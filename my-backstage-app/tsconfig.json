@@ -16,9 +16,10 @@
     "outDir": "dist-types",
     "rootDir": ".",
     "jsx": "react-jsx",
-    "baseUrl": ".",                                 // ✅ required
+    "baseUrl": ".",                              
     "paths": {
-      "@internal/*": ["plugins/*/src"]              // ✅ add this line
+      "@internal/*": ["plugins/*/src"]
     }
+
   }
 }

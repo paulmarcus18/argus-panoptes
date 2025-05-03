@@ -1,13 +1,9 @@
-/*
- * Hi!
- *
- * Note that this is an EXAMPLE Backstage backend. Please check the README.
- *
- * Happy hacking!
- */
+import dotenv from 'dotenv';
+dotenv.config();
+console.log('Loaded GitHub token:', process.env.GITHUB_TOKEN);
+
 
 import { createBackend } from '@backstage/backend-defaults';
-import { techInsightsModuleDependabot } from '@internal/tech-insights-backend-module-dependabot';
 
 
 const backend = createBackend();
@@ -18,50 +14,34 @@ backend.add(import('@backstage/plugin-scaffolder-backend'));
 backend.add(import('@backstage/plugin-scaffolder-backend-module-github'));
 backend.add(import('@backstage/plugin-techdocs-backend'));
 
+// Tech Insights plugin and fact retriever modules
 backend.add(import('@backstage-community/plugin-tech-insights-backend'));
 backend.add(import('@backstage-community/plugin-tech-insights-backend-module-jsonfc'));
+backend.add(import('@internal/tech-insights-backend-module-dependabot')); // <== uses index.ts
 
-
-
-
-backend.add(techInsightsModuleDependabot);
-// auth plugin
+// Auth plugin
 backend.add(import('@backstage/plugin-auth-backend'));
-// See https://backstage.io/docs/backend-system/building-backends/migrating#the-auth-plugin
 backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
-// See https://backstage.io/docs/auth/guest/provider
 
-// catalog plugin
+// Catalog plugin
 backend.add(import('@backstage/plugin-catalog-backend'));
-backend.add(
-  import('@backstage/plugin-catalog-backend-module-scaffolder-entity-model'),
-);
-
-// See https://backstage.io/docs/features/software-catalog/configuration#subscribing-to-catalog-errors
+backend.add(import('@backstage/plugin-catalog-backend-module-scaffolder-entity-model'));
 backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
 
-// permission plugin
+// Permission plugin
 backend.add(import('@backstage/plugin-permission-backend'));
-// See https://backstage.io/docs/permissions/getting-started for how to create your own permission policy
-backend.add(
-  import('@backstage/plugin-permission-backend-module-allow-all-policy'),
-);
+backend.add(import('@backstage/plugin-permission-backend-module-allow-all-policy'));
 
-// search plugin
+// Search
 backend.add(import('@backstage/plugin-search-backend'));
-
-// search engine
-// See https://backstage.io/docs/features/search/search-engines
 backend.add(import('@backstage/plugin-search-backend-module-pg'));
-
-// search collators
 backend.add(import('@backstage/plugin-search-backend-module-catalog'));
 backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
 
-// kubernetes
+// Kubernetes
 backend.add(import('@backstage/plugin-kubernetes-backend'));
 
-//backend.add(import('@internal/plugin-traffic-light-backend'));
-
+// Optional: your custom plugin
+// backend.add(import('@internal/plugin-traffic-light-backend'));
 
 backend.start();

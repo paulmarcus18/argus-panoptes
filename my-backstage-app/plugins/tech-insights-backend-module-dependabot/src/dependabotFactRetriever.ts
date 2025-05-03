@@ -15,10 +15,23 @@ export const dependabotFactRetriever: FactRetriever = {
     },
   },
   async handler({ config, logger }) {
-    const token = config.getOptionalString('integrations.github.0.token');
-    const octokit = new Octokit({
-      auth: token,
-    });
+    let token: string | undefined;
+
+    try {
+      const githubIntegrations = config.getConfigArray('integrations.github');
+      token = githubIntegrations[0]?.getString('token');
+      logger.info(`🔍 Retrieved GitHub token: ${token ? '✔️ Present' : '❌ Missing'}`);
+    } catch (e) {
+      logger.error(`Could not retrieve GitHub token: ${e}`);
+      return [];
+    }
+
+    if (!token) {
+      logger.error('GitHub token is not defined in config.');
+      return [];
+    }
+
+    const octokit = new Octokit({ auth: token });
 
     try {
       // Step 1: Fetch all public repos under the 'philips-labs' GitHub organization
@@ -66,7 +79,6 @@ export const dependabotFactRetriever: FactRetriever = {
         }),
       );
 
-      // Return only non-null fact results
       return results.filter((r): r is NonNullable<typeof r> => r !== null);
     } catch (e) {
       logger.error(`Failed to fetch repos from philips-labs: ${e}`);

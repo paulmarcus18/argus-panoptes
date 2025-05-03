@@ -2738,9 +2738,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@backstage-community/plugin-tech-insights-backend-module-jsonfc@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "@backstage-community/plugin-tech-insights-backend-module-jsonfc@npm:0.5.0"
+"@backstage-community/plugin-tech-insights-backend-module-jsonfc@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@backstage-community/plugin-tech-insights-backend-module-jsonfc@npm:0.4.0"
   dependencies:
     "@backstage-community/plugin-tech-insights-common": "npm:^0.5.0"
     "@backstage-community/plugin-tech-insights-node": "npm:^2.3.0"
@@ -2752,13 +2752,13 @@ __metadata:
     json-rules-engine: "npm:^7.0.0"
     lodash: "npm:^4.17.21"
     luxon: "npm:^3.0.0"
-  checksum: 10c0/54610e3d3724140eee2b239243ebdfc5f2064a0b984523458b0f138bde6c502cade05cf719c6f7ce8d0c79bafd140b13d68311e4e3e949be20e63528c6b6e69e
+  checksum: 10c0/f87a8eeac3eb4ec9716183f2186eaebfc8447cbb9970960793e6cd7e9fa5215d748502e0520ce1a454bb767feb38bdeb6a9c9e90165e898f2208a718fd3fe442
   languageName: node
   linkType: hard
 
-"@backstage-community/plugin-tech-insights-backend@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "@backstage-community/plugin-tech-insights-backend@npm:3.0.0"
+"@backstage-community/plugin-tech-insights-backend@npm:^2.2.1":
+  version: 2.2.1
+  resolution: "@backstage-community/plugin-tech-insights-backend@npm:2.2.1"
   dependencies:
     "@backstage-community/plugin-tech-insights-common": "npm:^0.5.0"
     "@backstage-community/plugin-tech-insights-node": "npm:^2.3.0"
@@ -2769,8 +2769,6 @@ __metadata:
     "@backstage/catalog-model": "npm:^1.7.3"
     "@backstage/config": "npm:^1.3.2"
     "@backstage/errors": "npm:^1.2.7"
-    "@backstage/plugin-permission-common": "npm:^0.8.4"
-    "@backstage/plugin-permission-node": "npm:^0.8.7"
     "@backstage/types": "npm:^1.2.1"
     "@types/express": "npm:^4.17.6"
     "@types/luxon": "npm:^3.0.0"
@@ -2783,7 +2781,7 @@ __metadata:
     semver: "npm:^7.5.3"
     uuid: "npm:^9.0.0"
     yn: "npm:^4.0.0"
-  checksum: 10c0/9013906fd98524f8253cb8325a3ef6f200fed8c2577e7c6af704a45d92863223c9636516300ee6b9ced8152fd65968161d04ca386f08592a5337d790f7b905d0
+  checksum: 10c0/efdcf3f8b1abc12ff8fdcf31016bbe729c80f7fbec0a15f4c2ff68b996f9d6ee724abef52d5b52324dab2fc0aca7d54154f2cf1e86ea546a1dd6ad02588c110b
   languageName: node
   linkType: hard
 
@@ -7057,6 +7055,12 @@ __metadata:
     react-use: "npm:^17.2.4"
   peerDependencies:
     react: ^16.13.1 || ^17.0.0 || ^18.0.0
+  languageName: unknown
+  linkType: soft
+
+"@internal/tech-insights-backend-module-dependabot@workspace:plugins/tech-insights-backend-module-dependabot":
+  version: 0.0.0-use.local
+  resolution: "@internal/tech-insights-backend-module-dependabot@workspace:plugins/tech-insights-backend-module-dependabot"
   languageName: unknown
   linkType: soft
 
@@ -15109,8 +15113,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "backend@workspace:packages/backend"
   dependencies:
-    "@backstage-community/plugin-tech-insights-backend": "npm:^3.0.0"
-    "@backstage-community/plugin-tech-insights-backend-module-jsonfc": "npm:^0.5.0"
+    "@backstage-community/plugin-tech-insights-backend": "npm:^2.2.1"
+    "@backstage-community/plugin-tech-insights-backend-module-jsonfc": "npm:^0.4.0"
+    "@backstage-community/plugin-tech-insights-node": "npm:^2.3.0"
     "@backstage/backend-defaults": "npm:^0.9.0"
     "@backstage/cli": "npm:^0.32.0"
     "@backstage/config": "npm:^1.3.2"
@@ -15139,6 +15144,7 @@ __metadata:
     "@octokit/rest": "npm:^21.1.1"
     app: "link:../app"
     better-sqlite3: "npm:^9.0.0"
+    dotenv: "npm:^16.5.0"
     node-gyp: "npm:^10.0.0"
     pg: "npm:^8.11.3"
   languageName: unknown
@@ -18019,6 +18025,13 @@ __metadata:
     no-case: "npm:^3.0.4"
     tslib: "npm:^2.0.3"
   checksum: 10c0/5b859ea65097a7ea870e2c91b5768b72ddf7fa947223fd29e167bcdff58fe731d941c48e47a38ec8aa8e43044c8fbd15cd8fa21689a526bc34b6548197cd5b05
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^16.5.0":
+  version: 16.5.0
+  resolution: "dotenv@npm:16.5.0"
+  checksum: 10c0/5bc94c919fbd955bf0ba44d33922a1e93d1078e64a1db5c30faeded1d996e7a83c55332cb8ea4fae5a9ca4d0be44cbceb95c5811e70f9f095298df09d1997dd9
   languageName: node
   linkType: hard
 

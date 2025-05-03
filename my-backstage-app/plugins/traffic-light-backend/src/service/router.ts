@@ -33,7 +33,7 @@ export async function createRouter({
     logger,
   });
 
-  const factChecker = checkerFactory.getFactChecker(); // ✅ fixed line
+  const factChecker = checkerFactory.getFactChecker(); 
 
   router.get('/dependabotStatus/:owner/:repo', async (req, res) => {
     const { repo } = req.params;
