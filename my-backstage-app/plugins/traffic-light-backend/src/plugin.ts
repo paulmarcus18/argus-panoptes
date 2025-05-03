@@ -1,5 +1,5 @@
 import { createBackendModule, coreServices } from '@backstage/backend-plugin-api';
-import {createRouter} from './service/router';
+import { createRouter } from './service/router';
 
 export const trafficLightBackendModule = createBackendModule({
   pluginId: 'traffic-light',
@@ -8,12 +8,11 @@ export const trafficLightBackendModule = createBackendModule({
     env.registerInit({
       deps: {
         router: coreServices.httpRouter,
-        config: coreServices.rootConfig,
         logger: coreServices.logger,
       },
-      async init({ router, config, logger }) {
-        const trafficLightRouter = await createRouter({ config, logger});
-        trafficLightRouter.use('/traffic-light');
+      async init({ router, logger }) {
+        const trafficLightRouter = await createRouter({ logger });
+        router.use('/traffic-light', trafficLightRouter);
       },
     });
   },

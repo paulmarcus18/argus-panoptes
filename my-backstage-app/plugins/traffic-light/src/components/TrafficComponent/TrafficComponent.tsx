@@ -18,53 +18,52 @@ import { fetchRepoStatus, StatusResponse } from '../api/mockStatusApi';
 import { DialogComponent } from '../DialogComponent';
 
 const TrafficLight = ({ color }: { color: 'red' | 'green' | 'yellow' }) => (
-  <Box my={1} width={50} height={50} borderRadius="50%" bgcolor={color} />
+  <Box my={1} width={50} height={50} borderRadius="50%" bgcolor={color} />
 );
 
 interface Props {
   owner: string;
   repo: string;
 }
-const Trafficlightdependabot = ({owner, repo}: Props) => {
-  const [color, setColor] = useState<string>('black');
+
+const Trafficlightdependabot = ({ owner, repo }: Props) => {
+  const [color, setColor] = useState<'green' | 'red' | 'gray'>('gray');
+
   useEffect(() => {
-    fetch(`api/traffic-light/dependabotStatus/${owner}/${repo}`)
-      .then(res => {
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch(`/api/traffic-light/dependabotStatus/${owner}/${repo}`);
         if (!res.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error('Failed to fetch status');
         }
-        return res.json();
-      })
-      .then(data => {
-        setColor(data.status);
-      })
-      .catch(err => {
-        console.error('Failed to fetch dependabot status:', err);
-        setColor('white');
-      });
+        const data = await res.json();
+        if (['green', 'red'].includes(data.status)) {
+          setColor(data.status);
+        } else {
+          setColor('gray');
+        }
+      } catch (err) {
+        console.error(`Failed to fetch dependabot status for ${repo}:`, err);
+        setColor('gray');
+      }
+    };
+
+    fetchStatus();
   }, [owner, repo]);
-  
-  
+
   return (
-    <Box my={1} width={50} height={50} borderRadius="50%" bgcolor={color} />
+    <Box my={1} width={50} height={50} borderRadius="50%" bgcolor={color} />
   );
 };
 
 export const TrafficComponent = () => {
-  //Initial variable setup
-  //List of repos to choose from
-  const [repos, setRepos] = useState<{ name: string; description: string }[]>([],);
-  //the repository currently selected from the dropdown
+  const [repos, setRepos] = useState<{ name: string; description: string }[]>([]);
   const [selectedRepo, setSelectedRepo] = useState('');
-  //security status of the tool for the selected repo
   const [statusData, setStatusData] = useState<StatusResponse | null>(null);
-  //Used to control the popup dialog for extra details
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState('');
-  const [dialogItems, setDialogItems] = useState<
-    { name: string; color: string }[]
-  >([]);
-  //crea
+  const [dialogItems, setDialogItems] = useState<{ name: string; color: string }[]>([]);
+
   const selected = repos.find(r => r.name === selectedRepo);
 
   const handleClick = (
@@ -88,7 +87,7 @@ export const TrafficComponent = () => {
       <MoreVertIcon />
     </IconButton>
   );
-  //creates the dropdown menu to choose repo to inspect
+
   return (
     <Page themeId="tool">
       <Header title="Traffic light plugin" subtitle="">
@@ -110,7 +109,6 @@ export const TrafficComponent = () => {
           </FormControl>
         </Box>
       </Header>
-      {/* shows name and description of picked repo */}
 
       <Content>
         {selected && (
@@ -121,16 +119,13 @@ export const TrafficComponent = () => {
                 <Typography variant="body2">{selected.description}</Typography>
               </InfoCard>
             </Box>
-            {/* shows a traffic light for tools */}
+
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <InfoCard
                   title="Security Checks"
                   action={cardAction('Security Checks', [
-                    {
-                      name: 'Dependabot',
-                      color: statusData?.Dependabot?.color || 'yellow',
-                    },
+                    { name: 'Dependabot', color: 'gray' },
                     {
                       name: 'BlackDuck',
                       color: statusData?.BlackDuck?.color || 'yellow',
@@ -142,13 +137,12 @@ export const TrafficComponent = () => {
                   ])}
                 >
                   <Typography variant="subtitle1">Dependabot</Typography>
-                  <Tooltip title={statusData?.Dependabot?.reason || ''}>
+                  <Tooltip title="Live check from Tech Insights">
                     <div>
                       <Trafficlightdependabot
-                      owner = "philips-lab"
-                      repo = {selectedRepo}
+                        owner="philips-labs"
+                        repo={selectedRepo}
                       />
-                      
                     </div>
                   </Tooltip>
 
@@ -273,7 +267,8 @@ export const TrafficComponent = () => {
                     {
                       name: 'Foundation Pipelines',
                       color:
-                        statusData?.['Foundation Pipelines']?.color || 'yellow',
+                        statusData?.['Foundation Pipelines']?.color ||
+                        'yellow',
                     },
                   ])}
                 >
@@ -293,7 +288,7 @@ export const TrafficComponent = () => {
                     </div>
                   </Tooltip>
                 </InfoCard>
-              </Grid> 
+              </Grid>
             </Grid>
           </>
         )}

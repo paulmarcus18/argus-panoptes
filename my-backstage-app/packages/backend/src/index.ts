@@ -7,6 +7,8 @@
  */
 
 import { createBackend } from '@backstage/backend-defaults';
+import { techInsightsModuleDependabot } from '@internal/tech-insights-backend-module-dependabot';
+
 
 const backend = createBackend();
 
@@ -16,8 +18,13 @@ backend.add(import('@backstage/plugin-scaffolder-backend'));
 backend.add(import('@backstage/plugin-scaffolder-backend-module-github'));
 backend.add(import('@backstage/plugin-techdocs-backend'));
 
+backend.add(import('@backstage-community/plugin-tech-insights-backend'));
+backend.add(import('@backstage-community/plugin-tech-insights-backend-module-jsonfc'));
 
 
+
+
+backend.add(techInsightsModuleDependabot);
 // auth plugin
 backend.add(import('@backstage/plugin-auth-backend'));
 // See https://backstage.io/docs/backend-system/building-backends/migrating#the-auth-plugin
@@ -55,7 +62,6 @@ backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
 backend.add(import('@backstage/plugin-kubernetes-backend'));
 
 //backend.add(import('@internal/plugin-traffic-light-backend'));
-
 
 
 backend.start();

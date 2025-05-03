@@ -147,3 +147,24 @@ kubernetes:
 permission:
   # setting this to `false` will disable permissions
   enabled: true
+
+techInsights:
+  factRetrievers:
+    dependabotFactRetriever:
+      cadence: '0 * * * *' # every hour
+      lifecycle: { timeToLive: { weeks: 2 } }
+
+  factChecker:
+    checks:
+      dependabotLowAlertCheck:
+        type: json-rules-engine
+        name: Dependabot Alerts Below Threshold
+        description: Checks if Dependabot alerts are below 5
+        factIds:
+          - dependabotFactRetriever
+        rule:
+          conditions:
+            all:
+              - fact: openAlertCount
+                operator: lessThan
+                value: 5

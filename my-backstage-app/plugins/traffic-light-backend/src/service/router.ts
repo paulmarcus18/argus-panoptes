@@ -1,22 +1,61 @@
 import express from 'express';
-import { Config } from '@backstage/config';
 import { LoggerService } from '@backstage/backend-plugin-api';
+import { JsonRulesEngineFactCheckerFactory } from '@backstage-community/plugin-tech-insights-backend-module-jsonfc';
 
 export async function createRouter({
-  config,
   logger,
 }: {
-  config: Config;
   logger: LoggerService;
 }): Promise<express.Router> {
   const router = express.Router();
 
+  const checkerFactory = new JsonRulesEngineFactCheckerFactory({
+    checks: [
+      {
+        id: 'dependabotLowAlertCheck',
+        type: 'json-rules-engine',
+        name: 'Dependabot Alerts Below Threshold',
+        description: 'Checks if Dependabot alerts are below 5',
+        factIds: ['dependabotFactRetriever'],
+        rule: {
+          conditions: {
+            all: [
+              {
+                fact: 'openAlertCount',
+                operator: 'lessThan',
+                value: 5,
+              },
+            ],
+          },
+        },
+      },
+    ],
+    logger,
+  });
+
+  const factChecker = checkerFactory.getFactChecker(); // ✅ fixed line
+
   router.get('/dependabotStatus/:owner/:repo', async (req, res) => {
-    const { owner, repo } = req.params;
+    const { repo } = req.params;
 
-    logger.info(`Fetching dependabot status for ${owner}/${repo}`);
+    logger.info(`Running dependabotLowAlertCheck for ${repo}`);
 
-    res.json({ status: Math.random() > 0.5 ? 'green' : 'red' });
+    try {
+      const results = await factChecker.runChecksForEntity(
+        {
+          kind: 'Component',
+          namespace: 'default',
+          name: repo,
+        },
+        ['dependabotLowAlertCheck'],
+      );
+
+      const passed = results?.[0]?.result?.result === true;
+      res.json({ status: passed ? 'green' : 'red' });
+    } catch (error: any) {
+      logger.error(`Error running check for ${repo}: ${error.message}`);
+      res.status(500).json({ status: 'unknown', error: error.message });
+    }
   });
 
   return router;
