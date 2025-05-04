@@ -13,6 +13,8 @@ export const RepoFetchComponent: React.FC<Props> = ({ onData }) => {
         );
         const data = await response.json();
 
+        console.log('Full repo data:', data);
+
         const simplified = data.map((repo: any) => ({
           name: repo.name,
           description: repo.description || 'No description',
