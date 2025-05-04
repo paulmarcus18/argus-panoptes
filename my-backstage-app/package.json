@@ -52,6 +52,7 @@
   },
   "packageManager": "yarn@4.4.1",
   "dependencies": {
+    "@backstage-community/plugin-tech-insights": "^0.5.1",
     "@mui/icons-material": "^7.0.2"
   }
 }
