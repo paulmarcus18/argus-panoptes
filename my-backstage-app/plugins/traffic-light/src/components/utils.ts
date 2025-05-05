@@ -1,3 +1,6 @@
+import { CompoundEntityRef, stringifyEntityRef } from '@backstage/catalog-model';
+import { TechInsightsApi } from '@backstage/plugin-tech-insights';
+
 export async function getAzureDevOpsBugs() {
   const organization = "argus-panoptes-dev";
   const project = "repo_2";
@@ -72,3 +75,38 @@ export async function getGitHubRepoStatus(repoName: string) {
       return "yellow"; // Default to yellow if the workflow is not completed yet
     }
   }
+
+  export const getSonarQubeFacts = async (
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<{ bugs: number; code_smells: number; security_hotspots: number }> => {
+    // Get facts using the entity reference and the fact retriever ID
+    const factsNames= ['bugs','code_smells','security_hotspots'];
+
+    const response = await api.getFacts(
+      entity,
+      factsNames
+    );
+
+    let facts: Record<string, any> = {};
+
+
+    if (Array.isArray(response)) {
+      const factEntry = response.find(
+        item =>
+          item.factRetrieverId === 'sonarcloud-fact-retriever' ||
+          item.id === 'sonarcloud-fact-retriever',
+      );
+      facts = factEntry?.facts || {};
+    } else if (typeof response === 'object' && response !== null) {
+      facts = response['sonarcloud-fact-retriever'] || response;
+    }
+
+    return {
+      bugs: Number(response[0]?.facts?.bugs),
+      code_smells: Number(response[0]?.facts?.code_smells),
+      security_hotspots: Number(response[0]?.facts?.security_hotspots),
+    };
+  };
+
+    
