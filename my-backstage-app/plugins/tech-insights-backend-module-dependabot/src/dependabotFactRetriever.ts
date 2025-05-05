@@ -2,8 +2,8 @@ import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
 import { Octokit } from '@octokit/rest';
 
 /**
- * This FactRetriever queries all public repos under the 'philips-labs' org
- * and returns the number of open Dependabot alerts per repository.
+ * This FactRetriever queries the 'philips-labs/dct-notary-admin' repo
+ * and returns the number of open Dependabot alerts.
  */
 export const dependabotFactRetriever: FactRetriever = {
   id: 'dependabotFactRetriever',
@@ -11,78 +11,74 @@ export const dependabotFactRetriever: FactRetriever = {
   schema: {
     openAlertCount: {
       type: 'integer',
-      description: 'Number of open Dependabot alerts for philips-labs repos',
+      description: 'Number of open Dependabot alerts for dct-notary-admin repo',
     },
   },
   async handler({ config, logger }) {
     let token: string | undefined;
 
     try {
-      const githubIntegrations = config.getConfigArray('integrations.github');
-      token = githubIntegrations[0]?.getString('token');
+      const githubConfigs = config.getOptionalConfigArray('integrations.github');
+      const githubConfig = githubConfigs?.[0];
+      token = githubConfig?.getOptionalString('token');
+
       logger.info(`🔍 Retrieved GitHub token: ${token ? '✔️ Present' : '❌ Missing'}`);
+      // Remove the next line in production
+      logger.info(`DEBUG: GitHub token = ${token}`);
     } catch (e) {
-      logger.error(`Could not retrieve GitHub token: ${e}`);
+      logger.error(`❌ Could not retrieve GitHub token: ${e}`);
       return [];
     }
 
     if (!token) {
-      logger.error('GitHub token is not defined in config.');
+      logger.error('❌ GitHub token is not defined.');
       return [];
     }
 
     const octokit = new Octokit({ auth: token });
 
-    try {
-      // Step 1: Fetch all public repos under the 'philips-labs' GitHub organization
-      const reposResponse = await octokit.repos.listForOrg({
-        org: 'philips-labs',
-        type: 'public',
-        per_page: 100,
-      });
+    const repos = [
+      {
+        owner: { login: 'philips-labs' },
+        name: 'dct-notary-admin',
+      },
+    ];
 
-      const repos = reposResponse.data;
+    const results = await Promise.all(
+      repos.map(async repo => {
+        try {
+          const alertsResponse = await octokit.request(
+            'GET /repos/{owner}/{repo}/dependabot/alerts',
+            {
+              owner: repo.owner.login,
+              repo: repo.name,
+              per_page: 100,
+            },
+          );
 
-      // Step 2: For each repo, fetch open Dependabot alerts
-      const results = await Promise.all(
-        repos.map(async repo => {
-          try {
-            const alertsResponse = await octokit.request(
-              'GET /repos/{owner}/{repo}/dependabot/alerts',
-              {
-                owner: repo.owner.login,
-                repo: repo.name,
-                per_page: 100,
-              },
-            );
+          const openAlerts = alertsResponse.data.filter(alert => alert.state === 'open');
 
-            const openAlerts = alertsResponse.data.filter(alert => alert.state === 'open');
-
-            return {
-              entity: {
-                kind: 'Component',
-                namespace: 'default',
-                name: repo.name,
-              },
-              facts: {
-                openAlertCount: openAlerts.length,
-              },
-            };
-          } catch (err: any) {
-            if (err.status === 403 || err.status === 404) {
-              logger.warn(`Access denied to alerts for ${repo.name} — skipping`);
-              return null;
-            }
-            logger.error(`Error fetching alerts for ${repo.name}: ${err}`);
+          return {
+            entity: {
+              kind: 'Component',
+              namespace: 'default',
+              name: repo.name,
+            },
+            facts: {
+              openAlertCount: openAlerts.length,
+            },
+          };
+        } catch (err: any) {
+          if (err.status === 403 || err.status === 404) {
+            logger.warn(`⚠️ Access denied to alerts for ${repo.name} (status ${err.status}) — skipping`);
             return null;
           }
-        }),
-      );
+          logger.error(`❌ Error fetching alerts for ${repo.name}: ${err.message} (status ${err.status})`);
+          return null;
+        }
+      }),
+    );
 
-      return results.filter((r): r is NonNullable<typeof r> => r !== null);
-    } catch (e) {
-      logger.error(`Failed to fetch repos from philips-labs: ${e}`);
-      return [];
-    }
+    return results.filter((r): r is NonNullable<typeof r> => r !== null);
   },
 };
