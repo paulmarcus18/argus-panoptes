@@ -81,32 +81,58 @@ export async function getGitHubRepoStatus(repoName: string) {
     entity: CompoundEntityRef,
   ): Promise<{ bugs: number; code_smells: number; security_hotspots: number }> => {
     // Get facts using the entity reference and the fact retriever ID
-    const factsNames= ['bugs','code_smells','security_hotspots'];
+    // const factsNames= ['bugs','code_smells','security_hotspots'];
 
-    const response = await api.getFacts(
-      entity,
-      factsNames
-    );
+    // const response = await api.getFacts(
+    //   entity,
+    //   factsNames
+    // );
 
-    let facts: Record<string, any> = {};
+    // let facts: Record<string, any> = {};
 
 
-    if (Array.isArray(response)) {
-      const factEntry = response.find(
-        item =>
-          item.factRetrieverId === 'sonarcloud-fact-retriever' ||
-          item.id === 'sonarcloud-fact-retriever',
+    // if (Array.isArray(response)) {
+    //   const factEntry = response.find(
+    //     item =>
+    //       item.factRetrieverId === 'sonarcloud-fact-retriever' ||
+    //       item.id === 'sonarcloud-fact-retriever',
+    //   );
+    //   facts = factEntry?.facts || {};
+    // } else if (typeof response === 'object' && response !== null) {
+    //   facts = response['sonarcloud-fact-retriever'] || response;
+    // }
+
+    // return {
+    //   bugs: Number(response[0]?.facts?.bugs),
+    //   code_smells: Number(response[0]?.facts?.code_smells),
+    //   security_hotspots: Number(response[0]?.facts?.security_hotspots),
+    // };
+    try {
+      // Define the fact names we want to retrieve
+      const factNames = ['bugs', 'code_smells', 'security_hotspots'];
+      
+      // Call the Tech Insights API to get facts for our entity
+      const response = await api.getFacts(
+        entity,
+        ['sonarcloud-fact-retriever']
       );
-      facts = factEntry?.facts || {};
-    } else if (typeof response === 'object' && response !== null) {
-      facts = response['sonarcloud-fact-retriever'] || response;
+      
+      // Useful for debugging: log the raw response from the API
+      // console.log('Raw Tech Insights API response:', JSON.stringify(response, null, 2));
+      
+      return {
+        bugs: Number(response['sonarcloud-fact-retriever']?.facts?.bugs),
+        code_smells: Number(response['sonarcloud-fact-retriever']?.facts?.code_smells),
+        security_hotspots: Number(response['sonarcloud-fact-retriever']?.facts?.security_hotspots),
+      };
+      
+      // If we couldn't find the facts, return zeros
+      console.error('Could not find SonarCloud facts in the response');
+      return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+    } catch (error) {
+      console.error('Error fetching SonarCloud facts:', error);
+      return { bugs: 0, code_smells: 0, security_hotspots: 0 };
     }
-
-    return {
-      bugs: Number(response[0]?.facts?.bugs),
-      code_smells: Number(response[0]?.facts?.code_smells),
-      security_hotspots: Number(response[0]?.facts?.security_hotspots),
-    };
   };
 
     

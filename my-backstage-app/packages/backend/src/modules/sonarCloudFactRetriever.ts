@@ -75,6 +75,14 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
             kind: 'component'
           },
           facts: facts,
+        },
+        {
+          entity: {
+            name: 'fatt',
+            namespace: 'default',
+            kind: 'component'
+          },
+          facts: facts,
         }];
       } catch (error) {
         logger.error(`Failed to fetch SonarCloud metrics: ${error}`);
