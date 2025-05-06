@@ -80,6 +80,7 @@ export const fetchRepoStatus = async (
   const preProdStatus: TrafficLightColor = validateTrafficLightColor(status);
 
   // Create entity reference for SonarCloud facts
+  // THIS IS HARCODED FOR TABIA - CHANGE LATER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   const entity: CompoundEntityRef = {
     name: 'tabia',
     namespace: 'default',

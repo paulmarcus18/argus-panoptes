@@ -118,7 +118,7 @@ export async function getGitHubRepoStatus(repoName: string) {
       );
       
       // Useful for debugging: log the raw response from the API
-      // console.log('Raw Tech Insights API response:', JSON.stringify(response, null, 2));
+      console.log('Raw Tech Insights API response:', JSON.stringify(response, null, 2));
       
       return {
         bugs: Number(response['sonarcloud-fact-retriever']?.facts?.bugs),

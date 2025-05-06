@@ -69,11 +69,17 @@ techdocs:
   publisher:
     type: 'local' # Alternatives - 'googleGcs' or 'awsS3'. Read documentation for using alternatives.
 
+# auth:
+#   # see https://backstage.io/docs/auth/ to learn about auth providers
+#   providers:
+#     # See https://backstage.io/docs/auth/guest/provider
+#     guest: {}
+
 auth:
-  # see https://backstage.io/docs/auth/ to learn about auth providers
   providers:
-    # See https://backstage.io/docs/auth/guest/provider
-    guest: {}
+    guest:
+      userEntityRef: user:development/vpetkova
+      # userEntityRef: user:default/ghristov
 
 scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
@@ -157,17 +163,23 @@ permission:
 
 sonarcloud: 
   token: ${SONARCLOUD_TOKEN}
-  organization: zofiarynkiewicz
+  organization: vesela-petkova
 
 techInsights:
   scheduler:
     knexConfig:
       client: 'better-sqlite3'
       connection: ':memory:'
+      # client: pg
+      # connection:
+      #   host: ${POSTGRES_HOST}
+      #   port: ${POSTGRES_PORT}
+      #   user: ${POSTGRES_USER}
+      #   password: ${POSTGRES_PASSWORD}
   factRetrievers:
     sonarcloud-fact-retriever:  # Change from array to object
       enabled: true
-      cadence: "0 */6 * * *"
+      cadence: "*/1 * * * *" # Every minute
   factChecker:
     checks:
       noHighBugsCheck:
