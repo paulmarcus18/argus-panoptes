@@ -6,3 +6,4 @@ metadata:
   description: Manages user accounts, profiles, and authentication
 spec:
   owner: identity-team
+  members: [ghristov]

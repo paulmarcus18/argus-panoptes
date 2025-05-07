@@ -6,3 +6,4 @@ metadata:
   description: Handles all payment transactions and billing
 spec:
   owner: finance-team
+  members: [vpetkova]

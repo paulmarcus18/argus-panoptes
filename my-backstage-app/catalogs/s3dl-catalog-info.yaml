@@ -6,6 +6,8 @@ metadata:
   annotations:
     github.com/project-slug: philips-labs/s3dl
     backstage.io/source-location: url:https://github.com/philips-labs/s3dl
+    sonarcloud.io/project-key: veselapetkova_s3dl
+    sonarcloud.io/enabled: 'true'
   tags:
     - critical
 spec:

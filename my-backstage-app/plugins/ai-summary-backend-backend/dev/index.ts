@@ -32,8 +32,8 @@ const backend = createBackend();
 // If you want to use real auth, you can install the following instead:
 //   backend.add(import('@backstage/plugin-auth-backend'));
 //   backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
-backend.add(mockServices.auth.factory());
-backend.add(mockServices.httpAuth.factory());
+// backend.add(mockServices.auth.factory());
+// backend.add(mockServices.httpAuth.factory());
 
 // TEMPLATE NOTE:
 // Rather than using a real catalog you can use a mock with a fixed set of entities.

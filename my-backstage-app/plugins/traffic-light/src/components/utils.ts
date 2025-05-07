@@ -1,3 +1,6 @@
+import { CompoundEntityRef, stringifyEntityRef } from '@backstage/catalog-model';
+import { TechInsightsApi } from '@backstage/plugin-tech-insights';
+
 export async function getAzureDevOpsBugs() {
   const organization = "argus-panoptes-dev";
   const project = "repo_2";
@@ -119,3 +122,33 @@ export async function getGitHubRepoStatus(repoName: string): Promise<{ color: Tr
     return { color: "green", reason: "All critical workflows succeeded." };
   }
 }
+
+  export const getSonarQubeFacts = async (
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<{ bugs: number; code_smells: number; security_hotspots: number }> => {
+    try {
+      // Call the Tech Insights API to get facts for our entity
+      const response = await api.getFacts(
+        entity,
+        ['sonarcloud-fact-retriever']
+      );
+      
+      // Useful for debugging: log the raw response from the API
+      console.log('Raw Tech Insights API response:', JSON.stringify(response, null, 2));
+      
+      return {
+        bugs: Number(response['sonarcloud-fact-retriever']?.facts?.bugs),
+        code_smells: Number(response['sonarcloud-fact-retriever']?.facts?.code_smells),
+        security_hotspots: Number(response['sonarcloud-fact-retriever']?.facts?.security_hotspots),
+      };
+      
+      // If we couldn't find the facts, return zeros
+      console.error('Could not find SonarCloud facts in the response');
+      return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+    } catch (error) {
+      console.error('Error fetching SonarCloud facts:', error);
+      return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+    }
+  };
+

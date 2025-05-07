@@ -1,16 +1,20 @@
-import { CatalogApi } from '@backstage/catalog-client';
-import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { LoggerService } from '@backstage/backend-plugin-api';
 import { getReposBySystem } from './getReposBySystem';
 import { Entity } from '@backstage/catalog-model';
 import { stringifyEntityRef } from '@backstage/catalog-model';
+import { CatalogClient } from '@backstage/catalog-client/index';
 
 /**
  * Aggregates commit messages by system using stored Tech Insights facts.
  */
 export async function getCommitMessagesBySystem(
-  catalogApi: CatalogApi,
-  techInsightsApi: TechInsightsApi,
+  catalogApi: CatalogClient,
+  techInsightsApi: {
+    getFacts: (
+      entityRef: { kind: string; namespace?: string; name: string },
+      facts: string[],
+    ) => Promise<Record<string, any>>;
+  },
   logger: LoggerService,
 ): Promise<Record<string, string>> {
   const systemToRepoNames = await getReposBySystem(catalogApi);
@@ -27,7 +31,6 @@ export async function getCommitMessagesBySystem(
           'metadata.name': name,
         },
       });
-
       const entity: Entity | undefined = items[0];
       if (!entity) {
         logger.warn(`No entity found for component name: ${name}`);

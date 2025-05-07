@@ -23,10 +23,11 @@ export const AiPluginPage = aiPluginPlugin.provide(
 
 import { OpenAI } from 'openai';
 
-const api_key = `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`;
+const api_key = `token`;
 
 const openai = new OpenAI({
   apiKey: api_key,
+  dangerouslyAllowBrowser: true,
 });
 
 // Mock commit messages
@@ -49,7 +50,11 @@ async function generateSummary() {
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
-        { role: 'system', content: 'You are a helpful assistant for generating concise release notes.' },
+        {
+          role: 'system',
+          content:
+            'You are a helpful assistant for generating concise release notes.',
+        },
         { role: 'user', content: prompt },
       ],
     });

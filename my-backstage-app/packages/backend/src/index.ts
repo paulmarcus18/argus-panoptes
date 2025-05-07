@@ -48,9 +48,11 @@ backend.add(import('@backstage/plugin-kubernetes-backend'));
 
 // tech-insights plugin
 backend.add(import('@backstage-community/plugin-tech-insights-backend'));
-backend.add(import('@backstage-community/plugin-tech-insights-backend-module-jsonfc'))
+backend.add(
+  import('@backstage-community/plugin-tech-insights-backend-module-jsonfc'),
+);
 backend.add(techInsightsModuleSonarCloudFactRetriever); // Add the SonarCloud fact retriever
 backend.add(import('@internal/plugin-ai-summary-backend-backend'));
 
-backend.add(techInsightsModuleGitHubCommitRetriever)
+backend.add(techInsightsModuleGitHubCommitRetriever);
 backend.start();

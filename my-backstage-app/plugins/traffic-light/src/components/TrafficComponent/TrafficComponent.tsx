@@ -17,6 +17,9 @@ import { RepoFetchComponent } from '../RepoFetchComponent';
 import { fetchRepoStatus, StatusResponse } from '../api/mockStatusApi';
 import { DialogComponent } from '../DialogComponent';
 
+import { TechInsightsApi, techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { useApi } from '@backstage/core-plugin-api';
+
 const TrafficLight = ({ color }: { color: 'red' | 'green' | 'yellow' }) => (
   <Box my={1} width={50} height={50} borderRadius="50%" bgcolor={color} />
 );
@@ -52,6 +55,7 @@ const Trafficlightdependabot = ({owner, repo}: Props) => {
 
 export const TrafficComponent = () => {
   //Initial variable setup
+  const techInsightsApi = useApi(techInsightsApiRef)
   //List of repos to choose from
   const [repos, setRepos] = useState<{ name: string; description: string }[]>([],);
   //the repository currently selected from the dropdown
@@ -66,6 +70,12 @@ export const TrafficComponent = () => {
   >([]);
   //crea
   const selected = repos.find(r => r.name === selectedRepo);
+
+  useEffect(() => {
+    if (selectedRepo) {
+      fetchRepoStatus(selectedRepo, techInsightsApi).then(data => setStatusData(data));
+    }
+  }, [selectedRepo]);
 
   const handleClick = (
     title: string,
@@ -175,16 +185,16 @@ export const TrafficComponent = () => {
               <Grid item xs={12} md={6}>
                 <InfoCard
                   title="Software Quality"
-                  action={cardAction('Software Quality', [
-                    {
-                      name: 'SonarQube',
-                      color: statusData?.SonarQube?.color || 'yellow',
-                    },
-                    {
-                      name: 'CodeScene',
-                      color: statusData?.CodeScene?.color || 'yellow',
-                    },
-                  ])}
+                  // action={cardAction('Software Quality', [
+                  //   {
+                  //     name: 'SonarQube',
+                  //     color: statusData?.SonarQube?.color || 'yellow',
+                  //   },
+                  //   {
+                  //     name: 'CodeScene',
+                  //     color: statusData?.CodeScene?.color || 'yellow',
+                  //   },
+                  // ])}
                 >
                   <Typography variant="subtitle1">SonarQube</Typography>
                   <Tooltip title={statusData?.SonarQube?.reason || ''}>

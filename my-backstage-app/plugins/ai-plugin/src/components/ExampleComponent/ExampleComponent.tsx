@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, Typography, CircularProgress } from '@mui/material';
-import { GoogleGenAI } from '@google/genai';  // Import the GoogleGenAI package
+import { GoogleGenAI } from '@google/genai'; // Import the GoogleGenAI package
 
 // Initialize GoogleGenAI with your API key
-const ai = new GoogleGenAI({ apiKey: "token" });
+const ai = new GoogleGenAI({ apiKey: 'token' });
 
 const commitMessages = [
   'Fix bug in login logic when email is missing',
@@ -29,24 +29,24 @@ export const ExampleComponent = () => {
       try {
         // Make a request to the Gemini API via the GoogleGenAI package
         const response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash',  // Specify the correct model name here
-          contents: prompt,           // Pass the prompt to the API
+          model: 'gemini-2.0-flash', // Specify the correct model name here
+          contents: prompt, // Pass the prompt to the API
         });
 
         // Extract the text from the API response
         const result = response.text || 'No summary returned.';
-        setSummary(result);  // Set the result into state
+        setSummary(result); // Set the result into state
       } catch (error) {
         console.error('Error generating summary:', error);
         setSummary('❌ Error generating summary.');
       } finally {
-        setLoading(false);  // Turn off loading state
+        setLoading(false); // Turn off loading state
       }
     };
 
     // Trigger the summary generation when the component mounts
     generateSummary();
-  }, []);  // Empty dependency array ensures the effect runs only once
+  }, []); // Empty dependency array ensures the effect runs only once
 
   return (
     <Card>

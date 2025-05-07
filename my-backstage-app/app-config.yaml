@@ -62,11 +62,17 @@ techdocs:
   publisher:
     type: 'local' # Alternatives - 'googleGcs' or 'awsS3'. Read documentation for using alternatives.
 
+# auth:
+#   # see https://backstage.io/docs/auth/ to learn about auth providers
+#   providers:
+#     # See https://backstage.io/docs/auth/guest/provider
+#     guest: {}
+
 auth:
-  # see https://backstage.io/docs/auth/ to learn about auth providers
   providers:
-    # See https://backstage.io/docs/auth/guest/provider
-    guest: {}
+    guest:
+      userEntityRef: user:development/vpetkova
+      # userEntityRef: user:default/ghristov
 
 scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
@@ -148,9 +154,9 @@ permission:
   # setting this to `false` will disable permissions
   enabled: true
 
-sonarcloud: 
+sonarcloud:
   token: ${SONARCLOUD_TOKEN}
-  organization: zofiarynkiewicz
+  organization: vesela-petkova
 
 techInsights:
   scheduler:
@@ -158,12 +164,12 @@ techInsights:
       client: 'better-sqlite3'
       connection: ':memory:'
   factRetrievers:
-    sonarcloud-fact-retriever:  # Change from array to object
+    sonarcloud-fact-retriever: # Change from array to object
       enabled: true
-      cadence: "0 */6 * * *"
+      cadence: '*/1 * * * *' # Every minute
     github-commit-message-retriever:
       enabled: true
-      cadence: "0 */4 * * *" # Every 4 hours
+      cadence: '0 */4 * * *' # Every 4 hours
   factChecker:
     checks:
       noHighBugsCheck:

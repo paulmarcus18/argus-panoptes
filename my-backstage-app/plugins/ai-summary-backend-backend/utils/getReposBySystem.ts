@@ -1,7 +1,7 @@
-import { CatalogApi } from '@backstage/catalog-client';
+import { CatalogClient } from '@backstage/catalog-client/index';
 
 export async function getReposBySystem(
-  catalogApi: CatalogApi,
+  catalogApi: CatalogClient,
 ): Promise<Record<string, string[]>> {
   console.log(
     '!!!!!!!!!!!!!!!The repo function is being accessed!!!!!!!!!!!!!!!!!!!',
