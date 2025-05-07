@@ -1,4 +1,6 @@
+//imports for state, effect hooks and ref
 import React, { useState, useEffect, useRef } from 'react';
+//material and UI components for layout, form controls and icons
 import {
   Typography,
   Grid,
@@ -19,42 +21,53 @@ import {
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
-
+//backstage components for page layout and UI
 import { Header, Page, Content, InfoCard } from '@backstage/core-components';
+//local api import to fetch mock status data 
 import { fetchRepoStatus, StatusResponse } from '../api/mockStatusApi';
+//import dialog component, this allows treshold configuration
 import { DialogComponent } from '../DialogComponent';
+//backstage api's to access catalog information
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 
+//renders a trafficlight based on the color parameter passed 
 const TrafficLight = ({ color }: { color: 'red' | 'green' | 'yellow' }) => (
   <Box my={1} width={50} height={50} borderRadius="50%" bgcolor={color} />
 );
 
+//props interface defining expected inputs to the component
 interface Props {
-  owner: string;
-  repos: string[];
+  owner: string; //GitHub username or organization
+  repos: string[]; //List of repository names to check
 }
 
+//main functional component to determine and show dependabot status
 const Trafficlightdependabot = ({ owner, repos }: Props) => {
-  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray'>(
-    'gray',
+  //local state to track the traffic light color
+  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray'|'white'>(
+    'white',
   );
 
+  //this runs when component mounts or when `owner` or `repos` change
   useEffect(() => {
+    //Async function to fetch status for each repo
     const fetchStatuses = async () => {
       try {
+        //fetch statuses concurrently for all repositories
         const statuses = await Promise.all(
           repos.map(async repo => {
             const res = await fetch(
               `/api/traffic-light/dependabotStatus/${owner}/${repo}`,
             );
-            if (!res.ok) throw new Error();
-            const data = await res.json();
-            return data.status;
+            if (!res.ok) throw new Error(); //non successful response
+            const data = await res.json(); //parse json response
+            return data.status; //extract status string
           }),
         );
 
+        //determine traffic light color based on repo statuses
         if (statuses.includes('red')) {
           setColor('red');
         } else if (statuses.includes('yellow') || statuses.includes('gray')) {
@@ -62,7 +75,7 @@ const Trafficlightdependabot = ({ owner, repos }: Props) => {
         } else if (statuses.every(status => status === 'green')) {
           setColor('green');
         } else {
-          setColor('gray');
+          setColor('white');
         }
       } catch (err) {
         console.error('Error fetching statuses:', err);
@@ -70,18 +83,23 @@ const Trafficlightdependabot = ({ owner, repos }: Props) => {
       }
     };
 
+    //trigger fetch function
     fetchStatuses();
-  }, [owner, repos]);
+  }, [owner, repos]); //dependencies that trigger the effect
 
+  //render the traffic light color indicator
   return (
     <Box my={1} width={50} height={50} borderRadius="50%" bgcolor={color} />
   );
 };
 
+//defines a component named TrafficComponent
 export const TrafficComponent = () => {
+  //accesses the catalog API from backstage to retrieve entities
   const catalogApi = useApi(catalogApiRef);
+  //creates a ref for the system filter button to anchor a Popover
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
-
+  //state for storing repository metadata from the catalog
   const [repos, setRepos] = useState<
     {
       name: string;
@@ -91,21 +109,26 @@ export const TrafficComponent = () => {
       tags?: string[];
     }[]
   >([]);
-
+  //state to hold traffic light status data for various checks
   const [statusData, setStatusData] = useState<StatusResponse | null>(null);
+  //states for managing the dialog window showing check details
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState('');
   const [dialogItems, setDialogItems] = useState<
     { name: string; color: string }[]
   >([]);
+  //states to filter only owned and critical repos
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
   const [onlyCritical, setOnlyCritical] = useState(true);
+  //stores the names of repos selected for status display
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
+  //state variables for system filtering UI, search and selection
   const [availableSystems, setAvailableSystems] = useState<string[]>([]);
   const [selectedSystem, setSelectedSystem] = useState<string>('all');
   const [systemSearchTerm, setSystemSearchTerm] = useState<string>('');
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
 
+  //opens a dialog with the provided title and items
   const handleClick = (
     title: string,
     items: { name: string; color: string }[],
@@ -115,10 +138,12 @@ export const TrafficComponent = () => {
     setDialogOpen(true);
   };
 
+  //closes the dialog
   const handleClose = () => {
     setDialogOpen(false);
   };
 
+  //returns an icon button that triggers the dialog for InfoCard actions
   const cardAction = (
     title: string,
     items: { name: string; color: string }[],
@@ -128,13 +153,15 @@ export const TrafficComponent = () => {
     </IconButton>
   );
 
+  //side effect hook to fetch catalog entities on mount
   useEffect(() => {
     const fetchCatalogRepos = async () => {
+      //fetches all entities of component kind 
       try {
         const entities = await catalogApi.getEntities({
           filter: { kind: 'Component' },
         });
-
+        //maps entity data to simplified structure
         const simplified = entities.items.map((entity: Entity) => ({
           name: entity.metadata.name,
           description: entity.metadata.description ?? 'No description',
@@ -151,7 +178,7 @@ export const TrafficComponent = () => {
 
         setRepos(simplified);
 
-        // Extract unique systems for dropdown
+        // Extract unique systems for filter dropdown
         const systems = Array.from(
           new Set(
             simplified
@@ -160,6 +187,7 @@ export const TrafficComponent = () => {
           ),
         ).sort();
 
+        //stores available systems and sets all repos as selected by default
         setAvailableSystems(systems);
         setSelectedRepos(simplified.map(r => r.name)); // select all by default
       } catch (err) {
@@ -167,11 +195,16 @@ export const TrafficComponent = () => {
       }
     };
 
+    //effect dependency is the API instance and runs once on mount
     fetchCatalogRepos();
   }, [catalogApi]);
 
+  //filters repos based on owner being `philips-labs`, repos being critical and system matching
+  //TO-DO!! : make owner filter equal to owner variable and not hardcoded string
   useEffect(() => {
+    //filters repos based on owner being `philips-labs`, repos being critical and system matching
     const filtered = repos.filter(repo => {
+      //updates selected repos when filters change
       const isMine = !onlyMyRepos || repo.owner === 'philips-labs';
       const isCritical = !onlyCritical || repo.tags?.includes('critical');
       const isInSelectedSystem =
@@ -187,11 +220,13 @@ export const TrafficComponent = () => {
     system.toLowerCase().includes(systemSearchTerm.toLowerCase()),
   );
 
+  //updates selected system and closes the dropdown
   const handleSystemSelect = (system: string) => {
     setSelectedSystem(system);
     setSystemMenuOpen(false);
   };
 
+  //handlers to open and close the system popover
   const handleOpenSystemMenu = () => {
     setSystemMenuOpen(true);
   };
@@ -200,6 +235,7 @@ export const TrafficComponent = () => {
     setSystemMenuOpen(false);
   };
 
+  //starts the component render
   return (
     <Page themeId="tool">
       <Header title="Traffic light plugin" subtitle="" />
@@ -335,7 +371,7 @@ export const TrafficComponent = () => {
             <InfoCard
               title="Security Checks"
               action={cardAction('Security Checks', [
-                { name: 'Dependabot', color: 'gray' },
+                { name: 'Dependabot', color: 'green' },
                 {
                   name: 'BlackDuck',
                   color: statusData?.BlackDuck?.color || 'yellow',
@@ -350,8 +386,9 @@ export const TrafficComponent = () => {
               <Tooltip title="Live check from Tech Insights">
                 <div>
                   <Trafficlightdependabot
-                    owner="philips-labs"
+                    owner="MeherShroff2"
                     repos={selectedRepos}
+                    //repos = {"dct-notary-admin" }
                   />
                 </div>
               </Tooltip>
