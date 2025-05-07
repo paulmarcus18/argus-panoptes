@@ -6,11 +6,12 @@ metadata:
   annotations:
     github.com/project-slug: zofiarynkiewicz/argus-panoptes
     sonarqube.org/project-key: zofiarynkiewicz_tabia
+    sonarqube.org/project-key: zofiarynkiewicz_fatt
     backstage.io/techdocs-ref: dir:.
-  links:
-    - url: https://sonarcloud.io/project/overview?id=zofiarynkiewicz_tabia
-      title: SonarCloud Analysis
-      icon: check
+  # links:
+  #   - url: https://sonarcloud.io/project/overview?id=zofiarynkiewicz_tabia
+  #     title: SonarCloud Analysis
+  #     icon: check
 spec:
   type: website
   owner: john@example.com

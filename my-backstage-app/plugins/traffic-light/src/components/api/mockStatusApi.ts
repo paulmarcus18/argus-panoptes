@@ -1,4 +1,6 @@
-import { getAzureDevOpsBugs, getGitHubRepoStatus } from '../utils.ts';
+import { TechInsightsApi } from '@backstage/plugin-tech-insights';
+import { CompoundEntityRef } from '@backstage/catalog-model';
+import { getAzureDevOpsBugs, getGitHubRepoStatus, getSonarQubeFacts} from '../utils.ts';
 
 export type TrafficLightColor = 'green' | 'yellow' | 'red';
 
@@ -39,8 +41,34 @@ const validateTrafficLightColor = (status: any): TrafficLightColor => {
   return 'red'; // Default to 'red' if status is invalid
 };
 
+const evaluateSonarCloudStatus = (
+  facts: { bugs: number; code_smells: number; security_hotspots: number }
+): { color: TrafficLightColor; reason: string } => {
+  // Rules based on your fact checker configuration
+
+  if (facts.bugs > 0) {
+    return { color: 'red', reason: `${facts.bugs} bugs detected` };
+  }
+  
+  if (facts.code_smells > 15) {
+    return { color: 'red', reason: `${facts.code_smells} code smells (>15)` };
+  } else if (facts.code_smells > 10) {
+    return { color: 'yellow', reason: `${facts.code_smells} code smells (10-20)` };
+  }
+  
+  if (facts.security_hotspots > 3) {
+    return { color: 'red', reason: `${facts.security_hotspots} security hotspots (>3)` };
+  } else if (facts.security_hotspots > 0) {
+    return { color: 'yellow', reason: `${facts.security_hotspots} security hotspots (1-3)` };
+  }
+  
+  // All good - passes all checks
+  return { color: 'green', reason: 'No bugs, acceptable code smells and security hotspots' };
+};
+
 export const fetchRepoStatus = async (
   repoName: string,
+  techInsightsApi: TechInsightsApi,
 ): Promise<StatusResponse> => {
   await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -51,11 +79,32 @@ export const fetchRepoStatus = async (
   // Validate the status before using it
   const preProdStatus: TrafficLightColor = validateTrafficLightColor(status);
 
+  // Create entity reference for SonarCloud facts
+  // THIS IS HARCODED FOR TABIA - CHANGE LATER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  const entity: CompoundEntityRef = {
+    name: 'tabia',
+    namespace: 'default',
+    kind: 'component'
+  };
+  
+  // Get SonarCloud facts and evaluate status
+  let sonarStatus = { color: 'green' as TrafficLightColor, reason: 'Score 70 ≥ 70 (green)' };
+  try {
+    const sonarFacts = await getSonarQubeFacts(techInsightsApi, entity);
+    console.log("Sonar Qube bugs: ", sonarFacts.bugs);
+    console.log("Sonar Qube code smells: ", sonarFacts.code_smells);
+    console.log("Sonar Qube security hotspots: ", sonarFacts.security_hotspots);
+    sonarStatus = evaluateSonarCloudStatus(sonarFacts);
+  } catch (error) {
+    console.error('Failed to get SonarCloud facts:', error);
+    sonarStatus = { color: 'red', reason: 'Failed to retrieve SonarCloud data' };
+  }
+
   return {
     Dependabot: { color: 'green', reason: `Score 70 ≥ 70 (green)` },
     BlackDuck: { color: 'green', reason: `Score 70 ≥ 70 (green)` },
     Fortify: { color: 'green', reason: 'Fixed yellow for Fortify' },
-    SonarQube: { color: 'green', reason: `Score 70 ≥ 70 (green)` },
+    SonarQube: sonarStatus,
     CodeScene: { color: 'green', reason: `Score 70 ≥ 70 (green)` },
     'Reporting Pipeline': { color: 'green', reason: `Score 70 ≥ 70 (green)` },
     'Pre-Production pipelines': {
