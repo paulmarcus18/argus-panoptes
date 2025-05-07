@@ -28,15 +28,17 @@ backend:
   # This is for local development only, it is not recommended to use this in production
   # The production database configuration is stored in app-config.production.yaml
   database:
-    client: 'better-sqlite3'
-    connection: ':memory:'
+    # client: 'better-sqlite3'
+    # connection: ':memory:'
 
-    # client: pg
-    # connection:
-    #   host: ${POSTGRES_HOST}
-    #   port: ${POSTGRES_PORT}
-    #   user: ${POSTGRES_USER}
-    #   password: ${POSTGRES_PASSWORD}
+    client: pg
+    connection: postgresql://neondb_owner:npg_1OBUMv0labxS@ep-proud-glade-ab6wzmqt-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+      # client: pg
+      # connection:
+      #   host: ${POSTGRES_HOST}
+      #   port: ${POSTGRES_PORT}
+      #   user: ${POSTGRES_USER}
+      #   password: ${POSTGRES_PASSWORD}
   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
 
 integrations:
@@ -168,8 +170,9 @@ sonarcloud:
 techInsights:
   scheduler:
     knexConfig:
-      client: 'better-sqlite3'
-      connection: ':memory:'
+      client: pg
+      connection: postgresql://neondb_owner:npg_1OBUMv0labxS@ep-proud-glade-ab6wzmqt-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+ 
       # client: pg
       # connection:
       #   host: ${POSTGRES_HOST}
