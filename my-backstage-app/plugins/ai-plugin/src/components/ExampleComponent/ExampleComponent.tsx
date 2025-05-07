@@ -3,7 +3,7 @@ import { Card, CardContent, Typography, CircularProgress } from '@mui/material';
 import { GoogleGenAI } from '@google/genai';  // Import the GoogleGenAI package
 
 // Initialize GoogleGenAI with your API key
-const ai = new GoogleGenAI({ apiKey: "AIzaSyAGvFE_8fGwGtBNzSL8_x6lbxaj24xUOBE" });
+const ai = new GoogleGenAI({ apiKey: "token" });
 
 const commitMessages = [
   'Fix bug in login logic when email is missing',

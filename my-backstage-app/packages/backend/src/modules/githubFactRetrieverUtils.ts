@@ -228,7 +228,7 @@ export const createGitHubCommitMessageRetriever = (
           `https://api.github.com/repos/${repoOwner}/${repoName}/pulls?state=closed&sort=updated&direction=desc&per_page=5`,
           {
             headers: {
-              Authorization: `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`,
+              Authorization: `git`,
               Accept: 'application/vnd.github.v3+json',
             },
           },
@@ -259,7 +259,7 @@ export const createGitHubCommitMessageRetriever = (
         for (const pr of prs) {
           const commitsResponse = await fetch(pr.commits_url, {
             headers: {
-              Authorization: `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`,
+              Authorization: `github`,
               Accept: 'application/vnd.github.v3+json',
             },
           });
