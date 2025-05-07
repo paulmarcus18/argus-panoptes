@@ -46,6 +46,7 @@
     "@backstage/plugin-tech-insights-common": "^0.2.13",
     "@backstage/plugin-tech-insights-node": "^0.6.1",
     "@backstage/plugin-techdocs-backend": "^2.0.1",
+    "@internal/plugin-ai-summary-backend-backend": "workspace:^",
     "@octokit/rest": "^21.1.1",
     "app": "link:../app",
     "better-sqlite3": "^9.0.0",
