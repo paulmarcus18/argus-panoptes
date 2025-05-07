@@ -7512,14 +7512,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@internal/plugin-traffic-light-backend@workspace:plugins/traffic-light-backend":
-  version: 0.0.0-use.local
-  resolution: "@internal/plugin-traffic-light-backend@workspace:plugins/traffic-light-backend"
-  dependencies:
-    express: "npm:^4.18.2"
-  languageName: unknown
-  linkType: soft
-
 "@internal/plugin-traffic-light@workspace:^, @internal/plugin-traffic-light@workspace:plugins/traffic-light":
   version: 0.0.0-use.local
   resolution: "@internal/plugin-traffic-light@workspace:plugins/traffic-light"
