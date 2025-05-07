@@ -1,5 +1,6 @@
 import { createBackend } from '@backstage/backend-defaults';
 import { techInsightsModuleSonarCloudFactRetriever } from './modules/sonarCloudFactRetriever';
+import { techInsightsModuleGitHubCommitRetriever } from './modules/githubFactRetrieverUtils';
 
 const backend = createBackend();
 
@@ -50,4 +51,6 @@ backend.add(import('@backstage-community/plugin-tech-insights-backend'));
 backend.add(import('@backstage-community/plugin-tech-insights-backend-module-jsonfc'))
 backend.add(techInsightsModuleSonarCloudFactRetriever); // Add the SonarCloud fact retriever
 backend.add(import('@internal/plugin-ai-summary-backend-backend'));
+
+backend.add(techInsightsModuleGitHubCommitRetriever)
 backend.start();
