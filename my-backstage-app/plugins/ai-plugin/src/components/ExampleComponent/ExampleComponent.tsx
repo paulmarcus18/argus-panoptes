@@ -1,37 +1,59 @@
-import { Typography, Grid } from '@material-ui/core';
-import {
-  InfoCard,
-  Header,
-  Page,
-  Content,
-  ContentHeader,
-  HeaderLabel,
-  SupportButton,
-} from '@backstage/core-components';
-import { ExampleFetchComponent } from '../ExampleFetchComponent';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, Typography, CircularProgress } from '@mui/material';
+import { GoogleGenAI } from '@google/genai';  // Import the GoogleGenAI package
 
-export const ExampleComponent = () => (
-  <Page themeId="tool">
-    <Header title="Welcome to ai-plugin!" subtitle="Optional subtitle">
-      <HeaderLabel label="Owner" value="Team X" />
-      <HeaderLabel label="Lifecycle" value="Alpha" />
-    </Header>
-    <Content>
-      <ContentHeader title="Plugin title">
-        <SupportButton>A description of your plugin goes here.</SupportButton>
-      </ContentHeader>
-      <Grid container spacing={3} direction="column">
-        <Grid item>
-          <InfoCard title="Information card">
-            <Typography variant="body1">
-              All content should be wrapped in a card like this.
-            </Typography>
-          </InfoCard>
-        </Grid>
-        <Grid item>
-          <ExampleFetchComponent />
-        </Grid>
-      </Grid>
-    </Content>
-  </Page>
-);
+// Initialize GoogleGenAI with your API key
+const ai = new GoogleGenAI({ apiKey: "AIzaSyAGvFE_8fGwGtBNzSL8_x6lbxaj24xUOBE" });
+
+const commitMessages = [
+  'Fix bug in login logic when email is missing',
+  'Refactor signup flow to use new auth API',
+  'Update dependencies and remove deprecated packages',
+  'Improve error logging in user service',
+  'Add unit tests for checkout module',
+];
+
+// Build the prompt to generate the summary
+const prompt = `
+You are a release note generator. Given the following GitHub commit messages, summarize the changes in a clear, professional paragraph:
+
+${commitMessages.map(msg => `- ${msg}`).join('\n')}
+`;
+
+export const ExampleComponent = () => {
+  const [summary, setSummary] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const generateSummary = async () => {
+      try {
+        // Make a request to the Gemini API via the GoogleGenAI package
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.0-flash',  // Specify the correct model name here
+          contents: prompt,           // Pass the prompt to the API
+        });
+
+        // Extract the text from the API response
+        const result = response.text || 'No summary returned.';
+        setSummary(result);  // Set the result into state
+      } catch (error) {
+        console.error('Error generating summary:', error);
+        setSummary('❌ Error generating summary.');
+      } finally {
+        setLoading(false);  // Turn off loading state
+      }
+    };
+
+    // Trigger the summary generation when the component mounts
+    generateSummary();
+  }, []);  // Empty dependency array ensures the effect runs only once
+
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h6">AI-Generated Summary</Typography>
+        {loading ? <CircularProgress /> : <Typography>{summary}</Typography>}
+      </CardContent>
+    </Card>
+  );
+};
