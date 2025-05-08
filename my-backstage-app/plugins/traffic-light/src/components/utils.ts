@@ -1,42 +1,206 @@
-import { CompoundEntityRef, stringifyEntityRef } from '@backstage/catalog-model';
+// import { CompoundEntityRef, stringifyEntityRef } from '@backstage/catalog-model';
+// import { TechInsightsApi } from '@backstage/plugin-tech-insights';
+
+// export async function getAzureDevOpsBugs() {
+//   const organization = "argus-panoptes-dev";
+//   const project = "repo_2";
+//   const queryId = "b2fdb928-a73e-4cba-82c9-e605a194666d";
+//   const pat = "9APDLq54nbzmerzTCuD50qLNWFHSprSivK7Q6zTuvqqP3PNMFPW0JQQJ99BDACAAAAAAAAAAAAASAZDOrt3M";
+
+//   const encodedPat = btoa(":" + pat);
+
+//   const response = await fetch(`https://dev.azure.com/${organization}/${project}/_apis/wit/wiql/${queryId}?api-version=7.0`, {
+//     method: "GET",
+//     headers: {
+//       "Authorization": `Basic ${encodedPat}`,
+//       "Accept": "application/json"
+//     }
+//   });
+
+//   const data = await response.json();
+
+//   // Save bug count in a variable
+//   const bugs = data.workItems;
+//   const bugCount = bugs.length;
+
+//   console.log("Azure DevOps bugs:", bugs);
+
+//   return bugCount;
+// }
+
+// // This code fetches the status of GitHub workflows and evaluates their status based on a configuration file.
+
+// export type TrafficLightColor = "green" | "yellow" | "red";
+
+// interface WorkflowRun {
+//   id: number;
+//   name: string;
+//   status: "completed" | "queued" | "in_progress" | string;
+//   conclusion: "success" | "failure" | "timed_out" | "cancelled" | "neutral" | null | string;
+//   [key: string]: any;
+// }
+
+// interface WorkflowConfig {
+//   exclude: string[];
+//   critical: string[];
+//   sampleIfNoCritical: number;
+// }
+
+// function shuffleArray(array: string[]): string[] {
+//   const result = [...array];
+//   for (let i = result.length - 1; i > 0; i--) {
+//     const j = Math.floor(Math.random() * (i + 1));
+//     [result[i], result[j]] = [result[j], result[i]];
+//   }
+//   return result;
+// }
+
+// async function loadWorkflowConfig(): Promise<WorkflowConfig> {
+//   try {
+//     const res = await fetch("/config/github-workflows.json");
+//     if (!res.ok) throw new Error("Failed to load config");
+//     const data = await res.json();
+//     return data.workflowConfig || { exclude: [], critical: [], sampleIfNoCritical: 0 };
+//   } catch (err) {
+//     console.error("Config load error:", err);
+//     return { exclude: [], critical: [], sampleIfNoCritical: 0 };
+//   }
+// }
+
+// export async function getGitHubRepoStatus(repoName: string): Promise<{ color: TrafficLightColor; reason: string }> {
+//   const apiUrl = `https://api.github.com/repos/philips-labs/${repoName}/actions/runs?branch=main`;
+
+//   const response = await fetch(apiUrl, {
+//     method: "GET",
+//     headers: {
+//       "Accept": "application/vnd.github.v3+json"
+//     }
+//   });
+
+//   if (!response.ok) {
+//     console.error("Failed to fetch GitHub data:", response.statusText);
+//     return { color: "red", reason: `GitHub API error: ${response.statusText}` };
+//   }
+
+//   const data = await response.json();
+//   const allRuns = data.workflow_runs as WorkflowRun[];
+
+//   if (allRuns.length === 0) {
+//     return { color: "red", reason: "No workflow runs found on 'main' branch." };
+//   }
+
+//   const { exclude, critical, sampleIfNoCritical } = await loadWorkflowConfig();
+
+//   const allWorkflowNames = [...new Set(allRuns.map(run => run.name))].filter(name => !exclude.includes(name));
+//   const criticalWorkflows = critical.length > 0 ? critical : shuffleArray(allWorkflowNames).slice(0, sampleIfNoCritical);
+
+//   const latestPerWorkflow = new Map<string, WorkflowRun>();
+//   for (const run of allRuns) {
+//     if (!exclude.includes(run.name) && !latestPerWorkflow.has(run.name)) {
+//       latestPerWorkflow.set(run.name, run);
+//     }
+//   }
+
+//   const failing: string[] = [];
+//   const inProgress: string[] = [];
+
+//   for (const [name, run] of latestPerWorkflow.entries()) {
+//     if (criticalWorkflows.includes(name)) {
+//       if (run.status !== "completed") {
+//         inProgress.push(name);
+//       } else if (["failure", "timed_out", "cancelled"].includes(run.conclusion || "")) {
+//         failing.push(name);
+//       }
+//     }
+//   }
+
+//   if (failing.length > 0) {
+//     return { color: "red", reason: `Critical workflows failed: ${failing.join(", ")}` };
+//   } else if (inProgress.length > 0) {
+//     return { color: "yellow", reason: `Critical workflows in progress: ${inProgress.join(", ")}` };
+//   } else {
+//     return { color: "green", reason: "All critical workflows succeeded." };
+//   }
+// }
+
+//   export const getSonarQubeFacts = async (
+//     api: TechInsightsApi,
+//     entity: CompoundEntityRef,
+//   ): Promise<{ bugs: number; code_smells: number; security_hotspots: number }> => {
+//     try {
+//       // Call the Tech Insights API to get facts for our entity
+//       const response = await api.getFacts(
+//         entity,
+//         ['sonarcloud-fact-retriever']
+//       );
+      
+//       // Useful for debugging: log the raw response from the API
+//       console.log('Raw Tech Insights API response:', JSON.stringify(response, null, 2));
+      
+//       return {
+//         bugs: Number(response['sonarcloud-fact-retriever']?.facts?.bugs),
+//         code_smells: Number(response['sonarcloud-fact-retriever']?.facts?.code_smells),
+//         security_hotspots: Number(response['sonarcloud-fact-retriever']?.facts?.security_hotspots),
+//       };
+      
+//       // If we couldn't find the facts, return zeros
+//       console.error('Could not find SonarCloud facts in the response');
+//       return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+//     } catch (error) {
+//       console.error('Error fetching SonarCloud facts:', error);
+//       return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+//     }
+//   };
+
+import {
+  CompoundEntityRef,
+  stringifyEntityRef,
+} from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
 export async function getAzureDevOpsBugs() {
-  const organization = "argus-panoptes-dev";
-  const project = "repo_2";
-  const queryId = "b2fdb928-a73e-4cba-82c9-e605a194666d";
-  const pat = "9APDLq54nbzmerzTCuD50qLNWFHSprSivK7Q6zTuvqqP3PNMFPW0JQQJ99BDACAAAAAAAAAAAAASAZDOrt3M";
+  const organization = 'argus-panoptes-dev';
+  const project = 'repo_2';
+  const queryId = 'b2fdb928-a73e-4cba-82c9-e605a194666d';
+  const pat =
+    '9APDLq54nbzmerzTCuD50qLNWFHSprSivK7Q6zTuvqqP3PNMFPW0JQQJ99BDACAAAAAAAAAAAAASAZDOrt3M';
 
-  const encodedPat = btoa(":" + pat);
+  const encodedPat = btoa(':' + pat);
 
-  const response = await fetch(`https://dev.azure.com/${organization}/${project}/_apis/wit/wiql/${queryId}?api-version=7.0`, {
-    method: "GET",
-    headers: {
-      "Authorization": `Basic ${encodedPat}`,
-      "Accept": "application/json"
-    }
-  });
+  const response = await fetch(
+    `https://dev.azure.com/${organization}/${project}/_apis/wit/wiql/${queryId}?api-version=7.0`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Basic ${encodedPat}`,
+        Accept: 'application/json',
+      },
+    },
+  );
 
   const data = await response.json();
-
-  // Save bug count in a variable
   const bugs = data.workItems;
   const bugCount = bugs.length;
 
-  console.log("Azure DevOps bugs:", bugs);
+  console.log('Azure DevOps bugs:', bugs);
 
   return bugCount;
 }
 
-// This code fetches the status of GitHub workflows and evaluates their status based on a configuration file.
-
-export type TrafficLightColor = "green" | "yellow" | "red";
+export type TrafficLightColor = 'green' | 'yellow' | 'red';
 
 interface WorkflowRun {
   id: number;
   name: string;
-  status: "completed" | "queued" | "in_progress" | string;
-  conclusion: "success" | "failure" | "timed_out" | "cancelled" | "neutral" | null | string;
+  status: 'completed' | 'queued' | 'in_progress' | string;
+  conclusion:
+    | 'success'
+    | 'failure'
+    | 'timed_out'
+    | 'cancelled'
+    | 'neutral'
+    | null
+    | string;
   [key: string]: any;
 }
 
@@ -57,42 +221,55 @@ function shuffleArray(array: string[]): string[] {
 
 async function loadWorkflowConfig(): Promise<WorkflowConfig> {
   try {
-    const res = await fetch("/config/github-workflows.json");
-    if (!res.ok) throw new Error("Failed to load config");
+    const res = await fetch('/config/github-workflows.json');
+    if (!res.ok) throw new Error('Failed to load config');
     const data = await res.json();
-    return data.workflowConfig || { exclude: [], critical: [], sampleIfNoCritical: 0 };
+    return (
+      data.workflowConfig || {
+        exclude: [],
+        critical: [],
+        sampleIfNoCritical: 0,
+      }
+    );
   } catch (err) {
-    console.error("Config load error:", err);
+    console.error('Config load error:', err);
     return { exclude: [], critical: [], sampleIfNoCritical: 0 };
   }
 }
 
-export async function getGitHubRepoStatus(repoName: string): Promise<{ color: TrafficLightColor; reason: string }> {
+export async function getGitHubRepoStatus(
+  repoName: string,
+): Promise<{ color: TrafficLightColor; reason: string }> {
   const apiUrl = `https://api.github.com/repos/philips-labs/${repoName}/actions/runs?branch=main`;
 
   const response = await fetch(apiUrl, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      "Accept": "application/vnd.github.v3+json"
-    }
+      Accept: 'application/vnd.github.v3+json',
+    },
   });
 
   if (!response.ok) {
-    console.error("Failed to fetch GitHub data:", response.statusText);
-    return { color: "red", reason: `GitHub API error: ${response.statusText}` };
+    console.error('Failed to fetch GitHub data:', response.statusText);
+    return { color: 'red', reason: `GitHub API error: ${response.statusText} `};
   }
 
   const data = await response.json();
   const allRuns = data.workflow_runs as WorkflowRun[];
 
   if (allRuns.length === 0) {
-    return { color: "red", reason: "No workflow runs found on 'main' branch." };
+    return { color: 'red', reason: "No workflow runs found on 'main' branch." };
   }
 
   const { exclude, critical, sampleIfNoCritical } = await loadWorkflowConfig();
 
-  const allWorkflowNames = [...new Set(allRuns.map(run => run.name))].filter(name => !exclude.includes(name));
-  const criticalWorkflows = critical.length > 0 ? critical : shuffleArray(allWorkflowNames).slice(0, sampleIfNoCritical);
+  const allWorkflowNames = [...new Set(allRuns.map(run => run.name))].filter(
+    name => !exclude.includes(name),
+  );
+  const criticalWorkflows =
+    critical.length > 0
+      ? critical
+      : shuffleArray(allWorkflowNames).slice(0, sampleIfNoCritical);
 
   const latestPerWorkflow = new Map<string, WorkflowRun>();
   for (const run of allRuns) {
@@ -106,49 +283,73 @@ export async function getGitHubRepoStatus(repoName: string): Promise<{ color: Tr
 
   for (const [name, run] of latestPerWorkflow.entries()) {
     if (criticalWorkflows.includes(name)) {
-      if (run.status !== "completed") {
+      if (run.status !== 'completed') {
         inProgress.push(name);
-      } else if (["failure", "timed_out", "cancelled"].includes(run.conclusion || "")) {
+      } else if (
+        ['failure', 'timed_out', 'cancelled'].includes(run.conclusion || '')
+      ) {
         failing.push(name);
       }
     }
   }
 
   if (failing.length > 0) {
-    return { color: "red", reason: `Critical workflows failed: ${failing.join(", ")}` };
+    return {
+      color: 'red',
+      reason: `Critical workflows failed: ${failing.join(', ')}`,
+    };
   } else if (inProgress.length > 0) {
-    return { color: "yellow", reason: `Critical workflows in progress: ${inProgress.join(", ")}` };
+    return {
+      color: 'yellow',
+      reason: `Critical workflows in progress: ${inProgress.join(', ')}`,
+    };
   } else {
-    return { color: "green", reason: "All critical workflows succeeded." };
+    return { color: 'green', reason: 'All critical workflows succeeded.' };
   }
 }
 
-  export const getSonarQubeFacts = async (
-    api: TechInsightsApi,
-    entity: CompoundEntityRef,
-  ): Promise<{ bugs: number; code_smells: number; security_hotspots: number }> => {
-    try {
-      // Call the Tech Insights API to get facts for our entity
-      const response = await api.getFacts(
-        entity,
-        ['sonarcloud-fact-retriever']
+export const getSonarQubeFacts = async (
+  api: TechInsightsApi,
+  entity: CompoundEntityRef,
+): Promise<{
+  bugs: number;
+  code_smells: number;
+  security_hotspots: number;
+}> => {
+  try {
+    console.log(
+      '📡 Fetching SonarCloud facts for entity:',
+      stringifyEntityRef(entity),
+    );
+
+    const response = await api.getFacts(entity, ['sonarcloud-fact-retriever']);
+
+    console.log(
+      '🧾 Raw Tech Insights API response:',
+      JSON.stringify(response, null, 2),
+    );
+
+    const facts = response?.['sonarcloud-fact-retriever']?.facts;
+
+    if (!facts) {
+      console.error(
+        '❌ No facts found for entity:',
+        stringifyEntityRef(entity),
       );
-      
-      // Useful for debugging: log the raw response from the API
-      console.log('Raw Tech Insights API response:', JSON.stringify(response, null, 2));
-      
-      return {
-        bugs: Number(response['sonarcloud-fact-retriever']?.facts?.bugs),
-        code_smells: Number(response['sonarcloud-fact-retriever']?.facts?.code_smells),
-        security_hotspots: Number(response['sonarcloud-fact-retriever']?.facts?.security_hotspots),
-      };
-      
-      // If we couldn't find the facts, return zeros
-      console.error('Could not find SonarCloud facts in the response');
-      return { bugs: 0, code_smells: 0, security_hotspots: 0 };
-    } catch (error) {
-      console.error('Error fetching SonarCloud facts:', error);
       return { bugs: 0, code_smells: 0, security_hotspots: 0 };
     }
-  };
 
+    return {
+      bugs: Number(facts.bugs ?? 0),
+      code_smells: Number(facts.code_smells ?? 0),
+      security_hotspots: Number(facts.security_hotspots ?? 0),
+    };
+  } catch (error) {
+    console.error(
+      '💥 Error fetching SonarCloud facts for entity:',
+      stringifyEntityRef(entity),
+      error,
+    );
+    return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+  }
+};
