@@ -168,6 +168,7 @@ import {
 import { LoggerService } from '@backstage/backend-plugin-api';
 import { Entity } from '@backstage/catalog-model';
 import { createFactRetrieverBackendModule } from '../factRetrieverUtils';
+import { CatalogClient } from '@backstage/catalog-client';
 
 interface GitHubPR {
   title: string;
@@ -218,13 +219,46 @@ export const createGitHubCommitMessageRetriever = (
       },
     },
 
-    handler: async (ctx: ExtendedContext) => {
-      const entities = ctx.entities ?? (ctx.entity ? [ctx.entity] : []);
+    handler: async ctx => {
+      const { token } = await ctx.auth.getPluginRequestToken({
+        onBehalfOf: await ctx.auth.getOwnServiceCredentials(),
+        targetPluginId: 'catalog',
+      });
+      const client = new CatalogClient({ discoveryApi: ctx.discovery });
+
+      let entities: Entity[] = [];
+
+      try {
+        const response = await client.getEntities(
+          {
+            filter: { kind: 'Component' },
+          },
+          { token },
+        );
+        entities = response.items ?? [];
+
+        logger.info(
+          `Fetched ${entities.length} component entities from catalog`,
+        );
+      } catch (e) {
+        logger.error(`Failed to fetch entities from catalog: ${e}`);
+        return [];
+      }
+
+      logger.info(`Fact retriever running for ${entities.length} entities`);
+      logger.info(`Entities:  ${entities} `);
+
       const githubToken = config.getOptionalString('github.token');
 
       const results = [];
 
       for (const entity of entities) {
+        logger.info(
+          `Entity: ${entity.metadata.name}, Annotations: ${JSON.stringify(
+            entity.metadata.annotations,
+          )}`,
+        );
+
         const slug = entity.metadata.annotations?.['github.com/project-slug'];
         if (!slug) {
           logger.warn(
@@ -247,6 +281,8 @@ export const createGitHubCommitMessageRetriever = (
             },
           );
 
+          logger.info(`GitHub PR API response status: ${prResponse.status}`);
+
           if (!prResponse.ok) {
             logger.error(`Failed to fetch PRs: ${prResponse.statusText}`);
             continue;
@@ -260,6 +296,7 @@ export const createGitHubCommitMessageRetriever = (
 
           const lastPr = prs[0];
           const prTitle = lastPr.title;
+          logger.info(` PR TITLE ${prTitle}`);
 
           let allCommitMessages: string[] = [];
           let commitCountLastWeek = 0;
@@ -292,6 +329,7 @@ export const createGitHubCommitMessageRetriever = (
 
             for (const commit of commits) {
               const shortMessage = commit.commit.message.split('\n')[0];
+              logger.info(` commit TITLE ${shortMessage}`);
               allCommitMessages.push(shortMessage);
             }
           }

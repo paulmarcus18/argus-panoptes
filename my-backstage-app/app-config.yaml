@@ -166,10 +166,12 @@ techInsights:
   factRetrievers:
     sonarcloud-fact-retriever: # Change from array to object
       enabled: true
-      cadence: '0 */4 * * *' # Every minute
+      cadence: '0 */4 * * *' # Every 4 hours
     github-commit-message-retriever:
       enabled: true
-      cadence: '*/1 * * * *' # Every 4 hours
+      cadence: '*/1 * * * *' # Every minute
+      filter:
+        kind: Component
   factChecker:
     checks:
       noHighBugsCheck:
