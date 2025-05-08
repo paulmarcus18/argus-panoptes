@@ -9,3 +9,5 @@ spec:
     displayName: Finance Team
     email: finance_team@yourcompany.com
   children: [] # List other sub-teams here if you want
+  members:
+    - vpetkova 

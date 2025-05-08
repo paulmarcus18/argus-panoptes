@@ -2,7 +2,6 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: tabia
-  namespace: philips-labs-tabia
   description: Gives insights on the characteristics of our code bases.
   annotations:
     github.com/project-slug: philips-labs/tabia

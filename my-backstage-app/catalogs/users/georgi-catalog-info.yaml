@@ -5,6 +5,6 @@ metadata:
 spec:
   profile:
     displayName: Georgi Hristov
-    email: jenny-doe@example.com
-    picture: https://example.com/staff/jenny-with-party-hat.jpeg
-  memberOf: [identity-team]
+    email: georgi-hristov@example.com
+  memberOf: 
+    - identity-team

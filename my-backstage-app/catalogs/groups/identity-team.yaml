@@ -9,3 +9,5 @@ spec:
     displayName: Identity Team
     email: identity_team@yourcompany.com
   children: [] # List other sub-teams here if you want
+  members:
+    - ghristov 
