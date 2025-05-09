@@ -20,6 +20,33 @@ import WarningIcon from '@material-ui/icons/Warning';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import ErrorIcon from '@material-ui/icons/Error';
 import InfoIcon from '@material-ui/icons/Info';
+import { useApi } from '@backstage/core-plugin-api';
+import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { Entity } from '@backstage/catalog-model';
+import { getSonarQubeFacts } from './utils';
+
+// Type for semaphore severity
+type Severity = 'critical' | 'high' | 'medium' | 'low';
+
+// Type for issue details
+interface IssueDetail {
+  severity: Severity;
+  description: string;
+  component?: string;
+}
+
+// Types for metrics data
+interface SemaphoreData {
+  color: 'red' | 'yellow' | 'green' | 'gray';
+  metrics: Record<string, any>;
+  summary: string;
+  details: IssueDetail[];
+}
+
+// Type for mock metrics data
+interface MockMetricsData {
+  [key: string]: SemaphoreData;
+}
 
 const useStyles = makeStyles(theme => ({
   dialogPaper: {
@@ -86,7 +113,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 // Mock data for each semaphore type
-const mockMetricsData = {
+const mockMetricsData: MockMetricsData = {
   Dependabot: {
     color: 'green',
     metrics: {
@@ -249,18 +276,148 @@ const mockMetricsData = {
   },
 };
 
-const DetailedSemaphoreDialog = ({ open, onClose, semaphoreType }) => {
-  const classes = useStyles();
+interface DetailedSemaphoreDialogProps {
+  open: boolean;
+  onClose: () => void;
+  semaphoreType: string;
+  entities?: Entity[];
+}
 
-  // Get mock data based on semaphore type
-  const data = mockMetricsData[semaphoreType] || {
+const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
+  open,
+  onClose,
+  semaphoreType,
+  entities = [],
+}) => {
+  const classes = useStyles();
+  const techInsightsApi = useApi(techInsightsApiRef);
+
+  // Get mock data based on semaphore type (or placeholder if not found)
+  const defaultData: SemaphoreData = {
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   };
 
-  const getStatusIcon = color => {
+  // State to store real SonarQube data
+  const [realSonarQubeData, setRealSonarQubeData] =
+    React.useState<SemaphoreData | null>(null);
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+
+  // Fetch real SonarQube data when needed
+  React.useEffect(() => {
+    // Only fetch data if this is a SonarQube semaphore and there are entities
+    if (semaphoreType === 'SonarQube' && entities && entities.length > 0) {
+      setIsLoading(true);
+
+      const fetchSonarQubeData = async () => {
+        try {
+          // Get SonarQube facts for all entities
+          const sonarQubeResults = await Promise.all(
+            entities.map(entity =>
+              getSonarQubeFacts(techInsightsApi, {
+                kind: entity.kind,
+                namespace: entity.metadata.namespace || 'default',
+                name: entity.metadata.name,
+              }),
+            ),
+          );
+
+          // Count totals
+          const totals = sonarQubeResults.reduce(
+            (acc, result) => {
+              acc.bugs += result.bugs || 0;
+              acc.code_smells += result.code_smells || 0;
+              acc.security_hotspots += result.security_hotspots || 0;
+              acc.coverage = result.coverage || '0%';
+              acc.duplications = result.duplications || '0%';
+              return acc;
+            },
+            {
+              bugs: 0,
+              code_smells: 0,
+              security_hotspots: 0,
+              coverage: '0%',
+              duplications: '0%',
+              technicalDebt: '0d',
+            },
+          );
+
+          // Create details array from results
+          const details: IssueDetail[] = [];
+
+          // Add bug issues
+          if (totals.bugs > 0) {
+            details.push({
+              severity: totals.bugs > 5 ? 'high' : 'medium',
+              description: `${totals.bugs} bugs detected across projects`,
+            });
+          }
+
+          // Add code smell issues
+          if (totals.code_smells > 0) {
+            details.push({
+              severity: totals.code_smells > 50 ? 'medium' : 'low',
+              description: `${totals.code_smells} code smells detected across projects`,
+            });
+          }
+
+          // Add security hotspot issues
+          if (totals.security_hotspots > 0) {
+            details.push({
+              severity: totals.security_hotspots > 0 ? 'high' : 'medium',
+              description: `${totals.security_hotspots} security hotspots need review`,
+            });
+          }
+
+          // Determine the overall status color
+          let color: 'red' | 'yellow' | 'green' | 'gray' = 'green';
+          if (totals.bugs > 0 || totals.security_hotspots > 0) {
+            color = 'red';
+          } else if (totals.code_smells > 10) {
+            color = 'yellow';
+          }
+
+          // Create the summary
+          let summary = 'Code quality is excellent with no significant issues.';
+          if (color === 'red') {
+            summary =
+              'Critical code quality issues require immediate attention.';
+          } else if (color === 'yellow') {
+            summary =
+              'Code quality issues need to be addressed before release.';
+          }
+
+          // Set the real data
+          setRealSonarQubeData({
+            color,
+            metrics: totals,
+            summary,
+            details,
+          });
+        } catch (err) {
+          console.error('Error fetching SonarQube data:', err);
+          // Fall back to mock data if there's an error
+          setRealSonarQubeData(null);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchSonarQubeData();
+    }
+  }, [semaphoreType, entities, techInsightsApi]);
+
+  // Use real SonarQube data if available, otherwise fall back to mock data
+  const data = React.useMemo(() => {
+    if (semaphoreType === 'SonarQube' && realSonarQubeData) {
+      return realSonarQubeData;
+    }
+    return mockMetricsData[semaphoreType] || defaultData;
+  }, [semaphoreType, realSonarQubeData]);
+
+  const getStatusIcon = (color: string) => {
     switch (color) {
       case 'red':
         return <ErrorIcon className={classes.errorIcon} />;
@@ -273,7 +430,7 @@ const DetailedSemaphoreDialog = ({ open, onClose, semaphoreType }) => {
     }
   };
 
-  const getSeverityColor = severity => {
+  const getSeverityColor = (severity: Severity) => {
     switch (severity) {
       case 'critical':
         return 'error.main';

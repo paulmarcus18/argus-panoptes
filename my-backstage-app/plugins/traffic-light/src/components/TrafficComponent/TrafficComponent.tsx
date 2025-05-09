@@ -707,6 +707,7 @@ export const TrafficComponent = () => {
           open={detailedDialogOpen}
           onClose={handleCloseDetailedDialog}
           semaphoreType={currentSemaphoreType}
+          entities={selectedEntities}
         />
       </Content>
     </Page>
