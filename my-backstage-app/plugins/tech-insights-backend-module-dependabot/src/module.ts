@@ -1,12 +1,12 @@
 
-/**
+/* 
  * This file registers a backend module with the tech-insights plugin
  * Adds a custom fact retriever to the system, dependabotFactRetriever
  * Allows the plugin to collect dependabot alerts for usage
  */
 
 //imports the utility function used to define and create a backend module in Backstage
-import { createBackendModule } from '@backstage/backend-plugin-api';
+/* import { createBackendModule } from '@backstage/backend-plugin-api';
 //imports the tech insights extension point that lets you plug in custom FactRetrievers
 import { techInsightsFactRetrieversExtensionPoint } from '@backstage-community/plugin-tech-insights-node';
 //imports retriever that queries dependabot alert data
@@ -37,4 +37,5 @@ export default createBackendModule({
       },
     });
   },
-});
+}); */
+ 

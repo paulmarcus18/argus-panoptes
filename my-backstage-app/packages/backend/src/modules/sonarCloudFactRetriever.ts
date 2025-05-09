@@ -1,8 +1,8 @@
-import { Config } from '@backstage/config/index';
-import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
-import { LoggerService } from '@backstage/backend-plugin-api';
-import { createFactRetrieverBackendModule } from '../factRetrieverUtils';
-import { CatalogClient } from '@backstage/catalog-client';
+// import { Config } from '@backstage/config/index';
+// import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
+// import { LoggerService } from '@backstage/backend-plugin-api';
+// import { createFactRetrieverBackendModule } from '../factRetrieverUtils';
+// import { CatalogClient } from '@backstage/catalog-client';
 
 // Define an interface for the SonarCloud measure
 interface SonarCloudMeasure {
@@ -14,7 +14,7 @@ interface SonarCloudMeasure {
 /**
  * Create a fact retriever for SonarCloud metrics
  */
-export const createSonarCloudFactRetriever = (config: Config, logger: LoggerService): FactRetriever => {
+/* export const createSonarCloudFactRetriever = (config: Config, logger: LoggerService): FactRetriever => {
   return {
     id: 'sonarcloud-fact-retriever',
     version: '1.0',
@@ -125,4 +125,4 @@ export const techInsightsModuleSonarCloudFactRetriever = createFactRetrieverBack
   moduleId: 'sonarcloud-fact-retriever',
   createFactRetriever: createSonarCloudFactRetriever,
   logMessage: 'Registering SonarCloud fact retriever',
-});
+}); */
