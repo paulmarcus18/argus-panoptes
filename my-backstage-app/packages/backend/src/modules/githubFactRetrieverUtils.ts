@@ -111,7 +111,7 @@ export const createGitHubCommitMessageRetriever = (
             `https://api.github.com/repos/${repoOwner}/${repoName}/pulls?state=closed&sort=updated&direction=desc&per_page=5`,
             {
               headers: {
-                Authorization: `Bearer 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`,
+                Authorization: `Bearer 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`,
                 Accept: 'application/vnd.github.v3+json',
               },
             },
@@ -152,7 +152,7 @@ export const createGitHubCommitMessageRetriever = (
             for (const pr of recentPRs) {
               const commitsResponse = await fetch(pr.commits_url, {
                 headers: {
-                  Authorization: `Bearer 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`,
+                  Authorization: `Bearer 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`,
                   Accept: 'application/vnd.github.v3+json',
                 },
               });

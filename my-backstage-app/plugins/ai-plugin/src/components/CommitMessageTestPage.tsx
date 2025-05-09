@@ -3,18 +3,24 @@ import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { getCommitMessagesBySystem } from '../../utils/getCommitMessagesBySystem';
+import { generateSummaries } from '../../utils/createAISummary';
+
+interface SummaryPerRepo {
+  repoName: string;
+  summary: string;
+}
 
 export const CommitMessageTestPage = () => {
   const catalogApi = useApi(catalogApiRef);
   const techInsightsApi = useApi(techInsightsApiRef);
   const [messagesBySystem, setMessagesBySystem] = useState<Record<
     string,
-    string
+    SummaryPerRepo[]
   > | null>(null);
 
   useEffect(() => {
     (async () => {
-      const result = await getCommitMessagesBySystem(
+      const result = await generateSummaries(
         catalogApi,
         techInsightsApi,
       );
@@ -30,7 +36,14 @@ export const CommitMessageTestPage = () => {
         Object.entries(messagesBySystem).map(([system, messages]) => (
           <div key={system}>
             <h2>{system}</h2>
-            <pre>{messages}</pre>
+            <ul>
+              {messages.map(({ repoName, summary }) => (
+                <li key={repoName}>
+                  <strong>{repoName}</strong>
+                  <pre>{summary}</pre>
+                </li>
+              ))}
+            </ul>
           </div>
         ))
       ) : (
@@ -38,4 +51,5 @@ export const CommitMessageTestPage = () => {
       )}
     </div>
   );
+  
 };
