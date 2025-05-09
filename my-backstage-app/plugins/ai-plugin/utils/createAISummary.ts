@@ -4,7 +4,7 @@ import { CatalogApi } from '@backstage/plugin-catalog-react';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
 // Initialize GoogleGenAI with your API key
-const ai = new GoogleGenAI({ apiKey: 'token' });
+const ai = new GoogleGenAI({ apiKey: 'AIzaSyC7PNqPNPlfa7v4obQm70xSr_XEfG1ySwA' });
 
 interface CommitsPerRepo {
     repoName: string;
@@ -22,11 +22,33 @@ export const generateSummaries = async (
   ): Promise<Record<string, SummaryPerRepo[]>> => {
     const summaries: Record<string, SummaryPerRepo[]> = {};
     const data = await getCommitMessagesBySystem(catalogApi, techInsightsApi);
+    // const data: Record<string, CommitsPerRepo[]> = {
+    //     'payments': [
+    //       {
+    //         repoName: 'payments-service',
+    //         commitMessages:
+    //           'refactor: improved validation\nfix: handle declined payments\nfeat: added transaction logging',
+    //       },
+    //       {
+    //         repoName: 'billing-ui',
+    //         commitMessages:
+    //           'fix: dropdown bug\nstyle: invoice layout\nchore: tooltip help text',
+    //       },
+    //     ],
+    //     'user-management': [
+    //       {
+    //         repoName: 'auth-service',
+    //         commitMessages:
+    //           'fix: token refresh\nfeat: add 2FA\nrefactor: session handling',
+    //       },
+    //     ],
+    //   };
+    
 
     for (const [system, repos] of Object.entries(data)) {
         const summarizedRepos: SummaryPerRepo[] = [];
         for (const { repoName, commitMessages } of repos) {
-            const prompt = `Summarize the following git commit messages:\n\n${commitMessages}`;
+            const prompt = `Summarize the following git commit messages:\n\n${commitMessages}.`;
             try {
                 const response = await ai.models.generateContent({
                 model: 'gemini-2.0-flash',
