@@ -1,9 +1,0 @@
-{
-    "name": "@internal/tech-insights-backend-module",
-    "version": "1.0.0",
-    "main": "src/index.ts",
-    "private": true,
-    "dependencies": {
-        "@backstage-community/plugin-tech-insights-node": "^2.3.0"
-    }
-}

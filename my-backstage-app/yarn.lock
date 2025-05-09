@@ -7627,14 +7627,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@internal/tech-insights-backend-module@workspace:plugins/tech-insights-backend-module":
-  version: 0.0.0-use.local
-  resolution: "@internal/tech-insights-backend-module@workspace:plugins/tech-insights-backend-module"
-  dependencies:
-    "@backstage-community/plugin-tech-insights-node": "npm:^2.3.0"
-  languageName: unknown
-  linkType: soft
-
 "@internationalized/date@npm:^3.8.0":
   version: 3.8.0
   resolution: "@internationalized/date@npm:3.8.0"

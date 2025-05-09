@@ -16,13 +16,7 @@ backend.add(import('@backstage/plugin-scaffolder-backend'));
 backend.add(import('@backstage/plugin-scaffolder-backend-module-github'));
 backend.add(import('@backstage/plugin-techdocs-backend'));
 
-
 // auth plugin
-// Tech Insights plugin and fact retriever modules
-backend.add(import('@backstage-community/plugin-tech-insights-backend'));
-backend.add(import('@backstage-community/plugin-tech-insights-backend-module-jsonfc'));
-backend.add(import('@internal/tech-insights-backend-module')); // <== uses index.ts
-
 backend.add(import('@backstage/plugin-auth-backend'));
 // See https://backstage.io/docs/backend-system/building-backends/migrating#the-auth-plugin
 backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
