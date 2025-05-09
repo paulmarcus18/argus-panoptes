@@ -6,7 +6,7 @@ metadata:
   annotations:
     github.com/project-slug: philips-labs/tabia
     backstage.io/source-location: url:https://github.com/philips-labs/tabia
-    sonarcloud.io/project-key: veselapetkova_tabia
+    sonarcloud.io/project-key: SEP-ArgusPanoptes_tabia
     sonarcloud.io/enabled: 'true'
   tags:
     - non-critical

@@ -6,7 +6,7 @@ metadata:
   annotations:
     github.com/project-slug: philips-labs/fatt
     backstage.io/source-location: url:https://github.com/philips-labs/fatt
-    sonarcloud.io/project-key: veselapetkova_fatt
+    sonarcloud.io/project-key: SEP-ArgusPanoptes_fatt
     sonarcloud.io/enabled: 'true'
   tags:
     - critical

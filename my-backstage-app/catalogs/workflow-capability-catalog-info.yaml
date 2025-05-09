@@ -6,6 +6,8 @@ metadata:
   annotations:
     github.com/project-slug: philips-labs/workflow-capability
     backstage.io/source-location: url:https://github.com/philips-labs/workflow-capability
+    sonarcloud.io/project-key: SEP-ArgusPanoptes_workflow-capability
+    sonarcloud.io/enabled: 'true'
   tags:
     - non-critical
 spec:

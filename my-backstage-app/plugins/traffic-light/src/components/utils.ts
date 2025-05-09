@@ -133,16 +133,16 @@
 //         entity,
 //         ['sonarcloud-fact-retriever']
 //       );
-      
+
 //       // Useful for debugging: log the raw response from the API
 //       console.log('Raw Tech Insights API response:', JSON.stringify(response, null, 2));
-      
+
 //       return {
 //         bugs: Number(response['sonarcloud-fact-retriever']?.facts?.bugs),
 //         code_smells: Number(response['sonarcloud-fact-retriever']?.facts?.code_smells),
 //         security_hotspots: Number(response['sonarcloud-fact-retriever']?.facts?.security_hotspots),
 //       };
-      
+
 //       // If we couldn't find the facts, return zeros
 //       console.error('Could not find SonarCloud facts in the response');
 //       return { bugs: 0, code_smells: 0, security_hotspots: 0 };
@@ -251,7 +251,10 @@ export async function getGitHubRepoStatus(
 
   if (!response.ok) {
     console.error('Failed to fetch GitHub data:', response.statusText);
-    return { color: 'red', reason: `GitHub API error: ${response.statusText} `};
+    return {
+      color: 'red',
+      reason: `GitHub API error: ${response.statusText} `,
+    };
   }
 
   const data = await response.json();
