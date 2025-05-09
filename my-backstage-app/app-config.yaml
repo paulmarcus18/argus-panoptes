@@ -167,7 +167,7 @@ permission:
 
 sonarcloud: 
   token: ${SONARCLOUD_TOKEN}
-  organization: vesela-petkova
+  organization: sep-arguspanoptes
 
 techInsights:
   factRetrievers:
