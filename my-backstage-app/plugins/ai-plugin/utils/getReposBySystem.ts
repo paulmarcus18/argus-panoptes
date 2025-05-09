@@ -17,9 +17,9 @@ export async function getReposBySystem(
 
     if (typeof system === 'string') {
       const entityRef = {
-        kind: entity.kind.toLowerCase(), // usually "component"
-        namespace: entity.metadata.namespace || 'default',
         name: entity.metadata.name,
+        namespace: entity.metadata.namespace || 'default',
+        kind: entity.kind, // usually "component"
       }; // full { kind, namespace, name }
 
       if (!reposBySystem[system]) {

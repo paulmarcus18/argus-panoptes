@@ -104,6 +104,9 @@ catalog:
 
     # Philips Labs repos
     - type: file
+      target: ../../catalogs/argus-panoptes-catalog-info.yaml
+
+    - type: file
       target: ../../catalogs/tabia-catalog-info.yaml
 
     - type: file
@@ -169,7 +172,7 @@ techInsights:
       cadence: '0 */4 * * *' # Every 4 hours
     github-commit-message-retriever:
       enabled: true
-      cadence: '*/1 * * * *' # Every minute
+      cadence: '0 */4 * * *' # Every minute
       filter:
         kind: Component
   factChecker:
