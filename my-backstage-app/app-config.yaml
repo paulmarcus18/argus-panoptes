@@ -29,11 +29,11 @@ backend:
   # The production database configuration is stored in app-config.production.yaml
   database:
     client: pg
-    connection: 
-        host: ${POSTGRES_HOST}
-        port: ${POSTGRES_PORT}
-        user: ${POSTGRES_USER}
-        password: ${POSTGRES_PASSWORD}
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
 
 integrations:
@@ -74,7 +74,8 @@ techdocs:
 
 auth:
   providers:
-    guest: {}
+    guest:
+      {}
       # userEntityRef: user:vpetkova
       # userEntityRef: user:default/ghristov
 
@@ -137,7 +138,7 @@ catalog:
     - type: file
       target: ../../catalogs/spiffe-vault-catalog-info.yaml
 
-    # Users 
+    # Users
     - type: file
       target: ../../catalogs/users/vesela-catalog-info.yaml
 
@@ -165,15 +166,15 @@ permission:
   # setting this to `false` will disable permissions
   enabled: true
 
-sonarcloud: 
+sonarcloud:
   token: ${SONARCLOUD_TOKEN}
   organization: sep-arguspanoptes
 
 techInsights:
   factRetrievers:
-    sonarcloud-fact-retriever:  # Change from array to object
+    sonarcloud-fact-retriever: # Change from array to object
       enabled: true
-      cadence: "*/1 * * * *" # Every minute
+      cadence: '*/1 * * * *' # Every minute
   factChecker:
     checks:
       noHighBugsCheck:
