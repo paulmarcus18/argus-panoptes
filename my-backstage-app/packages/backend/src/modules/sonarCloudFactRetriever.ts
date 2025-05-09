@@ -131,7 +131,7 @@ export const createSonarCloudFactRetriever = (
               namespace: entity.metadata.namespace || 'default',
               kind: entity.kind,
             },
-            facts: facts, //try with only facts, instead of facts:facts
+            facts: facts,
           };
         }),
       );
