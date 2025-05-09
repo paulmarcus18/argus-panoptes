@@ -1,25 +1,22 @@
-import dotenv from 'dotenv';
-dotenv.config();
-console.log('Loaded GitHub token:', process.env.GITHUB_TOKEN);
-
-
 import { createBackend } from '@backstage/backend-defaults';
-
+import { techInsightsModuleSonarCloudFactRetriever } from './modules/sonarCloudFactRetriever';
 
 const backend = createBackend();
 
+// permission plugin
+backend.add(import('@backstage/plugin-permission-backend'));
+
+// See https://backstage.io/docs/permissions/getting-started for how to create your own permission policy
+backend.add(
+  import('@backstage/plugin-permission-backend-module-allow-all-policy'),
+);
 backend.add(import('@backstage/plugin-app-backend'));
 backend.add(import('@backstage/plugin-proxy-backend'));
 backend.add(import('@backstage/plugin-scaffolder-backend'));
 backend.add(import('@backstage/plugin-scaffolder-backend-module-github'));
 backend.add(import('@backstage/plugin-techdocs-backend'));
 
-// Tech Insights plugin and fact retriever modules
-backend.add(import('@backstage-community/plugin-tech-insights-backend'));
-backend.add(import('@backstage-community/plugin-tech-insights-backend-module-jsonfc'));
-backend.add(import('@internal/tech-insights-backend-module-dependabot')); // <== uses index.ts
-
-// Auth plugin
+// auth plugin
 backend.add(import('@backstage/plugin-auth-backend'));
 backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
 
@@ -35,13 +32,17 @@ backend.add(import('@backstage/plugin-permission-backend-module-allow-all-policy
 // Search
 backend.add(import('@backstage/plugin-search-backend'));
 backend.add(import('@backstage/plugin-search-backend-module-pg'));
+
+// search collators
 backend.add(import('@backstage/plugin-search-backend-module-catalog'));
 backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
 
 // Kubernetes
 backend.add(import('@backstage/plugin-kubernetes-backend'));
 
-// Optional: your custom plugin
-// backend.add(import('@internal/plugin-traffic-light-backend'));
-
+// tech-insights plugin
+backend.add(import('@backstage-community/plugin-tech-insights-backend'));
+backend.add(import('@backstage-community/plugin-tech-insights-backend-module-jsonfc'))
+backend.add(techInsightsModuleSonarCloudFactRetriever); // Add the SonarCloud fact retriever
+backend.add(import('@internal/plugin-tech-insights-backend-module-traffic-light-backend-module'));
 backend.start();

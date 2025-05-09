@@ -6,6 +6,8 @@ metadata:
   annotations:
     github.com/project-slug: philips-labs/slsa-provenance-action
     backstage.io/source-location: url:https://github.com/philips-labs/slsa-provenance-action
+    sonarcloud.io/project-key: SEP-ArgusPanoptes_slsa-provenance-action
+    sonarcloud.io/enabled: 'true'
   tags:
     - critical
 spec:

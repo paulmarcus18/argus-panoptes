@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: vpetkova
+spec:
+  profile:
+    displayName: Vesela Petkova
+    email: vesela-petkova@example.com
+  memberOf: 
+    - finance-team

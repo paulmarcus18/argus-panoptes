@@ -6,6 +6,8 @@ metadata:
   annotations:
     github.com/project-slug: philips-labs/terraform-registry
     backstage.io/source-location: url:https://github.com/philips-labs/terraform-registry
+    sonarcloud.io/project-key: SEP-ArgusPanoptes_terraform-registry
+    sonarcloud.io/enabled: 'true'
   tags:
     - critical
 spec:

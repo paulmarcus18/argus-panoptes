@@ -62,11 +62,17 @@ techdocs:
   publisher:
     type: 'local' # Alternatives - 'googleGcs' or 'awsS3'. Read documentation for using alternatives.
 
+# auth:
+#   # see https://backstage.io/docs/auth/ to learn about auth providers
+#   providers:
+#     # See https://backstage.io/docs/auth/guest/provider
+#     guest: {}
+
 auth:
-  # see https://backstage.io/docs/auth/ to learn about auth providers
   providers:
-    # See https://backstage.io/docs/auth/guest/provider
     guest: {}
+      # userEntityRef: user:vpetkova
+      # userEntityRef: user:default/ghristov
 
 scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
@@ -76,7 +82,7 @@ catalog:
     entityFilename: catalog-info.yaml
     pullRequestBranchName: backstage-integration
   rules:
-    - allow: [Component, System, API, Resource, Location, Group]
+    - allow: [Component, System, API, Resource, Location, Group, User]
   locations:
     # File locations are relative to the backend process, typically `packages/backend`
     #Groups
@@ -127,6 +133,13 @@ catalog:
     - type: file
       target: ../../catalogs/spiffe-vault-catalog-info.yaml
 
+    # Users 
+    - type: file
+      target: ../../catalogs/users/vesela-catalog-info.yaml
+
+    - type: file
+      target: ../../catalogs/users/georgi-catalog-info.yaml
+
     ## Uncomment these lines to add more example data
     # - type: url
     #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml
@@ -148,22 +161,56 @@ permission:
   # setting this to `false` will disable permissions
   enabled: true
 
+sonarcloud: 
+  token: ${SONARCLOUD_TOKEN}
+  organization: sep-arguspanoptes
+
 techInsights:
-  scheduler:
-    knexConfig: 
-      client: pg
-      connection:
-        host: ${POSTGRES_HOST}
-        port: ${POSTGRES_PORT}
-        user: ${POSTGRES_USER}
-        password: ${POSTGRES_PASSWORD}
-        database: ${POSTGRES_DATABASE}
   factRetrievers:
+    sonarcloud-fact-retriever:  # Change from array to object
+      enabled: true
+      cadence: "*/1 * * * *" # Every minute
     dependabotFactRetriever:
       cadence: '0 * * * *' # every hour
       lifecycle: { timeToLive: { weeks: 2 } }
   factChecker:
     checks:
+      noHighBugsCheck:
+        type: json-rules-engine
+        name: No High Bugs Check
+        description: Verifies that there are no high severity bugs
+        factIds:
+          - sonarcloud-fact-retriever
+        rule:
+          conditions:
+            all:
+              - fact: bugs
+                operator: lessThanInclusive
+                value: 0
+      noHighCodeSmellsCheck:
+        type: json-rules-engine
+        name: Code Smells Check
+        description: Verifies code smells are within acceptable range
+        factIds:
+          - sonarcloud-fact-retriever
+        rule:
+          conditions:
+            all:
+              - fact: code_smells
+                operator: lessThanInclusive
+                value: 20
+      securityCheck:
+        type: json-rules-engine
+        name: Security Hotspots Check
+        description: Verifies security hotspots are within acceptable range
+        factIds:
+          - sonarcloud-fact-retriever
+        rule:
+          conditions:
+            all:
+              - fact: security_hotspots
+                operator: lessThanInclusive
+                value: 3
       dependabotLowAlertCheck:
         type: json-rules-engine
         name: Dependabot Alerts Below Threshold

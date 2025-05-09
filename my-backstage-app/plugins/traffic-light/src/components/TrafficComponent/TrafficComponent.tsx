@@ -1,17 +1,12 @@
-//imports for state, effect hooks and ref
 import React, { useState, useEffect, useRef } from 'react';
-//material and UI components for layout, form controls and icons
 import {
   Typography,
   Grid,
   Box,
   Tooltip,
   IconButton,
-  FormControl,
   TextField,
   MenuItem,
-  Select,
-  InputLabel,
   InputAdornment,
   Checkbox,
   FormControlLabel,
@@ -21,53 +16,61 @@ import {
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
-//backstage components for page layout and UI
 import { Header, Page, Content, InfoCard } from '@backstage/core-components';
-//local api import to fetch mock status data 
-import { fetchRepoStatus, StatusResponse } from '../api/mockStatusApi';
-//import dialog component, this allows treshold configuration
 import { DialogComponent } from '../DialogComponent';
-//backstage api's to access catalog information
+import DetailedSemaphoreDialog from '../DetailedSemaphoreDialog';
+import { ThresholdDialog } from '../TresholdDialogComponent';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import { Entity } from '@backstage/catalog-model';
+import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
+import { getSonarQubeFacts } from '../utils';
 
-//renders a trafficlight based on the color parameter passed 
-const TrafficLight = ({ color }: { color: 'red' | 'green' | 'yellow' }) => (
-  <Box my={1} width={50} height={50} borderRadius="50%" bgcolor={color} />
+// TrafficLight component that renders a colored circle
+const TrafficLight = ({
+  color,
+  onClick,
+}: {
+  color: 'red' | 'green' | 'yellow' | 'gray' | 'white';
+  onClick?: () => void;
+}) => (
+  <Box
+    my={1}
+    width={50}
+    height={50}
+    borderRadius="50%"
+    bgcolor={color}
+    onClick={onClick}
+    style={onClick ? { cursor: 'pointer' } : {}}
+  />
 );
 
-//props interface defining expected inputs to the component
-interface Props {
-  owner: string; //GitHub username or organization
-  repos: string[]; //List of repository names to check
+// Dependabot traffic light component (existing implementation)
+interface DependabotProps {
+  owner: string;
+  repos: string[];
+  onClick?: () => void;
 }
 
-//main functional component to determine and show dependabot status
-const Trafficlightdependabot = ({ owner, repos }: Props) => {
-  //local state to track the traffic light color
-  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray'|'white'>(
-    'white',
-  );
+const Trafficlightdependabot = ({ owner, repos, onClick }: DependabotProps) => {
+  const [color, setColor] = useState<
+    'green' | 'red' | 'yellow' | 'gray' | 'white'
+  >('white');
 
-  //this runs when component mounts or when `owner` or `repos` change
   useEffect(() => {
-    //Async function to fetch status for each repo
     const fetchStatuses = async () => {
       try {
-        //fetch statuses concurrently for all repositories
         const statuses = await Promise.all(
           repos.map(async repo => {
             const res = await fetch(
               `/api/traffic-light/dependabotStatus/${owner}/${repo}`,
             );
-            if (!res.ok) throw new Error(); //non successful response
-            const data = await res.json(); //parse json response
-            return data.status; //extract status string
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            return data.status;
           }),
         );
 
-        //determine traffic light color based on repo statuses
         if (statuses.includes('red')) {
           setColor('red');
         } else if (statuses.includes('yellow') || statuses.includes('gray')) {
@@ -83,23 +86,120 @@ const Trafficlightdependabot = ({ owner, repos }: Props) => {
       }
     };
 
-    //trigger fetch function
     fetchStatuses();
-  }, [owner, repos]); //dependencies that trigger the effect
+  }, [owner, repos]);
 
-  //render the traffic light color indicator
   return (
-    <Box my={1} width={50} height={50} borderRadius="50%" bgcolor={color} />
+    <Box
+      my={1}
+      width={50}
+      height={50}
+      borderRadius="50%"
+      bgcolor={color}
+      onClick={onClick}
+      style={onClick ? { cursor: 'pointer' } : {}}
+    />
   );
 };
 
-//defines a component named TrafficComponent
+// SonarQube traffic light component (new implementation)
+interface SonarQubeTrafficLightProps {
+  entities: Entity[];
+  onClick?: () => void;
+}
+
+const SonarQubeTrafficLight = ({
+  entities,
+  onClick,
+}: SonarQubeTrafficLightProps) => {
+  const [color, setColor] = useState<
+    'green' | 'red' | 'yellow' | 'gray' | 'white'
+  >('white');
+  const [reason, setReason] = useState<string>('Loading SonarQube data...');
+  const techInsightsApi = useApi(techInsightsApiRef);
+
+  useEffect(() => {
+    const fetchSonarQubeData = async () => {
+      if (!entities.length) {
+        setColor('gray');
+        setReason('No entities selected');
+        return;
+      }
+
+      try {
+        // Get SonarQube facts for all entities
+        const sonarQubeResults = await Promise.all(
+          entities.map(entity =>
+            getSonarQubeFacts(techInsightsApi, {
+              kind: entity.kind,
+              namespace: entity.metadata.namespace || 'default',
+              name: entity.metadata.name,
+            }),
+          ),
+        );
+
+        // Count totals
+        const totals = sonarQubeResults.reduce(
+          (acc, result) => {
+            acc.bugs += result.bugs;
+            acc.code_smells += result.code_smells;
+            acc.security_hotspots += result.security_hotspots;
+            return acc;
+          },
+          { bugs: 0, code_smells: 0, security_hotspots: 0 },
+        );
+
+        // Determine traffic light color based on metrics
+        if (
+          totals.bugs > 0 ||
+          totals.security_hotspots > 0 ||
+          totals.code_smells > 10
+        ) {
+          setColor('red');
+          setReason(
+            `Quality issues found: ${totals.bugs} bugs, ${totals.code_smells} code smells, ${totals.security_hotspots} security hotspots`,
+          );
+        } else if (totals.code_smells > 1) {
+          setColor('yellow');
+          setReason(`${totals.code_smells} code smells found`);
+        } else {
+          setColor('green');
+          setReason('All code quality metrics pass thresholds');
+        }
+      } catch (err) {
+        console.error('Error fetching SonarQube data:', err);
+        setColor('gray');
+        setReason('Failed to retrieve SonarQube data');
+      }
+    };
+
+    fetchSonarQubeData();
+  }, [entities, techInsightsApi]);
+
+  return (
+    <Tooltip title={reason}>
+      <div>
+        <Box
+          my={1}
+          width={50}
+          height={50}
+          borderRadius="50%"
+          bgcolor={color}
+          onClick={onClick}
+          style={onClick ? { cursor: 'pointer' } : {}}
+        />
+      </div>
+    </Tooltip>
+  );
+};
+
+// Main component
 export const TrafficComponent = () => {
-  //accesses the catalog API from backstage to retrieve entities
   const catalogApi = useApi(catalogApiRef);
-  //creates a ref for the system filter button to anchor a Popover
+  const techInsightsApi = useApi(techInsightsApiRef);
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
-  //state for storing repository metadata from the catalog
+
+  // Repository data states
   const [repos, setRepos] = useState<
     {
       name: string;
@@ -107,28 +207,38 @@ export const TrafficComponent = () => {
       owner?: string;
       system?: string;
       tags?: string[];
+      entity: Entity;
     }[]
   >([]);
-  //state to hold traffic light status data for various checks
-  const [statusData, setStatusData] = useState<StatusResponse | null>(null);
-  //states for managing the dialog window showing check details
+
+  // Status data state (for mock statuses)
+  const [statusData, setStatusData] = useState<Record<
+    string,
+    { color: 'red' | 'green' | 'yellow' | 'gray' | 'white'; reason: string }
+  > | null>(null);
+
+  // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState('');
   const [dialogItems, setDialogItems] = useState<
     { name: string; color: string }[]
   >([]);
-  //states to filter only owned and critical repos
+
+  // New detailed dialog states
+  const [detailedDialogOpen, setDetailedDialogOpen] = useState(false);
+  const [currentSemaphoreType, setCurrentSemaphoreType] = useState('');
+
+  // Filter states
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
   const [onlyCritical, setOnlyCritical] = useState(true);
-  //stores the names of repos selected for status display
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
-  //state variables for system filtering UI, search and selection
+  const [selectedEntities, setSelectedEntities] = useState<Entity[]>([]);
   const [availableSystems, setAvailableSystems] = useState<string[]>([]);
   const [selectedSystem, setSelectedSystem] = useState<string>('all');
   const [systemSearchTerm, setSystemSearchTerm] = useState<string>('');
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
 
-  //opens a dialog with the provided title and items
+  // Dialog handlers
   const handleClick = (
     title: string,
     items: { name: string; color: string }[],
@@ -143,7 +253,16 @@ export const TrafficComponent = () => {
     setDialogOpen(false);
   };
 
-  //returns an icon button that triggers the dialog for InfoCard actions
+  // New detailed dialog handlers
+  const handleSemaphoreClick = (semaphoreType: string) => {
+    setCurrentSemaphoreType(semaphoreType);
+    setDetailedDialogOpen(true);
+  };
+
+  const handleCloseDetailedDialog = () => {
+    setDetailedDialogOpen(false);
+  };
+
   const cardAction = (
     title: string,
     items: { name: string; color: string }[],
@@ -153,15 +272,14 @@ export const TrafficComponent = () => {
     </IconButton>
   );
 
-  //side effect hook to fetch catalog entities on mount
+  // Fetch catalog data on component mount
   useEffect(() => {
     const fetchCatalogRepos = async () => {
-      //fetches all entities of component kind 
       try {
         const entities = await catalogApi.getEntities({
           filter: { kind: 'Component' },
         });
-        //maps entity data to simplified structure
+
         const simplified = entities.items.map((entity: Entity) => ({
           name: entity.metadata.name,
           description: entity.metadata.description ?? 'No description',
@@ -174,6 +292,7 @@ export const TrafficComponent = () => {
               ? entity.spec.system
               : undefined,
           tags: entity.metadata?.tags,
+          entity: entity, // Store the full entity for later use
         }));
 
         setRepos(simplified);
@@ -187,24 +306,22 @@ export const TrafficComponent = () => {
           ),
         ).sort();
 
-        //stores available systems and sets all repos as selected by default
         setAvailableSystems(systems);
-        setSelectedRepos(simplified.map(r => r.name)); // select all by default
+
+        // Select all repos by default
+        setSelectedRepos(simplified.map(r => r.name));
+        setSelectedEntities(simplified.map(r => r.entity));
       } catch (err) {
         console.error('Failed to load catalog entities', err);
       }
     };
 
-    //effect dependency is the API instance and runs once on mount
     fetchCatalogRepos();
   }, [catalogApi]);
 
-  //filters repos based on owner being `philips-labs`, repos being critical and system matching
-  //TO-DO!! : make owner filter equal to owner variable and not hardcoded string
+  // Apply filters when filter settings change
   useEffect(() => {
-    //filters repos based on owner being `philips-labs`, repos being critical and system matching
     const filtered = repos.filter(repo => {
-      //updates selected repos when filters change
       const isMine = !onlyMyRepos || repo.owner === 'philips-labs';
       const isCritical = !onlyCritical || repo.tags?.includes('critical');
       const isInSelectedSystem =
@@ -213,6 +330,7 @@ export const TrafficComponent = () => {
     });
 
     setSelectedRepos(filtered.map(r => r.name));
+    setSelectedEntities(filtered.map(r => r.entity));
   }, [onlyMyRepos, onlyCritical, repos, selectedSystem]);
 
   // Filter systems based on search term
@@ -220,13 +338,12 @@ export const TrafficComponent = () => {
     system.toLowerCase().includes(systemSearchTerm.toLowerCase()),
   );
 
-  //updates selected system and closes the dropdown
+  // System menu handlers
   const handleSystemSelect = (system: string) => {
     setSelectedSystem(system);
     setSystemMenuOpen(false);
   };
 
-  //handlers to open and close the system popover
   const handleOpenSystemMenu = () => {
     setSystemMenuOpen(true);
   };
@@ -235,11 +352,11 @@ export const TrafficComponent = () => {
     setSystemMenuOpen(false);
   };
 
-  //starts the component render
   return (
     <Page themeId="tool">
       <Header title="Traffic light plugin" subtitle="" />
       <Content>
+        {/* Filters */}
         <Box display="flex" mb={3} alignItems="center" flexWrap="wrap">
           <FormControlLabel
             control={
@@ -337,7 +454,7 @@ export const TrafficComponent = () => {
           </Box>
         </Box>
 
-        {/* Selected Repositories Section - Separate from filters */}
+        {/* Selected Repositories Display */}
         {selectedRepos.length > 0 && (
           <Box mb={4}>
             <InfoCard title={`Selected Repositories (${selectedRepos.length})`}>
@@ -366,6 +483,7 @@ export const TrafficComponent = () => {
           </Box>
         )}
 
+        {/* Traffic Light Cards */}
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <InfoCard
@@ -374,11 +492,23 @@ export const TrafficComponent = () => {
                 { name: 'Dependabot', color: 'green' },
                 {
                   name: 'BlackDuck',
-                  color: statusData?.BlackDuck?.color || 'yellow',
+                  color:
+                    (statusData?.BlackDuck?.color as
+                      | 'red'
+                      | 'green'
+                      | 'yellow'
+                      | 'gray'
+                      | 'white') || 'yellow',
                 },
                 {
                   name: 'Fortify',
-                  color: statusData?.Fortify?.color || 'yellow',
+                  color:
+                    (statusData?.Fortify?.color as
+                      | 'red'
+                      | 'green'
+                      | 'yellow'
+                      | 'gray'
+                      | 'white') || 'yellow',
                 },
               ])}
             >
@@ -386,9 +516,9 @@ export const TrafficComponent = () => {
               <Tooltip title="Live check from Tech Insights">
                 <div>
                   <Trafficlightdependabot
-                    owner="MeherShroff2"
+                    owner="philips-labs"
                     repos={selectedRepos}
-                    //repos = {"dct-notary-admin" }
+                    onClick={() => handleSemaphoreClick('Dependabot')}
                   />
                 </div>
               </Tooltip>
@@ -397,7 +527,15 @@ export const TrafficComponent = () => {
               <Tooltip title={statusData?.BlackDuck?.reason || ''}>
                 <div>
                   <TrafficLight
-                    color={statusData?.BlackDuck?.color || 'yellow'}
+                    color={
+                      (statusData?.BlackDuck?.color as
+                        | 'red'
+                        | 'green'
+                        | 'yellow'
+                        | 'gray'
+                        | 'white') || 'yellow'
+                    }
+                    onClick={() => handleSemaphoreClick('BlackDuck')}
                   />
                 </div>
               </Tooltip>
@@ -406,7 +544,15 @@ export const TrafficComponent = () => {
               <Tooltip title={statusData?.Fortify?.reason || ''}>
                 <div>
                   <TrafficLight
-                    color={statusData?.Fortify?.color || 'yellow'}
+                    color={
+                      (statusData?.Fortify?.color as
+                        | 'red'
+                        | 'green'
+                        | 'yellow'
+                        | 'gray'
+                        | 'white') || 'yellow'
+                    }
+                    onClick={() => handleSemaphoreClick('Fortify')}
                   />
                 </div>
               </Tooltip>
@@ -417,30 +563,39 @@ export const TrafficComponent = () => {
             <InfoCard
               title="Software Quality"
               action={cardAction('Software Quality', [
-                {
-                  name: 'SonarQube',
-                  color: statusData?.SonarQube?.color || 'yellow',
-                },
+                { name: 'SonarQube', color: 'yellow' },
                 {
                   name: 'CodeScene',
-                  color: statusData?.CodeScene?.color || 'yellow',
+                  color:
+                    (statusData?.CodeScene?.color as
+                      | 'red'
+                      | 'green'
+                      | 'yellow'
+                      | 'gray'
+                      | 'white') || 'yellow',
                 },
               ])}
             >
               <Typography variant="subtitle1">SonarQube</Typography>
-              <Tooltip title={statusData?.SonarQube?.reason || ''}>
-                <div>
-                  <TrafficLight
-                    color={statusData?.SonarQube?.color || 'yellow'}
-                  />
-                </div>
-              </Tooltip>
+              {/* SonarQube component that uses real data */}
+              <SonarQubeTrafficLight
+                entities={selectedEntities}
+                onClick={() => handleSemaphoreClick('SonarQube')}
+              />
 
               <Typography variant="subtitle1">CodeScene</Typography>
               <Tooltip title={statusData?.CodeScene?.reason || ''}>
                 <div>
                   <TrafficLight
-                    color={statusData?.CodeScene?.color || 'yellow'}
+                    color={
+                      (statusData?.CodeScene?.color as
+                        | 'red'
+                        | 'green'
+                        | 'yellow'
+                        | 'gray'
+                        | 'white') || 'yellow'
+                    }
+                    onClick={() => handleSemaphoreClick('CodeScene')}
                   />
                 </div>
               </Tooltip>
@@ -462,8 +617,14 @@ export const TrafficComponent = () => {
                 <div>
                   <TrafficLight
                     color={
-                      statusData?.['Reporting Pipeline']?.color || 'yellow'
+                      (statusData?.['Reporting Pipeline']?.color as
+                        | 'red'
+                        | 'green'
+                        | 'yellow'
+                        | 'gray'
+                        | 'white') || 'yellow'
                     }
+                    onClick={() => handleSemaphoreClick('Reporting Pipeline')}
                   />
                 </div>
               </Tooltip>
@@ -490,8 +651,15 @@ export const TrafficComponent = () => {
                 <div>
                   <TrafficLight
                     color={
-                      statusData?.['Pre-Production pipelines']?.color ||
-                      'yellow'
+                      (statusData?.['Pre-Production pipelines']?.color as
+                        | 'red'
+                        | 'green'
+                        | 'yellow'
+                        | 'gray'
+                        | 'white') || 'yellow'
+                    }
+                    onClick={() =>
+                      handleSemaphoreClick('Pre-Production pipelines')
                     }
                   />
                 </div>
@@ -519,6 +687,7 @@ export const TrafficComponent = () => {
                     color={
                       statusData?.['Foundation Pipelines']?.color || 'yellow'
                     }
+                    onClick={() => handleSemaphoreClick('Foundation Pipelines')}
                   />
                 </div>
               </Tooltip>
@@ -526,11 +695,20 @@ export const TrafficComponent = () => {
           </Grid>
         </Grid>
 
+        {/* Regular Dialog Component */}
         <DialogComponent
           open={dialogOpen}
           onClose={handleClose}
           title={dialogTitle}
           items={dialogItems}
+        />
+
+        {/* Detailed Semaphore Dialog Component */}
+        <DetailedSemaphoreDialog
+          open={detailedDialogOpen}
+          onClose={handleCloseDetailedDialog}
+          semaphoreType={currentSemaphoreType}
+          entities={selectedEntities}
         />
       </Content>
     </Page>

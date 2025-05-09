@@ -6,6 +6,8 @@ metadata:
   annotations:
     github.com/project-slug: philips-labs/terraform-provider-cloudfoundry
     backstage.io/source-location: url:https://github.com/philips-labs/terraform-provider-cloudfoundry
+    sonarcloud.io/project-key: SEP-ArgusPanoptes_terraform-provider-cloudfoundry
+    sonarcloud.io/enabled: 'true'
   tags:
     - non-critical
 spec:
