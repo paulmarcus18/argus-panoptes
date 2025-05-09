@@ -7602,6 +7602,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@internal/plugin-tech-insights-backend-module-traffic-light-backend-module@workspace:^, @internal/plugin-tech-insights-backend-module-traffic-light-backend-module@workspace:plugins/tech-insights-backend-module-traffic-light-backend-module":
+  version: 0.0.0-use.local
+  resolution: "@internal/plugin-tech-insights-backend-module-traffic-light-backend-module@workspace:plugins/tech-insights-backend-module-traffic-light-backend-module"
+  dependencies:
+    "@backstage/backend-plugin-api": "npm:^1.3.0"
+    "@backstage/backend-test-utils": "npm:^1.3.0"
+    "@backstage/cli": "npm:^0.32.0"
+  languageName: unknown
+  linkType: soft
+
 "@internal/plugin-traffic-light@workspace:^, @internal/plugin-traffic-light@workspace:plugins/traffic-light":
   version: 0.0.0-use.local
   resolution: "@internal/plugin-traffic-light@workspace:plugins/traffic-light"
@@ -15801,6 +15811,7 @@ __metadata:
     "@backstage/plugin-tech-insights-node": "npm:^0.6.1"
     "@backstage/plugin-techdocs-backend": "npm:^2.0.1"
     "@internal/plugin-ai-summary-backend-backend": "workspace:^"
+    "@internal/plugin-tech-insights-backend-module-traffic-light-backend-module": "workspace:^"
     "@octokit/rest": "npm:^21.1.1"
     app: "link:../app"
     better-sqlite3: "npm:^9.0.0"
