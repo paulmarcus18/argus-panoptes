@@ -10,6 +10,7 @@ import { createBackendModule, coreServices, LoggerService } from '@backstage/bac
 import { techInsightsFactRetrieversExtensionPoint } from '@backstage-community/plugin-tech-insights-node';
 //imports retriever that queries dependabot alert data
 import { dependabotFactRetriever } from './dependabot/dependabotFactRetriever';
+import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/githubASFactRetriever';
 //import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 
 //defines a backend module that integrates with the tech insights plugin
@@ -34,7 +35,8 @@ export default createBackendModule({
         //logs to the console to confirm module is being registered
         logger.info('Registering dependabot-facts module...');
         providers.addFactRetrievers({
-          dependabotFactRetriever
+          dependabotFactRetriever,
+          githubAdvancedSecurityFactRetriever,
         });
       },
     });
