@@ -4,8 +4,7 @@
  */
 //Import fact retriever interface, used to define a retriever that collects factual data for a given entity
 import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
-//Imports the official GitHub REST API client library. Used to interact with GitHub's API to retrieve Dependabot alerts
-import { Octokit } from '@octokit/rest';
+import type { Octokit } from '@octokit/rest';
 
 /**
  * This FactRetriever queries the 'philips-labs/dct-notary-admin' repo
@@ -50,6 +49,9 @@ export const dependabotFactRetriever: FactRetriever = {
       return [];
     }
 
+    // Use dynamic import for Octokit
+    const { Octokit } = await import('@octokit/rest');
+    
     //initializes github api client with token to authorize future requests
     const octokit = new Octokit({ auth: token });
 
