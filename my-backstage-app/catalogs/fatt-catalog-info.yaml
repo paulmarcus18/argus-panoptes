@@ -4,7 +4,7 @@ metadata:
   name: fatt
   description: Enables fetching attestations for your binaries or other non OCI package types.
   annotations:
-    github.com/project-slug: philips-labs/fatt
+    github.com/project-slug: SEP-ArgusPanoptes/fatt
     backstage.io/source-location: url:https://github.com/philips-labs/fatt
     sonarcloud.io/project-key: SEP-ArgusPanoptes_fatt
     sonarcloud.io/enabled: 'true'
@@ -13,5 +13,5 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: philips-labs
+  owner: SEP-ArgusPanoptes
   system: payments-system

@@ -3,6 +3,7 @@
  * Returns security findings in a structured way that Tech Insights can consume
  */
 import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
+import { CatalogClient } from '@backstage/catalog-client';
 
 /**
  * This FactRetriever queries GitHub Advanced Security data for specified repositories
@@ -13,6 +14,8 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
   id: 'githubAdvancedSecurityFactRetriever',
   // Versioning information for this retriever
   version: '0.1.0',
+  // Entity filter to specify which entities this retriever applies to
+  entityFilter: [{kind: 'component'}],
   // Defines the structure of the facts returned
   schema: {
     openCodeScanningAlertCount: {
@@ -24,8 +27,9 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
       description: 'Number of open Secret Scanning alerts',
     },
   },
+
   // Main logic of the retriever
-  async handler({ config, logger }) {
+  async handler({ config, logger, entityFilter, auth, discovery }) {
     // Retrieve GitHub token from config
     let token: string | undefined;
     try {
@@ -44,32 +48,59 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
       return [];
     }
 
+    // Get catalog access token for fetching entities
+    const { token: catalogToken } = await auth.getPluginRequestToken({
+      onBehalfOf: await auth.getOwnServiceCredentials(),
+      targetPluginId: 'catalog',
+    });
+
+    // Instantiate the CatalogClient
+    const catalogClient = new CatalogClient({ discoveryApi: discovery });
+
+    // Fetch the list of entities matching the entityFilter
+    const { items: entities } = await catalogClient.getEntities(
+      { filter: entityFilter },
+      { token: catalogToken },
+    );
+
+    logger.info(`📋 Found ${entities.length} entities matching the filter`);
+
+    // Filter entities that have GitHub repositories
+    // The standard Backstage annotation for GitHub repositories is 'github.com/project-slug'
+    const githubEntities = entities.filter(entity => {
+      return entity.metadata.annotations?.['github.com/project-slug'];
+    });
+
+    logger.info(`🔍 Found ${githubEntities.length} entities with GitHub annotations`);
+
     // Use dynamic import for Octokit
     const { Octokit } = await import('@octokit/rest');
     
     // Initialize GitHub API client with token
     const octokit = new Octokit({ auth: token });
 
-    // Declare repositories to check
-    // TODO: Make this configurable or fetch from catalog
-    const repos = [
-      {
-        owner: 'test-GHAS1',
-        name: 'TrialSonarQube',
-      },
-      // Add more repos as needed
-    ];
-
-    // Perform parallel fetching for all repos
+    // Process each entity with GitHub integration
     const results = await Promise.all(
-      repos.map(async repo => {
+      githubEntities.map(async entity => {
+        // Extract owner and repo from the 'github.com/project-slug' annotation
+        // This annotation typically has the format 'owner/repo'
+        const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] || '';
+        const [owner, repo] = projectSlug.split('/');
+
+        if (!owner || !repo) {
+          logger.warn(`⚠️ Invalid GitHub project slug for entity ${entity.metadata.name}: ${projectSlug}`);
+          return null;
+        }
+
+        logger.info(`📊 Retrieving GitHub security data for ${owner}/${repo}`);
+
         try {
           // Fetch Code Scanning alerts
           const codeScanningResponse = await octokit.request(
             'GET /repos/{owner}/{repo}/code-scanning/alerts',
             {
-              owner: repo.owner,
-              repo: repo.name,
+              owner,
+              repo,
               state: 'open',
               per_page: 100,
             },
@@ -79,19 +110,26 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
           const secretScanningResponse = await octokit.request(
             'GET /repos/{owner}/{repo}/secret-scanning/alerts',
             {
-              owner: repo.owner,
-              repo: repo.name,
+              owner,
+              repo,
               state: 'open',
               per_page: 100,
             },
           );
 
+          logger.info(
+            `📊 GitHub security metrics for ${owner}/${repo}: ` +
+            `Code Scanning: ${codeScanningResponse.data.length}, ` +
+            `Secret Scanning: ${secretScanningResponse.data.length}`
+          );
+
           // Return the fact result object for this repository
+          // Use the entity's actual name, namespace, and kind from the catalog
           return {
             entity: {
-              kind: 'Component',
-              namespace: 'default',
-              name: repo.name,
+              kind: entity.kind,
+              namespace: entity.metadata.namespace || 'default',
+              name: entity.metadata.name,
             },
             facts: {
               openCodeScanningAlertCount: codeScanningResponse.data.length,
@@ -101,12 +139,12 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
         } catch (err: any) {
           if (err.status === 403 || err.status === 404) {
             logger.warn(
-              `⚠️ Access denied to security data for ${repo.name} (status ${err.status}) — skipping`,
+              `⚠️ Access denied to security data for ${owner}/${repo} (status ${err.status}) — skipping`,
             );
             return null;
           }
           logger.error(
-            `❌ Error fetching security data for ${repo.name}: ${err.message} (status ${err.status})`,
+            `❌ Error fetching security data for ${owner}/${repo}: ${err.message} (status ${err.status})`,
           );
           return null;
         }

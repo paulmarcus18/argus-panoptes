@@ -199,3 +199,67 @@ export const getSonarQubeFacts = async (
     return { bugs: 0, code_smells: 0, security_hotspots: 0 };
   }
 };
+
+
+/**
+ * Interface defining the shape of GitHub security facts
+ * Exactly matches your current fact retriever schema
+ */
+export interface GitHubSecurityFacts {
+  openCodeScanningAlertCount: number;
+  openSecretScanningAlertCount: number;
+}
+
+/**
+ * Function to fetch GitHub security facts for a given entity
+ * @param api - TechInsights API instance
+ * @param entity - The entity for which to fetch facts
+ * @returns A promise that resolves to an object containing the number of open code scanning and secret scanning alerts
+ */
+export const getGitHubSecurityFacts = async (
+  api: TechInsightsApi,
+  entity: CompoundEntityRef,
+): Promise<GitHubSecurityFacts> => {
+  try {
+    console.log(
+      '📡 Fetching GitHub Security facts for entity:',
+      stringifyEntityRef(entity),
+    );
+    
+    const response = await api.getFacts(entity, ['githubAdvancedSecurityFactRetriever']);
+    
+    console.log(
+      '🧾 Raw Tech Insights API response:',
+      JSON.stringify(response, null, 2),
+    );
+    
+    const facts = response?.['githubAdvancedSecurityFactRetriever']?.facts;
+    
+    if (!facts) {
+      console.error(
+        '❌ No GitHub Security facts found for entity:',
+        stringifyEntityRef(entity),
+      );
+      return { 
+        openCodeScanningAlertCount: 0, 
+        openSecretScanningAlertCount: 0,
+      };
+    }
+    
+    return {
+      openCodeScanningAlertCount: Number(facts.openCodeScanningAlertCount ?? 0),
+      openSecretScanningAlertCount: Number(facts.openSecretScanningAlertCount ?? 0),
+    };
+  } catch (error) {
+    console.error(
+      '💥 Error fetching GitHub Security facts for entity:',
+      stringifyEntityRef(entity),
+      error,
+    );
+    
+    return { 
+      openCodeScanningAlertCount: 0, 
+      openSecretScanningAlertCount: 0,
+    };
+  }
+};

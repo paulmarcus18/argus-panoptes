@@ -4,7 +4,7 @@ metadata:
   name: s3dl
   description: Generates pre-signed S3 Download URLS for any key in the attached S3 bucket.
   annotations:
-    github.com/project-slug: philips-labs/s3dl
+    github.com/project-slug: SEP-ArgusPanoptes/s3dl
     backstage.io/source-location: url:https://github.com/philips-labs/s3dl
     sonarcloud.io/project-key: SEP-ArgusPanoptes_s3dl
     sonarcloud.io/enabled: 'true'
@@ -13,5 +13,5 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: philips-labs
+  owner: SEP-ArgusPanoptes
   system: payments-system

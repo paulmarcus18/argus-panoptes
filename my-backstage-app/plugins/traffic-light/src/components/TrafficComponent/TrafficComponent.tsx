@@ -25,6 +25,8 @@ import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
 import { getSonarQubeFacts } from '../utils';
+import { getGitHubSecurityFacts } from '../utils';
+
 
 // TrafficLight component that renders a colored circle
 const TrafficLight = ({
@@ -174,6 +176,93 @@ const SonarQubeTrafficLight = ({
     };
 
     fetchSonarQubeData();
+  }, [entities, techInsightsApi]);
+
+  return (
+    <Tooltip title={reason}>
+      <div>
+        <Box
+          my={1}
+          width={50}
+          height={50}
+          borderRadius="50%"
+          bgcolor={color}
+          onClick={onClick}
+          style={onClick ? { cursor: 'pointer' } : {}}
+        />
+      </div>
+    </Tooltip>
+  );
+};
+
+// SonarQube traffic light component (new implementation)
+interface GitHubSecurityTrafficLightProps {
+  entities: Entity[];
+  onClick?: () => void;
+}
+
+// Github Advanced security traffic light component 
+const GitHubSecurityTrafficLight = ({
+  entities,
+  onClick,
+}: GitHubSecurityTrafficLightProps) => {
+  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray' | 'white'>('white');
+  const [reason, setReason] = useState<string>('Loading GitHub Security data...');
+  const techInsightsApi = useApi(techInsightsApiRef);
+
+  useEffect(() => {
+    const fetchGitHubSecurityData = async () => {
+      if (!entities.length) {
+        setColor('gray');
+        setReason('No entities selected');
+        return;
+      }
+
+      try {
+        // Get GitHub Security facts for all entities
+        const securityResults = await Promise.all(
+          entities.map(entity =>
+            getGitHubSecurityFacts(techInsightsApi, {
+              kind: entity.kind,
+              namespace: entity.metadata.namespace || 'default',
+              name: entity.metadata.name,
+            }),
+          ),
+        );
+
+        console.log('GitHub Security Results:', securityResults);
+        // Count totals
+        const totals = securityResults.reduce(
+          (acc, result) => {
+            acc.codeScanningAlerts += result.openCodeScanningAlertCount;
+            acc.secretScanningAlerts += result.openSecretScanningAlertCount;
+            return acc;
+          },
+          { codeScanningAlerts: 0, secretScanningAlerts: 0 },
+        );
+
+        // Determine traffic light color based on security metrics
+        if (
+          totals.secretScanningAlerts > 0 ||
+          totals.codeScanningAlerts > 0
+        ) {
+          setColor('red');
+          setReason(`Critical security issues found: ${totals.codeScanningAlerts} code scanning alerts, ${totals.secretScanningAlerts} secret scanning alerts`);
+        } else if ((totals.codeScanningAlerts < 10 && totals.codeScanningAlerts > 0) || (totals.secretScanningAlerts < 10 && totals.secretScanningAlerts > 0) ) {
+          setColor('yellow');
+          setReason(`${totals.codeScanningAlerts} code scanning alerts found`);
+        } else {
+          setColor('green');
+          setReason('No security issues detected');
+        }
+      } catch (err) {
+        console.error('Error fetching GitHub Security data:', err);
+        setColor('gray');
+        setReason('Failed to retrieve GitHub Security data');
+      }
+    };
+
+    fetchGitHubSecurityData();
   }, [entities, techInsightsApi]);
 
   return (
@@ -500,16 +589,7 @@ export const TrafficComponent = () => {
                       | 'gray'
                       | 'white') || 'yellow',
                 },
-                {
-                  name: 'Fortify',
-                  color:
-                    (statusData?.Fortify?.color as
-                      | 'red'
-                      | 'green'
-                      | 'yellow'
-                      | 'gray'
-                      | 'white') || 'yellow',
-                },
+                { name: 'Github Advanced Security', color: 'yellow'},
               ])}
             >
               <Typography variant="subtitle1">Dependabot</Typography>
@@ -540,22 +620,11 @@ export const TrafficComponent = () => {
                 </div>
               </Tooltip>
 
-              <Typography variant="subtitle1">Fortify</Typography>
-              <Tooltip title={statusData?.Fortify?.reason || ''}>
-                <div>
-                  <TrafficLight
-                    color={
-                      (statusData?.Fortify?.color as
-                        | 'red'
-                        | 'green'
-                        | 'yellow'
-                        | 'gray'
-                        | 'white') || 'yellow'
-                    }
-                    onClick={() => handleSemaphoreClick('Fortify')}
-                  />
-                </div>
-              </Tooltip>
+              <Typography variant="subtitle1">Github Advanced Security</Typography>
+                <GitHubSecurityTrafficLight
+                  entities ={selectedEntities}
+                  onClick={() => handleSemaphoreClick('Dependabot')}
+                />
             </InfoCard>
           </Grid>
 
