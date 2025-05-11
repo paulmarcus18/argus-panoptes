@@ -126,7 +126,7 @@
 //   export const getSonarQubeFacts = async (
 //     api: TechInsightsApi,
 //     entity: CompoundEntityRef,
-//   ): Promise<{ bugs: number; code_smells: number; security_hotspots: number }> => {
+//   ): Promise<{ bugs: number; code_smells: number; vulnerabilities: number }> => {
 //     try {
 //       // Call the Tech Insights API to get facts for our entity
 //       const response = await api.getFacts(
@@ -140,15 +140,15 @@
 //       return {
 //         bugs: Number(response['sonarcloud-fact-retriever']?.facts?.bugs),
 //         code_smells: Number(response['sonarcloud-fact-retriever']?.facts?.code_smells),
-//         security_hotspots: Number(response['sonarcloud-fact-retriever']?.facts?.security_hotspots),
+//         vulnerabilities: Number(response['sonarcloud-fact-retriever']?.facts?.vulnerabilities),
 //       };
       
 //       // If we couldn't find the facts, return zeros
 //       console.error('Could not find SonarCloud facts in the response');
-//       return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+//       return { bugs: 0, code_smells: 0, vulnerabilities: 0 };
 //     } catch (error) {
 //       console.error('Error fetching SonarCloud facts:', error);
-//       return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+//       return { bugs: 0, code_smells: 0, vulnerabilities: 0 };
 //     }
 //   };
 
@@ -314,7 +314,7 @@ export const getSonarQubeFacts = async (
 ): Promise<{
   bugs: number;
   code_smells: number;
-  security_hotspots: number;
+  vulnerabilities: number;
 }> => {
   try {
     console.log(
@@ -336,13 +336,13 @@ export const getSonarQubeFacts = async (
         '❌ No facts found for entity:',
         stringifyEntityRef(entity),
       );
-      return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+      return { bugs: 0, code_smells: 0, vulnerabilities: 0 };
     }
 
     return {
       bugs: Number(facts.bugs ?? 0),
       code_smells: Number(facts.code_smells ?? 0),
-      security_hotspots: Number(facts.security_hotspots ?? 0),
+      vulnerabilities: Number(facts.vulnerabilities ?? 0),
     };
   } catch (error) {
     console.error(
@@ -350,6 +350,6 @@ export const getSonarQubeFacts = async (
       stringifyEntityRef(entity),
       error,
     );
-    return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+    return { bugs: 0, code_smells: 0, vulnerabilities: 0 };
   }
 };

@@ -5,7 +5,7 @@ import { CatalogClient } from '@backstage/catalog-client';
 
 // Define an interface for the SonarCloud measure
 interface SonarCloudMeasure {
-  metric: string; // Name of the metric (e.g., 'bugs', 'code_smells', 'security_hotspots')
+  metric: string; // Name of the metric (e.g., 'bugs', 'code_smells', 'vulnerabilities')
   value: string; // Value of the metric, a number in string format
   bestValue?: boolean; // Indicates if this is the best possible value for the metric
 }
@@ -35,9 +35,9 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
         type: 'integer',
         description: 'Number of code smells detected by SonarCloud',
       },
-      security_hotspots: {
+      vulnerabilities: {
         type: 'integer',
-        description: 'Number of security hotspots detected',
+        description: 'Number of vulnerabilities detected',
       }
     },
     /**
@@ -90,7 +90,7 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
           
           // Call SonarCloud API to get metrics for the project
           const response = await fetch(
-            `https://sonarcloud.io/api/measures/component?component=${projectKey}&metricKeys=bugs,code_smells,security_hotspots`,
+            `https://sonarcloud.io/api/measures/component?component=${projectKey}&metricKeys=bugs,code_smells,vulnerabilities`,
             {
               headers: {
                 'Authorization': `Basic ${Buffer.from(`${token}:`).toString('base64')}`,
@@ -114,7 +114,7 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
           const facts = {
             bugs: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'bugs')?.value || '0', 10),
             code_smells: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'code_smells')?.value || '0', 10),
-            security_hotspots: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'security_hotspots')?.value || '0', 10),
+            vulnerabilities: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'vulnerabilities')?.value || '0', 10),
           };
           
           logger.info(`Extracted facts for ${projectKey}: ${JSON.stringify(facts)}`, { factRetrieverId: 'sonarcloud-fact-retriever' });
@@ -134,7 +134,7 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
       // Filter out null results (failed requests)
       return results.filter(Boolean) as Array<{
         entity: { kind: string; namespace: string; name: string };
-        facts: { bugs: number; code_smells: number; security_hotspots: number };
+        facts: { bugs: number; code_smells: number; vulnerabilities: number };
       }>;;
     },
   };

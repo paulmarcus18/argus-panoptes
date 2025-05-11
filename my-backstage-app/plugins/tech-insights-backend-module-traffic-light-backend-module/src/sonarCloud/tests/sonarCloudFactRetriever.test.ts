@@ -107,9 +107,9 @@ describe('SonarCloud Fact Retriever', () => {
           type: 'integer',
           description: 'Number of code smells detected by SonarCloud',
         },
-        security_hotspots: {
+        vulnerabilities: {
           type: 'integer',
-          description: 'Number of security hotspots detected',
+          description: 'Number of vulnerabilities detected',
         },
       },
       handler: expect.any(Function),
@@ -130,7 +130,7 @@ describe('SonarCloud Fact Retriever', () => {
           measures: [
             { metric: 'bugs', value: '10' },
             { metric: 'code_smells', value: '45' },
-            { metric: 'security_hotspots', value: '5' },
+            { metric: 'vulnerabilities', value: '5' },
           ],
         },
       }),
@@ -164,13 +164,13 @@ describe('SonarCloud Fact Retriever', () => {
       facts: {
         bugs: 10,
         code_smells: 45,
-        security_hotspots: 5,
+        vulnerabilities: 5,
       },
     });
     
     // Verify that fetch was called with the correct URL and headers
     expect(mockFetch).toHaveBeenCalledWith(
-      'https://sonarcloud.io/api/measures/component?component=test-project&metricKeys=bugs,code_smells,security_hotspots',
+      'https://sonarcloud.io/api/measures/component?component=test-project&metricKeys=bugs,code_smells,vulnerabilities',
       {
         headers: {
           'Authorization': `Basic ${Buffer.from('test-token:').toString('base64')}`,
@@ -202,7 +202,7 @@ describe('SonarCloud Fact Retriever', () => {
           measures: [
             { metric: 'bugs', value: '10' },
             { metric: 'code_smells', value: '45' },
-            { metric: 'security_hotspots', value: '5' },
+            { metric: 'vulnerabilities', value: '5' },
           ],
         },
       }),
@@ -327,7 +327,7 @@ describe('SonarCloud Fact Retriever', () => {
       json: async () => ({
         component: {
           measures: [
-            // Only bugs metric, missing code_smells and security_hotspots
+            // Only bugs metric, missing code_smells and vulnerabilities
             { metric: 'bugs', value: '7' },
           ],
         },
@@ -356,7 +356,7 @@ describe('SonarCloud Fact Retriever', () => {
     expect(result[0].facts).toEqual({
       bugs: 7,
       code_smells: 0,
-      security_hotspots: 0,
+      vulnerabilities: 0,
     });
   });
   
@@ -386,7 +386,7 @@ describe('SonarCloud Fact Retriever', () => {
             measures: [
               { metric: 'bugs', value: '10' },
               { metric: 'code_smells', value: '45' },
-              { metric: 'security_hotspots', value: '5' },
+              { metric: 'vulnerabilities', value: '5' },
             ],
           },
         }),
@@ -398,7 +398,7 @@ describe('SonarCloud Fact Retriever', () => {
             measures: [
               { metric: 'bugs', value: '3' },
               { metric: 'code_smells', value: '22' },
-              { metric: 'security_hotspots', value: '1' },
+              { metric: 'vulnerabilities', value: '1' },
             ],
           },
         }),
@@ -428,26 +428,26 @@ describe('SonarCloud Fact Retriever', () => {
     expect(result[0].facts).toEqual({
       bugs: 10,
       code_smells: 45,
-      security_hotspots: 5,
+      vulnerabilities: 5,
     });
     
     expect(result[1].entity.name).toBe('component-2');
     expect(result[1].facts).toEqual({
       bugs: 3,
       code_smells: 22,
-      security_hotspots: 1,
+      vulnerabilities: 1,
     });
     
     // Verify fetch was called twice with the correct URLs
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockFetch).toHaveBeenNthCalledWith(
       1,
-      'https://sonarcloud.io/api/measures/component?component=test-project&metricKeys=bugs,code_smells,security_hotspots',
+      'https://sonarcloud.io/api/measures/component?component=test-project&metricKeys=bugs,code_smells,vulnerabilities',
       expect.any(Object)
     );
     expect(mockFetch).toHaveBeenNthCalledWith(
       2,
-      'https://sonarcloud.io/api/measures/component?component=project-2&metricKeys=bugs,code_smells,security_hotspots',
+      'https://sonarcloud.io/api/measures/component?component=project-2&metricKeys=bugs,code_smells,vulnerabilities',
       expect.any(Object)
     );
   });
