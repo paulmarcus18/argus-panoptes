@@ -1,42 +1,43 @@
 /**
- * This file registers a backend module with the tech-insights plugin
- * Adds a custom fact retriever to the system, dependabotFactRetriever
- * Allows the plugin to collect dependabot alerts for usage
+ * This file registers a backend module with the tech-insights plugin.
+ * Adds two custom fact retrievers to the system, dependabotFactRetriever and sonarCloudFactRetriever.
+ * Allows the plugin to collect Dependabot and SonarQube (SonarCloud) alerts for usage.
  */
 
-//imports the utility function used to define and create a backend module in Backstage
+// Imports the utility function used to define and create a backend module in Backstage.
 import { createBackendModule, coreServices, LoggerService } from '@backstage/backend-plugin-api';
-//imports the tech insights extension point that lets you plug in custom FactRetrievers
+// Imports the tech insights extension point that lets you plug in custom FactRetrievers.
 import { techInsightsFactRetrieversExtensionPoint } from '@backstage-community/plugin-tech-insights-node';
-//imports retriever that queries dependabot alert data
+// Imports retriever that queries Dependabot alert data.
 import { dependabotFactRetriever } from './dependabot/dependabotFactRetriever';
+// Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 
-//defines a backend module that integrates with the tech insights plugin
+// Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({
-  //specifies which plugin this module is part of.
+  // Specifies which plugin this module is part of.
   pluginId: 'tech-insights',
-  //unique identifier for this module within the plugin
+  // Unique identifier for this module within the plugin.
   moduleId: 'traffic-lights-backend-module',
-  //the 'register' function allows the module to register itself during app startup
+  // The 'register' function allows the module to register itself during app startup.
   register(env) {
-    //registers an initialization routine for this module
+    // Registers an initialization routine for this module.
     env.registerInit({
-      //declares dependencies required by the init function
+      // Declares dependencies required by the init function.
       deps: {
-        //declares that it needs access to the fact retriever provider interface
+        // Declares that it needs access to the fact retriever provider interface.
         providers: techInsightsFactRetrieversExtensionPoint,
         logger: coreServices.rootLogger,
         config: coreServices.rootConfig,
       },
-      //initialization function that will run during backend's startup
+      // Initialization function that will run during backend's startup.
       async init({ providers, logger, config }) {
-        //logs to the console to confirm module is being registered
+        // Logs to the console to confirm module is being registered.
         logger.info('Registering dependabot-facts module...');
         const sonarCloudFactRetriever = createSonarCloudFactRetriever(config, logger);
         providers.addFactRetrievers({
-          dependabotFactRetriever,
-          [sonarCloudFactRetriever.id]: sonarCloudFactRetriever
+          dependabotFactRetriever, // Adds the dependabotFactRetriever to the system.
+          [sonarCloudFactRetriever.id]: sonarCloudFactRetriever // Adds the sonarCloudFactRetriever to the system.
         });
       },
     });

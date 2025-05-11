@@ -5,20 +5,28 @@ import { CatalogClient } from '@backstage/catalog-client';
 
 // Define an interface for the SonarCloud measure
 interface SonarCloudMeasure {
-  metric: string;
-  value: string;
-  bestValue?: boolean;
+  metric: string; // Name of the metric (e.g., 'bugs', 'code_smells', 'security_hotspots')
+  value: string; // Value of the metric, a number in string format
+  bestValue?: boolean; // Indicates if this is the best possible value for the metric
 }
 
 /**
- * Create a fact retriever for SonarCloud metrics
+ * Creates a fact retriever for SonarCloud metrics.
+ * 
+ * This retriever fetches code quality metrics from SonarCloud for components
+ * that have SonarCloud integration enabled via annotations.
+ * 
+ * @param config - The application configuration object
+ * @param logger - Logger service for reporting info and errors
+ * @returns A configured FactRetriever that will collect SonarCloud metrics
  */
 export const createSonarCloudFactRetriever = (config: Config, logger: LoggerService): FactRetriever => {
   return {
     id: 'sonarcloud-fact-retriever',
     version: '1.0',
-    entityFilter: [{ kind: 'component' }], // Filter for all components
+    entityFilter: [{ kind: 'component' }], // Only process entities of kind 'component'
     schema: {
+      // Define the schema for the facts this retriever provides
       bugs: {
         type: 'integer',
         description: 'Number of bugs detected by SonarCloud',
@@ -32,6 +40,12 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
         description: 'Number of security hotspots detected',
       }
     },
+    /**
+     * Handler function that retrieves SonarCloud metrics for relevant entities.
+     * 
+     * @param ctx - Context object containing configuration, logger, and other services
+     * @returns Array of entity facts with SonarCloud metrics
+     */
     handler: async ctx => {
       const { 
         config: appConfig,
@@ -40,29 +54,32 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
         auth,
         entityFilter, } = ctx;
         
+      // Get SonarCloud-specific configuration
       const sonarcloudConfig = config.getConfig('sonarcloud');
       const token = sonarcloudConfig.getString('token');
-      // const organization = sonarcloudConfig.getString('organization');
+      //const organization = sonarcloudConfig.getString('organization');
 
+      // Get authentication token for catalog access
       const { token: catalogToken } = await auth.getPluginRequestToken({
         onBehalfOf: await auth.getOwnServiceCredentials(),
         targetPluginId: 'catalog',
       });
 
-      // 2. Instantiate the CatalogClient
+      // Create a catalog client to fetch entities
       const catalogClient = new CatalogClient({ discoveryApi: discovery });
 
-      // 3. Fetch the list of entities matching your entityFilter
+      // Fetch all entities matching the filter
       const { items: entities } = await catalogClient.getEntities(
         { filter: entityFilter },
         { token: catalogToken },
       );
       
-      // Filter entities that have SonarCloud enabled
+      // Filter for entities that have SonarCloud integration enabled
+      // via the 'sonarcloud.io/enabled' and 'sonarcloud.io/project-key' annotations
+      // in the respective repo's catalog-info.yaml file.
       const sonarcloudEntities = entities.filter(entity => 
         entity.metadata.annotations?.['sonarcloud.io/enabled'] === 'true' && 
-        entity.metadata.annotations?.['sonarcloud.io/project-key'] //&& // maybe && (... xor ... xor ...) if each repo is part of a different system
-        // entity.spec?.system === 'payments-system'
+        entity.metadata.annotations?.['sonarcloud.io/project-key']
       );
       
       // Process each entity with SonarCloud enabled
@@ -70,7 +87,8 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
         sonarcloudEntities.map(async entity => {
           const projectKey = entity.metadata.annotations?.['sonarcloud.io/project-key'];
           logger.info(`Retrieving SonarCloud metrics for ${projectKey}`);
-            
+          
+          // Call SonarCloud API to get metrics for the project
           const response = await fetch(
             `https://sonarcloud.io/api/measures/component?component=${projectKey}&metricKeys=bugs,code_smells,security_hotspots`,
             {
@@ -79,16 +97,19 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
               },
             }
           );
-            
+          
+          // Handle API error responses
           if (!response.ok) {
             const errorText = await response.text();
             logger.error(`SonarCloud API error for ${projectKey}: ${response.status} ${response.statusText} - ${errorText}`);
             return null;
           }
             
+          // Parse response data
           const data = await response.json();
           logger.info(`SonarCloud API returned data for ${projectKey}: ${JSON.stringify(data)}`, { factRetrieverId: 'sonarcloud-fact-retriever' });
           
+          // Extract specific metrics from the response
           const measures = data.component.measures as SonarCloudMeasure[];
           const facts = {
             bugs: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'bugs')?.value || '0', 10),
@@ -98,6 +119,7 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
           
           logger.info(`Extracted facts for ${projectKey}: ${JSON.stringify(facts)}`, { factRetrieverId: 'sonarcloud-fact-retriever' });
           
+          // Return facts associated with this entity
           return {
             entity: {
               name: entity.metadata.name,
@@ -117,11 +139,3 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
     },
   };
 };
-
-// // Create and export the SonarCloud fact retriever backend module
-// export const techInsightsModuleSonarCloudFactRetriever = createBackendModule({
-//   pluginId: 'tech-insights',
-//   moduleId: 'sonarcloud-fact-retriever',
-//   createFactRetriever: createSonarCloudFactRetriever,
-//   logMessage: 'Registering SonarCloud fact retriever',
-// }); 
