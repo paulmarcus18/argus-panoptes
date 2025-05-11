@@ -1,8 +1,7 @@
-// import { Config } from '@backstage/config/index';
-// import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
-// import { LoggerService } from '@backstage/backend-plugin-api';
-// import { createFactRetrieverBackendModule } from '../factRetrieverUtils';
-// import { CatalogClient } from '@backstage/catalog-client';
+import { Config } from '@backstage/config/index';
+import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
+import { LoggerService } from '@backstage/backend-plugin-api';
+import { CatalogClient } from '@backstage/catalog-client';
 
 // Define an interface for the SonarCloud measure
 interface SonarCloudMeasure {
@@ -14,7 +13,7 @@ interface SonarCloudMeasure {
 /**
  * Create a fact retriever for SonarCloud metrics
  */
-/* export const createSonarCloudFactRetriever = (config: Config, logger: LoggerService): FactRetriever => {
+export const createSonarCloudFactRetriever = (config: Config, logger: LoggerService): FactRetriever => {
   return {
     id: 'sonarcloud-fact-retriever',
     version: '1.0',
@@ -62,8 +61,8 @@ interface SonarCloudMeasure {
       // Filter entities that have SonarCloud enabled
       const sonarcloudEntities = entities.filter(entity => 
         entity.metadata.annotations?.['sonarcloud.io/enabled'] === 'true' && 
-        entity.metadata.annotations?.['sonarcloud.io/project-key'] && // maybe && (... xor ... xor ...) if each repo is part of a different system
-        entity.spec?.system === 'payments-system'
+        entity.metadata.annotations?.['sonarcloud.io/project-key'] //&& // maybe && (... xor ... xor ...) if each repo is part of a different system
+        // entity.spec?.system === 'payments-system'
       );
       
       // Process each entity with SonarCloud enabled
@@ -119,10 +118,10 @@ interface SonarCloudMeasure {
   };
 };
 
-// Create and export the SonarCloud fact retriever backend module
-export const techInsightsModuleSonarCloudFactRetriever = createFactRetrieverBackendModule({
-  pluginId: 'tech-insights',
-  moduleId: 'sonarcloud-fact-retriever',
-  createFactRetriever: createSonarCloudFactRetriever,
-  logMessage: 'Registering SonarCloud fact retriever',
-}); */
+// // Create and export the SonarCloud fact retriever backend module
+// export const techInsightsModuleSonarCloudFactRetriever = createBackendModule({
+//   pluginId: 'tech-insights',
+//   moduleId: 'sonarcloud-fact-retriever',
+//   createFactRetriever: createSonarCloudFactRetriever,
+//   logMessage: 'Registering SonarCloud fact retriever',
+// }); 

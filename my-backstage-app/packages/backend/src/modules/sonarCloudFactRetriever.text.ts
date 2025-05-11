@@ -1,4 +1,4 @@
-import { createSonarCloudFactRetriever, techInsightsModuleSonarCloudFactRetriever } from './sonarCloudFactRetriever';
+import { createSonarCloudFactRetriever, techInsightsModuleSonarCloudFactRetriever } from '@internal/plugin-tech-insights-backend-module-traffic-light-backend-module/src/sonarQube/sonarCloudFactRetriever';
 import { createFactRetrieverBackendModule } from '../factRetrieverUtils';
 import { LoggerService } from '@backstage/backend-plugin-api';
 import { Config } from '@backstage/config';

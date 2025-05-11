@@ -169,7 +169,7 @@ techInsights:
   factRetrievers:
     sonarcloud-fact-retriever:  # Change from array to object
       enabled: true
-      cadence: "0 * * * *" # Every hour
+      cadence: "*/1 * * * *" # Every hour
     dependabotFactRetriever:
       cadence: "*/2 * * * *" # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
