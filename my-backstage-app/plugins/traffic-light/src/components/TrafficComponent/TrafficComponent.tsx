@@ -623,7 +623,7 @@ export const TrafficComponent = () => {
               <Typography variant="subtitle1">Github Advanced Security</Typography>
                 <GitHubSecurityTrafficLight
                   entities ={selectedEntities}
-                  onClick={() => handleSemaphoreClick('Dependabot')}
+                  onClick={() => handleSemaphoreClick('Github Advanced Security')}
                 />
             </InfoCard>
           </Grid>
