@@ -169,7 +169,7 @@ techInsights:
   factRetrievers:
     sonarcloud-fact-retriever:  # Change from array to object
       enabled: true
-      cadence: "0 * * * *" # Every hour
+      cadence: "*/1 * * * *" # Every hour
     dependabotFactRetriever:
       cadence: "*/2 * * * *" # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
@@ -202,18 +202,18 @@ techInsights:
               - fact: code_smells
                 operator: lessThanInclusive
                 value: 20
-      securityCheck:
+      vulnerabilitiesCheck:
         type: json-rules-engine
-        name: Security Hotspots Check
-        description: Verifies security hotspots are within acceptable range
+        name: Vulnerabilities Check
+        description: Verifies vulnerabilities are within acceptable range
         factIds:
           - sonarcloud-fact-retriever
         rule:
           conditions:
             all:
-              - fact: security_hotspots
+              - fact: vulnerabilities
                 operator: lessThanInclusive
-                value: 3
+                value: 5
       dependabotLowAlertCheck:
         type: json-rules-engine
         name: Dependabot Alerts Below Threshold

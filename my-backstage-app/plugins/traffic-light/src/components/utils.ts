@@ -162,7 +162,7 @@ export const getSonarQubeFacts = async (
 ): Promise<{
   bugs: number;
   code_smells: number;
-  security_hotspots: number;
+  vulnerabilities: number;
 }> => {
   try {
     console.log(
@@ -184,13 +184,13 @@ export const getSonarQubeFacts = async (
         '❌ No facts found for entity:',
         stringifyEntityRef(entity),
       );
-      return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+      return { bugs: 0, code_smells: 0, vulnerabilities: 0 };
     }
 
     return {
       bugs: Number(facts.bugs ?? 0),
       code_smells: Number(facts.code_smells ?? 0),
-      security_hotspots: Number(facts.security_hotspots ?? 0),
+      vulnerabilities: Number(facts.vulnerabilities ?? 0),
     };
   } catch (error) {
     console.error(
@@ -198,7 +198,7 @@ export const getSonarQubeFacts = async (
       stringifyEntityRef(entity),
       error,
     );
-    return { bugs: 0, code_smells: 0, security_hotspots: 0 };
+    return { bugs: 0, code_smells: 0, vulnerabilities: 0 };
   }
 };
 

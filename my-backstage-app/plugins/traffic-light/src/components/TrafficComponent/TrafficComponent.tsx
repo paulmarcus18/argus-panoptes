@@ -157,21 +157,21 @@ const SonarQubeTrafficLight = ({
           (acc, result) => {
             acc.bugs += result.bugs;
             acc.code_smells += result.code_smells;
-            acc.security_hotspots += result.security_hotspots;
+            acc.vulnerabilities += result.vulnerabilities;
             return acc;
           },
-          { bugs: 0, code_smells: 0, security_hotspots: 0 },
+          { bugs: 0, code_smells: 0, vulnerabilities: 0 },
         );
 
         // Determine traffic light color based on metrics
         if (
           totals.bugs > 0 ||
-          totals.security_hotspots > 0 ||
+          totals.vulnerabilities > 0 ||
           totals.code_smells > 10
         ) {
           setColor('red');
           setReason(
-            `Quality issues found: ${totals.bugs} bugs, ${totals.code_smells} code smells, ${totals.security_hotspots} security hotspots`,
+            `Quality issues found: ${totals.bugs} bugs, ${totals.code_smells} code smells, ${totals.vulnerabilities} vulnerabilities`,
           );
         } else if (totals.code_smells > 1) {
           setColor('yellow');
