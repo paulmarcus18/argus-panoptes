@@ -6,12 +6,20 @@
     "plugins/*/src",
     "plugins/*/config.d.ts",
     "plugins/*/dev",
-    "plugins/*/migrations"
-, "plugins/traffic-light-backend/router.ts", "plugins/traffic-light-backend/index.ts" ,"plugins/traffic-light-backend"  ],
+    "plugins/*/migrations",
+    "plugins/traffic-light-backend/router.ts",
+    "plugins/traffic-light-backend/index.ts",
+    "plugins/traffic-light-backend",
+    "**/*.test.ts"
+  ],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "outDir": "dist-types",
     "rootDir": ".",
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@internal/*": ["plugins/*/src"]
+    }
   }
 }

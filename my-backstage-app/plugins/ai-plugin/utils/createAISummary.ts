@@ -1,70 +1,78 @@
-import { GoogleGenAI } from '@google/genai'; // Import the GoogleGenAI package
-import { getCommitMessagesBySystem } from './getCommitMessagesBySystem'; // Import the function to get commit messages
-import { CatalogApi } from '@backstage/plugin-catalog-react';
+import { GoogleGenAI } from '@google/genai';
+import { CatalogApi } from '@backstage/catalog-client';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
+import { getCommitMessagesBySystem } from './getCommitMessagesBySystem';
+import { CommitsPerRepo, SummaryPerRepo } from './types';
 
-// Initialize GoogleGenAI with your API key
-const ai = new GoogleGenAI({ apiKey: 'AIzaSyC7PNqPNPlfa7v4obQm70xSr_XEfG1ySwA' });
+/**
+ * Core logic: Summarize commit messages by system using Gemini.
+ * Accepts a Gemini AI client and pre-fetched commit message data.
+ */
+export async function generateSummariesFromCommits(
+  ai: GoogleGenAI,
+  commitMessagesBySystem: Record<string, CommitsPerRepo[]>,
+): Promise<Record<string, SummaryPerRepo[]>> {
+  /**
+   * Initializes an empty record with system as key and
+   * a SummaryPerRepo list as value.
+   */
+  const summaries: Record<string, SummaryPerRepo[]> = {};
 
-interface CommitsPerRepo {
-    repoName: string;
-    commitMessages: string;
-}
+  /**
+   * Goes through each pair of key and value objects of the
+   * type system and repo list and generates a release note for
+   * the repo.
+   */
+  for (const [system, repos] of Object.entries(commitMessagesBySystem)) {
+    /**
+     * Initializes an empty SummaryPerRepo list.
+     */
+    const summarizedRepos: SummaryPerRepo[] = [];
 
-interface SummaryPerRepo {
-    repoName: string;
-    summary: string;
-}
-  
-export const generateSummaries = async (
-    catalogApi: CatalogApi,
-    techInsightsApi: TechInsightsApi,
-  ): Promise<Record<string, SummaryPerRepo[]>> => {
-    const summaries: Record<string, SummaryPerRepo[]> = {};
-    const data = await getCommitMessagesBySystem(catalogApi, techInsightsApi);
-    // const data: Record<string, CommitsPerRepo[]> = {
-    //     'payments': [
-    //       {
-    //         repoName: 'payments-service',
-    //         commitMessages:
-    //           'refactor: improved validation\nfix: handle declined payments\nfeat: added transaction logging',
-    //       },
-    //       {
-    //         repoName: 'billing-ui',
-    //         commitMessages:
-    //           'fix: dropdown bug\nstyle: invoice layout\nchore: tooltip help text',
-    //       },
-    //     ],
-    //     'user-management': [
-    //       {
-    //         repoName: 'auth-service',
-    //         commitMessages:
-    //           'fix: token refresh\nfeat: add 2FA\nrefactor: session handling',
-    //       },
-    //     ],
-    //   };
-    
+    /**
+     * Goes throug each pair of repo name and commit messages of
+     * the repo list and generates the release note.
+     */
+    for (const { repoName, commitMessages } of repos) {
+      const prompt = `Summarize the following git commit messages:\n\n${commitMessages}.`;
 
-    for (const [system, repos] of Object.entries(data)) {
-        const summarizedRepos: SummaryPerRepo[] = [];
-        for (const { repoName, commitMessages } of repos) {
-            const prompt = `Summarize the following git commit messages:\n\n${commitMessages}.`;
-            try {
-                const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
-                contents: prompt,
-                });
+      try {
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.0-flash',
+          contents: prompt,
+        });
 
-                const summary = response.text ?? 'No summary returned.';
-                const summarizedRepo: SummaryPerRepo = {repoName: repoName, summary: summary};
-                summarizedRepos.push(summarizedRepo);
-            } catch (error) {
-                console.error(`Error summarizing ${repoName} in ${system}:`, error);
-            }
-
-        }
-        summaries[system] = summarizedRepos;
+        const summary = response?.text ?? 'No summary returned.';
+        summarizedRepos.push({ repoName, summary });
+      } catch (error) {
+        console.error(`Error summarizing ${repoName} in ${system}:`, error);
+      }
     }
-    return summaries;
-  };
-  
+
+    summaries[system] = summarizedRepos;
+  }
+
+  return summaries;
+}
+
+/**
+ * This is a wrapper function that uses the getCommitMessagesBySystem
+ * function to get commitMessagesBySystem and that initializez a new
+ * ai model using gemini. It then calls generateSummariesFromCommits
+ * using the two as parameters.
+ */
+export async function generateSummaries(
+  catalogApi: CatalogApi,
+  techInsightsApi: TechInsightsApi,
+): Promise<Record<string, SummaryPerRepo[]>> {
+  const ai = new GoogleGenAI({
+    apiKey: 'AIzaSyC7PNqPNPlfa7v4obQm70xSr_XEfG1ySwA',
+  });
+
+  const commitMessagesBySystem = await getCommitMessagesBySystem(
+    catalogApi,
+    techInsightsApi,
+  );
+
+  return generateSummariesFromCommits(ai, commitMessagesBySystem);
+}

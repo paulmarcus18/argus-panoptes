@@ -1,43 +1,73 @@
-import { CatalogApi } from '@backstage/plugin-catalog-react';
+import { CatalogApi } from '@backstage/catalog-client';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
-import { getReposBySystem } from './getReposBySystem'; // same as updated frontend version
-/**
- * Aggregates commit messages by system from stored Tech Insights facts (frontend-safe).
- */
-interface CommitsPerRepo {
-  repoName: string;
-  commitMessages: string;
-}
+import { CompoundEntityRef } from '@backstage/catalog-model';
+import { getReposBySystem } from './getReposBySystem';
+import { CommitsPerRepo } from './types';
 
-export async function getCommitMessagesBySystem(
-  catalogApi: CatalogApi,
+/**
+ * Receives a record of all compound entity refs of a certain system,
+ * finds the commit messages for these refs and returns a dictionary
+ * with system as the key and an CommitPerRepo list as the value.
+ */
+export async function getCommitMessagesBySystemFromEntityRefs(
   techInsightsApi: TechInsightsApi,
+  systemToEntityRefs: Record<string, CompoundEntityRef[]>,
 ): Promise<Record<string, CommitsPerRepo[]>> {
-  const systemToEntityRefs = await getReposBySystem(catalogApi);
+  /**
+   * Creates an empty result object.
+   */
   const result: Record<string, CommitsPerRepo[]> = {};
 
+  /**
+   * Goes through each pair of key and value objects of the
+   * type system and entity ref list and gets all the commit messages
+   * by means of computind a CommitsPerRepo list
+   */
   for (const [system, entityRefs] of Object.entries(systemToEntityRefs)) {
+    /**
+     * Initializes an empty CommitsPerRepo list.
+     */
     const allCommitMessages: CommitsPerRepo[] = [];
 
+    /**
+     * Goes through each entity ref in the entity ref list of
+     * a certain system and gets the recent commits of that
+     * entity ref.
+     */
     for (const entityRef of entityRefs) {
+      /**
+       * Uses the techInsightsApi to retrieve the data saved under
+       * id github-commit-message-retriever.
+       */
       try {
         const facts = await techInsightsApi.getFacts(entityRef, [
           'github-commit-message-retriever',
         ]);
 
-        if (facts === undefined) {
-          break;
-        }
-        const retriever = facts['github-commit-message-retriever'];
-        const factsForEntity = retriever['facts'];
-        const recentCommitMessages = factsForEntity.recent_commit_messages;
+        /**
+         * If no facts are stored on a certain entity ref
+         * then no further action is needed and the program breaks.
+         */
+        if (!facts) break;
 
+        /**
+         * The JSON object retrieve is unpacked so that the recent
+         * commit messages can be extracted.
+         */
+        const retriever = facts['github-commit-message-retriever'];
+        const factsForEntity = retriever?.facts;
+        const recentCommitMessages = factsForEntity?.recent_commit_messages;
+
+        /**
+         * If the recent commit messages are not undefines, the allCommitMessages
+         * list is being populated with a new object of the type
+         * CommitsPerRepo.
+         */
         if (typeof recentCommitMessages === 'string') {
-          const commits: CommitsPerRepo = {
+          allCommitMessages.push({
             repoName: entityRef.name,
             commitMessages: recentCommitMessages,
-          };
-          allCommitMessages.push(commits);
+          });
         } else {
           console.debug(`No commit messages found for ${entityRef.name}`);
         }
@@ -46,8 +76,28 @@ export async function getCommitMessagesBySystem(
       }
     }
 
+    /**
+     * The created allCommitMessages list is added under the system
+     * key in the dictionary to be returned.
+     */
     result[system] = allCommitMessages;
   }
 
   return result;
+}
+
+/**
+ * This is a wrapper function which first gets the systemToEntiteyRefs list
+ * from the getReposBySystem function before sending them to the
+ * getCommitMessagesBySystemFromEntityRefs function.
+ */
+export async function getCommitMessagesBySystem(
+  catalogApi: CatalogApi,
+  techInsightsApi: TechInsightsApi,
+): Promise<Record<string, CommitsPerRepo[]>> {
+  const systemToEntityRefs = await getReposBySystem(catalogApi);
+  return getCommitMessagesBySystemFromEntityRefs(
+    techInsightsApi,
+    systemToEntityRefs,
+  );
 }

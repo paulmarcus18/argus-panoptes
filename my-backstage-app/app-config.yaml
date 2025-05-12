@@ -28,21 +28,23 @@ backend:
   # This is for local development only, it is not recommended to use this in production
   # The production database configuration is stored in app-config.production.yaml
   database:
-    client: better-sqlite3
-    connection: ':memory:'
+    # client: better-sqlite3
+    # connection: ':memory:'
+    #client: better-sqlite3
+    #connection: ':memory:',
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+      database: '${POSTGRES_DATABASE}'
   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
 
 integrations:
   github:
     - host: github.com
-      # This is a Personal Access Token or PAT from GitHub. You can find out how to generate this token, and more information
-      # about setting up the GitHub integration here: https://backstage.io/docs/integrations/github/locations#configuration
       token: ${GITHUB_TOKEN}
-    ### Example for how to add your GitHub Enterprise instance using the API:
-    # - host: ghe.example.net
-    #   apiBaseUrl: https://ghe.example.net/api/v3
-    #   token: ${GHE_TOKEN}
-
 proxy:
   ### Example for how to add a proxy endpoint for the frontend.
   ### A typical reason to do this is to handle HTTPS and CORS for internal services.
@@ -159,13 +161,9 @@ permission:
 
 sonarcloud:
   token: ${SONARCLOUD_TOKEN}
-  organization: vesela-petkova
+  organization: sep-arguspanoptes
 
 techInsights:
-  scheduler:
-    knexConfig:
-      client: 'better-sqlite3'
-      connection: ':memory:'
   factRetrievers:
     sonarcloud-fact-retriever: # Change from array to object
       enabled: true
@@ -175,6 +173,9 @@ techInsights:
       cadence: '0 */4 * * *' # Every minute
       filter:
         kind: Component
+    dependabotFactRetriever:
+      cadence: '*/2 * * * *' # every minute
+      lifecycle: { timeToLive: { weeks: 2 } }
   factChecker:
     checks:
       noHighBugsCheck:
@@ -238,3 +239,15 @@ techInsights:
               - fact: commit_count_last_week
                 operator: greaterThan
                 value: 0
+      dependabotLowAlertCheck:
+        type: json-rules-engine
+        name: Dependabot Alerts Below Threshold
+        description: Checks if Dependabot alerts are below 5
+        factIds:
+          - dependabotFactRetriever
+        rule:
+          conditions:
+            all:
+              - fact: openAlertCount
+                operator: lessThan
+                value: 5

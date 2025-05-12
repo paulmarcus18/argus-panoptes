@@ -4,9 +4,6 @@ metadata:
   name: my-backstage-app
   description: An example of a Backstage application.
   annotations:
-    github.com/project-slug: zofiarynkiewicz/argus-panoptes
-    sonarqube.org/project-key: zofiarynkiewicz_tabia
-    sonarqube.org/project-key: zofiarynkiewicz_fatt
     backstage.io/techdocs-ref: dir:.
   # links:
   #   - url: https://sonarcloud.io/project/overview?id=zofiarynkiewicz_tabia

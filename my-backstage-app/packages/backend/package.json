@@ -11,7 +11,7 @@
     "start": "backstage-cli package start",
     "build": "backstage-cli package build",
     "lint": "backstage-cli package lint",
-    "test": "backstage-cli package test",
+    "test": "jest",
     "clean": "backstage-cli package clean",
     "build-image": "docker build ../.. -f Dockerfile --tag backstage"
   },
@@ -48,15 +48,19 @@
     "@backstage/plugin-tech-insights-common": "^0.2.13",
     "@backstage/plugin-tech-insights-node": "^0.6.1",
     "@backstage/plugin-techdocs-backend": "^2.0.1",
+    "@internal/plugin-ai-plugin-backend-module-tech-insights-backend-module": "workspace:^",
+    "@internal/plugin-tech-insights-backend-module-traffic-light-backend-module": "workspace:^",
     "@octokit/rest": "^21.1.1",
     "app": "link:../app",
     "better-sqlite3": "^9.0.0",
+    "dotenv": "^16.5.0",
     "node-fetch": "^3.3.2",
     "node-gyp": "^10.0.0",
     "pg": "^8.11.3"
   },
   "devDependencies": {
-    "@backstage/cli": "^0.32.0"
+    "@backstage/cli": "^0.32.0",
+    "dotenv-cli": "^8.0.0"
   },
   "files": [
     "dist"
