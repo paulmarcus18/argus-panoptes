@@ -7602,6 +7602,31 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@internal/plugin-dora-dashboard@workspace:^, @internal/plugin-dora-dashboard@workspace:plugins/dora-dashboard":
+  version: 0.0.0-use.local
+  resolution: "@internal/plugin-dora-dashboard@workspace:plugins/dora-dashboard"
+  dependencies:
+    "@backstage/cli": "npm:^0.32.0"
+    "@backstage/core-app-api": "npm:^1.16.1"
+    "@backstage/core-components": "npm:^0.17.1"
+    "@backstage/core-plugin-api": "npm:^1.9.3"
+    "@backstage/dev-utils": "npm:^1.1.9"
+    "@backstage/test-utils": "npm:^1.7.7"
+    "@backstage/theme": "npm:^0.6.5"
+    "@material-ui/core": "npm:^4.9.13"
+    "@material-ui/icons": "npm:^4.9.1"
+    "@material-ui/lab": "npm:^4.0.0-alpha.61"
+    "@testing-library/jest-dom": "npm:^6.0.0"
+    "@testing-library/react": "npm:^14.0.0"
+    "@testing-library/user-event": "npm:^14.0.0"
+    msw: "npm:^1.0.0"
+    react: "npm:^16.13.1 || ^17.0.0 || ^18.0.0"
+    react-use: "npm:^17.2.4"
+  peerDependencies:
+    react: ^16.13.1 || ^17.0.0 || ^18.0.0
+  languageName: unknown
+  linkType: soft
+
 "@internal/plugin-tech-insights-backend-module-traffic-light-backend-module@workspace:^, @internal/plugin-tech-insights-backend-module-traffic-light-backend-module@workspace:plugins/tech-insights-backend-module-traffic-light-backend-module":
   version: 0.0.0-use.local
   resolution: "@internal/plugin-tech-insights-backend-module-traffic-light-backend-module@workspace:plugins/tech-insights-backend-module-traffic-light-backend-module"
@@ -15098,6 +15123,7 @@ __metadata:
     "@backstage/test-utils": "npm:^1.7.7"
     "@backstage/theme": "npm:^0.6.5"
     "@internal/plugin-ai-plugin": "workspace:^"
+    "@internal/plugin-dora-dashboard": "workspace:^"
     "@internal/plugin-traffic-light": "workspace:^"
     "@material-ui/core": "npm:^4.12.2"
     "@material-ui/icons": "npm:^4.9.1"

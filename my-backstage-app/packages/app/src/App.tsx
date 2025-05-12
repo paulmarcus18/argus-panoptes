@@ -37,6 +37,7 @@ import { RequirePermission } from '@backstage/plugin-permission-react';
 import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
 import { TrafficLightPage } from '@internal/plugin-traffic-light';
 import { AiPluginPage } from '@internal/plugin-ai-plugin';
+import { DoraDashboardPage } from '@internal/plugin-dora-dashboard';
 
 
 const app = createApp({
@@ -99,6 +100,7 @@ const routes = (
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
     <Route path="/traffic-light" element={<TrafficLightPage />} />
     <Route path="/ai-plugin" element={<AiPluginPage />} />
+    <Route path="/dora-dashboard" element={<DoraDashboardPage />} />
   </FlatRoutes>
 );
 
