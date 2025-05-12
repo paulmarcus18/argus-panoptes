@@ -4,8 +4,8 @@ metadata:
   name: terraform-provider-unleash
   description: A Terraform provider to provision and manage Unleash admin resources.
   annotations:
-    github.com/project-slug: philips-labs/terraform-provider-unleash
-    backstage.io/source-location: url:https://github.com/philips-labs/terraform-provider-unleash
+    github.com/project-slug: SEP-ArgusPanoptes/terraform-provider-unleash
+    backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/terraform-provider-unleash
     sonarcloud.io/project-key: SEP-ArgusPanoptes_terraform-provider-unleash
     sonarcloud.io/enabled: 'true'
   tags:
@@ -13,5 +13,5 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: philips-labs
+  owner: SEP-ArgusPanoptes
   system: user-management-system

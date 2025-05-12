@@ -4,8 +4,8 @@ metadata:
   name: slsa-provenance-action
   description: Implements the level 1 requirements of the SLSA framework.
   annotations:
-    github.com/project-slug: philips-labs/slsa-provenance-action
-    backstage.io/source-location: url:https://github.com/philips-labs/slsa-provenance-action
+    github.com/project-slug: SEP-ArgusPanoptes/slsa-provenance-action
+    backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/slsa-provenance-action
     sonarcloud.io/project-key: SEP-ArgusPanoptes_slsa-provenance-action
     sonarcloud.io/enabled: 'true'
   tags:
@@ -13,5 +13,5 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: philips-labs
+  owner: SEP-ArgusPanoptes
   system: payments-system

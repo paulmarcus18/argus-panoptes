@@ -1,112 +1,107 @@
 /**
  * This file reads a github token from config, uses Octokit to fetch open dependabot alerts
  * Returns the number of alerts per repo in a structured way that Tech Insights can consume
- */
-//Import fact retriever interface, used to define a retriever that collects factual data for a given entity
+*/
+//Imports the fact retriever interface, used to define structure of a custom fact retriever
 import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
-import type { Octokit } from '@octokit/rest';
+//LoggerService is used to log messages and errors
+import { LoggerService } from '@backstage/backend-plugin-api';
+//Imports config to give access to the app-config.yaml file for reading credentials or plugin settings
+import { Config } from '@backstage/config';
+//CatalogClient is used to query the catalog for entities
+import { CatalogClient } from '@backstage/catalog-client';
 
 /**
- * This FactRetriever queries the 'philips-labs/dct-notary-admin' repo
- * and returns the number of open Dependabot alerts.
+ * Creates a fact retriever that dynamically queries all catalog entities and retrieves Dependabot alerts.
+ * Defines and exports a function createDependabotFactRetriever that accepts config and logger, returning a FactRetriever object.
  */
-//Defines and exports the fact retriever object named dependabotFactRetriever
-export const dependabotFactRetriever: FactRetriever = {
-  //identifier for this fact retriever
-  id: 'dependabotFactRetriever',
-  //Versioning information for this retriever. Helps track changes over time
-  version: '0.1.0',
-  //Defines the structure of the facts returned, which is openAlertCount integer now
-  schema: {
-    openAlertCount: {
-      type: 'integer',
-      description: 'Number of open Dependabot alerts for dct-notary-admin repo',
-    },
-  },
-  //main logic of the retriever, function that receives config and logger
-  async handler({ config, logger }) {
-    //declares a variable to store github token used for auth
-    let token: string | undefined;
-    //tries to read github integration config from app-config.yaml and extracts the token if available
-    try {
-      const githubConfigs = config.getOptionalConfigArray('integrations.github');
-      const githubConfig = githubConfigs?.[0];
-      token = githubConfig?.getOptionalString('token');
-
-      //logs whether the token was found or not
-      logger.info(`🔍 Retrieved GitHub token: ${token ? '✔️ Present' : '❌ Missing'}`);
-      // Remove the next line in production
-      //logger.info(`DEBUG: GitHub token = ${token}`);
-    } catch (e) {
-      //logs any error retrieving the token 
-      logger.error(`❌ Could not retrieve GitHub token: ${e}`);
-      return [];
-    }
-
-    if (!token) {
-      //if token is missing then logs error and exits early
-      logger.error('❌ GitHub token is not defined.');
-      return [];
-    }
-
-    // Use dynamic import for Octokit
-    const { Octokit } = await import('@octokit/rest');
-    
-    //initializes github api client with token to authorize future requests
-    const octokit = new Octokit({ auth: token });
-
-    //Declares an array of repos to check for alerts, easily extendable for multiple repos now
-    //TO-DO: make the owner and name details be fetched automatically from frontend chosen repos
-    const repos = [
-      {
-        owner: { login: 'MeherShroff2' },
-        name: 'dct-notary-admin',
+export const createDependabotFactRetriever = (
+  config: Config,
+  logger: LoggerService,
+): FactRetriever => {
+  return {
+    //Unique identifier for the fact retriever
+    id: 'dependabotFactRetriever',
+    //Version to manage changes over time and backard compatibility
+    version: '0.2.1',
+    //Only retrieves facts for entities of kind 'Component'
+    entityFilter: [{ kind: 'Component' }],
+    //Defines the output schema for the facts: a single integer field openAlertCount
+    schema: {
+      openAlertCount: {
+        type: 'integer',
+        description: 'Number of open Dependabot alerts for the component',
       },
-    ];
+    },
+    //This function contains the logic to fetch and process the facts
+    //It uses the GitHub API to fetch open Dependabot alerts for each component
+    handler: async ({ discovery, auth }) => {
+      //Fetches the GitHub token from the app config
+      //This token is used to authenticate with the GitHub API
+      const githubConfigs = config.getOptionalConfigArray('integrations.github');
+      const githubToken = githubConfigs?.[0]?.getOptionalString('token');
+      //If the token is not found, log an error and return an empty array
+      //This prevents the function from running without proper authentication
+      if (!githubToken) {
+        logger.error('Missing GitHub token in config');
+        return [];
+      }
+      //Fetches the catalog token using the auth plugin
+      //This token is used to authenticate with the catalog API
+      const { token: catalogToken } = await auth.getPluginRequestToken({
+        onBehalfOf: await auth.getOwnServiceCredentials(),
+        targetPluginId: 'catalog',
+      });
+      //If the token is not found, log an error and return an empty array
+      //This prevents the function from running without proper authentication
+      const catalogClient = new CatalogClient({ discoveryApi: discovery });
+      const { items: entities } = await catalogClient.getEntities(
+        { filter: [{ kind: 'Component' }] },
+        { token: catalogToken },
+      );
+      //If no entities are found, log a warning and return an empty array
+      //This prevents the function from running without proper data
+      const Octokit = (await import('@octokit/rest')).Octokit;
+      const octokit = new Octokit({ auth: githubToken });
+      const results = await Promise.all(
+        entities.map(async entity => {
+          //Extracts the GitHub repository URL from the entity metadata
+          //This URL is used to identify the repository for which to fetch alerts
+          const repoUrl = entity.metadata.annotations?.['github.com/project-slug'];
+          if (!repoUrl) return null;
+          //Splits the URL to get the owner and repo name
+          //This is used to construct the API request
+          const [owner, name] = repoUrl.split('/');
+          try {
+            const alertsResponse = await octokit.request(
+              'GET /repos/{owner}/{repo}/dependabot/alerts',
+              { owner, repo: name, per_page: 100 },
+            );
+            //Filters the alerts to only include those that are open
+            //This is used to count the number of open alerts for the repository
+            const openAlerts = alertsResponse.data.filter(a => a.state === 'open');
 
-    //parallel fetching for all repost listed above
-    const results = await Promise.all(
-      //loops over each repo and performs the retrieval asynchronously
-      repos.map(async repo => {
-        //calls github rest api to fetch dependabot alerts, for more than 100, pagination is needed
-        //TO-DO : implement a way for more than 100 alerts to show
-        try {
-          const alertsResponse = await octokit.request(
-            'GET /repos/{owner}/{repo}/dependabot/alerts',
-            {
-              owner: repo.owner.login,
-              repo: repo.name,
-              per_page: 100,
-            },
-          );
-
-          //filters only alerts with state "open" to count open vulnerabilities
-          const openAlerts = alertsResponse.data.filter(alert => alert.state === 'open');
-
-          //returns a fact result object for the component including number of open alerts
-          return {
-            entity: {
-              kind: 'Component',
-              namespace: 'default',
-              name: repo.name,
-            },
-            facts: {
-              openAlertCount: openAlerts.length,
-            },
-          }; //handles errors and logs the corresponding error 
-        } catch (err: any) {
-          if (err.status === 403 || err.status === 404) {
-            logger.warn(`⚠️ Access denied to alerts for ${repo.name} (status ${err.status}) — skipping`);
+            //Returns the entity information and the count of open alerts
+            return {
+              entity: {
+                name: entity.metadata.name,
+                kind: entity.kind,
+                namespace: entity.metadata.namespace ?? 'default',
+              },
+              facts: {
+                openAlertCount: openAlerts.length,
+              },
+            };
+            //If the request fails, log a warning and return null
+          } catch (e) {
+            logger.warn(`Failed to fetch alerts for ${repoUrl}: ${e}`);
             return null;
           }
-          //logs if there was an error with fetching alerts despite having access
-          logger.error(`❌ Error fetching alerts for ${repo.name}: ${err.message} (status ${err.status})`);
-          return null;
-        }
-      }),
-    );
-
-    //filters null results 
-    return results.filter((r): r is NonNullable<typeof r> => r !== null);
-  },
+        }),
+      );
+      //Filters out any null results from the previous step
+      //This ensures that only valid results are returned
+      return results.filter(Boolean) as NonNullable<Awaited<ReturnType<FactRetriever['handler']>>>;
+    },
+  };
 };

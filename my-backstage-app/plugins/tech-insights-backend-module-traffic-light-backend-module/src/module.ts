@@ -3,13 +3,12 @@
  * Adds a custom fact retriever to the system, dependabotFactRetriever
  * Allows the plugin to collect dependabot alerts for usage
  */
-
 //imports the utility function used to define and create a backend module in Backstage
 import { createBackendModule, coreServices, LoggerService } from '@backstage/backend-plugin-api';
 //imports the tech insights extension point that lets you plug in custom FactRetrievers
 import { techInsightsFactRetrieversExtensionPoint } from '@backstage-community/plugin-tech-insights-node';
 //imports retriever that queries dependabot alert data
-import { dependabotFactRetriever } from './dependabot/dependabotFactRetriever';
+import { createDependabotFactRetriever } from './dependabot/dependabotFactRetriever';
 //import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 
 //defines a backend module that integrates with the tech insights plugin
@@ -27,16 +26,17 @@ export default createBackendModule({
         //declares that it needs access to the fact retriever provider interface
         providers: techInsightsFactRetrieversExtensionPoint,
         logger: coreServices.rootLogger,
-        //config: coreServices.rootConfig,
+        config: coreServices.rootConfig,
       },
       //initialization function that will run during backend's startup
-      async init({ providers, logger }) {
+      async init({ providers, logger, config }) {
         //logs to the console to confirm module is being registered
         logger.info('Registering dependabot-facts module...');
+        const factRetriever = createDependabotFactRetriever(config, logger);
         providers.addFactRetrievers({
-          dependabotFactRetriever
+          'dependabotFactRetriever': factRetriever
         });
       },
     });
   },
-});
+}); 

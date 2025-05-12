@@ -4,8 +4,8 @@ metadata:
   name: workflow-capability
   description: Allows caregivers and hospital management to start, control, and view the status of medical protocol workflows of patients.
   annotations:
-    github.com/project-slug: philips-labs/workflow-capability
-    backstage.io/source-location: url:https://github.com/philips-labs/workflow-capability
+    github.com/project-slug: SEP-ArgusPanoptes/workflow-capability
+    backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/workflow-capability
     sonarcloud.io/project-key: SEP-ArgusPanoptes_workflow-capability
     sonarcloud.io/enabled: 'true'
   tags:
@@ -13,5 +13,5 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: philips-labs
+  owner: SEP-ArgusPanoptes
   system: user-management-system
