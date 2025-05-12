@@ -11,11 +11,8 @@ import { Entity } from '@backstage/catalog-model';
 import { CatalogClient } from '@backstage/catalog-client';
 import { GitHubCommit, GitHubPR } from './types';
 
-export function createGitHubCommitMessageRetriever(
-  logger: LoggerService,
-): FactRetriever {
-  return {
-    id: 'github-commit-message-retriever',
+export const createGitHubCommitMessageRetriever: FactRetriever = {
+    id: 'createGitHubCommitMessageRetriever',
     version: '1.0',
     entityFilter: [{ kind: 'component' }],
     schema: {
@@ -48,11 +45,11 @@ export function createGitHubCommitMessageRetriever(
           { token },
         );
         entities = response.items ?? [];
-        logger.info(
+        console.info(
           `Fetched ${entities.length} component entities from catalog`,
         );
       } catch (e) {
-        logger.error(`Failed to fetch entities from catalog: ${e}`);
+        console.error(`Failed to fetch entities from catalog: ${e}`);
         return [];
       }
 
@@ -61,7 +58,7 @@ export function createGitHubCommitMessageRetriever(
       for (const entity of entities) {
         const slug = entity.metadata.annotations?.['github.com/project-slug'];
         if (!slug) {
-          logger.warn(
+          console.warn(
             `No GitHub slug annotation found for entity: ${entity.metadata.name}`,
           );
           continue;
@@ -81,7 +78,7 @@ export function createGitHubCommitMessageRetriever(
           );
 
           if (!prResponse.ok) {
-            logger.error(`Failed to fetch PRs: ${prResponse.statusText}`);
+            console.error(`Failed to fetch PRs: ${prResponse.statusText}`);
             continue;
           }
 
@@ -89,7 +86,8 @@ export function createGitHubCommitMessageRetriever(
           if (!prs.length) continue;
 
           const now = new Date();
-          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          // const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          const oneDayAgo = new Date(0);
 
           const recentPRs = prs.filter(pr => {
             if (!pr.merged_at) return false;
@@ -107,6 +105,7 @@ export function createGitHubCommitMessageRetriever(
             oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
             for (const pr of recentPRs) {
+              console.info(`Fetching commits for PR: ${pr.number}`);
               const commitsResponse = await fetch(pr.commits_url, {
                 headers: {
                   Authorization: `Bearer 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`,
@@ -147,7 +146,7 @@ export function createGitHubCommitMessageRetriever(
             });
           }
         } catch (err) {
-          logger.error(
+          console.error(
             `Error retrieving commit messages for ${entity.metadata.name}: ${err}`,
           );
         }
@@ -156,23 +155,4 @@ export function createGitHubCommitMessageRetriever(
       return results;
     },
   };
-}
 
-export const githubCommitRetrieverModule = createBackendModule({
-  pluginId: 'tech-insights',
-  moduleId: 'github-commit-message-retriever',
-  register(env) {
-    env.registerInit({
-      deps: {
-        factRetrievers: techInsightsFactRetrieversExtensionPoint,
-        config: coreServices.rootConfig,
-        logger: coreServices.rootLogger,
-      },
-      async init({ factRetrievers, logger }) {
-        logger.info('Registering GitHub commit message fact retriever');
-        const factRetriever = createGitHubCommitMessageRetriever(logger);
-        factRetrievers.addFactRetrievers({ [factRetriever.id]: factRetriever });
-      },
-    });
-  },
-});

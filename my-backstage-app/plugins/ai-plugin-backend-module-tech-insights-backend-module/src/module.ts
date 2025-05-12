@@ -15,10 +15,9 @@ export const aiPluginModuleTechInsightsBackendModule = createBackendModule({
         logger: coreServices.rootLogger,
       },
       async init({ providers, logger }) {
-        logger.info('Registering GitHub Commit Message Fact Retriever...');
-        const retriever = createGitHubCommitMessageRetriever(logger);
+        logger.info('✅ Registering GitHub Commit Message Fact Retriever...');
         providers.addFactRetrievers({
-          [retriever.id]: retriever,
+          createGitHubCommitMessageRetriever
         });
       },
     });

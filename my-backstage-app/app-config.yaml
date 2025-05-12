@@ -168,9 +168,9 @@ techInsights:
     sonarcloud-fact-retriever: # Change from array to object
       enabled: true
       cadence: '0 */4 * * *' # Every 4 hours
-    github-commit-message-retriever:
+    createGitHubCommitMessageRetriever:
       enabled: true
-      cadence: '0 */4 * * *' # Every minute
+      cadence: '*/2 * * * *' # Every minute
       filter:
         kind: Component
     dependabotFactRetriever:
@@ -219,20 +219,19 @@ techInsights:
         name: Commit Message Check
         description: Ensures there is a recent commit message
         factIds:
-          - github-commit-message-retriever
+          - createGitHubCommitMessageRetriever
         rule:
           conditions:
             all:
               - fact: last_commit_message
                 operator: notEqual
                 value: ''
-
-      recentCommitsCheck:
+      commitCountCheck:
         type: json-rules-engine
         name: Recent Commits Check
         description: Checks if there are recent commits in the past week
         factIds:
-          - github-commit-message-retriever
+          - createGitHubCommitMessageRetriever
         rule:
           conditions:
             all:
