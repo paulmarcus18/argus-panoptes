@@ -5,4 +5,4 @@
  * @packageDocumentation
  */
 
-export { aiPluginModuleTechInsightsBackendModule as default } from './module';
+export { default } from './module';
