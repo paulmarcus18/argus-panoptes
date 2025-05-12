@@ -4,7 +4,7 @@ metadata:
   name: tabia
   description: Gives insights on the characteristics of our code bases.
   annotations:
-    github.com/project-slug: philips-labs/tabia
+    github.com/project-slug: SEP-ArgusPanoptes/tabia
     backstage.io/source-location: url:https://github.com/philips-labs/tabia
     sonarcloud.io/project-key: SEP-ArgusPanoptes_tabia
     sonarcloud.io/enabled: 'true'
@@ -13,5 +13,5 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: philips-labs
+  owner: SEP-ArgusPanoptes
   system: user-management-system
