@@ -10,6 +10,24 @@ interface SonarCloudMeasure {
   bestValue?: boolean; // Indicates if this is the best possible value for the metric
 }
 
+// Interface for SonarCloud quality gate response
+interface SonarQualityGateCondition {
+  status: string;
+  metricKey: string;
+  comparator: string;
+  errorThreshold: string;
+  actualValue: string;
+}
+
+interface SonarQualityGateResponse {
+  projectStatus: {
+    status: 'OK' | 'ERROR' | 'WARN';
+    conditions: SonarQualityGateCondition[];
+    periods: unknown[];
+    ignoredConditions: boolean;
+  };
+}
+
 /**
  * Creates a fact retriever for SonarCloud metrics.
  * 
@@ -38,7 +56,13 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
       vulnerabilities: {
         type: 'integer',
         description: 'Number of vulnerabilities detected',
-      }
+      },
+      quality_gate: {
+        type: 'string',
+        description: 'Quality gate status from SonarCloud',
+      },
+      // Quality gate conditions go here (if needed)
+      // ...
     },
     /**
      * Handler function that retrieves SonarCloud metrics for relevant entities.
@@ -97,9 +121,19 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
               },
             }
           );
+
+          // Call SonarCloud API to get Quality Gate metrics for the project
+          const responseQG = await fetch(
+            `https://sonarcloud.io/api/qualitygates/project_status?projectKey=${projectKey}`,
+            {
+              headers: {
+                'Authorization': `Basic ${Buffer.from(`${token}:`).toString('base64')}`,
+              },
+            }
+          );
           
           // Handle API error responses
-          if (!response.ok) {
+          if (!response.ok || !responseQG.ok) {
             const errorText = await response.text();
             logger.error(`SonarCloud API error for ${projectKey}: ${response.status} ${response.statusText} - ${errorText}`);
             return null;
@@ -109,12 +143,24 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
           const data = await response.json();
           logger.info(`SonarCloud API returned data for ${projectKey}: ${JSON.stringify(data)}`, { factRetrieverId: 'sonarcloud-fact-retriever' });
           
+          // Parse response data for Quality Gate
+          const dataQG = await responseQG.json();
+          logger.info(`SonarCloud API returned quality gate data for ${projectKey}: ${JSON.stringify(dataQG)}`, { factRetrieverId: 'sonarcloud-fact-retriever' });
+
           // Extract specific metrics from the response
           const measures = data.component.measures as SonarCloudMeasure[];
+
+          //Extract Quality Gate status
+          const qgStatus = (dataQG as SonarQualityGateResponse).projectStatus.status;
+
+          // Facts object to be returned
           const facts = {
             bugs: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'bugs')?.value || '0', 10),
             code_smells: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'code_smells')?.value || '0', 10),
             vulnerabilities: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'vulnerabilities')?.value || '0', 10),
+            quality_gate: qgStatus,
+            // Quality gate conditions can be added here (if needed)
+            // ...
           };
           
           logger.info(`Extracted facts for ${projectKey}: ${JSON.stringify(facts)}`, { factRetrieverId: 'sonarcloud-fact-retriever' });
