@@ -41,4 +41,5 @@ backend.add(import('@backstage-community/plugin-tech-insights-backend-module-jso
 //backend.add(techInsightsModuleSonarCloudFactRetriever); // Add the SonarCloud fact retriever
 backend.add(import('@internal/plugin-tech-insights-backend-module-traffic-light-backend-module'));
 backend.add(import('@internal/plugin-ai-plugin-backend-module-tech-insights-backend-module'));
+backend.add(import('@internal/plugin-ai-plugin-backend'));
 backend.start();

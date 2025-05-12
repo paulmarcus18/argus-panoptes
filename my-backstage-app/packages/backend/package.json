@@ -48,6 +48,7 @@
     "@backstage/plugin-tech-insights-common": "^0.2.13",
     "@backstage/plugin-tech-insights-node": "^0.6.1",
     "@backstage/plugin-techdocs-backend": "^2.0.1",
+    "@internal/plugin-ai-plugin-backend": "workspace:^",
     "@internal/plugin-ai-plugin-backend-module-tech-insights-backend-module": "workspace:^",
     "@internal/plugin-tech-insights-backend-module-traffic-light-backend-module": "workspace:^",
     "@octokit/rest": "^21.1.1",
