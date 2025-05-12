@@ -140,7 +140,7 @@ export const CommitMessageTestPage = () => {
     <Box sx={{ padding: 4 }}>
   {/* Header + Refresh */}
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 4 }}>
-    <Typography variant="h4" color="primary" sx={{ flexGrow: 1 }}>
+    <Typography variant="h4" color="text.primary" sx={{ flexGrow: 1 }}>
       Commit Summaries by System
     </Typography>
     <IconButton
@@ -244,7 +244,7 @@ export const CommitMessageTestPage = () => {
                   overflow: 'hidden',
                 }}
               >
-                <Typography variant="h5" color="secondary" gutterBottom>
+                <Typography variant="h4" color="#0b5ed7" gutterBottom>
                   {system}
                 </Typography>
 
@@ -268,7 +268,7 @@ export const CommitMessageTestPage = () => {
                       )
                       .map(({ repoName, summary }) => (
                         <Box key={repoName}>
-                          <Typography variant="h6" color="primary" gutterBottom>
+                          <Typography variant="h4" color="text.secondary" gutterBottom>
                             {repoName}
                           </Typography>
                           <Typography
