@@ -54,6 +54,18 @@ interface DependabotProps {
   onClick?: () => void;
 }
 
+// Type for semaphore severity
+type Severity = 'critical' | 'high' | 'medium' | 'low';
+
+// Type for issue details - extended with URL and directLink
+interface IssueDetail {
+  severity: Severity;
+  description: string;
+  component?: string;
+  url?: string;
+  directLink?: string;
+}
+
 const Trafficlightdependabot = ({ owner, repos, onClick }: DependabotProps) => {
   const [color, setColor] = useState<
     'green' | 'red' | 'yellow' | 'gray' | 'white'
@@ -200,7 +212,6 @@ interface GitHubSecurityTrafficLightProps {
   entities: Entity[];
   onClick?: () => void;
 }
-
 // Github Advanced security traffic light component 
 const GitHubSecurityTrafficLight = ({
   entities,
@@ -219,7 +230,7 @@ const GitHubSecurityTrafficLight = ({
       }
 
       try {
-        // Get GitHub Security facts for all entities
+        // Get GitHub security facts for all entities
         const securityResults = await Promise.all(
           entities.map(entity =>
             getGitHubSecurityFacts(techInsightsApi, {
@@ -230,30 +241,68 @@ const GitHubSecurityTrafficLight = ({
           ),
         );
 
-        console.log('GitHub Security Results:', securityResults);
+        // Process the results to categorize findings by severity
+        let criticalIssues = 0;
+        let highIssues = 0;
+        let mediumIssues = 0;
+        let lowIssues = 0;
+        
+        securityResults.forEach(result => {
+          // Process code scanning alerts
+          Object.values(result.codeScanningAlerts || {}).forEach(alert => {
+            // Count by severity
+            switch(alert.severity) {
+              case 'critical':
+                criticalIssues++;
+                break;
+              case 'high':
+                highIssues++;
+                break;
+              case 'medium':
+                mediumIssues++;
+                break;
+              case 'low':
+                lowIssues++;
+                break;
+              default:
+                // Default to medium if severity is unknown
+                mediumIssues++;
+            }
+          });
+
+          // Process secret scanning alerts (most secret scanning alerts are high severity)
+          Object.values(result.secretScanningAlerts || {}).forEach(() => {
+            highIssues++; // Most secret alerts are high severity
+          });
+        });
+
         // Count totals
-        const totals = securityResults.reduce(
-          (acc, result) => {
-            acc.codeScanningAlerts += result.openCodeScanningAlertCount;
-            acc.secretScanningAlerts += result.openSecretScanningAlertCount;
-            return acc;
-          },
-          { codeScanningAlerts: 0, secretScanningAlerts: 0 },
+        const totalCodeScanningAlerts = securityResults.reduce(
+          (sum, result) => sum + result.openCodeScanningAlertCount, 0
         );
+        
+        const totalSecretScanningAlerts = securityResults.reduce(
+          (sum, result) => sum + result.openSecretScanningAlertCount, 0
+        );
+        
+        const totalIssues = totalCodeScanningAlerts + totalSecretScanningAlerts;
 
         // Determine traffic light color based on security metrics
-        if (
-          totals.secretScanningAlerts > 0 ||
-          totals.codeScanningAlerts > 0
-        ) {
+        if (criticalIssues > 0 || highIssues > 0) {
           setColor('red');
-          setReason(`Critical security issues found: ${totals.codeScanningAlerts} code scanning alerts, ${totals.secretScanningAlerts} secret scanning alerts`);
-        } else if ((totals.codeScanningAlerts < 10 && totals.codeScanningAlerts > 0) || (totals.secretScanningAlerts < 10 && totals.secretScanningAlerts > 0) ) {
+          setReason(`Critical security issues found: ${criticalIssues} critical, ${highIssues} high severity issues`);
+        } else if (mediumIssues > 0) {
           setColor('yellow');
-          setReason(`${totals.codeScanningAlerts} code scanning alerts found`);
-        } else {
+          setReason(`${mediumIssues} medium severity issues found`);
+        } else if (lowIssues > 0) {
+          setColor('yellow');
+          setReason(`${lowIssues} low severity issues found`);
+        } else if (totalIssues === 0) {
           setColor('green');
           setReason('No security issues detected');
+        } else {
+          setColor('yellow');
+          setReason(`${totalIssues} security issues found`);
         }
       } catch (err) {
         console.error('Error fetching GitHub Security data:', err);
