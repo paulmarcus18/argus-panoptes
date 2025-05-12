@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import DownloadIcon from '@mui/icons-material/Download';
+import IconButton from '@mui/material/IconButton';
 
 interface SummaryPerRepo {
   repoName: string;
@@ -56,16 +57,16 @@ export const CommitMessageTestPage = () => {
   const [repoSearch, setRepoSearch] = useState<string>('');
 
   const fetchSummaries = async () => {
-    // setLoading(true);
-    // setTimeout(() => {
-    //   setMessagesBySystem(mockSummaries);
-    //   setLoading(false);
-    //   console.log('📬 Mock messages loaded');
-    // }, 800);
+    setLoading(true);
+    setTimeout(() => {
+      setMessagesBySystem(mockSummaries);
+      setLoading(false);
+      console.log('📬 Mock messages loaded');
+    }, 800);
 
-    const result = await generateSummaries(catalogApi, techInsightsApi);
-    setMessagesBySystem(result);
-    setLoading(false);
+    // const result = await generateSummaries(catalogApi, techInsightsApi);
+    // setMessagesBySystem(result);
+    // setLoading(false);
   };
 
   useEffect(() => {
@@ -110,11 +111,22 @@ export const CommitMessageTestPage = () => {
       {/* Header + Refresh */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 4 }}>
         <Typography variant="h4" color="primary" sx={{ flexGrow: 1 }}>
-          💌 Commit Summaries by System
+          Commit Summaries by System
         </Typography>
-        <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchSummaries}>
-          Refresh
-        </Button>
+        <IconButton
+          onClick={fetchSummaries}
+          aria-label="refresh"
+          sx={{
+            backgroundColor: 'transparent',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)', // optional subtle hover
+            },
+            boxShadow: 'none',
+            padding: 1,
+          }}
+        >
+          <RefreshIcon />
+        </IconButton>
       </Box>
 
       {/* Filters */}
@@ -175,23 +187,24 @@ export const CommitMessageTestPage = () => {
                   }}
                 >
                   {/* Download Button */}
-                  <Button
+                  <IconButton
+                    onClick={() => handleDownload(system)}
+                    aria-label="download"
                     sx={{
                       position: 'absolute',
                       top: 10,
                       right: 10,
+                      backgroundColor: 'transparent',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      },
                       width: 40,
                       height: 40,
-                      padding: 0,
-                      minWidth: 'unset',
-                      borderRadius: '8px',
-                      backgroundColor: '#fff',
+                      padding: 1,
                     }}
-                    variant="contained"
-                    onClick={() => handleDownload(system)}
                   >
                     <DownloadIcon />
-                  </Button>
+                  </IconButton>
 
                   <CardContent>
                     <Typography variant="h5" color="secondary" gutterBottom>
