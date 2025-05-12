@@ -62,7 +62,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
           {
             headers: {
               // Replace this with secure token injection from config or secrets
-              Authorization: `Bearer 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`,
+              Authorization: `Bearer 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`,
               Accept: 'application/vnd.github.v3+json',
             },
           },
@@ -74,18 +74,23 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
         }
 
         const prs: GitHubPR[] = await prResponse.json();
+        console.info(
+          `Fetched ${prs.length} PRs for ${entity.metadata.name}`,);
         if (!prs.length) continue;
 
         const now = new Date();
-        // const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        const oneDayAgo = new Date(0);
+        const oneDayAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        // const oneDayAgo = new Date(0);
 
         const recentPRs = prs.filter(pr => {
           if (!pr.merged_at) return false;
           const mergedAt = new Date(pr.merged_at);
-          return mergedAt >= oneDayAgo;
+          return true;
         });
 
+        console.info(
+          `Found ${recentPRs.length} recent PRs for ${entity.metadata.name}`,
+        );
         if (recentPRs.length) {
           const lastPr = recentPRs[0];
           const prTitle = lastPr.title;
@@ -99,7 +104,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
             console.info(`Fetching commits for PR: ${pr.number}`);
             const commitsResponse = await fetch(pr.commits_url, {
               headers: {
-                Authorization: `Bearer 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`,
+                Authorization: `Bearer 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`,
                 Accept: 'application/vnd.github.v3+json',
               },
             });
@@ -110,7 +115,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
 
             const recentCommits = commits.filter(commit => {
               const commitDate = new Date(commit.commit.author.date);
-              return commitDate > oneWeekAgo;
+              return true;
             });
 
             commitCountLastWeek += recentCommits.length;
