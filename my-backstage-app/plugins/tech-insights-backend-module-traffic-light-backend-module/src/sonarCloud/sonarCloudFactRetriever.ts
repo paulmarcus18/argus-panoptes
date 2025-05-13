@@ -185,7 +185,7 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
       // Filter out null results (failed requests)
       return results.filter(Boolean) as Array<{
         entity: { kind: string; namespace: string; name: string };
-        facts: { bugs: number; code_smells: number; vulnerabilities: number };
+        facts: { bugs: number; code_smells: number; vulnerabilities: number; code_coverage: number; quality_gate: string };
       }>;;
     },
   };
