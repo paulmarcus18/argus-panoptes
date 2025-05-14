@@ -3,6 +3,18 @@ import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { generateSummaries } from '../../utils/createAISummary';
+import { keyframes } from '@emotion/react';
+
+
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
 
 import {
   Box,
@@ -94,6 +106,7 @@ export const CommitMessageTestPage = () => {
     //   console.log('📬 Mock messages loaded');
     // }, 800);
 
+    setLoading(true); // 🔧 Make sure loading state is updated
     const result = await generateSummaries(catalogApi, techInsightsApi);
     setMessagesBySystem(result);
     setLoading(false);
@@ -155,7 +168,11 @@ export const CommitMessageTestPage = () => {
         padding: 1,
       }}
     >
-      <RefreshIcon />
+      <RefreshIcon
+        sx={{
+            animation: loading ? `${spin} 1s linear infinite` : 'none',
+          }}
+      />
     </IconButton>
   </Box>
 
@@ -189,7 +206,7 @@ export const CommitMessageTestPage = () => {
   {loading || !messagesBySystem ? (
     <Box display="flex" justifyContent="center" alignItems="center" mt={5}>
       <CircularProgress />
-      <Typography sx={{ ml: 2 }}>Loading commit summaries...</Typography>
+      <Typography sx={{ ml: 2 }}>Loading release notes...</Typography>
     </Box>
   ) : Object.keys(filteredMessages).length === 0 ? (
     <Typography variant="body1" color="text.secondary">
