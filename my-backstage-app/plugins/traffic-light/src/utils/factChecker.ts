@@ -1,42 +1,61 @@
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
+import { getCompoundEntityRef } from '@backstage/catalog-model';
 
-export type TrafficLightColor = 'green' | 'yellow' | 'red' | 'gray' | 'white';
-
-export const getDependabotStatusFromFacts = async (
+export async function getDependabotStatusFromFacts(
   techInsightsApi: TechInsightsApi,
   entities: Entity[],
-): Promise<TrafficLightColor> => {
-  try {
-    const results = await Promise.all(
-      entities.map(async entity => {
-        const entityRef = {
-          kind: entity.kind,
-          namespace: entity.metadata.namespace || 'default',
-          name: entity.metadata.name,
-        };
-
-        const factsArray = await techInsightsApi.getFacts(entityRef, ['dependabot:status']);
-        console.log('📦 Received facts for', entityRef.name, factsArray);
-
-        const status = factsArray[0]?.facts?.['dependabot:status'] as TrafficLightColor | undefined;
-
-        if (!status) {
-          console.warn(`⚠️ Missing 'dependabot:status' fact for ${entityRef.name}`);
-          return 'white';
-        }
-
-        return status;
-      }),
-    );
-
-    if (results.includes('red')) return 'red';
-    if (results.includes('yellow') || results.includes('gray')) return 'yellow';
-    if (results.length > 0 && results.every(color => color === 'green')) return 'green';
-
-    return 'white';
-  } catch (err) {
-    console.error('❌ Error retrieving dependabot facts:', err);
-    return 'gray';
+): Promise<{ color: 'green' | 'yellow' | 'red' | 'gray'; alertCount: number }> {
+  if (!entities.length) {
+    console.warn('⚠️ No entities provided to getDependabotStatusFromFacts');
+    return { color: 'gray', alertCount: 0 };
   }
-};
+
+  const entity = entities[0];
+  const entityRef = getCompoundEntityRef(entity);
+  console.log(`📛 entityRef:`, entityRef);
+
+  try {
+    const facts = await techInsightsApi.getFacts(entityRef, ['dependabot:status']);
+    let factObj = facts['dependabot:status'] ?? { color: 'yellow', alertCount: 0 };
+
+    console.log(`🔍 Raw fact value:`, factObj);
+    console.log(`🧪 Type of fact:`, typeof factObj);
+
+    if (typeof factObj === 'string') {
+      try {
+        factObj = JSON.parse(factObj);
+      } catch (e) {
+        console.warn(`❗ Could not parse stringified fact`);
+        return { color: 'gray', alertCount: 0 };
+      }
+    }
+
+    if (
+      typeof factObj !== 'object' ||
+      factObj === null ||
+      !('color' in factObj)
+    ) {
+      console.warn(`⚠️ Malformed dependabot fact:`, factObj);
+      return { color: 'gray', alertCount: 0 };
+    }
+
+    const color = (factObj as { color?: unknown }).color;
+
+    if (
+      typeof color === 'string' &&
+      ['green', 'yellow', 'red'].includes(color)
+    ) {
+      return {
+        color: color as 'green' | 'yellow' | 'red',
+        alertCount: (factObj as any).alertCount ?? 0,
+      };
+    }
+
+    console.warn(`⚠️ Invalid color in fact:`, color);
+    return { color: 'gray', alertCount: 0 };
+  } catch (err) {
+    console.error(`❌ Error retrieving facts for entity:`, err);
+    return { color: 'gray', alertCount: 0 };
+  }
+}

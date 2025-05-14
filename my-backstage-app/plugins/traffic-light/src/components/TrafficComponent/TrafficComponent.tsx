@@ -66,10 +66,16 @@ const Trafficlightdependabot = ({
   const techInsightsApi = useApi(techInsightsApiRef);
 
   useEffect(() => {
+    if (!entities.length) {
+      setColor('gray');
+      setReason('No entities available');
+      return;
+    }
+
     const fetchStatus = async () => {
       const result = await getDependabotStatusFromFacts(techInsightsApi, entities);
-      setColor(result);
-      setReason(`Status from Tech Insights: ${result}`);
+      setColor(result.color);
+      setReason(`Dependabot: ${result.color.toUpperCase()} — ${result.alertCount} alerts`);
     };
 
     fetchStatus();
@@ -89,6 +95,7 @@ const Trafficlightdependabot = ({
     </Tooltip>
   );
 };
+
 
 
 // SonarQube traffic light component (new implementation)

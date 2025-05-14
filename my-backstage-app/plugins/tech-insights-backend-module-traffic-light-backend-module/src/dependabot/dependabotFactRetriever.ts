@@ -74,7 +74,10 @@ export const createDependabotFactRetriever = (
                 namespace: entity.metadata.namespace ?? 'default',
               },
               facts: {
-                'dependabot:status': { color },
+                'dependabot:status': {
+                  color,
+                  alertCount,
+                },
               }
             };
           } catch (e) {
