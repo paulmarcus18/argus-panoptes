@@ -64,7 +64,7 @@ export async function generateSummariesFromCommits(
           Regulatory Compliance
           Any changes or updates related to regulatory compliance specific to the medical device industry.
           References to relevant standards or guidelines. 
-          Give me just the summary. no other text.`;
+          Give me just the summary. no other text. Please follow the format exactly.`;
 
       try {
         const response = await ai.models.generateContent({

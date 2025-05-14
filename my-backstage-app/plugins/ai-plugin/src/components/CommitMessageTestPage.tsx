@@ -210,8 +210,8 @@ export const CommitMessageTestPage = () => {
             <Card
               elevation={3}
               sx={{
-                width: '140mm', // A4 size width (scaled down)
-                height: '180mm', // Dynamic height based on content
+                width: '205mm',
+                height: '180mm', 
                 position: 'relative',
                 margin: '0 10px',
               }}
@@ -244,7 +244,7 @@ export const CommitMessageTestPage = () => {
                   overflow: 'hidden',
                 }}
               >
-                <Typography variant="h4" color="#0b5ed7" gutterBottom>
+                <Typography variant="h4" color="#83a2f2" gutterBottom>
                   {system}
                 </Typography>
 
@@ -262,30 +262,42 @@ export const CommitMessageTestPage = () => {
                       No new releases.
                     </Typography>
                   ) : (
-                    repos
-                      .filter(repo =>
-                        repo.repoName.toLowerCase().includes(repoSearch.toLowerCase())
-                      )
-                      .map(({ repoName, summary }) => (
-                        <Box key={repoName}>
-                          <Typography variant="h4" color="text.secondary" gutterBottom>
-                            {repoName}
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{
-                              whiteSpace: 'pre-wrap',
-                              fontSize: '1.3rem',
-                              lineHeight: '1.5',
-                            }}
-                          >
-                            {summary}
-                          </Typography>
-                        </Box>
-                      ))
+                    <Box
+                      sx={{
+                        backgroundColor: '#fff',
+                        borderRadius: 2,
+                        padding: 2,
+                        boxShadow: 1,
+                        border: '1px solid #e0e0e0',
+                      }}
+                    >
+                      {repos
+                        .filter(repo =>
+                          repo.repoName.toLowerCase().includes(repoSearch.toLowerCase())
+                        )
+                        .map(({ repoName, summary }) => (
+                          <Box key={repoName} sx={{ marginBottom: 2 }}>
+                            <Typography variant="h5" color="black" gutterBottom>
+                              {repoName}
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                whiteSpace: 'pre-wrap',
+                                fontSize: '1.2rem',
+                                lineHeight: '1.5',
+                                color: 'black',
+                              }}
+                            >
+                              {summary}
+                            </Typography>
+                          </Box>
+                        ))}
+                    </Box>
                   )}
                 </Box>
               </CardContent>
+
             </Card>
           </Box>
         ))}
