@@ -62,7 +62,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
           {
             headers: {
               // Replace this with secure token injection from config or secrets
-              Authorization: `Bearer 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`,
+              Authorization: `Bearer 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`,
               Accept: 'application/vnd.github.v3+json',
             },
           },
@@ -104,7 +104,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
             console.info(`Fetching commits for PR: ${pr.number}`);
             const commitsResponse = await fetch(pr.commits_url, {
               headers: {
-                Authorization: `Bearer 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`,
+                Authorization: `Bearer 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`,
                 Accept: 'application/vnd.github.v3+json',
               },
             });

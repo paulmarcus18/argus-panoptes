@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tidb
+  description: This is another test repo.
+  annotations:
+    github.com/project-slug: pingcap/tidb
+    backstage.io/source-location: url:https://github.com/pingcap/tidb
+  tags:
+    - critical
+spec:
+  type: service
+  lifecycle: experimental
+  owner: pingcap
+  system: payments-system

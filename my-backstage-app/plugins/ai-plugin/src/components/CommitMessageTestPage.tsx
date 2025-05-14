@@ -87,16 +87,16 @@ export const CommitMessageTestPage = () => {
   const [repoSearch, setRepoSearch] = useState<string>('');
 
   const fetchSummaries = async () => {
-    setLoading(true);
-    setTimeout(() => {
-      setMessagesBySystem(mockSummaries);
-      setLoading(false);
-      console.log('📬 Mock messages loaded');
-    }, 800);
+    // setLoading(true);
+    // setTimeout(() => {
+    //   setMessagesBySystem(mockSummaries);
+    //   setLoading(false);
+    //   console.log('📬 Mock messages loaded');
+    // }, 800);
 
-    // const result = await generateSummaries(catalogApi, techInsightsApi);
-    // setMessagesBySystem(result);
-    // setLoading(false);
+    const result = await generateSummaries(catalogApi, techInsightsApi);
+    setMessagesBySystem(result);
+    setLoading(false);
   };
 
   useEffect(() => {
