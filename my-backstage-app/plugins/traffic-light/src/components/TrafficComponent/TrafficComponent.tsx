@@ -75,7 +75,7 @@ const Trafficlightdependabot = ({
     const fetchStatus = async () => {
       const result = await getDependabotStatusFromFacts(techInsightsApi, entities);
       setColor(result.color);
-      setReason(`Dependabot: ${result.color.toUpperCase()} — ${result.alertCount} alerts`);
+      setReason(`Dependabot: ${result.color.toUpperCase()}`);
     };
 
     fetchStatus();

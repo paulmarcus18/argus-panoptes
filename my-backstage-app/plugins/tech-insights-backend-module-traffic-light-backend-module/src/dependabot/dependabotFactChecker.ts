@@ -8,6 +8,7 @@ export const getDependabotStatus = async (
   entityRefs: CompoundEntityRef[],
 ): Promise<TrafficLightColor> => {
   try {
+    
     const results = await Promise.all(
       entityRefs.map(async ref => {
         const factResponse = await techInsightsApi.getFacts(ref, ['dependabot:status']);

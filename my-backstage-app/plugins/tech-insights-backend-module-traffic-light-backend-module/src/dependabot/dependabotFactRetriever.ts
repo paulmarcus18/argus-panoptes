@@ -56,16 +56,16 @@ export const createDependabotFactRetriever = (
             const openAlerts = alertsResponse.data.filter(a => a.state === 'open');
             const alertCount = openAlerts.length;
 
-            let color: 'green' | 'yellow' | 'red';
-            if (alertCount === 0) {
-              color = 'green';
-            } else if (alertCount <= 5) {
-              color = 'yellow';
-            } else {
-              color = 'red';
-            }
+            // let color: 'green' | 'yellow' | 'red';
+            // if (alertCount === 0) {
+            //   color = 'green';
+            // } else if (alertCount <= 5) {
+            //   color = 'yellow';
+            // } else {
+            //   color = 'red';
+            // }
 
-            logger.info(`✅ ${entity.metadata.name} → ${color} (${alertCount} alerts)`);
+            logger.info(`✅ ${entity.metadata.name} → (${alertCount} alerts)`);
 
             return {
               entity: {
@@ -74,10 +74,10 @@ export const createDependabotFactRetriever = (
                 namespace: entity.metadata.namespace ?? 'default',
               },
               facts: {
-                'dependabot:status': {
-                  color,
+                // 'dependabot:status': {
+                  //color,
                   alertCount,
-                },
+                // },
               }
             };
           } catch (e) {
