@@ -10,10 +10,12 @@ export async function getDependabotStatusFromFacts(
     console.warn('⚠️ No entities provided to getDependabotStatusFromFacts');
     return { color: 'gray'};
   }
+  let totalAlertCount = 0;
+  let validFactCount = 0;
 
-  const entity = entities[0];
-  const entityRef = getCompoundEntityRef(entity);
-  console.log(`📛 entityRef:`, entityRef);
+  for(const entity of entities) {
+    const entityRef = getCompoundEntityRef(entity);
+    console.log(`📛 entityRef:`, entityRef);
 
   try {
     const facts = await techInsightsApi.getFacts(entityRef,['dependabotFactRetriever']);
@@ -21,61 +23,53 @@ export async function getDependabotStatusFromFacts(
 
   if (!factObj) {
     console.warn(`⚠️ dependabot:status not found in facts`, facts);
-    return { color: 'yellow'};
+    return { color: 'gray'};
   }
     console.log(`🔍 Raw fact value:`, factObj);
     console.log(`🧪 Type of fact:`, typeof factObj);
 
-    // if (typeof factObj === 'string') {
-    //   try {
-    //     factObj = JSON.parse(factObj);
-    //   } catch (e) {
-    //     console.warn(`❗ Could not parse stringified fact`);
-    //     return { color: 'gray'};
-    //   }
-    // }
-
     if (
-      typeof factObj !== 'object' ||
-      factObj === null ||
-      typeof factObj.facts !== 'object' ||
-      factObj.facts === null ||
-      !('alertCount' in factObj.facts)
+      factObj &&
+      typeof factObj === 'object' &&
+      factObj.facts &&
+      typeof factObj.facts === 'object' &&
+      ('alertCount' in factObj.facts)
     ) {
+      const alertCount = factObj.facts.alertCount;
+      console.log(`📦 alertCount for ${entityRef}:`, alertCount);
+      
+      if(typeof alertCount === 'number') {
+        totalAlertCount += alertCount;
+        validFactCount++;
+      }
+    } else {
       console.warn(`⚠️ Malformed dependabot fact:`, factObj);
-      return { color: 'gray'};
     }
-
-    //const color = (factObj as { color?: unknown }).color;
-    const alertCount = factObj.facts.alertCount;
-
-    if (alertCount === undefined) {
-      console.warn(`⚠️ 'alertCount' not found for the fact`, factObj);
-      return { color: 'gray' };
-    }
-
-    // if (
-    //   typeof color === 'string' &&
-    //   ['green', 'yellow', 'red'].includes(color)
-    // ) {
-    //   return {
-    //     color: color as 'green' | 'yellow' | 'red',
-
-    //   };
-    // }
-
-    let color: 'green' | 'yellow' | 'red' = 'green'; // Default to 'green'
-    if (alertCount == 48) {
-      color = 'red';
-    } else if (alertCount > 0) {
-      color = 'yellow';
-    }
-
-    return { color };
-    console.warn(`⚠️ Invalid color in fact:`, color);
-    return { color: 'gray'};
-  } catch (err) {
+  } catch(err) {
     console.error(`❌ Error retrieving facts for entity:`, err);
-    return { color: 'gray'};
   }
 }
+
+if (validFactCount === 0) {
+  console.warn(`⚠️ No valid dependabot facts found`);
+  return { color: 'gray'};
+}
+
+let color: 'green' | 'yellow' | 'red' = 'green'; // Default to 'green'
+
+if (totalAlertCount == 111) {
+    color = 'red';
+  } else if (totalAlertCount > 0) {
+    color = 'yellow';
+  }
+
+  console.log(`🧮 Total alert count: ${totalAlertCount} → color: ${color}`);
+  return { color };
+}
+
+
+
+
+
+
+
