@@ -141,7 +141,7 @@ export const CommitMessageTestPage = () => {
   {/* Header + Refresh */}
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 4 }}>
     <Typography variant="h4" color="text.primary" sx={{ flexGrow: 1 }}>
-      Commit Summaries by System
+      AI Generated Release Notes
     </Typography>
     <IconButton
       onClick={fetchSummaries}
