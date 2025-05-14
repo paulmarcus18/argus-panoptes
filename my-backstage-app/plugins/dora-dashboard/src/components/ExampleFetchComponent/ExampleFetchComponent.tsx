@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Table,
   TableColumn,
@@ -7,105 +6,76 @@ import {
 } from '@backstage/core-components';
 import useAsync from 'react-use/lib/useAsync';
 
-type Metric = {
-  service: string;
-  leadTimeDays: number;
-  deployFrequency: number;
-  changeFailureRate: number;
-  timeToRestoreHours: number;
+type MetricRow = {
+  key: string;
+  [metricType: string]: string | number;
 };
 
-type MetricsTableProps = {
-  data: Metric[];
-};
-
-/**
- * Renders a table of DORA metrics for a set of services.
- */
-export const MetricsTable = ({ data }: MetricsTableProps) => {
-  const columns: TableColumn[] = [
-    { title: 'Service', field: 'service', cellStyle: { minWidth: 120 } },
-    { title: 'Lead Time (days)', field: 'leadTimeDays', cellStyle: { minWidth: 120 } },
-    { title: 'Deploy Frequency (/week)', field: 'deployFrequency', cellStyle: { minWidth: 150 } },
-    {
-      title: 'Failure Rate (%)',
-      field: 'changeFailureRate',
-      cellStyle: { minWidth: 120 },
-    },
-    { title: 'Time to Restore (hrs)', field: 'timeToRestoreHours', cellStyle: { minWidth: 140 } },
-  ];
-
-  const tableData = data.map(metric => ({
-    service: metric.service,
-    leadTimeDays: metric.leadTimeDays.toFixed(1),
-    deployFrequency: metric.deployFrequency.toFixed(1),
-    changeFailureRate: metric.changeFailureRate,
-    timeToRestoreHours: metric.timeToRestoreHours.toFixed(1),
-  }));
-
-  return (
-    <Table
-      title="DORA Metrics Overview"
-      options={{ search: false, paging: false }}
-      columns={columns}
-      data={tableData}
-    />
-  );
-};
-
-/**
- * Generates an array of random metrics for demonstration.
- */
-function generateRandomMetrics(count: number): Metric[] {
-  const services = [
-    'auth-service',
-    'checkout-service',
-    'inventory-service',
-    'payment-gateway',
-    'notification-service',
-    'user-profile',
-    'analytics-engine',
-    'recommendation-api',
-  ];
-
-  return Array.from({ length: count }).map((_, idx) => ({
-    service: services[idx % services.length],
-    leadTimeDays: Math.random() * 10 + 1,
-    deployFrequency: Math.random() * 7 + 0.5,
-    changeFailureRate: Math.random() * 15 + 1,
-    timeToRestoreHours: Math.random() * 24 + 1,
-  }));
-}
+const METRIC_TYPES = [
+  { id: 'df_average',   label: 'Deploy Freq Avg' },
+  { id: 'mltc',         label: 'Lead Time Median' },
+  { id: 'cfr',          label: 'Change Failure Rate' },
+  { id: 'mttr',  label: 'Time to Restore' },
+];
 
 export const ExampleFetchComponent = () => {
-  const { value, loading, error } = useAsync(async (): Promise<Metric[]> => {
-    const response = await fetch('http://localhost:10666/dora/api/metric?type=df_average&aggregation=weekly');
-    if (!response.ok) {
-      throw new Error(`Error fetching metrics: ${response.statusText}`);
+  const { value, loading, error } = useAsync(async (): Promise<MetricRow[]> => {
+    const responses = await Promise.all(
+      METRIC_TYPES.map(m =>
+        fetch(
+          `http://localhost:10666/dora/api/metric?type=${m.id}&aggregation=weekly`,
+        ).then(res => {
+          if (!res.ok) throw new Error(res.statusText);
+          return res.json();
+        }),
+      ),
+    ); // 
+
+    const metricMaps = responses.map((json: any) => {
+      const map: Record<string, number> = {};
+      for (const dp of json.dataPoints) {
+        map[dp.key] = dp.value;
+      }
+      return map;
+    });
+
+    const allKeys = new Set<string>();
+    for (const m of metricMaps) {
+      Object.keys(m).forEach(k => allKeys.add(k));
     }
-    const data = await response.json();
 
-    // Transform the API response to match the Metric type
-    const metrics: Metric[] = data.dataPoints.map((dp: any) => ({
-      service: dp.service || 'unknown',
-      leadTimeDays: dp.leadTimeDays || 0,
-      deployFrequency: dp.deployFrequency || 0,
-      changeFailureRate: dp.changeFailureRate || 0,
-      timeToRestoreHours: dp.timeToRestoreHours || 0,
-    }));
-
-    return metrics;
+    return Array.from(allKeys).map(key => {
+      const row: MetricRow = { key };
+      metricMaps.forEach((m, i) => {
+        row[METRIC_TYPES[i].label] = m[key] ?? 0;
+      });
+      return row;
+    });
   }, []);
 
   if (loading) {
-    return <Progress />;
-  } else if (error) {
+    return <Progress />;  
+  }
+  if (error) {
     return <ResponseErrorPanel error={error} />;
   }
 
-  return <MetricsTable data={value || []} />;
+  const columns: TableColumn[] = [
+    { title: 'Period', field: 'key', cellStyle: { minWidth: 200 } },
+    ...METRIC_TYPES.map(m => ({
+      title: m.label,
+      field: m.label,
+      cellStyle: { minWidth: 120 },
+      render: (row: any) => {
+        const v = row[m.label] as number;
+        const formatted =
+          m.id === 'cfr'
+            ? `${(v * 100).toFixed(1)}%`
+            : v.toFixed(1);
+        return formatted;
+      },
+    })),
+  ];
+
+  return <Table title="Weekly dora metrics" options={{ search: false, paging: false }} columns={columns} data={value || []} />;
 };
-
-
-
-// return generateRandomMetrics(10);
