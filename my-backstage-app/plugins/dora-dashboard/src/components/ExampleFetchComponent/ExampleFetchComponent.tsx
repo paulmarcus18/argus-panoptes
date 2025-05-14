@@ -79,8 +79,22 @@ function generateRandomMetrics(count: number): Metric[] {
 
 export const ExampleFetchComponent = () => {
   const { value, loading, error } = useAsync(async (): Promise<Metric[]> => {
-    await new Promise(res => setTimeout(res, 500));
-    return generateRandomMetrics(10);
+    const response = await fetch('http://localhost:10666/dora/api/metric?type=df_average&aggregation=weekly');
+    if (!response.ok) {
+      throw new Error(`Error fetching metrics: ${response.statusText}`);
+    }
+    const data = await response.json();
+
+    // Transform the API response to match the Metric type
+    const metrics: Metric[] = data.dataPoints.map((dp: any) => ({
+      service: dp.service || 'unknown',
+      leadTimeDays: dp.leadTimeDays || 0,
+      deployFrequency: dp.deployFrequency || 0,
+      changeFailureRate: dp.changeFailureRate || 0,
+      timeToRestoreHours: dp.timeToRestoreHours || 0,
+    }));
+
+    return metrics;
   }, []);
 
   if (loading) {
@@ -91,3 +105,7 @@ export const ExampleFetchComponent = () => {
 
   return <MetricsTable data={value || []} />;
 };
+
+
+
+// return generateRandomMetrics(10);
