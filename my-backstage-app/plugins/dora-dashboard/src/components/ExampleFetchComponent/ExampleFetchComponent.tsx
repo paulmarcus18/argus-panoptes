@@ -1,81 +1,94 @@
-import {
-  Table,
-  TableColumn,
-  Progress,
-  ResponseErrorPanel,
-} from '@backstage/core-components';
 import useAsync from 'react-use/lib/useAsync';
 
-type MetricRow = {
+type DataPoint = {
   key: string;
-  [metricType: string]: string | number;
+  value: number;
 };
 
+type MetricData = {
+  id: string;
+  dataPoints: DataPoint[];
+};
+
+// The four DORA metrics
 const METRIC_TYPES = [
-  { id: 'df_average',   label: 'Deploy Freq Avg' },
-  { id: 'mltc',         label: 'Lead Time Median' },
-  { id: 'cfr',          label: 'Change Failure Rate' },
-  { id: 'mttr',  label: 'Time to Restore' },
+  { id: 'df_average', label: 'Deploy Freq Avg' },
+  { id: 'mltc', label: 'Lead Time Median' },
+  { id: 'cfr', label: 'Change Failure Rate' },
+  { id: 'mttr', label: 'Time to Restore' },
 ];
 
-export const ExampleFetchComponent = () => {
-  const { value, loading, error } = useAsync(async (): Promise<MetricRow[]> => {
+/**
+ * Custom hook to fetch all DORA metrics data
+ * @param aggregation - The time aggregation to use ('weekly' or 'monthly')
+ * @returns The metrics data, loading state, and any error
+ */
+export function useMetricsData(aggregation: 'weekly' | 'monthly' = 'weekly') {
+  return useAsync(async (): Promise<MetricData[]> => {
     const responses = await Promise.all(
       METRIC_TYPES.map(m =>
         fetch(
-          `http://localhost:10666/dora/api/metric?type=${m.id}&aggregation=weekly`,
+          `http://localhost:10666/dora/api/metric?type=${m.id}&aggregation=${aggregation}`,
         ).then(res => {
           if (!res.ok) throw new Error(res.statusText);
           return res.json();
         }),
       ),
-    ); // 
+    );
 
-    const metricMaps = responses.map((json: any) => {
-      const map: Record<string, number> = {};
-      for (const dp of json.dataPoints) {
-        map[dp.key] = dp.value;
-      }
-      return map;
-    });
+    // Format the responses with their metric ID
+    return responses.map((json: any, index) => ({
+      id: METRIC_TYPES[index].id,
+      dataPoints: json.dataPoints || [],
+    }));
+  }, [aggregation]);
+}
 
-    const allKeys = new Set<string>();
-    for (const m of metricMaps) {
-      Object.keys(m).forEach(k => allKeys.add(k));
-    }
-
-    return Array.from(allKeys).map(key => {
-      const row: MetricRow = { key };
-      metricMaps.forEach((m, i) => {
-        row[METRIC_TYPES[i].label] = m[key] ?? 0;
-      });
-      return row;
-    });
-  }, []);
+/**
+ * Legacy component that uses the metrics data to render a table
+ * Kept for backward compatibility
+ */
+export const ExampleFetchComponent = () => {
+  const { value, loading, error } = useMetricsData();
 
   if (loading) {
-    return <Progress />;  
+    return <div>Loading...</div>;
   }
+
   if (error) {
-    return <ResponseErrorPanel error={error} />;
+    return <div>Error: {error.message}</div>;
   }
 
-  const columns: TableColumn[] = [
-    { title: 'Period', field: 'key', cellStyle: { minWidth: 200 } },
-    ...METRIC_TYPES.map(m => ({
-      title: m.label,
-      field: m.label,
-      cellStyle: { minWidth: 120 },
-      render: (row: any) => {
-        const v = row[m.label] as number;
-        const formatted =
-          m.id === 'cfr'
-            ? `${(v * 100).toFixed(1)}%`
-            : v.toFixed(1);
-        return formatted;
-      },
-    })),
-  ];
+  // Convert the data to the format expected by the original component
+  const metricMaps = (value || []).map(metric => {
+    const map: Record<string, number> = {};
+    for (const dp of metric.dataPoints) {
+      map[dp.key] = dp.value;
+    }
+    return map;
+  });
 
-  return <Table title="Weekly dora metrics" options={{ search: false, paging: false }} columns={columns} data={value || []} />;
+  const allKeys = new Set<string>();
+  for (const m of metricMaps) {
+    Object.keys(m).forEach(k => allKeys.add(k));
+  }
+
+  // Create rows with all metrics for each time period
+  const rows = Array.from(allKeys).map(key => {
+    const row: { key: string; [metricType: string]: string | number } = { key };
+    metricMaps.forEach((m, i) => {
+      row[METRIC_TYPES[i].label] = m[key] ?? 0;
+    });
+    return row;
+  });
+
+  // Just a placeholder table to maintain the original interface
+  return (
+    <div>
+      <p>
+        This component is deprecated. Please use the DoraDashboard component
+        instead.
+      </p>
+    </div>
+  );
 };

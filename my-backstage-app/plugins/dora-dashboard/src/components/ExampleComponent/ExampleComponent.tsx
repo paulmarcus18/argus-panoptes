@@ -8,28 +8,21 @@ import {
   HeaderLabel,
   SupportButton,
 } from '@backstage/core-components';
-import { ExampleFetchComponent } from '../ExampleFetchComponent';
+import { DoraDashboard } from '../DoraDashboard';
 
 export const ExampleComponent = () => (
   <Page themeId="tool">
-    <Header title="Welcome to dora-dashboard!" subtitle="Optional subtitle">
-      <HeaderLabel label="Owner" value="Team X" />
-      <HeaderLabel label="Lifecycle" value="Alpha" />
+    <Header
+      title="DORA Metrics Dashboard"
+      subtitle="Monitor your DevOps performance metrics"
+    >
+      <HeaderLabel label="Owner" value="DevOps Team" />
+      <HeaderLabel label="Lifecycle" value="Beta" />
     </Header>
     <Content>
-      <ContentHeader title="Plugin title">
-        <SupportButton>A description of your plugin goes here.</SupportButton>
-      </ContentHeader>
       <Grid container spacing={3} direction="column">
         <Grid item>
-          <InfoCard title="Information card">
-            <Typography variant="body1">
-              All content should be wrapped in a card like this.
-            </Typography>
-          </InfoCard>
-        </Grid>
-        <Grid item>
-          <ExampleFetchComponent />
+          <DoraDashboard />
         </Grid>
       </Grid>
     </Content>
