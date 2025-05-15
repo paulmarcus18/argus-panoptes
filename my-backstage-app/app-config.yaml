@@ -173,6 +173,9 @@ techInsights:
     dependabotFactRetriever:
       cadence: "*/2 * * * *" # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
+    githubAdvancedSecurityFactRetriever:
+      cadence: "*/2 * * * *" # every minute
+      lifecycle: { timeToLive: { weeks: 2 } }
   factChecker:
     checks:
       noHighBugsCheck:
@@ -223,3 +226,52 @@ techInsights:
               - fact: openAlertCount
                 operator: lessThan
                 value: 5
+      githubCodeScanningCheck:
+        type: json-rules-engine
+        name: Code Scanning Alerts Below Threshold
+        description: Checks if Code Scanning alerts are below acceptable threshold
+        factIds:
+          - githubAdvancedSecurityFactRetriever
+        rule:
+          conditions:
+            all:
+              - fact: openCodeScanningAlertCount
+                operator: lessThan
+                value: 5
+      githubSecretScanningCheck:
+        type: json-rules-engine
+        name: No Secret Scanning Alerts
+        description: Checks if there are no exposed secrets detected
+        factIds:
+          - githubAdvancedSecurityFactRetriever
+        rule:
+          conditions:
+            all:
+              - fact: openSecretScanningAlertCount
+                operator: lessThanInclusive
+                value: 0
+      githubCodeScanningAlert:
+        type: json-rules-engine
+        name: Code Scanning Alerts as dictionary
+        description: Checks if Code Scanning alerts are below acceptable threshold
+        factIds:
+          - githubAdvancedSecurityFactRetriever
+        rule:
+          conditions:
+            all:
+              - fact: codeScanningAlerts
+                operator: equal
+                value: {}
+      githubSecretScanningAlert:
+        type: json-rules-engine
+        name: No Secret Scanning Alerts
+        description: Checks if there are no exposed secrets detected
+        factIds:
+          - githubAdvancedSecurityFactRetriever
+        rule:
+          conditions:
+            all:
+              - fact: secretScanningAlerts
+                operator: equal
+                value: {}
+      

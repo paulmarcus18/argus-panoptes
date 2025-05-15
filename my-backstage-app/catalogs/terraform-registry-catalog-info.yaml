@@ -4,7 +4,7 @@ metadata:
   name: terraform-registry
   description: Light weight Terraform Registry.
   annotations:
-    github.com/project-slug: philips-labs/terraform-registry
+    github.com/project-slug: SEP-ArgusPanoptes/terraform-registry
     backstage.io/source-location: url:https://github.com/philips-labs/terraform-registry
     sonarcloud.io/project-key: SEP-ArgusPanoptes_terraform-registry
     sonarcloud.io/enabled: 'true'
@@ -13,5 +13,5 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: philips-labs
+  owner: SEP-ArgusPanoptes
   system: user-management-system

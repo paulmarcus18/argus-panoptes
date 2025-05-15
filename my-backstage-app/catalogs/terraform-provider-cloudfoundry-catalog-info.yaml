@@ -4,7 +4,7 @@ metadata:
   name: terraform-provider-cloudfoundry
   description: Allows you to configure a Cloud Foundry environment declaratively using HCL.
   annotations:
-    github.com/project-slug: philips-labs/terraform-provider-cloudfoundry
+    github.com/project-slug: SEP-ArgusPanoptes/terraform-provider-cloudfoundry
     backstage.io/source-location: url:https://github.com/philips-labs/terraform-provider-cloudfoundry
     sonarcloud.io/project-key: SEP-ArgusPanoptes_terraform-provider-cloudfoundry
     sonarcloud.io/enabled: 'true'
@@ -13,5 +13,5 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: philips-labs
+  owner: SEP-ArgusPanoptes
   system: user-management-system
