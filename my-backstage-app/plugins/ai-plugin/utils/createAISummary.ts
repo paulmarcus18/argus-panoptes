@@ -31,38 +31,27 @@ export async function generateSummaries(
      * the repo list and generates the release note.
      */
     for (const { repoName, commitMessages } of repos) {
-      const prompt = `Summarize the following git commit messages:\n\n${commitMessages}. Please the following release notes format: 
-          Release Notes
-          Product Name: [Insert Product Name Here]
-          Version: [Insert Version Number Here]
-          Release Date: [Insert Release Date Here]
-          Contents:
-          Introduction
-          Brief overview of the release.
-          Purpose of the update.
-          New Functionality
-          Feature Name 1: Description of the new feature, its benefits, and how it can be used.
-          Feature Name 2: Description of another new feature, if applicable.
-          [Continue as needed]
-          Resolved Defects
-          Defect ID/Name 1: Description of the defect and how it has been resolved.
-          Defect ID/Name 2: Description of another resolved defect, if applicable.
-          [Continue as needed]
-          Known Issues
-          Issue ID/Name 1: Description of known issues that remain, possible workarounds, if any.
-          Issue ID/Name 2: Description of another known issue.
-          [Continue as needed]
-          Backwards Compatibility
-          Details on compatibility with previous versions.
-          Information on any deprecated features or incompatibilities introduced in this release.
-          Upgrade Instructions
-          Steps for upgrading from previous versions.
-          Any prerequisites or considerations before upgrading.
-          Regulatory Compliance
-          Any changes or updates related to regulatory compliance specific to the medical device industry.
-          References to relevant standards or guidelines. 
-          Give me just the summary. no other text. Please follow the format exactly.`;
-
+      const prompt = `Summarize the following git commit messages:\n\n${commitMessages}. 
+      Your response MUST follow the format: 
+      New functionality 
+      * Functionality 1
+      * Functionality 2
+      Improvements
+      * Improvement 1
+      * Improvement 2
+      Bug fixes
+      * Bug fix 1
+      * Bug fix 2
+      Breaking changes
+      * Breaking change 1
+      * Breaking change 2
+      Write N/A if not applicable.
+      Write in a concise and clear manner.
+      Write in a list format.
+      You must not add empty lines.
+      Only use stars for the content of each section, not the section name itself.
+     Write in a professional tone. Write just the summary. You must follow the format exactly. Do not add any other information.
+     Do not write the commit messages again. I want the summary only.`;
       try {
         const response = await ai.models.generateContent({
           model: 'gemini-2.0-flash',

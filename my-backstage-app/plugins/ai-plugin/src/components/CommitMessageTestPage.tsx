@@ -7,6 +7,19 @@ import {
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { generateSummaries } from '../../utils/createAISummary';
+import { postSummaries } from '../../utils/saveToDatabase';
+
+import { keyframes } from '@emotion/react';
+
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
 import { GoogleGenAI } from '@google/genai';
 
 import {
@@ -56,38 +69,6 @@ export const CommitMessageTestPage = () => {
 
     const today = new Date().toISOString().split('T')[0];
 
-    // try {
-    //   const postRes = await fetch(`${apiBaseUrl}/summaries`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json', // ✅ ADD THIS
-    //     },
-    //     body: JSON.stringify({
-    //       system: 'my-system',
-    //       date: '2025-05-15',
-    //       summaries: [
-    //         {
-    //           repoName: 'repo-a',
-    //           summary: 'some summary text',
-    //         },
-    //         {
-    //           repoName: 'repo-b',
-    //           summary: 'another summary',
-    //         },
-    //       ],
-    //     }),
-    //   });
-
-    //   if (postRes.ok) {
-    //     console.log('✅ POST Success!');
-    //   } else {
-    //     const errorText = await postRes.text();
-    //     console.error(`❌ POST failed: ${postRes.status}`, errorText);
-    //   }
-    // } catch (err) {
-    //   console.error('❌ POST threw an error:', err);
-    // }
-
     try {
       const res = await fetch(`${apiBaseUrl}/summaries?date=${today}`);
 
@@ -110,6 +91,7 @@ export const CommitMessageTestPage = () => {
     });
 
     const result = await generateSummaries(ai, commitMessagesBySystem);
+    postSummaries(result, today, apiBaseUrl);
     setMessagesBySystem(result);
     setLoading(false);
   };
@@ -155,7 +137,7 @@ export const CommitMessageTestPage = () => {
         sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 4 }}
       >
         <Typography variant="h4" color="text.primary" sx={{ flexGrow: 1 }}>
-          Commit Summaries by System
+          AI Generated Release Notes
         </Typography>
         <IconButton
           onClick={fetchSummaries}
@@ -169,7 +151,11 @@ export const CommitMessageTestPage = () => {
             padding: 1,
           }}
         >
-          <RefreshIcon />
+          <RefreshIcon
+            sx={{
+              animation: loading ? `${spin} 1s linear infinite` : 'none',
+            }}
+          />
         </IconButton>
       </Box>
 
@@ -203,7 +189,7 @@ export const CommitMessageTestPage = () => {
       {loading || !messagesBySystem ? (
         <Box display="flex" justifyContent="center" alignItems="center" mt={5}>
           <CircularProgress />
-          <Typography sx={{ ml: 2 }}>Loading commit summaries...</Typography>
+          <Typography sx={{ ml: 2 }}>Loading release notes...</Typography>
         </Box>
       ) : Object.keys(filteredMessages).length === 0 ? (
         <Typography variant="body1" color="text.secondary">

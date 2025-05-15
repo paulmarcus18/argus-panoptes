@@ -2,6 +2,28 @@ import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
 import { Entity } from '@backstage/catalog-model';
 import { CatalogClient } from '@backstage/catalog-client';
 import { GitHubCommit, GitHubPR } from './types';
+import { Config } from '@backstage/config';
+
+export const getGitHubTokenFromConfig = (
+  config: Config,
+): string | undefined => {
+  try {
+    const githubConfigs = config.getOptionalConfigArray('integrations.github');
+    const githubConfig = githubConfigs?.[0];
+    const token = githubConfig?.getOptionalString('token');
+
+    if (!token) {
+      console.error('❌ GitHub token is not defined.');
+      return undefined;
+    }
+
+    console.info(`🔍 Retrieved GitHub token: ${token ? '✔️ Present' : '❌ Missing'}`);
+    return token;
+  } catch (e) {
+    console.error(`❌ Could not retrieve GitHub token: ${e}`);
+    return undefined;
+  }
+};
 
 export const createGitHubCommitMessageRetriever: FactRetriever = {
   id: 'github-commit-message-retriever',
@@ -45,6 +67,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
     }
 
     const results = [];
+    const gitHubtoken = getGitHubTokenFromConfig(ctx.config);
 
     for (const entity of entities) {
       const slug = entity.metadata.annotations?.['github.com/project-slug'];
@@ -55,6 +78,13 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
         continue;
       }
 
+      if (!token) {
+        console.error(
+          `GitHub token is not defined. Please check your configuration.`,
+        );
+        return [];
+      }
+
       const [repoOwner, repoName] = slug.split('/');
       try {
         const prResponse = await fetch(
@@ -62,7 +92,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
           {
             headers: {
               // Replace this with secure token injection from config or secrets
-              Authorization: `Bearer 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`,
+              Authorization: `Bearer ${gitHubtoken}`,
               Accept: 'application/vnd.github.v3+json',
             },
           },
@@ -104,7 +134,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
             console.info(`Fetching commits for PR: ${pr.number}`);
             const commitsResponse = await fetch(pr.commits_url, {
               headers: {
-                Authorization: `Bearer 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`,
+                Authorization: `Bearer ${gitHubtoken}`,
                 Accept: 'application/vnd.github.v3+json',
               },
             });
