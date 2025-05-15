@@ -183,7 +183,7 @@ export const getSonarQubeFacts = async (
 
     // ------------------------------------------------
     // Facts checks
-    const checkResults = await api.runChecks(entity, ['noHighBugsCheck', 'vulnerabilitiesCheck',]);
+    const checkResults = await api.runChecks(entity);
     const bugsCheck = checkResults.find(r => r.check.id === 'noHighBugsCheck');
     const vulnerabilitiesCheck = checkResults.find(r => r.check.id === 'vulnerabilitiesCheck');
     const codeSmellsCheck = checkResults.find(r => r.check.id === 'noHighCodeSmellsCheck');

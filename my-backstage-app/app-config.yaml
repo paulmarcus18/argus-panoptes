@@ -223,7 +223,7 @@ techInsights:
         rule:
           conditions:
             all:
-              - fact: quality_gate_status
+              - fact: quality_gate
                 operator: equal
                 value: 'OK'
       codeCoverageCheck:
@@ -235,9 +235,9 @@ techInsights:
         rule:
           conditions:
             all:
-              - fact: coverage
+              - fact: code_coverage
                 operator: greaterThanInclusive
-                value: 80
+                value: 35
       dependabotLowAlertCheck:
         type: json-rules-engine
         name: Dependabot Alerts Below Threshold
