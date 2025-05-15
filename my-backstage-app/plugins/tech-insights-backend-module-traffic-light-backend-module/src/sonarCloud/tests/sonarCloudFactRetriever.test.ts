@@ -111,6 +111,10 @@ describe('SonarCloud Fact Retriever', () => {
           type: 'integer',
           description: 'Number of vulnerabilities detected',
         },
+        code_coverage: {
+          type: 'float',
+          description: 'Percentage of code coverage from SonarCloud',
+        },
         quality_gate: {
           type: 'string',
           description: 'Quality gate status from SonarCloud',
@@ -136,6 +140,7 @@ describe('SonarCloud Fact Retriever', () => {
             { metric: 'bugs', value: '10' },
             { metric: 'code_smells', value: '45' },
             { metric: 'vulnerabilities', value: '5' },
+            { metric: 'coverage', value: '10.5' },
           ],
         },
       }),
@@ -190,6 +195,7 @@ describe('SonarCloud Fact Retriever', () => {
         bugs: 10,
         code_smells: 45,
         vulnerabilities: 5,
+        code_coverage: 10.5,
         quality_gate: 'OK',
       },
     });
@@ -198,7 +204,7 @@ describe('SonarCloud Fact Retriever', () => {
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockFetch).toHaveBeenNthCalledWith(
       1,
-      'https://sonarcloud.io/api/measures/component?component=test-project&metricKeys=bugs,code_smells,vulnerabilities',
+      'https://sonarcloud.io/api/measures/component?component=test-project&metricKeys=bugs,code_smells,vulnerabilities,coverage',
       {
         headers: {
           'Authorization': `Basic ${Buffer.from('test-token:').toString('base64')}`,
@@ -241,6 +247,7 @@ describe('SonarCloud Fact Retriever', () => {
             { metric: 'bugs', value: '10' },
             { metric: 'code_smells', value: '45' },
             { metric: 'vulnerabilities', value: '5' },
+            { metric: 'coverage', value: '10.5' },
           ],
         },
       }),
@@ -386,7 +393,7 @@ describe('SonarCloud Fact Retriever', () => {
       json: async () => ({
         component: {
           measures: [
-            // Only bugs metric, missing code_smells and vulnerabilities
+            // Only bugs metric, missing code_smells, vulnerabilities and code coverage
             { metric: 'bugs', value: '7' },
           ],
         },
@@ -437,6 +444,7 @@ describe('SonarCloud Fact Retriever', () => {
       bugs: 7,
       code_smells: 0,
       vulnerabilities: 0,
+      code_coverage: 0.0,
       quality_gate: 'OK'
     });
   });
@@ -453,8 +461,10 @@ describe('SonarCloud Fact Retriever', () => {
       json: async () => ({
         component: {
           measures: [
-            // Only bugs metric, missing code_smells and vulnerabilities
-            { metric: 'bugs', value: '7' },
+            { metric: 'bugs', value: '10' },
+            { metric: 'code_smells', value: '45' },
+            { metric: 'vulnerabilities', value: '5' },
+            { metric: 'coverage', value: '10.5' },
           ],
         },
       }),
@@ -493,9 +503,10 @@ describe('SonarCloud Fact Retriever', () => {
     // Verify the results - missing metrics should be 0
     expect(result).toHaveLength(1);
     expect(result[0].facts).toEqual({
-      bugs: 7,
-      code_smells: 0,
-      vulnerabilities: 0,
+      bugs: 10,
+      code_smells: 45,
+      vulnerabilities: 5,
+      code_coverage: 10.5,
       quality_gate: 'NONE'
     });
   });
@@ -527,6 +538,7 @@ describe('SonarCloud Fact Retriever', () => {
               { metric: 'bugs', value: '10' },
               { metric: 'code_smells', value: '45' },
               { metric: 'vulnerabilities', value: '5' },
+              { metric: 'coverage', value: '10.5' },
             ],
           },
         }),
@@ -539,6 +551,7 @@ describe('SonarCloud Fact Retriever', () => {
               { metric: 'bugs', value: '3' },
               { metric: 'code_smells', value: '22' },
               { metric: 'vulnerabilities', value: '1' },
+              { metric: 'coverage', value: '30.2' },
             ],
           },
         }),
@@ -609,6 +622,7 @@ describe('SonarCloud Fact Retriever', () => {
       bugs: 10,
       code_smells: 45,
       vulnerabilities: 5,
+      code_coverage: 10.5,
       quality_gate: 'OK',
     });
     
@@ -617,6 +631,7 @@ describe('SonarCloud Fact Retriever', () => {
       bugs: 3,
       code_smells: 22,
       vulnerabilities: 1,
+      code_coverage: 30.2,
       quality_gate: 'OK',
     });
     
@@ -624,12 +639,12 @@ describe('SonarCloud Fact Retriever', () => {
     expect(mockFetch).toHaveBeenCalledTimes(4);
     expect(mockFetch).toHaveBeenNthCalledWith(
       1,
-      'https://sonarcloud.io/api/measures/component?component=test-project&metricKeys=bugs,code_smells,vulnerabilities',
+      'https://sonarcloud.io/api/measures/component?component=test-project&metricKeys=bugs,code_smells,vulnerabilities,coverage',
       expect.any(Object)
     );
     expect(mockFetch).toHaveBeenNthCalledWith(
       2,
-      'https://sonarcloud.io/api/measures/component?component=project-2&metricKeys=bugs,code_smells,vulnerabilities',
+      'https://sonarcloud.io/api/measures/component?component=project-2&metricKeys=bugs,code_smells,vulnerabilities,coverage',
       expect.any(Object)
     );
     expect(mockFetch).toHaveBeenNthCalledWith(

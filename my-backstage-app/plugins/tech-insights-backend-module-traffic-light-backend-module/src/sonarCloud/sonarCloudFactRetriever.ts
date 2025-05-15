@@ -57,6 +57,10 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
         type: 'integer',
         description: 'Number of vulnerabilities detected',
       },
+      code_coverage: {
+        type: 'float',
+        description: 'Percentage of code coverage from SonarCloud',
+      },
       quality_gate: {
         type: 'string',
         description: 'Quality gate status from SonarCloud',
@@ -114,7 +118,7 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
           
           // Call SonarCloud API to get metrics for the project
           const response = await fetch(
-            `https://sonarcloud.io/api/measures/component?component=${projectKey}&metricKeys=bugs,code_smells,vulnerabilities`,
+            `https://sonarcloud.io/api/measures/component?component=${projectKey}&metricKeys=bugs,code_smells,vulnerabilities,coverage`,
             {
               headers: {
                 'Authorization': `Basic ${Buffer.from(`${token}:`).toString('base64')}`,
@@ -158,6 +162,7 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
             bugs: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'bugs')?.value || '0', 10),
             code_smells: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'code_smells')?.value || '0', 10),
             vulnerabilities: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'vulnerabilities')?.value || '0', 10),
+            code_coverage: parseFloat(measures.find((m: SonarCloudMeasure) => m.metric === 'coverage')?.value || '0'),
             quality_gate: qgStatus,
             // Quality gate conditions can be added here (if needed)
             // ...
@@ -180,7 +185,7 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
       // Filter out null results (failed requests)
       return results.filter(Boolean) as Array<{
         entity: { kind: string; namespace: string; name: string };
-        facts: { bugs: number; code_smells: number; vulnerabilities: number };
+        facts: { bugs: number; code_smells: number; vulnerabilities: number; code_coverage: number; quality_gate: string };
       }>;;
     },
   };
