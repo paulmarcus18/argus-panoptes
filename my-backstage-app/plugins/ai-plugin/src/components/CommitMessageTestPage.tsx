@@ -91,7 +91,7 @@ export const CommitMessageTestPage = () => {
     });
 
     const result = await generateSummaries(ai, commitMessagesBySystem);
-    postSummaries(result, today, apiBaseUrl);
+    postSummaries(result, today, apiBaseUrl, fetch);
     setMessagesBySystem(result);
     setLoading(false);
   };

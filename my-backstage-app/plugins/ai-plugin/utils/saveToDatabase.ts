@@ -4,10 +4,11 @@ export async function postSummaries(
   data: Record<string, SummaryPerRepo[]>,
   date: string,
   apiBaseUrl: string,
+  fetchFn: typeof fetch,
 ): Promise<void> {
   for (const [system, summaries] of Object.entries(data)) {
     try {
-      const response = await fetch(`${apiBaseUrl}/summaries`, {
+      const response = await fetchFn(`${apiBaseUrl}/summaries`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
