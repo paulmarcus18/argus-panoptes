@@ -186,7 +186,7 @@ techInsights:
       filter:
         kind: Component
     dependabotFactRetriever:
-      cadence: '*/2 * * * *' # every minute
+      cadence: "0 * * * *" # every  hour
       lifecycle: { timeToLive: { weeks: 2 } }
   factChecker:
     checks:

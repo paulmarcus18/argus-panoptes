@@ -9,7 +9,7 @@ import { createBackendModule, coreServices, LoggerService } from '@backstage/bac
 // Imports the tech insights extension point that lets you plug in custom FactRetrievers.
 import { techInsightsFactRetrieversExtensionPoint } from '@backstage-community/plugin-tech-insights-node';
 // Imports retriever that queries Dependabot alert data.
-import { dependabotFactRetriever } from './dependabot/dependabotFactRetriever';
+import { createDependabotFactRetriever } from './dependabot/dependabotFactRetriever';
 import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/githubASFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
@@ -31,17 +31,18 @@ export default createBackendModule({
         logger: coreServices.rootLogger,
         config: coreServices.rootConfig,
       },
-      // Initialization function that will run during backend's startup.
+      //initialization function that will run during backend's startup
       async init({ providers, logger, config }) {
-        // Logs to the console to confirm module is being registered.
+        //logs to the console to confirm module is being registered
         logger.info('Registering dependabot-facts module...');
+        const factRetriever = createDependabotFactRetriever(config, logger);
         const sonarCloudFactRetriever = createSonarCloudFactRetriever(config, logger);
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
-          dependabotFactRetriever, // Adds the dependabotFactRetriever to the system.
+          'dependabotFactRetriever': factRetriever, // Adds the dependabotFactRetriever to the system.
           [sonarCloudFactRetriever.id]: sonarCloudFactRetriever // Adds the sonarCloudFactRetriever to the system.
         });
       },
     });
   },
-});
+}); 
