@@ -1,8 +1,8 @@
-import { getCommitMessagesBySystemFromEntityRefs } from './getCommitMessagesBySystem';
+import { getCommitMessagesBySystem } from './getCommitMessagesBySystem';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef } from '@backstage/catalog-model';
 
-describe('getCommitMessagesBySystemFromEntityRefs', () => {
+describe('getCommitMessagesBySystem', () => {
   /**
    * Creates a mock TechInsightsApi to be used in testing the
    * getCommitMessagesBySystemFromEntityRefs function.
@@ -62,7 +62,7 @@ describe('getCommitMessagesBySystemFromEntityRefs', () => {
      * called using the mockTechInsightsApi as well as mockEntityRefs
      * and the result is being stored.
      */
-    const result = await getCommitMessagesBySystemFromEntityRefs(
+    const result = await getCommitMessagesBySystem(
       mockTechInsightsApi,
       mockEntityRefs,
     );
@@ -101,14 +101,9 @@ describe('getCommitMessagesBySystemFromEntityRefs', () => {
      * called using the mockTechInsightsApi as well as mockEntityRefs
      * and the result is being stored.
      */
-    const result = await getCommitMessagesBySystemFromEntityRefs(
-      mockTechInsightsApi,
-      {
-        'system-x': [
-          { name: 'repoX', namespace: 'default', kind: 'Component' },
-        ],
-      },
-    );
+    const result = await getCommitMessagesBySystem(mockTechInsightsApi, {
+      'system-x': [{ name: 'repoX', namespace: 'default', kind: 'Component' }],
+    });
 
     /**
      * Checks to see if the results the function is providing
@@ -141,14 +136,9 @@ describe('getCommitMessagesBySystemFromEntityRefs', () => {
      * called using the mockTechInsightsApi as well as mockEntityRefs
      * and the result is being stored.
      */
-    const result = await getCommitMessagesBySystemFromEntityRefs(
-      mockTechInsightsApi,
-      {
-        'system-y': [
-          { name: 'repoY', namespace: 'default', kind: 'Component' },
-        ],
-      },
-    );
+    const result = await getCommitMessagesBySystem(mockTechInsightsApi, {
+      'system-y': [{ name: 'repoY', namespace: 'default', kind: 'Component' }],
+    });
 
     /**
      * Checks to see if the results the function is providing
@@ -185,14 +175,9 @@ describe('getCommitMessagesBySystemFromEntityRefs', () => {
      * called using the mockTechInsightsApi as well as mockEntityRefs
      * and the result is being stored.
      */
-    const result = await getCommitMessagesBySystemFromEntityRefs(
-      mockTechInsightsApi,
-      {
-        'system-z': [
-          { name: 'repoZ', namespace: 'default', kind: 'Component' },
-        ],
-      },
-    );
+    const result = await getCommitMessagesBySystem(mockTechInsightsApi, {
+      'system-z': [{ name: 'repoZ', namespace: 'default', kind: 'Component' }],
+    });
 
     /**
      * Checks to see if the results the function is providing

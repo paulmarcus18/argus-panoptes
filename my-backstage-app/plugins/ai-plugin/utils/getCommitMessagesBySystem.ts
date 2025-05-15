@@ -1,7 +1,5 @@
-import { CatalogApi } from '@backstage/catalog-client';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef } from '@backstage/catalog-model';
-import { getReposBySystem } from './getReposBySystem';
 import { CommitsPerRepo } from './types';
 
 /**
@@ -9,7 +7,7 @@ import { CommitsPerRepo } from './types';
  * finds the commit messages for these refs and returns a dictionary
  * with system as the key and an CommitPerRepo list as the value.
  */
-export async function getCommitMessagesBySystemFromEntityRefs(
+export async function getCommitMessagesBySystem(
   techInsightsApi: TechInsightsApi,
   systemToEntityRefs: Record<string, CompoundEntityRef[]>,
 ): Promise<Record<string, CommitsPerRepo[]>> {
@@ -84,20 +82,4 @@ export async function getCommitMessagesBySystemFromEntityRefs(
   }
 
   return result;
-}
-
-/**
- * This is a wrapper function which first gets the systemToEntiteyRefs list
- * from the getReposBySystem function before sending them to the
- * getCommitMessagesBySystemFromEntityRefs function.
- */
-export async function getCommitMessagesBySystem(
-  catalogApi: CatalogApi,
-  techInsightsApi: TechInsightsApi,
-): Promise<Record<string, CommitsPerRepo[]>> {
-  const systemToEntityRefs = await getReposBySystem(catalogApi);
-  return getCommitMessagesBySystemFromEntityRefs(
-    techInsightsApi,
-    systemToEntityRefs,
-  );
 }

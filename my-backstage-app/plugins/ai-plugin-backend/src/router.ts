@@ -1,7 +1,8 @@
 import express from 'express';
 import { LoggerService } from '@backstage/backend-plugin-api';
 import { PluginDatabaseManager } from '@backstage/backend-common';
-import { AISummaryStore, SummaryPerRepo } from './utils/aiSummaryStore';
+import { AISummaryStore } from './utils/aiSummaryStore';
+import { SummaryPerRepo } from 'plugins/ai-plugin/utils/types';
 
 interface RouterOptions {
   logger: LoggerService;
@@ -18,14 +19,20 @@ export async function createRouter({
   const db = await database.getClient();
   const store = new AISummaryStore(db);
 
-  const today = new Date().toISOString().split('T')[0];
-
   /**
    * GET /summaries - fetch all summaries for today
    */
-  router.get('/summaries', async (_req, res) => {
+  router.get('/summaries', async (req, res) => {
+    const requestedDate = req.query.date as string;
+
+    if (!requestedDate) {
+      return res
+        .status(400)
+        .json({ error: 'Missing required "date" query param' });
+    }
+
     try {
-      const summaries = await store.getAllSummariesForDate(today);
+      const summaries = await store.getAllSummariesForDate(requestedDate);
       res.json(summaries);
     } catch (error) {
       logger.error('Error fetching summaries:');
@@ -44,6 +51,7 @@ export async function createRouter({
    */
   router.post('/summaries', async (req, res) => {
     try {
+      console.log('Received POST body:', req.body);
       const { system, date, summaries } = req.body;
 
       if (!system || !date || !Array.isArray(summaries)) {

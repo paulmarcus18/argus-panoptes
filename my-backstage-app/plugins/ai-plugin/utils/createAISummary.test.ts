@@ -1,7 +1,7 @@
-import { generateSummariesFromCommits } from './createAISummary';
+import { generateSummaries } from './createAISummary';
 import { CommitsPerRepo } from './types';
 
-describe('generateSummariesFromCommits', () => {
+describe('generateSummaries', () => {
   /**
    * Mocks the generation of AI content.
    */
@@ -48,7 +48,7 @@ describe('generateSummariesFromCommits', () => {
      * Get's the response of the generateSummariesFromCommits
      * function on the mock entities.
      */
-    const result = await generateSummariesFromCommits(mockAI as any, input);
+    const result = await generateSummaries(mockAI as any, input);
 
     /**
      * Checks to see if the results the function is providing
@@ -81,7 +81,7 @@ describe('generateSummariesFromCommits', () => {
      * Get's the response of the generateSummariesFromCommits
      * function on the mock entities.
      */
-    const result = await generateSummariesFromCommits(mockAI as any, input);
+    const result = await generateSummaries(mockAI as any, input);
 
     /**
      * Checks to see if the results the function is providing
@@ -114,7 +114,7 @@ describe('generateSummariesFromCommits', () => {
      * Get's the response of the generateSummariesFromCommits
      * function on the mock entities.
      */
-    const result = await generateSummariesFromCommits(mockAI as any, input);
+    const result = await generateSummaries(mockAI as any, input);
 
     /**
      * Checks to see if the results the function is providing

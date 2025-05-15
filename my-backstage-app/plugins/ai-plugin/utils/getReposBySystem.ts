@@ -1,10 +1,9 @@
-import { CatalogApi } from '@backstage/catalog-client';
 import { CompoundEntityRef, Entity } from '@backstage/catalog-model';
 
 /**
  * Processes a list of entities and groups them by system.
  */
-export function getReposBySystemFromEntities(
+export function getReposBySystem(
   entities: Entity[],
 ): Record<string, CompoundEntityRef[]> {
   // Initialize an empty record
@@ -44,24 +43,4 @@ export function getReposBySystemFromEntities(
   }
 
   return reposBySystem;
-}
-
-/**
- * This is a wrapper function that
- * fetches all components and returns them grouped by system.
- */
-export async function getReposBySystem(
-  catalogApi: CatalogApi,
-): Promise<Record<string, CompoundEntityRef[]>> {
-  console.log('📦 Fetching all components from catalog...');
-
-  /**
-   * Calles the catalogApi to get all components and then filters
-   * them based on their kind.
-   */
-  const { items: entities } = await catalogApi.getEntities({
-    filter: { kind: 'Component' },
-  });
-
-  return getReposBySystemFromEntities(entities);
 }

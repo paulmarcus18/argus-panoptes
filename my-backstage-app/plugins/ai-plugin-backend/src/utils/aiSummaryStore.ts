@@ -1,9 +1,5 @@
 import { Knex } from 'knex';
-
-export interface SummaryPerRepo {
-  repoName: string;
-  summary: string;
-}
+import { SummaryPerRepo } from 'plugins/ai-plugin/utils/types';
 
 export class AISummaryStore {
   constructor(private readonly db: Knex) {}
@@ -52,6 +48,14 @@ export class AISummaryStore {
       date,
     }));
 
-    await this.db.batchInsert('ai_summaries', rows);
+    try {
+      await this.db('ai_summaries')
+        .insert(rows)
+        .onConflict(['system', 'repo_name', 'date'])
+        .merge(); // or .ignore()
+    } catch (error) {
+      console.error('Failed to insert summaries:', error);
+      throw error;
+    }
   }
 }

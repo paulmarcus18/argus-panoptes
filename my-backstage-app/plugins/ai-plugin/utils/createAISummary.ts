@@ -1,14 +1,11 @@
 import { GoogleGenAI } from '@google/genai';
-import { CatalogApi } from '@backstage/catalog-client';
-import { TechInsightsApi } from '@backstage/plugin-tech-insights';
-import { getCommitMessagesBySystem } from './getCommitMessagesBySystem';
 import { CommitsPerRepo, SummaryPerRepo } from './types';
 
 /**
  * Core logic: Summarize commit messages by system using Gemini.
  * Accepts a Gemini AI client and pre-fetched commit message data.
  */
-export async function generateSummariesFromCommits(
+export async function generateSummaries(
   ai: GoogleGenAI,
   commitMessagesBySystem: Record<string, CommitsPerRepo[]>,
 ): Promise<Record<string, SummaryPerRepo[]>> {
@@ -83,26 +80,4 @@ export async function generateSummariesFromCommits(
   }
 
   return summaries;
-}
-
-/**
- * This is a wrapper function that uses the getCommitMessagesBySystem
- * function to get commitMessagesBySystem and that initializez a new
- * ai model using gemini. It then calls generateSummariesFromCommits
- * using the two as parameters.
- */
-export async function generateSummaries(
-  catalogApi: CatalogApi,
-  techInsightsApi: TechInsightsApi,
-): Promise<Record<string, SummaryPerRepo[]>> {
-  const ai = new GoogleGenAI({
-    apiKey: 'AIzaSyC7PNqPNPlfa7v4obQm70xSr_XEfG1ySwA',
-  });
-
-  const commitMessagesBySystem = await getCommitMessagesBySystem(
-    catalogApi,
-    techInsightsApi,
-  );
-
-  return generateSummariesFromCommits(ai, commitMessagesBySystem);
 }

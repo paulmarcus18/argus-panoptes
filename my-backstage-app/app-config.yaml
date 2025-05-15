@@ -140,13 +140,13 @@ catalog:
 
     - type: file
       target: ../../catalogs/spring-ai-alibaba-catalog-info.yaml
-      
+
     - type: file
       target: ../../catalogs/tidb-catalog-info.yaml
-    
+
     - type: file
       target: ../../catalogs/trivy-catalog-info.yaml
-    
+
     - type: file
       target: ../../catalogs/rustdesk-catalog-info.yaml
 
@@ -182,7 +182,7 @@ techInsights:
       cadence: '0 */4 * * *' # Every 4 hours
     github-commit-message-retriever:
       enabled: true
-      cadence: '*/2 * * * *' # Every minute
+      cadence: '0 */4 * * *' # Every minute
       filter:
         kind: Component
     dependabotFactRetriever:

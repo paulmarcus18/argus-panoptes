@@ -1,7 +1,7 @@
-import { getReposBySystemFromEntities } from './getReposBySystem';
+import { getReposBySystem } from './getReposBySystem';
 import { Entity } from '@backstage/catalog-model';
 
-describe('getReposBySystemFromEntities', () => {
+describe('getReposBySystem', () => {
   /**
    * Checks if getReposBySystemFromEntities groups entities of the
    * same system correctly using mock entities.
@@ -35,7 +35,7 @@ describe('getReposBySystemFromEntities', () => {
      * Get's the response of the getReposBySystemFromEntities
      * function on the mock entities.
      */
-    const result = getReposBySystemFromEntities(mockEntities);
+    const result = getReposBySystem(mockEntities);
 
     /**
      * Checks to see if the results the function is providing
@@ -72,7 +72,7 @@ describe('getReposBySystemFromEntities', () => {
      * Get's the response of the getReposBySystemFromEntities
      * function on the mock entities.
      */
-    const result = getReposBySystemFromEntities(mockEntities);
+    const result = getReposBySystem(mockEntities);
 
     /**
      * Checks to see if the results the function is providing
