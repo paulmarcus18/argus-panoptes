@@ -21,10 +21,10 @@ export async function getDependabotStatusFromFacts(
     const facts = await techInsightsApi.getFacts(entityRef,['dependabotFactRetriever']);
     let factObj = facts['dependabotFactRetriever'];
 
-  if (!factObj) {
-    console.warn(`⚠️ dependabot:status not found in facts`, facts);
-    return { color: 'gray'};
-  }
+  // if (!factObj) {
+  //   console.warn(`⚠️ dependabot:status not found in facts`, facts);
+  //   return { color: 'gray'};
+  // }
     console.log(`🔍 Raw fact value:`, factObj);
     console.log(`🧪 Type of fact:`, typeof factObj);
 
