@@ -213,7 +213,31 @@ techInsights:
             all:
               - fact: vulnerabilities
                 operator: lessThanInclusive
-                value: 5
+                value: 1 # change me
+      qualityGateCheck:
+        type: json-rules-engine
+        name: Quality Gate Check
+        description: Verifies quality gate status is passed
+        factIds:
+          - sonarcloud-fact-retriever
+        rule:
+          conditions:
+            all:
+              - fact: quality_gate_status
+                operator: equal
+                value: 'OK'
+      codeCoverageCheck:
+        type: json-rules-engine
+        name: Code Coverage Check
+        description: Verifies code coverage is within acceptable range
+        factIds:
+          - sonarcloud-fact-retriever
+        rule:
+          conditions:
+            all:
+              - fact: coverage
+                operator: greaterThanInclusive
+                value: 80
       dependabotLowAlertCheck:
         type: json-rules-engine
         name: Dependabot Alerts Below Threshold

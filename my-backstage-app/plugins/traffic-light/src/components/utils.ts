@@ -181,6 +181,25 @@ export const getSonarQubeFacts = async (
     // Fetch facts from the Tech Insights API for the given entity and retriever
     const response = await api.getFacts(entity, ['sonarcloud-fact-retriever']);
 
+    // ------------------------------------------------
+    // Facts checks
+    const checkResults = await api.runChecks(entity, ['noHighBugsCheck', 'vulnerabilitiesCheck',]);
+    const bugsCheck = checkResults.find(r => r.check.id === 'noHighBugsCheck');
+    const vulnerabilitiesCheck = checkResults.find(r => r.check.id === 'vulnerabilitiesCheck');
+    const codeSmellsCheck = checkResults.find(r => r.check.id === 'noHighCodeSmellsCheck');
+    const qualityGateCheck = checkResults.find(r => r.check.id === 'qualityGateCheck');
+    const codeCoverageCheck = checkResults.find(r => r.check.id === 'codeCoverageCheck');
+    
+    // Log the results of the checks for debugging
+    console.log("Result from Bugs checks:", bugsCheck?.result);
+    console.log("Result from Vulnerabilities checks:", vulnerabilitiesCheck?.result);
+    console.log("Result from Code Smells checks:", codeSmellsCheck?.result);
+    console.log("Result from Quality Gate checks:", qualityGateCheck?.result);
+    console.log("Result from Code Coverage checks:", codeCoverageCheck?.result);
+
+    // End of facts checks
+    // -----------------------------------------------
+
     // Log the raw response from the API for debugging
     console.log(
       'Raw Tech Insights API response:',
