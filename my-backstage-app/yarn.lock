@@ -5793,6 +5793,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@backstage/plugin-tech-insights-backend-module-jsonfc@npm:^0.1.50":
+  version: 0.1.50
+  resolution: "@backstage/plugin-tech-insights-backend-module-jsonfc@npm:0.1.50"
+  dependencies:
+    "@backstage/backend-common": "npm:^0.21.7"
+    "@backstage/backend-plugin-api": "npm:^0.6.17"
+    "@backstage/config": "npm:^1.2.0"
+    "@backstage/errors": "npm:^1.2.4"
+    "@backstage/plugin-tech-insights-common": "npm:^0.2.13"
+    "@backstage/plugin-tech-insights-node": "npm:^0.6.1"
+    "@backstage/types": "npm:^1.1.1"
+    ajv: "npm:^8.10.0"
+    json-rules-engine: "npm:^6.1.2"
+    lodash: "npm:^4.17.21"
+    luxon: "npm:^3.0.0"
+  checksum: 10c0/ce192b71a6ba6aed22bdcd5bf79e7e8d2e603cd9c21c0f96d87143727d09f76fed027d8d190e487daf3b080e46ea7e3479d76caeb178c49bb1380c120b68a463
+  languageName: node
+  linkType: hard
+
 "@backstage/plugin-tech-insights-backend@npm:^0.5.32":
   version: 0.5.32
   resolution: "@backstage/plugin-tech-insights-backend@npm:0.5.32"
@@ -23885,6 +23904,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"json-rules-engine@npm:^6.1.2":
+  version: 6.6.0
+  resolution: "json-rules-engine@npm:6.6.0"
+  dependencies:
+    clone: "npm:^2.1.2"
+    eventemitter2: "npm:^6.4.4"
+    hash-it: "npm:^6.0.0"
+    jsonpath-plus: "npm:^7.2.0"
+  checksum: 10c0/ed8329c7f61fc50463d72ae05ee764b71502343ba51b237a1a2e5ccecebc8e03281483679cf4e88f67ef5548a94f4cf199ab13c0366c30310a6d8754652828f8
+  languageName: node
+  linkType: hard
+
 "json-rules-engine@npm:^7.0.0":
   version: 7.3.1
   resolution: "json-rules-engine@npm:7.3.1"
@@ -30405,6 +30436,7 @@ __metadata:
     "@backstage-community/plugin-tech-insights": "npm:^0.5.1"
     "@backstage/cli": "npm:^0.32.0"
     "@backstage/e2e-test-utils": "npm:^0.1.1"
+    "@backstage/plugin-tech-insights-backend-module-jsonfc": "npm:^0.1.50"
     "@mui/icons-material": "npm:^7.0.2"
     "@playwright/test": "npm:^1.32.3"
     "@types/jest": "npm:^29.5.14"

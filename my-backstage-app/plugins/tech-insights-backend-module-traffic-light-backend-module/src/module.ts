@@ -7,11 +7,14 @@
 //imports the utility function used to define and create a backend module in Backstage
 import { createBackendModule, coreServices, LoggerService } from '@backstage/backend-plugin-api';
 //imports the tech insights extension point that lets you plug in custom FactRetrievers
-import { techInsightsFactRetrieversExtensionPoint } from '@backstage-community/plugin-tech-insights-node';
+import { techInsightsFactRetrieversExtensionPoint, techInsightsFactCheckerFactoryExtensionPoint } from '@backstage-community/plugin-tech-insights-node';
 //imports retriever that queries dependabot alert data
 import { dependabotFactRetriever } from './dependabot/dependabotFactRetriever';
 import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/githubASFactRetriever';
-//import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
+import { createGitHubSecretScanningCheck } from './github-advanced-security/githubASFactChecker';
+// Import JsonRulesEngineFactCheckerFactory
+import { JsonRulesEngineFactCheckerFactory } from '@backstage/plugin-tech-insights-backend-module-jsonfc';
+
 
 //defines a backend module that integrates with the tech insights plugin
 export default createBackendModule({
@@ -28,17 +31,35 @@ export default createBackendModule({
         //declares that it needs access to the fact retriever provider interface
         providers: techInsightsFactRetrieversExtensionPoint,
         logger: coreServices.rootLogger,
-        //config: coreServices.rootConfig,
+        factCheckerProvider: techInsightsFactCheckerFactoryExtensionPoint,
+        config: coreServices.rootConfig,
       },
+
       //initialization function that will run during backend's startup
-      async init({ providers, logger }) {
+      async init({ providers, logger, config, factCheckerProvider }) {
         //logs to the console to confirm module is being registered
         logger.info('Registering dependabot-facts module...');
         providers.addFactRetrievers({
           dependabotFactRetriever,
           githubAdvancedSecurityFactRetriever,
         });
+
+
+      // Create the fact checkers from config
+      const secretCheck = createGitHubSecretScanningCheck(config);
+      // Create the JSON Rules Engine factory with our checks
+      const jsonRulesEngineFactChecker = new JsonRulesEngineFactCheckerFactory({
+        checks: [
+          secretCheck,
+        ],
+        logger,
+      });
+      
+      // Register the fact checker factory
+      factCheckerProvider.setFactCheckerFactory(jsonRulesEngineFactChecker);
       },
+
+      
     });
   },
 });

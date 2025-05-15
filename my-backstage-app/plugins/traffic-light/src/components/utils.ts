@@ -247,6 +247,17 @@ export const getGitHubSecurityFacts = async (
     );
     
     const response = await api.getFacts(entity, ['githubAdvancedSecurityFactRetriever']);
+
+    // ------------------------------------------------
+    // Facts checks
+    const checkResults = await api.runChecks(entity);
+    const secretCheck = checkResults.find(r => r.check.id === 'githubSecretScanningCheck');
+    
+    // Log the results of the checks for debugging
+    console.log("Result from secret checks:", secretCheck?.result);
+
+    // End of facts checks
+    // -----------------------------------------------
     
     console.log(
       '🧾 Raw Tech Insights API response:',
