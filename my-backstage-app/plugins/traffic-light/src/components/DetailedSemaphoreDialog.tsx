@@ -29,13 +29,13 @@ import { getSonarQubeFacts, getGitHubSecurityFacts } from './utils';
 // Type for semaphore severity
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
-// Type for issue details - extended with URL and directLink
+// Type for issue details - updated to match factRetriever
 interface IssueDetail {
   severity: Severity;
   description: string;
-  component?: string;
-  url?: string;
   directLink?: string;
+  created_at?: string;
+  component?: string; // Extracted from direct_link if possible
 }
 
 // Types for metrics data
@@ -302,6 +302,34 @@ interface DetailedSemaphoreDialogProps {
   entities?: Entity[];
 }
 
+// Utility function to extract repository and file path from the direct_link
+const extractInfoFromDirectLink = (directLink: string): { repoName: string; filePath: string } => {
+  const result = { repoName: '', filePath: '' };
+  
+  if (!directLink) return result;
+  
+  try {
+    // Format is usually: https://github.com/{owner}/{repo}/blob/{commit}/{path}#L{line}
+    const url = new URL(directLink);
+    const pathParts = url.pathname.split('/');
+    
+    if (url.hostname === 'github.com' && pathParts.length >= 5) {
+      // Extract owner/repo
+      result.repoName = `${pathParts[1]}/${pathParts[2]}`;
+      
+      // Extract file path - everything after the /blob/{commit}/ part
+      if (pathParts[3] === 'blob' && pathParts.length > 5) {
+        result.filePath = pathParts.slice(5).join('/');
+      }
+    }
+  } catch (e) {
+    // If URL parsing fails, return empty strings
+    console.error('Failed to parse direct_link:', e);
+  }
+  
+  return result;
+};
+
 const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   open,
   onClose,
@@ -483,27 +511,22 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
                   mediumIssues++;
               }
               
-              // Extract repository name from HTML URL
-              // Format is usually: https://github.com/{owner}/{repo}/security/...
-              const urlParts = (alert.html_url || '').split('/');
-              const repoIndex = urlParts.indexOf('github.com');
-              let repoName = '';
-              if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
-                repoName = `${urlParts[repoIndex + 1]}/${urlParts[repoIndex + 2]}`;
-              }
+              // Extract repository and file info from direct_link
+              const { repoName, filePath } = extractInfoFromDirectLink(alert.direct_link);
               
               // Add repository name to description if available
-              const description = repoName 
-                ? `[${repoName}] ${alert.description}` 
-                : alert.description;
+              let description = alert.description;
+              if (repoName) {
+                description = `[${repoName}] ${description}`;
+              }
 
               // Add to details
               details.push({
                 severity: (alert.severity as Severity) || 'medium',
                 description: description,
-                component: alert.location?.path, // Use file path as component
-                url: alert.html_url, // Store URL for linking
-                directLink: alert.direct_link // Direct link to the specific line
+                directLink: alert.direct_link,
+                created_at: alert.created_at,
+                component: filePath || undefined, // Use file path as component if available
               });
             });
 
@@ -511,23 +534,20 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             Object.values(result.secretScanningAlerts || {}).forEach(alert => {
               highIssues++; // Most secret alerts are high severity
               
-              // Extract repository name from HTML URL
-              const urlParts = (alert.html_url || '').split('/');
-              const repoIndex = urlParts.indexOf('github.com');
-              let repoName = '';
-              if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
-                repoName = `${urlParts[repoIndex + 1]}/${urlParts[repoIndex + 2]}`;
-              }
+              // Extract repository info from direct_link
+              const { repoName } = extractInfoFromDirectLink(alert.direct_link);
               
               // Add repository name to description if available
-              const description = repoName 
-                ? `[${repoName}] ${alert.description}` 
-                : alert.description;
+              let description = alert.description;
+              if (repoName) {
+                description = `[${repoName}] ${description}`;
+              }
               
               details.push({
                 severity: 'high',
                 description: description,
-                url: alert.html_url
+                directLink: alert.direct_link,
+                created_at: alert.created_at
               });
             });
           });
@@ -893,7 +913,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             {/* Metrics section */}
             {renderMetrics()}
 
-                            {/* Details/Issues section */}
+            {/* Details/Issues section */}
             {data.details && data.details.length > 0 && (
               <>
                 <Box mt={3} mb={1}>
@@ -924,9 +944,9 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
                           variant="subtitle1"
                           className={classes.issueTitle}
                         >
-                          {issue.url ? (
+                          {issue.directLink ? (
                             <Link
-                              href={issue.directLink || issue.url}
+                              href={issue.directLink}
                               target="_blank"
                               rel="noopener noreferrer"
                               className={classes.issueLink}
@@ -950,6 +970,13 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
                             <Chip
                               size="small"
                               label={issue.component}
+                              variant="outlined"
+                            />
+                          )}
+                          {issue.created_at && (
+                            <Chip
+                              size="small"
+                              label={new Date(issue.created_at).toLocaleDateString()}
                               variant="outlined"
                             />
                           )}
