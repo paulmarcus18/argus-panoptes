@@ -360,14 +360,26 @@ export const CommitMessageTestPage = () => {
   const [repoSearch, setRepoSearch] = useState<string>('');
   const { fetch } = useApi(fetchApiRef);
   const discoveryApi = useApi(discoveryApiRef);
+  const today = new Date().toISOString().split('T')[0];
+
+  const callAI = async () => {
+    const apiBaseUrl = await discoveryApi.getBaseUrl('ai-plugin');
+    const { items: entities } = await catalogApi.getEntities({ filter: { kind: 'Component' } });
+    const systemToEntityRefs = getReposBySystem(entities);
+
+    const commitMessagesBySystem = await getCommitMessagesBySystem(techInsightsApi, systemToEntityRefs);
+
+    const ai = new GoogleGenAI({ apiKey: 'AIzaSyC7PNqPNPlfa7v4obQm70xSr_XEfG1ySwA' });
+    const result = await generateSummaries(ai, commitMessagesBySystem);
+
+    await postSummaries(result, today, apiBaseUrl, fetch);
+    setMessagesBySystem(result);
+    setLoading(false);
+  }
 
   const fetchSummaries = async () => {
     setLoading(true);
-    const { items: entities } = await catalogApi.getEntities({ filter: { kind: 'Component' } });
-    const systemToEntityRefs = getReposBySystem(entities);
-    const commitMessagesBySystem = await getCommitMessagesBySystem(techInsightsApi, systemToEntityRefs);
     const apiBaseUrl = await discoveryApi.getBaseUrl('ai-plugin');
-    const today = new Date().toISOString().split('T')[0];
 
     try {
       const res = await fetch(`${apiBaseUrl}/summaries?date=${today}`);
@@ -383,11 +395,7 @@ export const CommitMessageTestPage = () => {
       console.error('Error fetching summaries:', err);
     }
 
-    const ai = new GoogleGenAI({ apiKey: 'AIzaSyC7PNqPNPlfa7v4obQm70xSr_XEfG1ySwA' });
-    const result = await generateSummaries(ai, commitMessagesBySystem);
-    await postSummaries(result, today, apiBaseUrl, fetch);
-    setMessagesBySystem(result);
-    setLoading(false);
+    callAI();
   };
 
   useEffect(() => {
@@ -427,7 +435,7 @@ export const CommitMessageTestPage = () => {
           AI Generated Release Notes
         </Typography>
         <IconButton
-          onClick={fetchSummaries}
+          onClick={callAI}
           aria-label="refresh"
           sx={{ backgroundColor: 'transparent', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }, padding: 1 }}
         >
