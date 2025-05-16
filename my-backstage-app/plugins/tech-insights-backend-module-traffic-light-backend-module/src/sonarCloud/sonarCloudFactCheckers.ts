@@ -1,4 +1,4 @@
-import { TechInsightJsonRuleCheck } from '@backstage/plugin-tech-insights-backend-module-jsonfc';
+import { TechInsightJsonRuleCheck } from '@backstage-community/plugin-tech-insights-backend-module-jsonfc';
 import { Config } from '@backstage/config';
 
 /**

@@ -22,7 +22,7 @@ import {
   createCodeCoverageCheck 
 } from './sonarCloud/sonarCloudFactCheckers';
 // Import JsonRulesEngineFactCheckerFactory
-import { JsonRulesEngineFactCheckerFactory } from '@backstage/plugin-tech-insights-backend-module-jsonfc';
+import { JsonRulesEngineFactCheckerFactory } from '@backstage-community/plugin-tech-insights-backend-module-jsonfc';
 
 
 // Defines a backend module that integrates with the tech insights plugin.
