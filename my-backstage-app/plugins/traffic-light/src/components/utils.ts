@@ -211,19 +211,8 @@ export interface GitHubSecurityFacts {
   codeScanningAlerts: Record<string, {
     severity: string;
     description: string;
-    html_url: string;
     direct_link?: string;
-    location?: {
-      path: string;
-      start_line: number;
-      commit_sha: string;
-    };
     created_at: string;
-    rule?: {
-      id: string;
-      name: string;
-      description?: string;
-    };
   }>;
   secretScanningAlerts: Record<string, {
     severity: string;

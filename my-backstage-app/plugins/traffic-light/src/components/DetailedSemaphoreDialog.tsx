@@ -25,6 +25,7 @@ import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { getSonarQubeFacts, getGitHubSecurityFacts } from './utils';
+import { processGitHubSecurityData } from './dataProcessing/githubAdvancedSecurity_logic';
 
 // Type for semaphore severity
 type Severity = 'critical' | 'high' | 'medium' | 'low';
@@ -35,7 +36,7 @@ interface IssueDetail {
   description: string;
   directLink?: string;
   created_at?: string;
-  component?: string; // Extracted from direct_link if possible
+  component?: string; 
 }
 
 // Types for metrics data
@@ -461,148 +462,36 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     }
   }, [semaphoreType, entities, techInsightsApi]);
 
-  // Fetch real GitHub Security data when needed
-  React.useEffect(() => {
-    // Only fetch data if this is a GitHub Advanced Security semaphore and there are entities
-    if (semaphoreType === 'Github Advanced Security' && entities && entities.length > 0) {
-      setIsLoading(true);
+  // Fetch and process real GitHub Security data when needed
+React.useEffect(() => {
+  // Only fetch data if this is a GitHub Advanced Security semaphore and there are entities
+  if (semaphoreType === 'Github Advanced Security' && entities && entities.length > 0) {
+    setIsLoading(true);
 
-      const fetchGitHubSecurityData = async () => {
-        try {
-          // Get GitHub security facts for all entities
-          const securityResults = await Promise.all(
-            entities.map(entity =>
-              getGitHubSecurityFacts(techInsightsApi, {
-                kind: entity.kind,
-                namespace: entity.metadata.namespace || 'default',
-                name: entity.metadata.name,
-              }),
-            ),
-          );
+    const fetchGitHubSecurityData = async () => {
+      try {
+        // Use the imported utility function to process GitHub security data
+        const processedData = await processGitHubSecurityData(techInsightsApi, entities);
+        
+        // The utility function already handles all the processing logic
+        // Just set the returned data directly
+        setRealGitHubSecurityData({
+          color: processedData.color,
+          metrics: processedData.metrics,
+          summary: processedData.summary,
+          details: processedData.details
+        });
+      } catch (err) {
+        console.error('Error fetching GitHub Security data:', err);
+        setRealGitHubSecurityData(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-          // Process the results to categorize findings by severity
-          let criticalIssues = 0;
-          let highIssues = 0;
-          let mediumIssues = 0;
-          let lowIssues = 0;
-          
-          // Collect all issues for details section
-          const details: IssueDetail[] = [];
-
-          securityResults.forEach(result => {
-            // Process code scanning alerts
-            Object.values(result.codeScanningAlerts || {}).forEach(alert => {
-              // Count by severity
-              switch(alert.severity) {
-                case 'critical':
-                  criticalIssues++;
-                  break;
-                case 'high':
-                  highIssues++;
-                  break;
-                case 'medium':
-                  mediumIssues++;
-                  break;
-                case 'low':
-                  lowIssues++;
-                  break;
-                default:
-                  // Default to medium if severity is unknown
-                  mediumIssues++;
-              }
-              
-              // Extract repository and file info from direct_link
-              const { repoName, filePath } = extractInfoFromDirectLink(alert.direct_link);
-              
-              // Add repository name to description if available
-              let description = alert.description;
-              if (repoName) {
-                description = `[${repoName}] ${description}`;
-              }
-
-              // Add to details
-              details.push({
-                severity: (alert.severity as Severity) || 'medium',
-                description: description,
-                directLink: alert.direct_link,
-                created_at: alert.created_at,
-                component: filePath || undefined, // Use file path as component if available
-              });
-            });
-
-            // Process secret scanning alerts (most secret scanning alerts are high severity)
-            Object.values(result.secretScanningAlerts || {}).forEach(alert => {
-              highIssues++; // Most secret alerts are high severity
-              
-              // Extract repository info from direct_link
-              const { repoName } = extractInfoFromDirectLink(alert.direct_link);
-              
-              // Add repository name to description if available
-              let description = alert.description;
-              if (repoName) {
-                description = `[${repoName}] ${description}`;
-              }
-              
-              details.push({
-                severity: 'high',
-                description: description,
-                directLink: alert.direct_link,
-                created_at: alert.created_at
-              });
-            });
-          });
-
-          // Calculate total issues
-          const totalCodeScanningAlerts = securityResults.reduce(
-            (sum, result) => sum + result.openCodeScanningAlertCount, 0
-          );
-          const totalSecretScanningAlerts = securityResults.reduce(
-            (sum, result) => sum + result.openSecretScanningAlertCount, 0
-          );
-          const totalIssues = totalCodeScanningAlerts + totalSecretScanningAlerts;
-
-          // Determine color based on the presence of issues
-          let color: 'red' | 'yellow' | 'green' | 'gray' = 'green';
-          if (criticalIssues > 0 || highIssues > 0) {
-            color = 'red';
-          } else if (mediumIssues > 0) {
-            color = 'yellow';
-          }
-
-          // Create summary
-          let summary = 'No security issues found.';
-          if (color === 'red') {
-            summary = 'Critical security issues require immediate attention.';
-          } else if (color === 'yellow') {
-            summary = 'Security issues need to be addressed.';
-          }
-
-          // Set the data
-          setRealGitHubSecurityData({
-            color,
-            metrics: {
-              totalIssues,
-              criticalIssues,
-              highIssues,
-              mediumIssues,
-              lowIssues,
-              totalCodeScanningAlerts,
-              totalSecretScanningAlerts
-            },
-            summary,
-            details,
-          });
-        } catch (err) {
-          console.error('Error fetching GitHub Security data:', err);
-          setRealGitHubSecurityData(null);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchGitHubSecurityData();
-    }
-  }, [semaphoreType, entities, techInsightsApi]);
+    fetchGitHubSecurityData();
+  }
+}, [semaphoreType, entities, techInsightsApi]);
 
   // Use real data if available, otherwise fall back to mock data
   const data = React.useMemo(() => {
