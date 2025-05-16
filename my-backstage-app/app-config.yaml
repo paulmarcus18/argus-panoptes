@@ -174,8 +174,7 @@ techInsights:
       cadence: "*/2 * * * *" # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
     githubAdvancedSecurityFactRetriever:
-      cadence: "*/2 * * * *" # every minute
-      lifecycle: { timeToLive: { weeks: 2 } }
+      cadence: "0 * * * *" # every hour
   factChecker:
     checks:
       noHighBugsCheck:

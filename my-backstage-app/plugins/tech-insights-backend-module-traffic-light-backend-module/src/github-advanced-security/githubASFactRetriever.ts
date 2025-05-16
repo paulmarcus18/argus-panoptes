@@ -16,6 +16,7 @@ interface codeScanningFinding extends JsonObject {
 
 // Dictionary structure for security findings where the key is the alert number/id
 // Must be JsonObject compatible
+// This way we store all the issues per repository
 interface codeScanningFindingsDict extends JsonObject {
   [alertId: string]: codeScanningFinding;
 }
@@ -51,23 +52,18 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
     },
   },
 
-  // Main logic of the retriever
+  // Main logic of the retriever 
   async handler({ config, logger, entityFilter, auth, discovery }): Promise<TechInsightFact[]> {
     // Retrieve GitHub token from config
     let token: string | undefined;
     try {
       const githubConfigs = config.getOptionalConfigArray('integrations.github');
       const githubConfig = githubConfigs?.[0];
-      token = githubConfig?.getOptionalString('token');
+      token = githubConfig?.getOptionalString('token'); 
 
-      logger.info(`🔍 Retrieved GitHub token: ${token ? '✔️ Present' : '❌ Missing'}`);
+      logger.info(`Retrieved GitHub token: ${token ? 'Present' : 'Missing'}`);
     } catch (e) {
-      logger.error(`❌ Could not retrieve GitHub token: ${e}`);
-      return [];
-    }
-
-    if (!token) {
-      logger.error('❌ GitHub token is not defined.');
+      logger.error(`Could not retrieve GitHub token: ${e}`);
       return [];
     }
 
@@ -86,15 +82,10 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
       { token: catalogToken },
     );
 
-    logger.info(`📋 Found ${entities.length} entities matching the filter`);
-
     // Filter entities that have GitHub repositories
-    // The standard Backstage annotation for GitHub repositories is 'github.com/project-slug'
     const githubEntities = entities.filter(entity => {
       return entity.metadata.annotations?.['github.com/project-slug'];
     });
-
-    logger.info(`🔍 Found ${githubEntities.length} entities with GitHub annotations`);
 
     // Use dynamic import for Octokit
     const { Octokit } = await import('@octokit/rest');
@@ -111,11 +102,11 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
         const [owner, repo] = projectSlug.split('/');
 
         if (!owner || !repo) {
-          logger.warn(`⚠️ Invalid GitHub project slug for entity ${entity.metadata.name}: ${projectSlug}`);
+          logger.warn(`Invalid GitHub project slug for entity ${entity.metadata.name}: ${projectSlug}`);
           return null;
         }
 
-        logger.info(`📊 Retrieving GitHub security data for ${owner}/${repo}`);
+        logger.info(`Retrieving GitHub security data for ${owner}/${repo}`);
 
         try {
           // Fetch Code Scanning alerts
@@ -177,8 +168,9 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
             };
           });
 
+          // logger for debugging purposes
           logger.info(
-            `📊 GitHub security metrics for ${owner}/${repo}: ` +
+            `GitHub security metrics for ${owner}/${repo}: ` +
             `Code Scanning: ${Object.keys(codeScanningAlerts).length}, ` +
             `Secret Scanning: ${Object.keys(secretScanningAlerts).length}`
           );
@@ -201,12 +193,12 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
         } catch (err: any) {
           if (err.status === 403 || err.status === 404) {
             logger.warn(
-              `⚠️ Access denied to security data for ${owner}/${repo} (status ${err.status}) — skipping`,
+              `Access denied to security data for ${owner}/${repo} (status ${err.status}) — skipping`,
             );
             return null;
           }
           logger.error(
-            `❌ Error fetching security data for ${owner}/${repo}: ${err.message} (status ${err.status})`,
+            `Error fetching security data for ${owner}/${repo}: ${err.message} (status ${err.status})`,
           );
           return null;
         }

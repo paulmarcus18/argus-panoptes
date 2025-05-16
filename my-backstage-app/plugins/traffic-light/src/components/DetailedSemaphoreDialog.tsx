@@ -24,20 +24,8 @@ import InfoIcon from '@material-ui/icons/Info';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
-import { getSonarQubeFacts, getGitHubSecurityFacts } from './utils';
-import { processGitHubSecurityData } from './dataProcessing/githubAdvancedSecurity_logic';
-
-// Type for semaphore severity
-type Severity = 'critical' | 'high' | 'medium' | 'low';
-
-// Type for issue details - updated to match factRetriever
-interface IssueDetail {
-  severity: Severity;
-  description: string;
-  directLink?: string;
-  created_at?: string;
-  component?: string; 
-}
+import { getSonarQubeFacts } from './utils';
+import { processGitHubSecurityData, IssueDetail, Severity } from './dataProcessing/githubAdvancedSecurity_logic';
 
 // Types for metrics data
 interface SemaphoreData {

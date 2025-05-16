@@ -224,6 +224,9 @@ export interface GitHubSecurityFacts {
 
 /**
  * Function to fetch GitHub security facts for a given entity
+ * @param api - TechInsightsApi instance
+ * @param entity - The entity reference for which to fetch facts
+ * @return A promise that resolves to an object containing GitHub security facts
  */
 export const getGitHubSecurityFacts = async (
   api: TechInsightsApi,
@@ -255,6 +258,7 @@ export const getGitHubSecurityFacts = async (
     
     const facts = response?.['githubAdvancedSecurityFactRetriever']?.facts;
     
+    // Check if the facts are present and log an error if not
     if (!facts) {
       console.error(
         '❌ No GitHub Security facts found for entity:',

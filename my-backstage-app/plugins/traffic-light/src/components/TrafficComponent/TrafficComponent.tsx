@@ -19,13 +19,10 @@ import FilterListIcon from '@material-ui/icons/FilterList';
 import { Header, Page, Content, InfoCard } from '@backstage/core-components';
 import { DialogComponent } from '../DialogComponent';
 import DetailedSemaphoreDialog from '../DetailedSemaphoreDialog';
-import { ThresholdDialog } from '../TresholdDialogComponent';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
-import { getSonarQubeFacts } from '../utils';
-import { getGitHubSecurityFacts } from '../utils';
 import { processGitHubSecurityData } from '../dataProcessing/githubAdvancedSecurity_logic';
 
 // TrafficLight component that renders a colored circle
@@ -195,12 +192,13 @@ const SonarQubeTrafficLight = ({
   );
 };
 
-// SonarQube traffic light component (new implementation)
+// Github Security Traffic Component
 interface GitHubSecurityTrafficLightProps {
   entities: Entity[];
   onClick?: () => void;
 }
-// Then update the GitHubSecurityTrafficLight component
+
+// Update the GitHubSecurityTrafficLight component
 const GitHubSecurityTrafficLight = ({
   entities,
   onClick,
@@ -225,6 +223,7 @@ const GitHubSecurityTrafficLight = ({
         setColor(securityData.color as 'green' | 'red' | 'yellow' | 'gray' | 'white');
         
         // Create a reason string based on the metrics and summary
+        // It will appear when the user hovers the mouse over the traffic light
         const { metrics, summary } = securityData;
         
         if (metrics.criticalIssues > 0 || metrics.highIssues > 0) {
