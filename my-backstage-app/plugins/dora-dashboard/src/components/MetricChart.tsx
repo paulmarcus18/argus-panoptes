@@ -40,23 +40,29 @@ export const MetricChart = ({
         </Typography>
       )}
 
-      <Box sx={{ flex: 1 }}>
+      <Box sx={{ flex: 1, height: '100%', px: 0.5, pt: 0.5 }}>
         <BarChart
+          height={240}
           xAxis={[
             {
               data: xLabels,
               scaleType: 'band',
               label: 'Date Range',
-              categoryGapRatio: 0.3,
-              barGapRatio: 0.2,
+              tickLabelStyle: { fontSize: 10 },
             },
           ]}
-          yAxis={[{ label: 'Value' }]}
+          yAxis={[
+            {
+              label: 'Value',
+              tickLabelStyle: { fontSize: 10 },
+            },
+          ]}
+          margin={{ top: 16, left: 35, bottom: 26, right: 4 }}
+          grid={{ horizontal: true }}
           series={[
             {
               data: chartData,
               color,
-
               valueFormatter: (value: number | null) => {
                 if (value == null || isNaN(value)) return 'N/A';
                 return title === 'Change Failure Rate'
@@ -65,7 +71,6 @@ export const MetricChart = ({
               },
             },
           ]}
-          margin={{ top: 10, right: 20, bottom: 40, left: 50 }}
         />
       </Box>
     </Paper>
