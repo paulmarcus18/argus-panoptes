@@ -176,6 +176,9 @@ techInsights:
     githubAdvancedSecurityFactRetriever:
       cadence: "*/2 * * * *" # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
+    githubPipelineStatusFactRetriever:
+      cadence: "*/2 * * * *" # every minute
+      lifecycle: { timeToLive: { weeks: 2 } }
   factChecker:
     checks:
       noHighBugsCheck:
@@ -274,4 +277,28 @@ techInsights:
               - fact: secretScanningAlerts
                 operator: equal
                 value: {}
+      noCriticalPipelineFailuresCheck:
+        type: json-rules-engine
+        name: No Critical Pipeline Failures Check
+        description: Checks that no critical workflows are failing
+        factIds:
+          - githubPipelineStatusFactRetriever
+        rule:
+          conditions:
+            all:
+              - fact: criticalFailureCount
+                operator: equal
+                value: 0
+      pipleineHealthCheck:
+        type: json-rules-engine
+        name: Overall Pipeline Health
+        description: Checks that most pipelines are successful
+        factIds:
+          - githubPipelineStatusFactRetriever
+        rule:
+          conditions:
+            all:
+              - fact: failingCount
+                operator: lessThanInclusive
+                value: 2
       

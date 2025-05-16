@@ -11,6 +11,7 @@ import { techInsightsFactRetrieversExtensionPoint } from '@backstage-community/p
 //imports retriever that queries dependabot alert data
 import { dependabotFactRetriever } from './dependabot/dependabotFactRetriever';
 import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/githubASFactRetriever';
+import { githubPipelineStatusFactRetriever } from './pipelines/preproductionFactRetriever';
 //import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 
 //defines a backend module that integrates with the tech insights plugin
@@ -37,6 +38,7 @@ export default createBackendModule({
         providers.addFactRetrievers({
           dependabotFactRetriever,
           githubAdvancedSecurityFactRetriever,
+          githubPipelineStatusFactRetriever,
         });
       },
     });

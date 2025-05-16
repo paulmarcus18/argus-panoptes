@@ -15,3 +15,10 @@ spec:
   lifecycle: experimental
   owner: SEP-ArgusPanoptes
   system: payments-system
+
+  workflowConfig:
+    exclude:
+      - "Depandabot Updates"
+    critical:
+      - "CodeQL"
+    sampleIfNoCritical: 1
