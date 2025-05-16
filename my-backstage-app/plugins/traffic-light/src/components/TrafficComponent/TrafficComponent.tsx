@@ -24,7 +24,7 @@ import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
-import { getSonarQubeFacts } from '../utils';
+import { getSonarQubeChecks } from '../../utils/sonarCloudUtils';
 import { getDependabotStatusFromFacts } from '../../utils/factChecker';
 
 import { getGitHubSecurityFacts } from '../utils';
@@ -119,6 +119,23 @@ interface SonarQubeTrafficLightProps {
   onClick?: () => void;
 }
 
+/**
+ * SonarQubeTrafficLight is a React component that displays a colored traffic light indicator
+ * representing the overall SonarQube quality status for a set of entities.
+ * 
+ * The component fetches SonarQube fact check results for each provided entity using the Tech Insights API,
+ * aggregates the results, and determines the appropriate traffic light color:
+ * - Green: All checks pass for all entities.
+ * - Yellow: 1 or 2 checks fail for more than 1/3 of the entities.
+ * - Red: More than 2 checks fail for more than 1/3 of the entities.
+ * - Gray: No entities are selected or data cannot be retrieved.
+ * 
+ * The component also displays a tooltip with a summary of the check results or error messages.
+ *
+ * @param entities - An array of Backstage Entity objects to check SonarQube status for.
+ * @param onClick - Optional click handler for the traffic light indicator.
+ * @returns A React element rendering the traffic light with a tooltip.
+ */
 const SonarQubeTrafficLight = ({
   entities,
   onClick,
@@ -131,6 +148,7 @@ const SonarQubeTrafficLight = ({
 
   useEffect(() => {
     const fetchSonarQubeData = async () => {
+      // If there are no entities, set color to gray and display reason
       if (!entities.length) {
         setColor('gray');
         setReason('No entities selected');
@@ -138,10 +156,10 @@ const SonarQubeTrafficLight = ({
       }
 
       try {
-        // Get SonarQube facts for all entities
-        const sonarQubeResults = await Promise.all(
+        // Get the results of the SonarQube fact checks for all entities
+        const sonarQubeCheckResults = await Promise.all(
           entities.map(entity =>
-            getSonarQubeFacts(techInsightsApi, {
+            getSonarQubeChecks(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
               name: entity.metadata.name,
@@ -149,41 +167,66 @@ const SonarQubeTrafficLight = ({
           ),
         );
 
-        // Count totals
-        const totals = sonarQubeResults.reduce(
+        // Count total number of failed checks for each metric
+        const totalChecks = sonarQubeCheckResults.reduce(
           (acc, result) => {
-            acc.bugs += result.bugs;
-            acc.code_smells += result.code_smells;
-            acc.vulnerabilities += result.vulnerabilities;
+            acc.bugsCheckFalse += (result.bugsCheck === false ? 1 : 0);
+            acc.codeSmellsCheckFalse += (result.codeSmellsCheck === false ? 1 : 0);
+            acc.vulnerabilitiesCheckFalse += (result.vulnerabilitiesCheck === false ? 1 : 0);
+            acc.qualityGateCheckFalse += (result.qualityGateCheck === false ? 1 : 0);
+            acc.codeCoverageCheckFalse += (result.codeCoverageCheck === false ? 1 : 0);
             return acc;
           },
-          { bugs: 0, code_smells: 0, vulnerabilities: 0 },
+          { bugsCheckFalse: 0, codeSmellsCheckFalse: 0, vulnerabilitiesCheckFalse: 0, qualityGateCheckFalse: 0, codeCoverageCheckFalse: 0 },
         );
+
+        // An individual check is considered "red" if it fails for more than 1/3 of the entities
+        let redCount = 0;
+  
+        // Count the number of "red" checks
+        if (totalChecks.bugsCheckFalse > entities.length / 3) redCount++;
+        if (totalChecks.codeSmellsCheckFalse > entities.length / 3) redCount++;
+        if (totalChecks.vulnerabilitiesCheckFalse > entities.length / 3) redCount++;
+        if (totalChecks.qualityGateCheckFalse > entities.length / 3) redCount++;
+        if (totalChecks.codeCoverageCheckFalse > entities.length / 3) redCount++;
 
         // Determine traffic light color based on metrics
         if (
-          totals.bugs > 0 ||
-          totals.vulnerabilities > 0 ||
-          totals.code_smells > 10
+          // All checks passed for all entities
+          totalChecks.bugsCheckFalse === 0 &&
+          totalChecks.codeSmellsCheckFalse === 0 &&
+          totalChecks.vulnerabilitiesCheckFalse === 0 &&
+          totalChecks.qualityGateCheckFalse === 0 &&
+          totalChecks.codeCoverageCheckFalse === 0 
         ) {
-          setColor('red');
-          setReason(
-            `Quality issues found: ${totals.bugs} bugs, ${totals.code_smells} code smells, ${totals.vulnerabilities} vulnerabilities`,
-          );
-        } else if (totals.code_smells > 1) {
-          setColor('yellow');
-          setReason(`${totals.code_smells} code smells found`);
-        } else {
           setColor('green');
-          setReason('All code quality metrics pass thresholds');
+          setReason(
+            `All SonarQube checks passed for all entities`,
+          );
+        } else if (redCount >= 3) {
+          // at least 3 of the checks are 'red' (failed for more than 1/3 of entities)
+          setColor('red');
+          setReason(`${totalChecks.bugsCheckFalse} entities failed the bugs check, 
+            ${totalChecks.codeSmellsCheckFalse} entities failed the code smells check, 
+            ${totalChecks.vulnerabilitiesCheckFalse} entities failed the vulnerabilities check, 
+            ${totalChecks.qualityGateCheckFalse} entities failed the quality gate check, 
+            ${totalChecks.codeCoverageCheckFalse} entities failed the code coverage check`);
+        } else {
+          setColor('yellow');
+          setReason(`${totalChecks.bugsCheckFalse} entities failed the bugs check, 
+            ${totalChecks.codeSmellsCheckFalse} entities failed the code smells check, 
+            ${totalChecks.vulnerabilitiesCheckFalse} entities failed the vulnerabilities check, 
+            ${totalChecks.qualityGateCheckFalse} entities failed the quality gate check, 
+            ${totalChecks.codeCoverageCheckFalse} entities failed the code coverage check`);
         }
+
       } catch (err) {
+        // Handle errors 
         console.error('Error fetching SonarQube data:', err);
         setColor('gray');
         setReason('Failed to retrieve SonarQube data');
       }
     };
-
     fetchSonarQubeData();
   }, [entities, techInsightsApi]);
 
