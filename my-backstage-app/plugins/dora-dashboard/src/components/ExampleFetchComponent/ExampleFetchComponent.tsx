@@ -1,16 +1,19 @@
+import React from 'react';
 import useAsync from 'react-use/lib/useAsync';
 
-type DataPoint = {
+// ------------------ Types ------------------
+
+export type DataPoint = {
   key: string;
   value: number;
+  date?: Date;
 };
 
-type MetricData = {
+export type MetricData = {
   id: string;
   dataPoints: DataPoint[];
 };
 
-// The four DORA metrics
 const METRIC_TYPES = [
   { id: 'df_average', label: 'Deploy Freq Avg' },
   { id: 'mltc', label: 'Lead Time Median' },
@@ -18,77 +21,88 @@ const METRIC_TYPES = [
   { id: 'mttr', label: 'Time to Restore' },
 ];
 
-/**
- * Custom hook to fetch all DORA metrics data
- * @param aggregation - The time aggregation to use ('weekly' or 'monthly')
- * @returns The metrics data, loading state, and any error
- */
-export function useMetricsData(aggregation: 'weekly' | 'monthly' = 'weekly') {
+// ------------------ Hook ------------------
+
+export function useMetricsData(
+  aggregation: 'weekly' | 'monthly' = 'weekly',
+  startDate?: Date,
+  endDate?: Date,
+) {
   return useAsync(async (): Promise<MetricData[]> => {
-    const responses = await Promise.all(
-      METRIC_TYPES.map(m =>
-        fetch(
-          `http://localhost:10666/dora/api/metric?type=${m.id}&aggregation=${aggregation}`,
-        ).then(res => {
-          if (!res.ok) throw new Error(res.statusText);
-          return res.json();
-        }),
-      ),
+    const baseUrl = 'http://localhost:10666/dora/api/metric';
+    const queryParams = new URLSearchParams({ aggregation });
+
+    if (startDate) {
+      queryParams.append('startDate', startDate.toISOString().split('T')[0]);
+    }
+
+    if (endDate) {
+      queryParams.append('endDate', endDate.toISOString().split('T')[0]);
+    }
+
+    const results = await Promise.all(
+      METRIC_TYPES.map(async metric => {
+        const url = `${baseUrl}?${queryParams.toString()}&type=${metric.id}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch ${metric.label}: ${response.statusText}`,
+          );
+        }
+
+        const json = await response.json();
+        const dataPoints: DataPoint[] = (json.dataPoints || []).map(
+          (dp: any) => ({
+            ...dp,
+            date: new Date(dp.key),
+          }),
+        );
+
+        return {
+          id: metric.id,
+          dataPoints,
+        };
+      }),
     );
 
-    // Format the responses with their metric ID
-    return responses.map((json: any, index) => ({
-      id: METRIC_TYPES[index].id,
-      dataPoints: json.dataPoints || [],
-    }));
-  }, [aggregation]);
+    return results;
+  }, [aggregation, startDate?.getTime(), endDate?.getTime()]);
 }
 
-/**
- * Legacy component that uses the metrics data to render a table
- * Kept for backward compatibility
- */
+// ------------------ Legacy Component ------------------
+
 export const ExampleFetchComponent = () => {
   const { value, loading, error } = useMetricsData();
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
-
-  // Convert the data to the format expected by the original component
+  const allKeys = new Set<string>();
   const metricMaps = (value || []).map(metric => {
     const map: Record<string, number> = {};
     for (const dp of metric.dataPoints) {
       map[dp.key] = dp.value;
+      allKeys.add(dp.key);
     }
     return map;
   });
 
-  const allKeys = new Set<string>();
-  for (const m of metricMaps) {
-    Object.keys(m).forEach(k => allKeys.add(k));
-  }
-
-  // Create rows with all metrics for each time period
   const rows = Array.from(allKeys).map(key => {
-    const row: { key: string; [metricType: string]: string | number } = { key };
-    metricMaps.forEach((m, i) => {
-      row[METRIC_TYPES[i].label] = m[key] ?? 0;
+    const row: { key: string; [metric: string]: number | string } = { key };
+    METRIC_TYPES.forEach((metric, i) => {
+      row[metric.label] = metricMaps[i][key] ?? 0;
     });
     return row;
   });
 
-  // Just a placeholder table to maintain the original interface
   return (
     <div>
       <p>
-        This component is deprecated. Please use the DoraDashboard component
-        instead.
+        This component is deprecated. Please use the{' '}
+        <strong>DoraDashboard</strong> component instead.
       </p>
+      <pre>{JSON.stringify(rows, null, 2)}</pre>
     </div>
   );
 };
