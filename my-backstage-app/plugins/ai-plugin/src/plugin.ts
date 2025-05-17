@@ -20,7 +20,7 @@ export const AiPluginPage = aiPluginPlugin.provide(
   createRoutableExtension({
     name: 'AiPluginPage',
     component: () =>
-      import('./components/CommitMessageTestPage').then(
+      import('./components/AISummariesPage').then(
         m => m.CommitMessageTestPage,
       ),
     mountPoint: rootRouteRef,

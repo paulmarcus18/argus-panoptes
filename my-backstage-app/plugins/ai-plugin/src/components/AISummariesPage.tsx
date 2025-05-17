@@ -15,13 +15,13 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { keyframes } from '@emotion/react';
-import { generateSummaries } from '../../utils/createAISummary';
-import { postSummaries } from '../../utils/saveToDatabase';
-import { getReposBySystem } from '../../utils/getReposBySystem';
-import { getCommitMessagesBySystem } from '../../utils/getCommitMessagesBySystem';
+import { generateSummaries } from '../../utils/createAISummary.ts';
+import { postSummaries } from '../../utils/saveToDatabase.ts';
+import { getReposBySystem } from '../../utils/getReposBySystem.ts';
+import { getCommitMessagesBySystem } from '../../utils/getCommitMessagesBySystem.ts';
 import { SummaryPerRepo } from 'plugins/ai-plugin/utils/types';
 import { SummaryGrid } from './SummaryGrid.tsx';
-import { Filters } from './Filters';
+import { Filters } from './Filters.tsx';
 
 const spin = keyframes`
   from {
