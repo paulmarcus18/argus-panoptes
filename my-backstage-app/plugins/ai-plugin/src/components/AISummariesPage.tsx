@@ -67,11 +67,20 @@ export const CommitMessageTestPage = () => {
   const fetchSummaries = async () => {
     setLoading(true);
     const apiBaseUrl = await discoveryApi.getBaseUrl('ai-plugin');
+    const { items: systems } = await catalogApi.getEntities({ filter: { kind: 'System' } });
 
     try {
       const res = await fetch(`${apiBaseUrl}/summaries?date=${today}`);
       if (res.ok) {
         const data: Record<string, SummaryPerRepo[]> = await res.json();
+
+        for (const entity of systems) {
+          const systemName = entity.metadata.name;
+          if (!(systemName in data)) {
+            data[systemName] = []; 
+          }
+        }
+
         if (Object.keys(data).length > 0) {
           setMessagesBySystem(data);
           setLoading(false);

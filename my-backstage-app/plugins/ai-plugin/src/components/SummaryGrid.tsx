@@ -37,7 +37,9 @@ export const SummaryGrid = ({
           gap: 2,
         }}
       >
-        {Object.entries(filteredMessages).map(([system, repos]) => (
+        {Object.entries(filteredMessages)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([system, repos]) => (
           <Card
             key={system}
             elevation={3}
