@@ -34,7 +34,7 @@ const spin = keyframes`
 
 type MessagesBySystem = Record<string, SummaryPerRepo[]>;
 
-export const CommitMessageTestPage = () => {
+export const AISummaries = () => {
   const catalogApi = useApi(catalogApiRef);
   const techInsightsApi = useApi(techInsightsApiRef);
   const [messagesBySystem, setMessagesBySystem] = useState<MessagesBySystem | null>(null);
