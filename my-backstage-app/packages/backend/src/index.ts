@@ -40,4 +40,5 @@ backend.add(import('@backstage-community/plugin-tech-insights-backend'));
 backend.add(import('@backstage-community/plugin-tech-insights-backend-module-jsonfc'))
 //backend.add(techInsightsModuleSonarCloudFactRetriever); // Add the SonarCloud fact retriever
 backend.add(import('@internal/plugin-tech-insights-backend-module-traffic-light-backend-module'));
+backend.add(import('@internal/plugin-dora-dashboard-backend'));
 backend.start();

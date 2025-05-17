@@ -49,6 +49,7 @@
     "@backstage/plugin-tech-insights-node": "^0.6.1",
     "@backstage/plugin-techdocs-backend": "^2.0.1",
     "@internal/plugin-ai-summary-backend-backend": "workspace:^",
+    "@internal/plugin-dora-dashboard-backend": "workspace:^",
     "@internal/plugin-tech-insights-backend-module-traffic-light-backend-module": "workspace:^",
     "@octokit/rest": "^21.1.1",
     "app": "link:../app",
