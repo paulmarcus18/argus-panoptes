@@ -1,7 +1,7 @@
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef } from '@backstage/catalog-model';
-import { getAzureDevOpsBugs, getGitHubRepoStatus } from '../utils.ts';
-import { getSonarQubeFacts } from '.././utils/sonarCloudUtils';
+import { getAzureDevOpsBugs, getGitHubRepoStatus} from '../utils.ts';
+import { getSonarQubeFacts } from '../../utils/sonarCloudUtils';
 
 export type TrafficLightColor = 'green' | 'yellow' | 'red';
 

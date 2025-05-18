@@ -243,5 +243,5 @@ export const createCodeCoverageCheck = (config: Config): TechInsightJsonRuleChec
         },
     },
     type: 'json-rules-engine',
-  };
+  };
 };

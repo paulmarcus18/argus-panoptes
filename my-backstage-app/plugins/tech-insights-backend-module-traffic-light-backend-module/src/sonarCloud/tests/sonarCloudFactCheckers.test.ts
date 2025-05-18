@@ -656,5 +656,5 @@ describe('SonarCloud Fact Checkers', () => {
     // The check should pass (one event should be triggered)
     expect(events.length).toBe(1);
     expect(results[0].result).toBe(true);
-  });
+  });
 });

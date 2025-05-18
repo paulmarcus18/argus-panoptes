@@ -7,9 +7,9 @@
 // Imports the utility function used to define and create a backend module in Backstage.
 import { createBackendModule, coreServices, LoggerService } from '@backstage/backend-plugin-api';
 // Imports the tech insights extension point that lets you plug in custom FactRetrievers.
-import { techInsightsFactRetrieversExtensionPoint, techInsightsFactCheckerFactoryExtensionPoint} from '@backstage-community/plugin-tech-insights-node';
+import { techInsightsFactRetrieversExtensionPoint, techInsightsFactCheckerFactoryExtensionPoint } from '@backstage-community/plugin-tech-insights-node';
 // Imports retriever that queries Dependabot alert data.
-import { dependabotFactRetriever } from './dependabot/dependabotFactRetriever';
+import { createDependabotFactRetriever } from './dependabot/dependabotFactRetriever';
 import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/githubASFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
@@ -23,7 +23,6 @@ import {
 } from './sonarCloud/sonarCloudFactCheckers';
 // Import JsonRulesEngineFactCheckerFactory
 import { JsonRulesEngineFactCheckerFactory } from '@backstage-community/plugin-tech-insights-backend-module-jsonfc';
-
 
 // Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({
@@ -43,14 +42,15 @@ export default createBackendModule({
         logger: coreServices.rootLogger,
         config: coreServices.rootConfig,
       },
-      // Initialization function that will run during backend's startup.
+      //initialization function that will run during backend's startup
       async init({ providers, factCheckerProvider, logger, config }) {
-        // Logs to the console to confirm module is being registered.
+        //logs to the console to confirm module is being registered
         logger.info('Registering dependabot-facts module...');
+        const factRetriever = createDependabotFactRetriever(config, logger);
         const sonarCloudFactRetriever = createSonarCloudFactRetriever(config, logger);
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
-          dependabotFactRetriever, // Adds the dependabotFactRetriever to the system.
+          'dependabotFactRetriever': factRetriever, // Adds the dependabotFactRetriever to the system.
           [sonarCloudFactRetriever.id]: sonarCloudFactRetriever // Adds the sonarCloudFactRetriever to the system.
         });
 
@@ -71,7 +71,6 @@ export default createBackendModule({
         logger.info(`Configured quality gate threshold: ${(qualityGateCheck.rule.conditions as any).all[0].value}`);
         logger.info(`Configured code coverage threshold: ${(codeCoverageCheck.rule.conditions as any).all[0].value}`);
 
-        
         // Create the JSON Rules Engine factory with our checks
         const jsonRulesEngineFactChecker = new JsonRulesEngineFactCheckerFactory({
           checks: [
@@ -86,7 +85,8 @@ export default createBackendModule({
         
         // Register the fact checker factory
         factCheckerProvider.setFactCheckerFactory(jsonRulesEngineFactChecker);
+
       },
     });
   },
-});
+}); 

@@ -24,7 +24,9 @@ import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
-import { getSonarQubeFacts, getSonarQubeChecks } from '../utils/sonarCloudUtils';
+import { getSonarQubeChecks } from '../../utils/sonarCloudUtils';
+import { getDependabotStatusFromFacts } from '../../utils/factChecker';
+
 import { getGitHubSecurityFacts } from '../utils';
 
 
@@ -66,55 +68,50 @@ interface IssueDetail {
   directLink?: string;
 }
 
-const Trafficlightdependabot = ({ owner, repos, onClick }: DependabotProps) => {
-  const [color, setColor] = useState<
-    'green' | 'red' | 'yellow' | 'gray' | 'white'
-  >('white');
+
+const Trafficlightdependabot = ({
+  entities,
+  onClick,
+}: {
+  entities: Entity[];
+  onClick?: () => void;
+}) => {
+  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray' | 'white'>('white');
+  const [reason, setReason] = useState('Fetching Dependabot status...');
+  const techInsightsApi = useApi(techInsightsApiRef);
 
   useEffect(() => {
-    const fetchStatuses = async () => {
-      try {
-        const statuses = await Promise.all(
-          repos.map(async repo => {
-            const res = await fetch(
-              `/api/traffic-light/dependabotStatus/${owner}/${repo}`,
-            );
-            if (!res.ok) throw new Error();
-            const data = await res.json();
-            return data.status;
-          }),
-        );
+    if (!entities.length) {
+      setColor('gray');
+      setReason('No entities available');
+      return;
+    }
 
-        if (statuses.includes('red')) {
-          setColor('red');
-        } else if (statuses.includes('yellow') || statuses.includes('gray')) {
-          setColor('yellow');
-        } else if (statuses.every(status => status === 'green')) {
-          setColor('green');
-        } else {
-          setColor('white');
-        }
-      } catch (err) {
-        console.error('Error fetching statuses:', err);
-        setColor('gray');
-      }
+    const fetchStatus = async () => {
+      const result = await getDependabotStatusFromFacts(techInsightsApi, entities);
+      setColor(result.color);
+      setReason(`Dependabot: ${result.color.toUpperCase()}`);
     };
 
-    fetchStatuses();
-  }, [owner, repos]);
+    fetchStatus();
+  }, [techInsightsApi, entities]);
 
   return (
-    <Box
-      my={1}
-      width={50}
-      height={50}
-      borderRadius="50%"
-      bgcolor={color}
-      onClick={onClick}
-      style={onClick ? { cursor: 'pointer' } : {}}
-    />
+    <Tooltip title={reason}>
+      <Box
+        my={1}
+        width={50}
+        height={50}
+        borderRadius="50%"
+        bgcolor={color}
+        onClick={onClick}
+        style={onClick ? { cursor: 'pointer' } : {}}
+      />
+    </Tooltip>
   );
 };
+
+
 
 // SonarQube traffic light component (new implementation)
 interface SonarQubeTrafficLightProps {
@@ -688,8 +685,7 @@ export const TrafficComponent = () => {
               <Tooltip title="Live check from Tech Insights">
                 <div>
                   <Trafficlightdependabot
-                    owner="philips-labs"
-                    repos={selectedRepos}
+                    entities={selectedEntities}
                     onClick={() => handleSemaphoreClick('Dependabot')}
                   />
                 </div>

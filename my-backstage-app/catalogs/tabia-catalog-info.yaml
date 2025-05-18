@@ -5,7 +5,7 @@ metadata:
   description: Gives insights on the characteristics of our code bases.
   annotations:
     github.com/project-slug: SEP-ArgusPanoptes/tabia
-    backstage.io/source-location: url:https://github.com/philips-labs/tabia
+    backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/tabia
     sonarcloud.io/project-key: SEP-ArgusPanoptes_tabia
     sonarcloud.io/enabled: 'true'
   tags:
