@@ -5,7 +5,7 @@ metadata:
   description: Adds the capability to manage your Docker Content Trust and notary certificates.
   annotations:
     github.com/project-slug: SEP-ArgusPanoptes/dct-notary-admin
-    backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/dct-notary-admin
+    backstage.io/source-location: url:https://github.com/philips-labs/dct-notary-admin
     sonarcloud.io/project-key: SEP-ArgusPanoptes_dct-notary-admin
     sonarcloud.io/enabled: 'true'
   tags:
@@ -13,5 +13,5 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: SEP-ArgusPanoptes 
+  owner: SEP-ArgusPanoptes
   system: payments-system
