@@ -1,75 +1,103 @@
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
-import { Entity } from '@backstage/catalog-model';
-import { getCompoundEntityRef } from '@backstage/catalog-model';
+import { Entity, getCompoundEntityRef } from '@backstage/catalog-model';
+import { CatalogApi } from '@backstage/plugin-catalog-react';
+
+async function getSeverityThresholdsFromSystem(
+  systemName: string,
+  catalogApi: CatalogApi,
+): Promise<{ critical: number; high: number; medium: number }> {
+  try {
+    const { items: systems } = await catalogApi.getEntities({
+      filter: { kind: 'System', 'metadata.name': systemName },
+    });
+
+    const system = systems[0];
+    const annotation = system?.metadata?.annotations?.['dependabot/thresholds'];
+
+    console.log('📥 Raw system entities fetched:', systems.map(s => s.metadata.name));
+    console.log('📒 Raw annotation string:', annotation);
+
+    if (annotation) {
+      try {
+        const parsed = JSON.parse(annotation);
+        return {
+          critical: parsed.critical ?? 1,
+          high: parsed.high ?? 3,
+          medium: parsed.medium ?? 10,
+        };
+      } catch (err) {
+        console.warn(`❌ Failed to parse annotation JSON for system "${systemName}"`, err);
+      }
+    }
+  } catch (e) {
+    console.warn(`⚠️ Could not fetch system "${systemName}" from catalog`, e);
+  }
+
+  // Default fallback
+  return { critical: 1, high: 3, medium: 10 };
+}
 
 export async function getDependabotStatusFromFacts(
   techInsightsApi: TechInsightsApi,
   entities: Entity[],
-): Promise<{ color: 'green' | 'yellow' | 'red' | 'gray'}> {
+  systemName?: string,
+  catalogApi?: CatalogApi,
+): Promise<{ color: 'green' | 'yellow' | 'red' | 'gray'; reason: string }> {
   if (!entities.length) {
     console.warn('⚠️ No entities provided to getDependabotStatusFromFacts');
-    return { color: 'gray'};
+    return { color: 'gray', reason: 'No entities provided' };
   }
-  let totalAlertCount = 0;
-  let validFactCount = 0;
 
-  for(const entity of entities) {
+  let totalCritical = 0;
+  let totalHigh = 0;
+  let totalMedium = 0;
+  let validCount = 0;
+
+  for (const entity of entities) {
     const entityRef = getCompoundEntityRef(entity);
-    console.log(`📛 entityRef:`, entityRef);
+    try {
+      const facts = await techInsightsApi.getFacts(entityRef, ['dependabotFactRetriever']);
+      const factObj = facts['dependabotFactRetriever']?.facts;
 
-  try {
-    const facts = await techInsightsApi.getFacts(entityRef,['dependabotFactRetriever']);
-    let factObj = facts['dependabotFactRetriever'];
-
-  if (!factObj) {
-    console.warn(`⚠️ dependabot:status not found in facts`, facts);
-    return { color: 'gray'};
-  }
-    console.log(`🔍 Raw fact value:`, factObj);
-    console.log(`🧪 Type of fact:`, typeof factObj);
-
-    if (
-      factObj &&
-      typeof factObj === 'object' &&
-      factObj.facts &&
-      typeof factObj.facts === 'object' &&
-      ('alertCount' in factObj.facts)
-    ) {
-      const alertCount = factObj.facts.alertCount;
-      console.log(`📦 alertCount for ${entityRef}:`, alertCount);
-      
-      if(typeof alertCount === 'number') {
-        totalAlertCount += alertCount;
-        validFactCount++;
+      if (factObj) {
+        if (typeof factObj.critical === 'number') totalCritical += factObj.critical;
+        if (typeof factObj.high === 'number') totalHigh += factObj.high;
+        if (typeof factObj.medium === 'number') totalMedium += factObj.medium;
+        validCount++;
+      } else {
+        console.warn(`⚠️ No valid dependabot fact for ${entityRef.name}`);
       }
-    } else {
-      console.warn(`⚠️ Malformed dependabot fact:`, factObj);
+    } catch (err) {
+      console.error(`❌ Failed to fetch facts for ${entityRef.name}`, err);
     }
-  } catch(err) {
-    console.error(`❌ Error retrieving facts for entity:`, err);
   }
-}
 
-if (validFactCount === 0) {
-  console.warn(`⚠️ No valid dependabot facts found`);
-  return { color: 'gray'};
-}
+  if (validCount === 0) {
+    return { color: 'gray', reason: 'No valid facts available' };
+  }
 
-let color: 'green' | 'yellow' | 'red' = 'green'; // Default to 'green'
+  const thresholds = catalogApi && systemName
+    ? await getSeverityThresholdsFromSystem(systemName, catalogApi)
+    : { critical: 1, high: 3, medium: 10 };
 
-if (totalAlertCount == 111) {
+  console.log(`📊 Thresholds - critical: ${thresholds.critical}, high: ${thresholds.high}, medium: ${thresholds.medium}`);
+  console.log(`📦 Totals - critical: ${totalCritical}, high: ${totalHigh}, medium: ${totalMedium}`);
+
+  let color: 'green' | 'yellow' | 'red' = 'green';
+  let reason = '';
+
+  if (totalCritical > thresholds.critical) {
     color = 'red';
-  } else if (totalAlertCount > 0) {
+    reason = `Critical alerts exceed threshold (${totalCritical} > ${thresholds.critical})`;
+  } else if (totalHigh > thresholds.high) {
     color = 'yellow';
+    reason = `High alerts exceed threshold (${totalHigh} > ${thresholds.high})`;
+  } else if (totalMedium > thresholds.medium) {
+    color = 'yellow';
+    reason = `Medium alerts exceed threshold (${totalMedium} > ${thresholds.medium})`;
+  } else {
+    reason = `All severities within thresholds`;
   }
 
-  console.log(`🧮 Total alert count: ${totalAlertCount} → color: ${color}`);
-  return { color };
+  return { color, reason };
 }
-
-
-
-
-
-
-

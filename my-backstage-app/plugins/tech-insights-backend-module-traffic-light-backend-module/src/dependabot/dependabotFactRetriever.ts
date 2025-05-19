@@ -3,21 +3,26 @@ import { LoggerService } from '@backstage/backend-plugin-api';
 import { Config } from '@backstage/config';
 import { CatalogClient } from '@backstage/catalog-client';
 
-/**
- * Creates a fact retriever that dynamically queries all catalog entities and retrieves Dependabot alerts.
- */
 export const createDependabotFactRetriever = (
   config: Config,
   logger: LoggerService,
 ): FactRetriever => {
   return {
     id: 'dependabotFactRetriever',
-    version: '0.2.0',
+    version: '0.3.0',
     entityFilter: [{ kind: 'Component' }],
     schema: {
-      'dependabot:status': {
-        type: 'string',
-        description: 'Traffic light status based on Dependabot alert counts',
+      critical: {
+        type: 'integer',
+        description: 'Number of critical severity Dependabot alerts',
+      },
+      high: {
+        type: 'integer',
+        description: 'Number of high severity Dependabot alerts',
+      },
+      medium: {
+        type: 'integer',
+        description: 'Number of medium severity Dependabot alerts',
       },
     },
     handler: async ({ discovery, auth }) => {
@@ -53,19 +58,21 @@ export const createDependabotFactRetriever = (
               'GET /repos/{owner}/{repo}/dependabot/alerts',
               { owner, repo: name, per_page: 100 },
             );
+
             const openAlerts = alertsResponse.data.filter(a => a.state === 'open');
-            const alertCount = openAlerts.length;
 
-            // let color: 'green' | 'yellow' | 'red';
-            // if (alertCount === 0) {
-            //   color = 'green';
-            // } else if (alertCount <= 5) {
-            //   color = 'yellow';
-            // } else {
-            //   color = 'red';
-            // }
+            let critical = 0;
+            let high = 0;
+            let medium = 0;
 
-            logger.info(`✅ ${entity.metadata.name} → (${alertCount} alerts)`);
+            for (const alert of openAlerts) {
+              const severity = alert.security_advisory?.severity?.toLowerCase();
+              if (severity === 'critical') critical++;
+              else if (severity === 'high') high++;
+              else if (severity === 'moderate' || severity === 'medium') medium++;
+            }
+
+            logger.info(`✅ ${entity.metadata.name} → critical: ${critical}, high: ${high}, medium: ${medium}`);
 
             return {
               entity: {
@@ -74,11 +81,10 @@ export const createDependabotFactRetriever = (
                 namespace: entity.metadata.namespace ?? 'default',
               },
               facts: {
-                // 'dependabot:status': {
-                  //color,
-                  alertCount,
-                // },
-              }
+                critical,
+                high,
+                medium,
+              },
             };
           } catch (e) {
             logger.warn(`Failed to fetch alerts for ${repoUrl}: ${e}`);

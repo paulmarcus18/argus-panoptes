@@ -56,30 +56,43 @@ interface DependabotProps {
 
 const Trafficlightdependabot = ({
   entities,
+  systemName,
   onClick,
 }: {
   entities: Entity[];
+  systemName?: string;
   onClick?: () => void;
 }) => {
   const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray' | 'white'>('white');
   const [reason, setReason] = useState('Fetching Dependabot status...');
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef); // ✅ added to support annotation-based thresholds
 
   useEffect(() => {
     if (!entities.length) {
       setColor('gray');
       setReason('No entities available');
+      console.warn('⚠️ No entities passed to dependabot checker');
       return;
     }
 
     const fetchStatus = async () => {
-      const result = await getDependabotStatusFromFacts(techInsightsApi, entities);
+      console.log('🔌 Dependabot received entities:', entities.map(e => e.metadata.name));
+      console.log('🧭 SystemName passed to checker:', systemName);
+
+      const result = await getDependabotStatusFromFacts(
+        techInsightsApi,
+        entities,
+        systemName,
+        catalogApi // ✅ passed catalogApi to enable annotation reading
+      );
+
       setColor(result.color);
-      setReason(`Dependabot: ${result.color.toUpperCase()}`);
+      setReason(result.reason); // ✅ now includes explanation
     };
 
     fetchStatus();
-  }, [techInsightsApi, entities]);
+  }, [techInsightsApi, catalogApi, entities, systemName]);
 
   return (
     <Tooltip title={reason}>
@@ -95,6 +108,8 @@ const Trafficlightdependabot = ({
     </Tooltip>
   );
 };
+
+
 
 
 
@@ -272,9 +287,7 @@ export const TrafficComponent = () => {
   useEffect(() => {
     const fetchCatalogRepos = async () => {
       try {
-        const entities = await catalogApi.getEntities({
-          filter: { kind: 'Component' },
-        });
+        const entities = await catalogApi.getEntities({ filter: { kind: 'Component' } });
 
         const simplified = entities.items.map((entity: Entity) => ({
           name: entity.metadata.name,
@@ -288,37 +301,36 @@ export const TrafficComponent = () => {
               ? entity.spec.system
               : undefined,
           tags: entity.metadata?.tags,
-          entity: entity, // Store the full entity for later use
+          entity,
         }));
+
+        console.log('📋 All loaded catalog components:');
+        simplified.forEach(r => {
+          console.log(`🧩 ${r.name} | system: ${r.system} | tags: ${r.tags} | owner: ${r.owner}`);
+        });
 
         setRepos(simplified);
 
-        // Extract unique systems for filter dropdown
         const systems = Array.from(
-          new Set(
-            simplified
-              .map(repo => repo.system)
-              .filter(system => system !== undefined) as string[],
-          ),
+          new Set(simplified.map(repo => repo.system).filter(Boolean) as string[]),
         ).sort();
-
         setAvailableSystems(systems);
 
-        // Select all repos by default
         setSelectedRepos(simplified.map(r => r.name));
         setSelectedEntities(simplified.map(r => r.entity));
       } catch (err) {
-        console.error('Failed to load catalog entities', err);
+        console.error('❌ Failed to load catalog entities:', err);
       }
     };
 
     fetchCatalogRepos();
   }, [catalogApi]);
 
+
   // Apply filters when filter settings change
   useEffect(() => {
     const filtered = repos.filter(repo => {
-      const isMine = !onlyMyRepos || repo.owner === 'philips-labs';
+      const isMine = !onlyMyRepos || repo.owner === 'sep-arguspanoptes';
       const isCritical = !onlyCritical || repo.tags?.includes('critical');
       const isInSelectedSystem =
         selectedSystem === 'all' || repo.system === selectedSystem;
@@ -513,8 +525,10 @@ export const TrafficComponent = () => {
                 <div>
                   <Trafficlightdependabot
                     entities={selectedEntities}
+                    systemName={selectedSystem !== 'all' ? selectedSystem : undefined}
                     onClick={() => handleSemaphoreClick('Dependabot')}
                   />
+
                 </div>
               </Tooltip>
 

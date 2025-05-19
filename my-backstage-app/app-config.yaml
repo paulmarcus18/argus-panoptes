@@ -171,7 +171,7 @@ techInsights:
       enabled: true
       cadence: "0 * * * *" # Every hour
     dependabotFactRetriever:
-      cadence: "0 * * * *" # every  hour
+      cadence: "* * * * *" # every  hour
       lifecycle: { timeToLive: { weeks: 2 } }
   factChecker:
     checks:

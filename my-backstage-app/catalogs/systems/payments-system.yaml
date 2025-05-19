@@ -3,7 +3,8 @@ kind: System
 metadata:
   name: payments-system
   title: Payments System
-  description: Handles all payment transactions and billing
+  annotations:
+    dependabot/thresholds: '{"critical": 2, "high": 5, "medium": 15}'
 spec:
   owner: finance-team
   members: [vpetkova]

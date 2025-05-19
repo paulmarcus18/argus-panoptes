@@ -3,7 +3,8 @@ kind: System
 metadata:
   name: user-management-system
   title: User Management System
-  description: Manages user accounts, profiles, and authentication
+  annotations:
+    dependabot/thresholds: '{"critical": 99, "high": 99, "medium": 99}'
 spec:
   owner: identity-team
   members: [ghristov]
