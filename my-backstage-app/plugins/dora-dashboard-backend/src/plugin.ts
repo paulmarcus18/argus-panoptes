@@ -4,7 +4,7 @@ import {
 } from '@backstage/backend-plugin-api';
 import { createRouter } from './router';
 import { catalogServiceRef } from '@backstage/plugin-catalog-node';
-import { createTodoListService } from './services/TodoListService';
+import { createDoraService } from './services/TodoListService'; // change this to DoraService
 
 /**
  * doraDashboardPlugin backend plugin
@@ -21,16 +21,15 @@ export const doraDashboardPlugin = createBackendPlugin({
         httpRouter: coreServices.httpRouter,
         catalog: catalogServiceRef,
       },
-      async init({ logger, httpAuth, httpRouter, catalog }) {
-        const todoListService = await createTodoListService({
-          logger,
-          catalog,
+      async init({ logger, httpAuth, httpRouter}) {
+        const doraService = await createDoraService({
+          logger
         });
 
         httpRouter.use(
           await createRouter({
             httpAuth,
-            todoListService,
+            doraService: doraService,
           }),
         );
       },
