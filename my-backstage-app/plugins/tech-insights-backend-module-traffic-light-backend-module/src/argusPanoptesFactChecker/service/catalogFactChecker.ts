@@ -68,10 +68,10 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
             // Get the threshold value from the entity annotation
             // TODO: change for system level
             const thresholdStr = entity.metadata.annotations?.[check.annotationKeyThreshold];
-            const threshold = thresholdStr ? parseFloat(thresholdStr) : undefined;
+            const threshold = typeof thresholdStr === 'number' ? parseFloat(thresholdStr) : thresholdStr;
 
             // If threshold is missing or invalid, log a warning and return result: false
-            if (threshold === undefined || isNaN(threshold)) {
+            if (thresholdStr === undefined || thresholdStr === null || (typeof threshold === 'number' && isNaN(threshold))) {
                 this.logger.warn(
                     `Missing or invalid threshold for ${check.id} on entity ${entityRef}, threshold is ${thresholdStr}`,
                 );
@@ -94,16 +94,16 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
             let result: boolean = false; // Declare result once before the switch block
             switch (operator) {
                 case 'greaterThan':
-                  result = isNumber && rawValue > threshold;
+                  result = isNumber && typeof threshold === 'number' && rawValue > threshold;
                   break;
                 case 'greaterThanInclusive':
-                  result = isNumber && rawValue >= threshold;
+                  result = isNumber && typeof threshold === 'number' && rawValue >= threshold;
                   break;
                 case 'lessThan':
-                  result = isNumber && rawValue < threshold;  
+                  result = isNumber && typeof threshold === 'number' && rawValue < threshold;  
                   break;
                 case 'lessThanInclusive':
-                  result = isNumber && rawValue <= threshold;
+                  result = isNumber && typeof threshold === 'number' && rawValue <= threshold;
                   break;
                 case 'equal':
                   result = (isNumber || isString) && rawValue === threshold;
