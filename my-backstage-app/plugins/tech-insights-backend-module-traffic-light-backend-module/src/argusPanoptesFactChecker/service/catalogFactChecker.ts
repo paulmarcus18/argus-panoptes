@@ -17,6 +17,7 @@ export type DynamicThresholdCheck = {
   type: string;
   factIds: string[];
   annotationKeyThreshold: string; 
+  annotationKeyOperator: string;
   description: string;
 };
 
@@ -86,12 +87,36 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
             const factContainer = factValues[factId];
             const rawValue = factContainer?.facts?.[check.factIds[1]];
 
-            // Determine result based on threshold comparison
+            const operator = entity.metadata.annotations?.[check.annotationKeyOperator];
             const isNumber = typeof rawValue === 'number';
-            const result = isNumber && rawValue <= threshold;
+            const isString = typeof rawValue === 'string';
+
+            let result: boolean = false; // Declare result once before the switch block
+            switch (operator) {
+                case 'greaterThan':
+                  result = isNumber && rawValue > threshold;
+                  break;
+                case 'greaterThanInclusive':
+                  result = isNumber && rawValue >= threshold;
+                  break;
+                case 'lessThan':
+                  result = isNumber && rawValue < threshold;  
+                  break;
+                case 'lessThanInclusive':
+                  result = isNumber && rawValue <= threshold;
+                  break;
+                case 'equal':
+                  result = (isNumber || isString) && rawValue === threshold;
+                  break;
+                case 'notEqual':
+                  result = (isNumber || isString) && rawValue !== threshold;
+                  break;
+                default:
+                  result = false; // Default to false if operator is not recognized
+            }
 
             // Log the result of the check
-            this.logger.info(`The result from the check is ${result} for ${check.id} on entity ${entityRef}, threshold is ${thresholdStr}, rawValue is ${rawValue}`);
+            this.logger.info(`The result from the check is ${result} for ${check.id} on entity ${entityRef}, threshold is ${operator} ${thresholdStr}, rawValue is ${rawValue}`);
 
             // Format fact correctly
             const fact: FactResponse[string] = {
@@ -125,13 +150,13 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
    * @returns An object with a boolean 'valid' and an optional message.
    */
   async validate(check: DynamicThresholdCheck) {
-    const valid = Boolean(check.factIds && check.annotationKeyThreshold);
+    const valid = Boolean(check.factIds && check.annotationKeyThreshold && check.annotationKeyOperator);
     return {
       valid,
       ...(valid
         ? {}
         : {
-            message: 'Each check must have a valid factId and annotationKey.',
+            message: 'Each check must have a valid factId, annotationKeyThreshold and annotationKeyOperator.',
           }),
     };
   }
