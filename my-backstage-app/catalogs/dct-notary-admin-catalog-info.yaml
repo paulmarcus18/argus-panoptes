@@ -19,6 +19,3 @@ spec:
   workflowConfig:
     exclude:
       - "Depandabot Updates"
-    critical:
-      - "CodeQL"
-    sampleIfNoCritical: 1

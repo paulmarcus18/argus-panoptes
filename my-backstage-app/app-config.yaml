@@ -179,9 +179,6 @@ techInsights:
     githubPipelineStatusFactRetriever:
       cadence: "*/2 * * * *" # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
-    githubReportingPipelineStatusFactRetriever:
-      cadence: "*/2 * * * *" # every minute
-      lifecycle: { timeToLive: { weeks: 2 } }
   factChecker:
     checks:
       noHighBugsCheck:
@@ -304,44 +301,6 @@ techInsights:
               - fact: failingCount
                 operator: lessThanInclusive
                 value: 2
-      # New checks for reporting pipelines
-      reportingPipelinesHealthCheck:
-        type: json-rules-engine
-        name: Reporting Pipelines Health
-        description: Checks that reporting pipelines have good overall success rate
-        factIds:
-          - githubReportingPipelineStatusFactRetriever
-        rule:
-          conditions:
-            all:
-              - fact: successRate
-                operator: greaterThanInclusive
-                value: 80
-      nightlyTestsHealthCheck:
-        type: json-rules-engine
-        name: Nightly Tests Health
-        description: Checks that all nightly test pipelines are passing
-        factIds:
-          - githubReportingPipelineStatusFactRetriever
-        rule:
-          conditions:
-            all:
-              - fact: nightlyTestsSuccess
-                operator: equal
-                value: true
-      cicdHealthCheck:
-        type: json-rules-engine
-        name: CI/CD Health
-        description: Checks that both CI and CD pipelines are healthy
-        factIds:
-          - githubReportingPipelineStatusFactRetriever
-        rule:
-          conditions:
-            all:
-              - fact: ciSuccess
-                operator: equal
-                value: true
-              - fact: cdSuccess
-                operator: equal
-                value: true
+      
+
       
