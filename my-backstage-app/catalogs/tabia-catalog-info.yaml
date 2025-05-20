@@ -8,16 +8,6 @@ metadata:
     backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/tabia
     sonarcloud.io/project-key: SEP-ArgusPanoptes_tabia
     sonarcloud.io/enabled: 'true'
-    tech-insights.io/sonarcloud-bugs-threshold: '0'
-    tech-insights.io/sonarcloud-bugs-operator: 'lessThanInclusive'
-    tech-insights.io/sonarcloud-vulnerabilities-threshold: '0'
-    tech-insights.io/sonarcloud-vulnerabilities-operator: 'lessThanInclusive'
-    tech-insights.io/sonarcloud-code-smells-threshold: '0'
-    tech-insights.io/sonarcloud-code-smells-operator: 'lessThanInclusive'
-    tech-insights.io/sonarcloud-code-coverage-threshold: '0'
-    tech-insights.io/sonarcloud-code-coverage-operator: 'greaterThanInclusive'
-    tech-insights.io/sonarcloud-quality-gate: 'OK'
-    tech-insights.io/sonarcloud-quality-gate-operator: 'notEqual'
   tags:
     - non-critical
 spec:

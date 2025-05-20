@@ -54,6 +54,23 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
       throw new Error(`Entity not found: ${entityRef}`);
     }
 
+    // Extract system name from entity spec
+    const systemName = entity.spec?.system;
+    if (!systemName) {
+      throw new Error(`Component ${entity.metadata.name} does not specify a system.`);
+    }
+
+    // Fetch the system entity from the catalog
+    const systemEntity = await this.catalogApi.getEntityByRef({
+      kind: 'System',
+      namespace: entity.metadata.namespace || 'default',
+      name: typeof systemName === 'string' ? systemName : String(systemName),
+    });
+
+    if (!systemEntity) {
+      throw new Error(`System entity '${systemName}' not found in catalog.`);
+    }
+
     // Filter checks to run by checkIds if provided
     const checksToRun = this.checks.filter(c => !checkIds || checkIds.includes(c.id));
     // Retrieve the latest facts for all relevant factIds
@@ -65,15 +82,14 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
     // Evaluate each check and return the results
     return await Promise.all(
         checksToRun.map(async check => {
-            // Get the threshold value from the entity annotation
-            // TODO: change for system level
-            const thresholdStr = entity.metadata.annotations?.[check.annotationKeyThreshold];
-            const threshold = typeof thresholdStr === 'number' ? parseFloat(thresholdStr) : thresholdStr;
+            // Get the threshold value from the system entity annotation
+            const thresholdStr = systemEntity.metadata.annotations?.[check.annotationKeyThreshold];
+            const threshold = typeof thresholdStr === 'string' ? parseFloat(thresholdStr) : thresholdStr;
 
             // If threshold is missing or invalid, log a warning and return result: false
             if (thresholdStr === undefined || thresholdStr === null || (typeof threshold === 'number' && isNaN(threshold))) {
                 this.logger.warn(
-                    `Missing or invalid threshold for ${check.id} on entity ${entityRef}, threshold is ${thresholdStr}`,
+                    `Missing or invalid threshold for ${check.id} on entity ${entityRef} part of system ${systemName}, threshold is ${thresholdStr}`,
                 );
                 return {
                     check,
@@ -87,36 +103,37 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
             const factContainer = factValues[factId];
             const rawValue = factContainer?.facts?.[check.factIds[1]];
 
-            const operator = entity.metadata.annotations?.[check.annotationKeyOperator];
+            const operator = systemEntity.metadata.annotations?.[check.annotationKeyOperator];
             const isNumber = typeof rawValue === 'number';
             const isString = typeof rawValue === 'string';
 
-            let result: boolean = false; // Declare result once before the switch block
+            // Evaluate the check based on the operator and the threshold
+            let result: boolean = false; 
             switch (operator) {
                 case 'greaterThan':
-                  result = isNumber && typeof threshold === 'number' && rawValue > threshold;
+                  result = rawValue !== undefined && isNumber && typeof threshold === 'number' && rawValue > threshold ;
                   break;
                 case 'greaterThanInclusive':
-                  result = isNumber && typeof threshold === 'number' && rawValue >= threshold;
+                  result = rawValue !== undefined && isNumber && typeof threshold === 'number' && rawValue >= threshold;
                   break;
                 case 'lessThan':
-                  result = isNumber && typeof threshold === 'number' && rawValue < threshold;  
+                  result = rawValue !== undefined && isNumber && typeof threshold === 'number' && rawValue < threshold;  
                   break;
                 case 'lessThanInclusive':
-                  result = isNumber && typeof threshold === 'number' && rawValue <= threshold;
+                  result = rawValue !== undefined && isNumber && typeof threshold === 'number' && rawValue <= threshold;
                   break;
                 case 'equal':
-                  result = (isNumber || isString) && rawValue === threshold;
+                  result = rawValue !== undefined && (isNumber || isString) && rawValue === threshold;
                   break;
                 case 'notEqual':
-                  result = (isNumber || isString) && rawValue !== threshold;
+                  result = rawValue !== undefined && (isNumber || isString) && rawValue !== threshold;
                   break;
                 default:
                   result = false; // Default to false if operator is not recognized
             }
 
             // Log the result of the check
-            this.logger.info(`The result from the check is ${result} for ${check.id} on entity ${entityRef}, threshold is ${operator} ${thresholdStr}, rawValue is ${rawValue}`);
+            this.logger.info(`The result from the check is ${result} for ${check.id} on entity ${entityRef} part of system ${systemName}, threshold is ${operator} ${thresholdStr} with type ${typeof threshold}, rawValue is ${rawValue}`);
 
             // Format fact correctly
             const fact: FactResponse[string] = {
