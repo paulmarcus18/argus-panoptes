@@ -8,6 +8,11 @@ metadata:
     backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/terraform-registry
     sonarcloud.io/project-key: SEP-ArgusPanoptes_terraform-registry
     sonarcloud.io/enabled: 'true'
+    tech-insights.io/sonarcloud-bugs-threshold: '0'
+    tech-insights.io/sonarcloud-vulnerabilities-threshold: '0'
+    tech-insights.io/sonarcloud-code-smells-threshold: '0'
+    tech-insights.io/sonarcloud-code-coverage-threshold: '0'
+    tech-insights.io/sonarcloud-quality-gate: '1'
   tags:
     - critical
 spec:

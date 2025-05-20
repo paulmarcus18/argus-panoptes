@@ -8,6 +8,11 @@ metadata:
     backstage.io/source-location: url:https://github.com/philips-labs/dct-notary-admin
     sonarcloud.io/project-key: SEP-ArgusPanoptes_dct-notary-admin
     sonarcloud.io/enabled: 'true'
+    tech-insights.io/sonarcloud-bugs-threshold: '0'
+    tech-insights.io/sonarcloud-vulnerabilities-threshold: '0'
+    tech-insights.io/sonarcloud-code-smells-threshold: '0'
+    tech-insights.io/sonarcloud-code-coverage-threshold: '0'
+    tech-insights.io/sonarcloud-quality-gate: '1'
   tags:
     - critical
 spec:
