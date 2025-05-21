@@ -55,6 +55,7 @@
   },
   "packageManager": "yarn@4.4.1",
   "dependencies": {
+    "@actions/github": "^6.0.1",
     "@backstage-community/plugin-tech-insights": "^0.5.1",
     "@backstage/plugin-tech-insights-backend-module-jsonfc": "^0.1.50",
     "@mui/icons-material": "^7.0.2",
