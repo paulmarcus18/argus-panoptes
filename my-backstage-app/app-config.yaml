@@ -179,6 +179,9 @@ techInsights:
     githubPipelineStatusFactRetriever:
       cadence: "*/2 * * * *" # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
+    foundationPipelineStatusFactRetriever:
+      cadence: "*/2 * * * *" # every minute
+      lifecycle: { timeToLive: { weeks: 2 } }
   factChecker:
     checks:
       noHighBugsCheck:

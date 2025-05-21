@@ -17,5 +17,5 @@ spec:
   system: payments-system
   workflowConfig:
     exclude:
-      - "Depandabot Updates"
+      - "Dependabot Updates"
   

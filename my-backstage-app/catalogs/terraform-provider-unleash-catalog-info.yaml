@@ -17,5 +17,5 @@ spec:
   system: user-management-system
   workflowConfig:
     exclude:
-      - "Depandabot Updates"
+      - "Dependabot Updates"
     
