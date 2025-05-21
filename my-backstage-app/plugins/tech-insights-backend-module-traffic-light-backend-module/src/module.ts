@@ -13,18 +13,11 @@ import { createDependabotFactRetriever } from './dependabot/dependabotFactRetrie
 import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/githubASFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
-// Import SonarCloud fact checkers
-// import { 
-//   createBugsCheck, 
-//   createCodeSmellsCheck, 
-//   createVulnerabilitiesCheck, 
-//   createQualityGateCheck, 
-//   createCodeCoverageCheck 
-// } from './sonarCloud/sonarCloudFactCheckers';
-// // Import JsonRulesEngineFactCheckerFactory
-// import { JsonRulesEngineFactCheckerFactory } from '@backstage-community/plugin-tech-insights-backend-module-jsonfc';
+// Import SonarCloud fact checkers.
 import { sonarCloudChecks } from './sonarCloud/sonarCloudFactCheckers'; 
+// Imports the fact checker factory that evaluates dynamic thresholds.
 import { DynamicThresholdFactCheckerFactory } from './argusPanoptesFactChecker/service/catalogFactChecker';
+// Imports the CatalogClient to interact with the Backstage catalog.
 import { CatalogClient } from '@backstage/catalog-client';
 
 // Import the missing AuthenticatedCatalogApi class or function
@@ -65,63 +58,25 @@ export default createBackendModule({
         // Register fact checkers
         logger.info('Registering SonarCloud fact checkers...');
       
-
+        // AuthenticatedCatalogApi is used to authenticate requests to the catalog service.
         const { token: catalogToken } = await auth.getPluginRequestToken({
           onBehalfOf: await auth.getOwnServiceCredentials(),
           targetPluginId: 'catalog',
         });
 
         const catalogClient = new CatalogClient({ discoveryApi: discovery });
-
         const authenticatedCatalogApi = new AuthenticatedCatalogApi(catalogClient, catalogToken);
 
+        // Create a new instance of the DynamicThresholdFactCheckerFactory
+        // and pass the checks, logger, and authenticated catalog API to it.
         const sonarCloudFactCheckerFactory = new DynamicThresholdFactCheckerFactory({
           checks: sonarCloudChecks,
           logger,
           catalogApi: authenticatedCatalogApi,
         });
 
-        // const catalogApi = new CatalogClient({  discoveryApi: discovery, });
-
-        // const catalogApiWithAuth = {
-        //   getEntityByRef: (ref: string) => catalogApi.getEntityByRef(ref, { token: catalogToken }),
-        // };
-        // const sonarCloudFactCheckerFactory = new DynamicThresholdFactCheckerFactory({
-        //   checks: sonarCloudChecks,
-        //   logger,
-        //   catalogApi: catalogApiWithAuth, // Use env.catalogClient or inject CatalogApi somehow
-        // });
-
+        // Register the fact checker factory with the fact checker provider.
         factCheckerProvider.setFactCheckerFactory(sonarCloudFactCheckerFactory);
-        // // Create the fact checkers from config
-        // const bugsCheck = createBugsCheck(config);
-        // const vulnerabilitiesCheck = createVulnerabilitiesCheck(config);
-        // const codeSmellsCheck = createCodeSmellsCheck(config);
-        // const qualityGateCheck = createQualityGateCheck(config);
-        // const codeCoverageCheck = createCodeCoverageCheck(config);
-        
-        // // Log the configured thresholds for debugging
-        // logger.info(`Configured bugs threshold: ${(bugsCheck.rule.conditions as any).all[0].value}`);
-        // logger.info(`Configured vulnerabilities threshold: ${(vulnerabilitiesCheck.rule.conditions as any).all[0].value}`);
-        // logger.info(`Configured code smells threshold: ${(codeSmellsCheck.rule.conditions as any).all[0].value}`);
-        // logger.info(`Configured quality gate threshold: ${(qualityGateCheck.rule.conditions as any).all[0].value}`);
-        // logger.info(`Configured code coverage threshold: ${(codeCoverageCheck.rule.conditions as any).all[0].value}`);
-
-        // // Create the JSON Rules Engine factory with our checks
-        // const jsonRulesEngineFactChecker = new JsonRulesEngineFactCheckerFactory({
-        //   checks: [
-        //     bugsCheck,
-        //     vulnerabilitiesCheck,
-        //     codeSmellsCheck,
-        //     qualityGateCheck,
-        //     codeCoverageCheck,
-        //   ],
-        //   logger,
-        // });
-        
-        // // Register the fact checker factory
-        // factCheckerProvider.setFactCheckerFactory(jsonRulesEngineFactChecker);
-
       },
     });
   },

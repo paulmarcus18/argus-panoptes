@@ -1,6 +1,5 @@
 import {
   FactChecker,
-  TechInsightCheckRegistry,
   TechInsightsStore,
 } from '@backstage-community/plugin-tech-insights-node';
 import { FactResponse } from '@backstage-community/plugin-tech-insights-common';
@@ -194,7 +193,6 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
 export interface DynamicThresholdFactCheckerFactoryOptions {
   checks: DynamicThresholdCheck[]; // Define check metadata (e.g., id, annotationKey, factIds)
   logger: LoggerService;
-  checkRegistry?: TechInsightCheckRegistry<DynamicThresholdCheck>;
   catalogApi: CatalogApi;
 }
 
@@ -202,13 +200,11 @@ export interface DynamicThresholdFactCheckerFactoryOptions {
 export class DynamicThresholdFactCheckerFactory {
   private readonly checks: DynamicThresholdCheck[];
   private readonly logger: LoggerService;
-  private readonly checkRegistry?: TechInsightCheckRegistry<DynamicThresholdCheck>;
   private readonly catalogApi: CatalogApi;
 
   constructor(options: DynamicThresholdFactCheckerFactoryOptions) {
     this.checks = options.checks;
     this.logger = options.logger;
-    this.checkRegistry = options.checkRegistry;
     this.catalogApi = options.catalogApi;
   }
 
