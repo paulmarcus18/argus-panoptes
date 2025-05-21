@@ -21,7 +21,7 @@ export const AiPluginPage = aiPluginPlugin.provide(
     name: 'AiPluginPage',
     component: () =>
       import('./components/AISummariesPage').then(
-        m => m.CommitMessageTestPage,
+        m => m.AISummaries,
       ),
     mountPoint: rootRouteRef,
   }),
