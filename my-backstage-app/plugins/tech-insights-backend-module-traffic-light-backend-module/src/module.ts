@@ -5,7 +5,7 @@
  */
 
 // Imports the utility function used to define and create a backend module in Backstage.
-import { createBackendModule, coreServices, LoggerService } from '@backstage/backend-plugin-api';
+import { createBackendModule, coreServices } from '@backstage/backend-plugin-api';
 // Imports the tech insights extension point that lets you plug in custom FactRetrievers.
 import { techInsightsFactRetrieversExtensionPoint, techInsightsFactCheckerFactoryExtensionPoint } from '@backstage-community/plugin-tech-insights-node';
 // Imports retriever that queries Dependabot alert data.
