@@ -167,7 +167,7 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
    * @returns An object with a boolean 'valid' and an optional message.
    */
   async validate(check: DynamicThresholdCheck) {
-    const valid = Boolean(check.factIds && check.annotationKeyThreshold && check.annotationKeyOperator);
+    const valid = Boolean(check.factIds.length !== 0 && check.annotationKeyThreshold && check.annotationKeyOperator);
     return {
       valid,
       ...(valid
