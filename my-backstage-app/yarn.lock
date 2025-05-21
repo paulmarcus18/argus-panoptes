@@ -16089,6 +16089,7 @@ __metadata:
     better-sqlite3: "npm:^9.0.0"
     dotenv: "npm:^16.5.0"
     dotenv-cli: "npm:^8.0.0"
+    mysql2: "npm:^3.14.1"
     node-fetch: "npm:^3.3.2"
     node-gyp: "npm:^10.0.0"
     pg: "npm:^8.11.3"
@@ -26628,7 +26629,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mysql2@npm:^3.0.0":
+"mysql2@npm:^3.0.0, mysql2@npm:^3.14.1":
   version: 3.14.1
   resolution: "mysql2@npm:3.14.1"
   dependencies:
