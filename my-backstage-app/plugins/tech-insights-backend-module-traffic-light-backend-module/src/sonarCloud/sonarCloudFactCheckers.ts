@@ -1,4 +1,4 @@
-import { DynamicThresholdCheck } from '../argusPanoptesFactChecker/service/catalogFactChecker';
+import { DynamicThresholdCheck } from '../argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 
 export const sonarCloudChecks: DynamicThresholdCheck[] = [
   { // SonarCloud bug check

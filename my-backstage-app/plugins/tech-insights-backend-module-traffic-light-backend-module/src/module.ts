@@ -16,7 +16,7 @@ import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetrie
 // Import SonarCloud fact checkers.
 import { sonarCloudChecks } from './sonarCloud/sonarCloudFactCheckers'; 
 // Imports the fact checker factory that evaluates dynamic thresholds.
-import { DynamicThresholdFactCheckerFactory } from './argusPanoptesFactChecker/service/catalogFactChecker';
+import { DynamicThresholdFactCheckerFactory } from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 // Imports the CatalogClient to interact with the Backstage catalog.
 import { CatalogClient } from '@backstage/catalog-client';
 

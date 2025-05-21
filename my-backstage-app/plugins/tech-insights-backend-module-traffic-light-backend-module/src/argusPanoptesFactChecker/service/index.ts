@@ -1,8 +1,8 @@
 export {
   DynamicThresholdFactCheckerFactory,
   DynamicThresholdFactChecker,
-} from './catalogFactChecker';
+} from './dynamicThresholdFactChecker';
 
 export type {
   DynamicThresholdFactCheckerFactoryOptions,
-} from './catalogFactChecker';
+} from './dynamicThresholdFactChecker';

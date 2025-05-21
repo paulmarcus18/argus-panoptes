@@ -1,4 +1,4 @@
-import { DynamicThresholdFactChecker, DynamicThresholdCheck, DynamicThresholdFactCheckerFactory } from './catalogFactChecker';
+import { DynamicThresholdFactChecker, DynamicThresholdCheck, DynamicThresholdFactCheckerFactory } from './dynamicThresholdFactChecker';
 import { TechInsightsStore } from '@backstage-community/plugin-tech-insights-node';
 import { CatalogApi } from '@backstage/catalog-client';
 import { LoggerService } from '@backstage/backend-plugin-api';
