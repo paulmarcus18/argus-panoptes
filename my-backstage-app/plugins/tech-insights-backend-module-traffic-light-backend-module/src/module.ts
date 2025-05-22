@@ -1,47 +1,106 @@
 /**
- * This file registers a backend module with the tech-insights plugin
- * Adds a custom fact retriever to the system, dependabotFactRetriever
- * Allows the plugin to collect dependabot alerts for usage
+ * This file registers a backend module with the tech-insights plugin.
+ * Adds two custom fact retrievers to the system, dependabotFactRetriever and sonarCloudFactRetriever.
+ * Allows the plugin to collect Dependabot and SonarQube (SonarCloud) alerts for usage.
  */
 
-//imports the utility function used to define and create a backend module in Backstage
-import { createBackendModule, coreServices, LoggerService } from '@backstage/backend-plugin-api';
-//imports the tech insights extension point that lets you plug in custom FactRetrievers
-import { techInsightsFactRetrieversExtensionPoint } from '@backstage-community/plugin-tech-insights-node';
-//imports retriever that queries dependabot alert data
-import { dependabotFactRetriever } from './dependabot/dependabotFactRetriever';
+// Imports the utility function used to define and create a backend module in Backstage.
+import {
+  createBackendModule,
+  coreServices,
+  LoggerService,
+} from '@backstage/backend-plugin-api';
+// Imports the tech insights extension point that lets you plug in custom FactRetrievers.
+import {
+  techInsightsFactRetrieversExtensionPoint,
+  techInsightsFactCheckerFactoryExtensionPoint,
+} from '@backstage-community/plugin-tech-insights-node';
+// Imports retriever that queries Dependabot alert data.
+import { createDependabotFactRetriever } from './dependabot/dependabotFactRetriever';
 import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/githubASFactRetriever';
 import { githubPipelineStatusFactRetriever } from './pipelines/preproductionFactRetriever';
 import { foundationPipelineStatusFactRetriever } from './pipelines/foundationFactRetriever';
 //import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
+// Imports retriever that queries SonarCloud data.
+import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
+// Import SonarCloud fact checkers.
+import { sonarCloudChecks } from './sonarCloud/sonarCloudFactCheckers';
+// Imports the fact checker factory that evaluates dynamic thresholds.
+import { DynamicThresholdFactCheckerFactory } from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
+// Imports the CatalogClient to interact with the Backstage catalog.
+import { CatalogClient } from '@backstage/catalog-client';
 
-//defines a backend module that integrates with the tech insights plugin
+// Import the missing AuthenticatedCatalogApi class or function
+import { AuthenticatedCatalogApi } from './authenticatedCatalogApi';
+
+// Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({
-  //specifies which plugin this module is part of.
+  // Specifies which plugin this module is part of.
   pluginId: 'tech-insights',
-  //unique identifier for this module within the plugin
+  // Unique identifier for this module within the plugin.
   moduleId: 'traffic-lights-backend-module',
-  //the 'register' function allows the module to register itself during app startup
+  // The 'register' function allows the module to register itself during app startup.
   register(env) {
-    //registers an initialization routine for this module
+    // Registers an initialization routine for this module.
     env.registerInit({
-      //declares dependencies required by the init function
+      // Declares dependencies required by the init function.
       deps: {
-        //declares that it needs access to the fact retriever provider interface
+        // Declares that it needs access to the fact retriever provider interface.
         providers: techInsightsFactRetrieversExtensionPoint,
+        factCheckerProvider: techInsightsFactCheckerFactoryExtensionPoint,
         logger: coreServices.rootLogger,
-        //config: coreServices.rootConfig,
+        config: coreServices.rootConfig,
+        discovery: coreServices.discovery,
+        auth: coreServices.auth,
       },
       //initialization function that will run during backend's startup
-      async init({ providers, logger }) {
+      async init({
+        providers,
+        factCheckerProvider,
+        logger,
+        config,
+        discovery,
+        auth,
+      }) {
         //logs to the console to confirm module is being registered
         logger.info('Registering dependabot-facts module...');
+        const factRetriever = createDependabotFactRetriever(config, logger);
+        const sonarCloudFactRetriever = createSonarCloudFactRetriever(
+          config,
+          logger,
+        );
         providers.addFactRetrievers({
-          dependabotFactRetriever,
           githubAdvancedSecurityFactRetriever,
-          githubPipelineStatusFactRetriever,
-          foundationPipelineStatusFactRetriever
+          dependabotFactRetriever: factRetriever, // Adds the dependabotFactRetriever to the system.
+          [sonarCloudFactRetriever.id]: sonarCloudFactRetriever, // Adds the sonarCloudFactRetriever to the system.
         });
+
+        // Register fact checkers
+        logger.info('Registering SonarCloud fact checkers...');
+
+        // AuthenticatedCatalogApi is used to authenticate requests to the catalog service.
+        const { token: catalogToken } = await auth.getPluginRequestToken({
+          onBehalfOf: await auth.getOwnServiceCredentials(),
+          targetPluginId: 'catalog',
+        });
+
+        const catalogClient = new CatalogClient({ discoveryApi: discovery });
+        const authenticatedCatalogApi = new AuthenticatedCatalogApi(
+          catalogClient,
+          catalogToken,
+        );
+
+        // Create a new instance of the DynamicThresholdFactCheckerFactory
+        // and pass the checks, logger, and authenticated catalog API to it.
+        const sonarCloudFactCheckerFactory =
+          new DynamicThresholdFactCheckerFactory({
+            checks: sonarCloudChecks,
+            logger,
+            catalogApi: authenticatedCatalogApi,
+          });
+
+        // Register the fact checker factory with the fact checker provider.
+        factCheckerProvider.setFactCheckerFactory(sonarCloudFactCheckerFactory);
       },
     });
   },

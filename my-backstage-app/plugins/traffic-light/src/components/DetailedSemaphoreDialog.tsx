@@ -24,7 +24,8 @@ import InfoIcon from '@material-ui/icons/Info';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
-import { getSonarQubeFacts, getGitHubSecurityFacts } from './utils';
+import { getGitHubSecurityFacts } from './utils';
+import { getSonarQubeFacts, getSonarQubeChecks } from '../utils/sonarCloudUtils';
 
 // Type for semaphore severity
 type Severity = 'critical' | 'high' | 'medium' | 'low';
@@ -197,7 +198,7 @@ const mockMetricsData: MockMetricsData = {
     metrics: {
       bugs: 3,
       code_smells: 76,
-      security_hotspots: 2,
+      vulnerabilities: 2,
       coverage: '68.4%',
       duplications: '5.2%',
       technicalDebt: '4d 2h',
@@ -207,7 +208,7 @@ const mockMetricsData: MockMetricsData = {
       { severity: 'medium', description: 'Fix 3 bugs in UserService.java' },
       {
         severity: 'medium',
-        description: 'Review 2 security hotspots in AuthenticationManager.java',
+        description: 'Review 2 vulnerabilities in AuthenticationManager.java',
       },
       {
         severity: 'low',
@@ -353,7 +354,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             (acc, result) => {
               acc.bugs += result.bugs || 0;
               acc.code_smells += result.code_smells || 0;
-              acc.security_hotspots += result.security_hotspots || 0;
+              acc.vulnerabilities += result.vulnerabilities || 0;
               acc.coverage = result.coverage || '0%';
               acc.duplications = result.duplications || '0%';
               return acc;
@@ -361,7 +362,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             {
               bugs: 0,
               code_smells: 0,
-              security_hotspots: 0,
+              vulnerabilities: 0,
               coverage: '0%',
               duplications: '0%',
               technicalDebt: '0d',
@@ -387,17 +388,17 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             });
           }
 
-          // Add security hotspot issues
-          if (totals.security_hotspots > 0) {
+          // Add vulnerabilities issues
+          if (totals.vulnerabilities > 0) {
             details.push({
-              severity: totals.security_hotspots > 0 ? 'high' : 'medium',
-              description: `${totals.security_hotspots} security hotspots need review`,
+              severity: totals.vulnerabilities > 0 ? 'high' : 'medium',
+              description: `${totals.vulnerabilities} vulnerabilities need review`,
             });
           }
 
           // Determine the overall status color
           let color: 'red' | 'yellow' | 'green' | 'gray' = 'green';
-          if (totals.bugs > 0 || totals.security_hotspots > 0) {
+          if (totals.bugs > 0 || totals.vulnerabilities > 0) {
             color = 'red';
           } else if (totals.code_smells > 10) {
             color = 'yellow';
@@ -649,10 +650,10 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             <Grid item xs={4}>
               <Paper className={classes.metricBox} elevation={1}>
                 <Typography variant="h4" className={classes.metricValue}>
-                  {data.metrics.security_hotspots}
+                  {data.metrics.vulnerabilities}
                 </Typography>
                 <Typography className={classes.metricLabel}>
-                  Security Hotspots
+                  Vulnerabilities
                 </Typography>
               </Paper>
             </Grid>

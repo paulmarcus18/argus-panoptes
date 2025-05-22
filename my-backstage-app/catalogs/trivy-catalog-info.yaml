@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: trivy
+  description: This is another test repo.
+  annotations:
+    github.com/project-slug: aquasecurity/trivy
+    backstage.io/source-location: url:https://github.com/aquasecurity/trivy
+  tags:
+    - critical
+spec:
+  type: service
+  lifecycle: experimental
+  owner: aquasecurity
+  system: new-system

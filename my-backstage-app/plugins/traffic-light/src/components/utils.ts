@@ -156,52 +156,6 @@ export async function getGitHubRepoStatus(
   }
 }
 
-export const getSonarQubeFacts = async (
-  api: TechInsightsApi,
-  entity: CompoundEntityRef,
-): Promise<{
-  bugs: number;
-  code_smells: number;
-  security_hotspots: number;
-}> => {
-  try {
-    console.log(
-      '📡 Fetching SonarCloud facts for entity:',
-      stringifyEntityRef(entity),
-    );
-
-    const response = await api.getFacts(entity, ['sonarcloud-fact-retriever']);
-
-    console.log(
-      '🧾 Raw Tech Insights API response:',
-      JSON.stringify(response, null, 2),
-    );
-
-    const facts = response?.['sonarcloud-fact-retriever']?.facts;
-
-    if (!facts) {
-      console.error(
-        '❌ No facts found for entity:',
-        stringifyEntityRef(entity),
-      );
-      return { bugs: 0, code_smells: 0, security_hotspots: 0 };
-    }
-
-    return {
-      bugs: Number(facts.bugs ?? 0),
-      code_smells: Number(facts.code_smells ?? 0),
-      security_hotspots: Number(facts.security_hotspots ?? 0),
-    };
-  } catch (error) {
-    console.error(
-      '💥 Error fetching SonarCloud facts for entity:',
-      stringifyEntityRef(entity),
-      error,
-    );
-    return { bugs: 0, code_smells: 0, security_hotspots: 0 };
-  }
-};
-
 /**
  * Interface defining the shape of GitHub security facts
  */
@@ -242,14 +196,14 @@ export const getGitHubSecurityFacts = async (
 ): Promise<GitHubSecurityFacts> => {
   try {
     console.log(
-      '📡 Fetching GitHub Security facts for entity:',
+      'Fetching GitHub Security facts for entity:',
       stringifyEntityRef(entity),
     );
     
     const response = await api.getFacts(entity, ['githubAdvancedSecurityFactRetriever']);
     
     console.log(
-      '🧾 Raw Tech Insights API response:',
+      'Raw Tech Insights API response:',
       JSON.stringify(response, null, 2),
     );
     
@@ -257,7 +211,7 @@ export const getGitHubSecurityFacts = async (
     
     if (!facts) {
       console.error(
-        '❌ No GitHub Security facts found for entity:',
+        'No GitHub Security facts found for entity:',
         stringifyEntityRef(entity),
       );
       return {
@@ -281,7 +235,7 @@ export const getGitHubSecurityFacts = async (
     };
   } catch (error) {
     console.error(
-      '💥 Error fetching GitHub Security facts for entity:',
+      'Error fetching GitHub Security facts for entity:',
       stringifyEntityRef(entity),
       error,
     );

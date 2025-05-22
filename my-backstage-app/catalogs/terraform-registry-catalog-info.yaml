@@ -5,7 +5,7 @@ metadata:
   description: Light weight Terraform Registry.
   annotations:
     github.com/project-slug: SEP-ArgusPanoptes/terraform-registry
-    backstage.io/source-location: url:https://github.com/philips-labs/terraform-registry
+    backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/terraform-registry
     sonarcloud.io/project-key: SEP-ArgusPanoptes_terraform-registry
     sonarcloud.io/enabled: 'true'
     pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'

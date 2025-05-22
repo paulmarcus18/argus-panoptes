@@ -2792,6 +2792,37 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@backstage-community/plugin-tech-insights-backend@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@backstage-community/plugin-tech-insights-backend@npm:3.0.0"
+  dependencies:
+    "@backstage-community/plugin-tech-insights-common": "npm:^0.5.0"
+    "@backstage-community/plugin-tech-insights-node": "npm:^2.3.0"
+    "@backstage/backend-defaults": "npm:^0.7.0"
+    "@backstage/backend-plugin-api": "npm:^1.1.1"
+    "@backstage/backend-test-utils": "npm:^1.3.0"
+    "@backstage/catalog-client": "npm:^1.9.1"
+    "@backstage/catalog-model": "npm:^1.7.3"
+    "@backstage/config": "npm:^1.3.2"
+    "@backstage/errors": "npm:^1.2.7"
+    "@backstage/plugin-permission-common": "npm:^0.8.4"
+    "@backstage/plugin-permission-node": "npm:^0.8.7"
+    "@backstage/types": "npm:^1.2.1"
+    "@types/express": "npm:^4.17.6"
+    "@types/luxon": "npm:^3.0.0"
+    express: "npm:^4.17.1"
+    express-promise-router: "npm:^4.1.0"
+    knex: "npm:^3.0.0"
+    lodash: "npm:^4.17.21"
+    luxon: "npm:^3.0.0"
+    p-limit: "npm:^3.1.0"
+    semver: "npm:^7.5.3"
+    uuid: "npm:^9.0.0"
+    yn: "npm:^4.0.0"
+  checksum: 10c0/9013906fd98524f8253cb8325a3ef6f200fed8c2577e7c6af704a45d92863223c9636516300ee6b9ced8152fd65968161d04ca386f08592a5337d790f7b905d0
+  languageName: node
+  linkType: hard
+
 "@backstage-community/plugin-tech-insights-common@npm:^0.5.0":
   version: 0.5.0
   resolution: "@backstage-community/plugin-tech-insights-common@npm:0.5.0"
@@ -7076,6 +7107,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@google/genai@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "@google/genai@npm:0.12.0"
+  dependencies:
+    google-auth-library: "npm:^9.14.2"
+    ws: "npm:^8.18.0"
+    zod: "npm:^3.22.4"
+    zod-to-json-schema: "npm:^3.22.4"
+  checksum: 10c0/f7d4e0e7c9e943688847eac1bae630e7a1ecde222c2fe4f296ce92e060c2cb63cb90e41ac18eb49582d01d2a6e7a7d8f39d7fa479b47af43a620ae48d6347c84
+  languageName: node
+  linkType: hard
+
 "@graphiql/react@npm:^0.20.3":
   version: 0.20.4
   resolution: "@graphiql/react@npm:0.20.4"
@@ -7557,6 +7600,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@internal/plugin-ai-plugin-backend-module-tech-insights-backend-module@workspace:^, @internal/plugin-ai-plugin-backend-module-tech-insights-backend-module@workspace:plugins/ai-plugin-backend-module-tech-insights-backend-module":
+  version: 0.0.0-use.local
+  resolution: "@internal/plugin-ai-plugin-backend-module-tech-insights-backend-module@workspace:plugins/ai-plugin-backend-module-tech-insights-backend-module"
+  dependencies:
+    "@backstage/backend-plugin-api": "npm:^1.3.0"
+    "@backstage/backend-test-utils": "npm:^1.3.0"
+    "@backstage/cli": "npm:^0.32.0"
+  languageName: unknown
+  linkType: soft
+
+"@internal/plugin-ai-plugin-backend@workspace:^, @internal/plugin-ai-plugin-backend@workspace:plugins/ai-plugin-backend":
+  version: 0.0.0-use.local
+  resolution: "@internal/plugin-ai-plugin-backend@workspace:plugins/ai-plugin-backend"
+  dependencies:
+    "@backstage/backend-defaults": "npm:^0.9.0"
+    "@backstage/backend-plugin-api": "npm:^1.3.0"
+    "@backstage/backend-test-utils": "npm:^1.3.0"
+    "@backstage/catalog-client": "npm:^1.9.1"
+    "@backstage/cli": "npm:^0.32.0"
+    "@backstage/errors": "npm:^1.2.7"
+    "@backstage/plugin-catalog-node": "npm:^1.16.3"
+    "@types/express": "npm:^4.17.6"
+    "@types/supertest": "npm:^2.0.12"
+    express: "npm:^4.17.1"
+    express-promise-router: "npm:^4.1.0"
+    supertest: "npm:^6.2.4"
+    zod: "npm:^3.22.4"
+  languageName: unknown
+  linkType: soft
+
 "@internal/plugin-ai-plugin@workspace:^, @internal/plugin-ai-plugin@workspace:plugins/ai-plugin":
   version: 0.0.0-use.local
   resolution: "@internal/plugin-ai-plugin@workspace:plugins/ai-plugin"
@@ -7579,26 +7652,6 @@ __metadata:
     react-use: "npm:^17.2.4"
   peerDependencies:
     react: ^16.13.1 || ^17.0.0 || ^18.0.0
-  languageName: unknown
-  linkType: soft
-
-"@internal/plugin-ai-summary-backend-backend@workspace:^, @internal/plugin-ai-summary-backend-backend@workspace:plugins/ai-summary-backend-backend":
-  version: 0.0.0-use.local
-  resolution: "@internal/plugin-ai-summary-backend-backend@workspace:plugins/ai-summary-backend-backend"
-  dependencies:
-    "@backstage/backend-defaults": "npm:^0.9.0"
-    "@backstage/backend-plugin-api": "npm:^1.3.0"
-    "@backstage/backend-test-utils": "npm:^1.3.0"
-    "@backstage/catalog-client": "npm:^1.9.1"
-    "@backstage/cli": "npm:^0.32.0"
-    "@backstage/errors": "npm:^1.2.7"
-    "@backstage/plugin-catalog-node": "npm:^1.16.3"
-    "@types/express": "npm:^4.17.6"
-    "@types/supertest": "npm:^2.0.12"
-    express: "npm:^4.17.1"
-    express-promise-router: "npm:^4.1.0"
-    supertest: "npm:^6.2.4"
-    zod: "npm:^3.22.4"
   languageName: unknown
   linkType: soft
 
@@ -13694,6 +13747,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash@npm:^4.17.16":
+  version: 4.17.16
+  resolution: "@types/lodash@npm:4.17.16"
+  checksum: 10c0/cf017901b8ab1d7aabc86d5189d9288f4f99f19a75caf020c0e2c77b8d4cead4db0d0b842d009b029339f92399f49f34377dd7c2721053388f251778b4c23534
+  languageName: node
+  linkType: hard
+
 "@types/long@npm:^4.0.0":
   version: 4.0.2
   resolution: "@types/long@npm:4.0.2"
@@ -13761,7 +13821,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node-fetch@npm:^2.6.9":
+"@types/node-fetch@npm:^2.6.4, @types/node-fetch@npm:^2.6.9":
   version: 2.6.12
   resolution: "@types/node-fetch@npm:2.6.12"
   dependencies:
@@ -14824,7 +14884,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"agentkeepalive@npm:^4.1.4":
+"agentkeepalive@npm:^4.1.4, agentkeepalive@npm:^4.2.1":
   version: 4.6.0
   resolution: "agentkeepalive@npm:4.6.0"
   dependencies:
@@ -15117,6 +15177,7 @@ __metadata:
     "@testing-library/user-event": "npm:^14.0.0"
     "@types/react-dom": "npm:*"
     cross-env: "npm:^7.0.0"
+    openai: "npm:^4.97.0"
     react: "npm:^18.0.2"
     react-dom: "npm:^18.0.2"
     react-router: "npm:^6.3.0"
@@ -15820,7 +15881,8 @@ __metadata:
     "@backstage/plugin-tech-insights-common": "npm:^0.2.13"
     "@backstage/plugin-tech-insights-node": "npm:^0.6.1"
     "@backstage/plugin-techdocs-backend": "npm:^2.0.1"
-    "@internal/plugin-ai-summary-backend-backend": "workspace:^"
+    "@internal/plugin-ai-plugin-backend": "workspace:^"
+    "@internal/plugin-ai-plugin-backend-module-tech-insights-backend-module": "workspace:^"
     "@internal/plugin-tech-insights-backend-module-traffic-light-backend-module": "workspace:^"
     "@octokit/rest": "npm:^21.1.1"
     app: "link:../app"
@@ -20598,6 +20660,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"form-data-encoder@npm:1.7.2":
+  version: 1.7.2
+  resolution: "form-data-encoder@npm:1.7.2"
+  checksum: 10c0/56553768037b6d55d9de524f97fe70555f0e415e781cb56fc457a68263de3d40fadea2304d4beef2d40b1a851269bd7854e42c362107071892cb5238debe9464
+  languageName: node
+  linkType: hard
+
 "form-data@npm:^2.3.2, form-data@npm:^2.5.0":
   version: 2.5.3
   resolution: "form-data@npm:2.5.3"
@@ -20638,6 +20707,16 @@ __metadata:
   version: 0.2.2
   resolution: "format@npm:0.2.2"
   checksum: 10c0/6032ba747541a43abf3e37b402b2f72ee08ebcb58bf84d816443dd228959837f1cddf1e8775b29fa27ff133f4bd146d041bfca5f9cf27f048edf3d493cf8fee6
+  languageName: node
+  linkType: hard
+
+"formdata-node@npm:^4.3.2":
+  version: 4.4.1
+  resolution: "formdata-node@npm:4.4.1"
+  dependencies:
+    node-domexception: "npm:1.0.0"
+    web-streams-polyfill: "npm:4.0.0-beta.3"
+  checksum: 10c0/74151e7b228ffb33b565cec69182694ad07cc3fdd9126a8240468bb70a8ba66e97e097072b60bcb08729b24c7ce3fd3e0bd7f1f80df6f9f662b9656786e76f6a
   languageName: node
   linkType: hard
 
@@ -21244,7 +21323,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"google-auth-library@npm:^9.0.0, google-auth-library@npm:^9.3.0, google-auth-library@npm:^9.6.3":
+"google-auth-library@npm:^9.0.0, google-auth-library@npm:^9.14.2, google-auth-library@npm:^9.3.0, google-auth-library@npm:^9.6.3":
   version: 9.15.1
   resolution: "google-auth-library@npm:9.15.1"
   dependencies:
@@ -26498,7 +26577,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-domexception@npm:^1.0.0":
+"node-domexception@npm:1.0.0, node-domexception@npm:^1.0.0":
   version: 1.0.0
   resolution: "node-domexception@npm:1.0.0"
   checksum: 10c0/5e5d63cda29856402df9472335af4bb13875e1927ad3be861dc5ebde38917aecbf9ae337923777af52a48c426b70148815e890a5d72760f1b4d758cc671b1a2b
@@ -27053,6 +27132,31 @@ __metadata:
     is-docker: "npm:^2.1.1"
     is-wsl: "npm:^2.2.0"
   checksum: 10c0/bb6b3a58401dacdb0aad14360626faf3fb7fba4b77816b373495988b724fb48941cad80c1b65d62bb31a17609b2cd91c41a181602caea597ca80dfbcc27e84c9
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.97.0":
+  version: 4.97.0
+  resolution: "openai@npm:4.97.0"
+  dependencies:
+    "@types/node": "npm:^18.11.18"
+    "@types/node-fetch": "npm:^2.6.4"
+    abort-controller: "npm:^3.0.0"
+    agentkeepalive: "npm:^4.2.1"
+    form-data-encoder: "npm:1.7.2"
+    formdata-node: "npm:^4.3.2"
+    node-fetch: "npm:^2.6.7"
+  peerDependencies:
+    ws: ^8.18.0
+    zod: ^3.23.8
+  peerDependenciesMeta:
+    ws:
+      optional: true
+    zod:
+      optional: true
+  bin:
+    openai: bin/cli
+  checksum: 10c0/9938eb85102dd0465197e79c0912df9f3afd52be2d9524fd5100f5befbfa70e6bb7803120515ffa0925b7afc14762052b087c7c2f3d0b85852efa22aa1d745d6
   languageName: node
   linkType: hard
 
@@ -30412,12 +30516,16 @@ __metadata:
   resolution: "root@workspace:."
   dependencies:
     "@backstage-community/plugin-tech-insights": "npm:^0.5.1"
+    "@backstage-community/plugin-tech-insights-backend": "npm:^3.0.0"
+    "@backstage/backend-plugin-api": "npm:^1.3.0"
     "@backstage/cli": "npm:^0.32.0"
     "@backstage/e2e-test-utils": "npm:^0.1.1"
+    "@google/genai": "npm:^0.12.0"
     "@mui/icons-material": "npm:^7.0.2"
     "@playwright/test": "npm:^1.32.3"
     "@types/adm-zip": "npm:^0"
     "@types/jest": "npm:^29.5.14"
+    "@types/lodash": "npm:^4.17.16"
     adm-zip: "npm:^0.5.16"
     dotenv: "npm:^16.5.0"
     jest: "npm:^29.7.0"
@@ -33850,6 +33958,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"web-streams-polyfill@npm:4.0.0-beta.3":
+  version: 4.0.0-beta.3
+  resolution: "web-streams-polyfill@npm:4.0.0-beta.3"
+  checksum: 10c0/a9596779db2766990117ed3a158e0b0e9f69b887a6d6ba0779940259e95f99dc3922e534acc3e5a117b5f5905300f527d6fbf8a9f0957faf1d8e585ce3452e8e
+  languageName: node
+  linkType: hard
+
 "web-streams-polyfill@npm:^3.0.3":
   version: 3.3.3
   resolution: "web-streams-polyfill@npm:3.3.3"
@@ -34620,7 +34735,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-to-json-schema@npm:^3.20.4, zod-to-json-schema@npm:^3.21.4":
+"zod-to-json-schema@npm:^3.20.4, zod-to-json-schema@npm:^3.21.4, zod-to-json-schema@npm:^3.22.4":
   version: 3.24.5
   resolution: "zod-to-json-schema@npm:3.24.5"
   peerDependencies:
