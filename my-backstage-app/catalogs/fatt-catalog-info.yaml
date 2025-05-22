@@ -8,6 +8,7 @@ metadata:
     backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/fatt
     sonarcloud.io/project-key: SEP-ArgusPanoptes_fatt
     sonarcloud.io/enabled: 'true'
+    reporting/workflows: '["CodeQL", "Continuous Integration"]'
   tags:
     - critical
 spec:
@@ -15,3 +16,6 @@ spec:
   lifecycle: experimental
   owner: SEP-ArgusPanoptes
   system: payments-system
+  workflowConfig:
+    exclude:
+      - 'Dependabot Updates'

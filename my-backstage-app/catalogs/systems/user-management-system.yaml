@@ -4,6 +4,21 @@ metadata:
   name: user-management-system
   title: User Management System
   description: Manages user accounts, profiles, and authentication
+  annotations:
+    tech-insights.io/sonarcloud-bugs-threshold: '2'
+    tech-insights.io/sonarcloud-bugs-operator: 'lessThanInclusive'
+    tech-insights.io/sonarcloud-vulnerabilities-threshold: '0'
+    tech-insights.io/sonarcloud-vulnerabilities-operator: 'lessThanInclusive'
+    tech-insights.io/sonarcloud-code-smells-threshold: '30'
+    tech-insights.io/sonarcloud-code-smells-operator: 'lessThanInclusive'
+    tech-insights.io/sonarcloud-code-coverage-threshold: '40'
+    tech-insights.io/sonarcloud-code-coverage-operator: 'greaterThanInclusive'
+    tech-insights.io/sonarcloud-quality-gate: 'OK'
+    tech-insights.io/sonarcloud-quality-gate-operator: 'equal'
+    tech-insights.io/foundation-success-rate-threshold: '90'
+    tech-insights.io/foundation-success-rate-operator: 'greaterThanInclusive'
+    tech-insights.io/foundation-max-failures-threshold: '2'
+    tech-insights.io/foundation-max-failures-operator: 'lessThanInclusive'
 spec:
   owner: identity-team
   members: [ghristov]

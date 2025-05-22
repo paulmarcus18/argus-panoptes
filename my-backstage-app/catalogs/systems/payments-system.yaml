@@ -4,6 +4,21 @@ metadata:
   name: payments-system
   title: Payments System
   description: Handles all payment transactions and billing
+  annotations:
+    tech-insights.io/sonarcloud-bugs-threshold: '5'
+    tech-insights.io/sonarcloud-bugs-operator: 'lessThanInclusive'
+    tech-insights.io/sonarcloud-vulnerabilities-threshold: '1'
+    tech-insights.io/sonarcloud-vulnerabilities-operator: 'lessThanInclusive'
+    tech-insights.io/sonarcloud-code-smells-threshold: '20'
+    tech-insights.io/sonarcloud-code-smells-operator: 'lessThanInclusive'
+    tech-insights.io/sonarcloud-code-coverage-threshold: '30'
+    tech-insights.io/sonarcloud-code-coverage-operator: 'greaterThanInclusive'
+    tech-insights.io/sonarcloud-quality-gate: 'OK'
+    tech-insights.io/sonarcloud-quality-gate-operator: 'equal'
+    tech-insights.io/foundation-success-rate-threshold: '90'
+    tech-insights.io/foundation-success-rate-operator: 'greaterThanInclusive'
+    tech-insights.io/foundation-max-failures-threshold: '2'
+    tech-insights.io/foundation-max-failures-operator: 'lessThanInclusive'
 spec:
   owner: finance-team
   members: [vpetkova]
