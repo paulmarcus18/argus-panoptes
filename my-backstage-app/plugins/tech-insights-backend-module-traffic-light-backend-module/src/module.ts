@@ -32,6 +32,7 @@ import { CatalogClient } from '@backstage/catalog-client';
 
 // Import the missing AuthenticatedCatalogApi class or function
 import { AuthenticatedCatalogApi } from './authenticatedCatalogApi';
+import { foundationPipelineChecks } from './pipelines/foundationFactChecker';
 
 // Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({
@@ -98,7 +99,7 @@ export default createBackendModule({
         // and pass the checks, logger, and authenticated catalog API to it.
         const sonarCloudFactCheckerFactory =
           new DynamicThresholdFactCheckerFactory({
-            checks: sonarCloudChecks,
+            checks: [...sonarCloudChecks, ...foundationPipelineChecks],
             logger,
             catalogApi: authenticatedCatalogApi,
           });
