@@ -69,8 +69,12 @@ export default createBackendModule({
           config,
           logger,
         );
+        const preproductionFactRetriever = githubPipelineStatusFactRetriever;
+        const foundationFactRetriever = foundationPipelineStatusFactRetriever;
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
+          foundationFactRetriever,
+          preproductionFactRetriever,
           dependabotFactRetriever: factRetriever, // Adds the dependabotFactRetriever to the system.
           [sonarCloudFactRetriever.id]: sonarCloudFactRetriever, // Adds the sonarCloudFactRetriever to the system.
         });
