@@ -185,6 +185,11 @@ techInsights:
       cadence: '0 */4 * * *' # Every minute
       filter:
         kind: Component
+    azure-devops-bugs-retriever:
+      enabled: true
+      cadence: '0 */4 * * *' # Every 4 hours
+      filter:
+        kind: Component
     dependabotFactRetriever:
       cadence: "0 * * * *" # every  hour
       lifecycle: { timeToLive: { weeks: 2 } }

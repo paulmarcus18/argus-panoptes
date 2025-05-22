@@ -11,6 +11,8 @@ import { techInsightsFactRetrieversExtensionPoint, techInsightsFactCheckerFactor
 // Imports retriever that queries Dependabot alert data.
 import { createDependabotFactRetriever } from './dependabot/dependabotFactRetriever';
 import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/githubASFactRetriever';
+// Imports retriever that queries Azure DevOps bugs data.
+import { createAzureDevOpsBugsRetriever } from './azure/azureDevOpsFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 // Import SonarCloud fact checkers
@@ -50,6 +52,7 @@ export default createBackendModule({
         const sonarCloudFactRetriever = createSonarCloudFactRetriever(config, logger);
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
+          'azure-devops-bugs-retriever': createAzureDevOpsBugsRetriever,
           'dependabotFactRetriever': factRetriever, // Adds the dependabotFactRetriever to the system.
           [sonarCloudFactRetriever.id]: sonarCloudFactRetriever // Adds the sonarCloudFactRetriever to the system.
         });
@@ -85,7 +88,6 @@ export default createBackendModule({
         
         // Register the fact checker factory
         factCheckerProvider.setFactCheckerFactory(jsonRulesEngineFactChecker);
-
       },
     });
   },
