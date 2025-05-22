@@ -8,6 +8,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/philips-labs/tabia
     sonarcloud.io/project-key: SEP-ArgusPanoptes_tabia
     sonarcloud.io/enabled: 'true'
+    pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
+    foundation/thresholds: '{"minSuccessRate": 95}'
   tags:
     - non-critical
 spec:
@@ -17,5 +19,4 @@ spec:
   system: user-management-system
   workflowConfig:
     exclude:
-      - "Dependabot Updates"
-  
+      - 'Dependabot Updates'
