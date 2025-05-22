@@ -15,6 +15,10 @@ metadata:
     tech-insights.io/sonarcloud-code-coverage-operator: 'greaterThanInclusive'
     tech-insights.io/sonarcloud-quality-gate: 'OK'
     tech-insights.io/sonarcloud-quality-gate-operator: 'equal'
+    tech-insights.io/foundation-success-rate-threshold: '90'
+    tech-insights.io/foundation-success-rate-operator: 'greaterThanInclusive'
+    tech-insights.io/foundation-max-failures-threshold: '2'
+    tech-insights.io/foundation-max-failures-operator: 'lessThanInclusive'
 spec:
   owner: finance-team
   members: [vpetkova]
