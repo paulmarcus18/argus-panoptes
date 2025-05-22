@@ -10,6 +10,7 @@ metadata:
     sonarcloud.io/enabled: 'true'
     pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
     foundation/thresholds: '{"minSuccessRate": 95}'
+    reporting/workflows: '["CodeQL", "Continuous Integration"]'
   tags:
     - critical
 spec:
