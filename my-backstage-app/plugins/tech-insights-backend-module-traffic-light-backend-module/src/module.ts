@@ -20,6 +20,7 @@ import { createDependabotFactRetriever } from './dependabot/dependabotFactRetrie
 import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/githubASFactRetriever';
 import { githubPipelineStatusFactRetriever } from './pipelines/preproductionFactRetriever';
 import { foundationPipelineStatusFactRetriever } from './pipelines/foundationFactRetriever';
+import { reportingPipelineStatusFactRetriever } from './pipelines/reportingFactRetriever';
 //import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
@@ -71,6 +72,7 @@ export default createBackendModule({
         );
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
+          reportingPipelineStatusFactRetriever,
           dependabotFactRetriever: factRetriever, // Adds the dependabotFactRetriever to the system.
           [sonarCloudFactRetriever.id]: sonarCloudFactRetriever, // Adds the sonarCloudFactRetriever to the system.
         });
