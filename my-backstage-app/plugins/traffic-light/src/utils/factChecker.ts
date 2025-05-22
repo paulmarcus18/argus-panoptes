@@ -42,10 +42,10 @@ export async function getDependabotStatusFromFacts(
   entities: Entity[],
   systemName?: string,
   catalogApi?: CatalogApi,
-): Promise<{ color: 'green' | 'yellow' | 'red' | 'gray'; reason: string }> {
+): Promise<{ color: 'green' | 'yellow' | 'red' | 'gray'; reason: string; alertCounts: number[] }> {
   if (!entities.length) {
     console.warn('⚠️ No entities provided to getDependabotStatusFromFacts');
-    return { color: 'gray', reason: 'No entities provided' };
+    return { color: 'gray', reason: 'No entities provided', alertCounts: [] };
   }
 
   let totalCritical = 0;
@@ -73,7 +73,7 @@ export async function getDependabotStatusFromFacts(
   }
 
   if (validCount === 0) {
-    return { color: 'gray', reason: 'No valid facts available' };
+    return { color: 'gray', reason: 'No valid facts available', alertCounts:[] };
   }
 
   const thresholds = catalogApi && systemName
@@ -85,19 +85,24 @@ export async function getDependabotStatusFromFacts(
 
   let color: 'green' | 'yellow' | 'red' = 'green';
   let reason = '';
+  let alertCounts = [];
 
   if (totalCritical > thresholds.critical) {
     color = 'red';
     reason = `Critical alerts exceed threshold (${totalCritical} > ${thresholds.critical})`;
+    alertCounts = [totalCritical, totalHigh, totalMedium];
   } else if (totalHigh > thresholds.high) {
     color = 'yellow';
     reason = `High alerts exceed threshold (${totalHigh} > ${thresholds.high})`;
+    alertCounts = [totalCritical, totalHigh, totalMedium];
   } else if (totalMedium > thresholds.medium) {
     color = 'yellow';
     reason = `Medium alerts exceed threshold (${totalMedium} > ${thresholds.medium})`;
+    alertCounts = [totalCritical, totalHigh, totalMedium];
   } else {
     reason = `All severities within thresholds`;
+    alertCounts = [totalCritical, totalHigh, totalMedium];
   }
 
-  return { color, reason };
+  return { color, reason, alertCounts };
 }

@@ -22,6 +22,8 @@ import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { getSonarQubeFacts } from './utils';
+import {getDependabotStatusFromFacts} from '../utils/factChecker';
+import { ResetTvOutlined } from '@mui/icons-material';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -85,30 +87,13 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     const fetchDependabotData = async () => {
       setIsLoading(true);
       try {
-        let totalCritical = 0;
-        let totalHigh = 0;
-        let totalMedium = 0;
-
-        for (const entity of entities) {
-          const entityRef = {
-            kind: entity.kind,
-            namespace: entity.metadata.namespace || 'default',
-            name: entity.metadata.name,
-          };
-
-          const facts = await techInsightsApi.getFacts(entityRef, ['dependabotFactRetriever']);
-          const fact = facts['dependabotFactRetriever']?.facts;
-
-          if (fact) {
-            if (typeof fact.critical === 'number') totalCritical += fact.critical;
-            if (typeof fact.high === 'number') totalHigh += fact.high;
-            if (typeof fact.medium === 'number') totalMedium += fact.medium;
-          }
-        }
-
-        setLiveData({
-          color: 'green',
-          summary: 'Dependabot alert counts by severity.',
+        const result = await getDependabotStatusFromFacts(techInsightsApi, entities);
+        const { color, reason, alertCounts } = result;
+        const [totalCritical, totalHigh, totalMedium] =alertCounts;
+        
+          setLiveData({
+          color, 
+          summary: reason,
           metrics: {
             critical: totalCritical,
             high: totalHigh,
@@ -116,6 +101,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
           },
           details: [],
         });
+        
       } catch (e) {
         console.error('❌ Failed to fetch dependabot facts', e);
         setLiveData(null);
@@ -123,6 +109,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
         setIsLoading(false);
       }
     };
+    
 
     const fetchSonarQubeData = async () => {
       setIsLoading(true);
