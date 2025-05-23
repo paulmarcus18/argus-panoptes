@@ -1,27 +1,26 @@
-import { HttpAuthService } from '@backstage/backend-plugin-api';
-import express from 'express';
-import Router from 'express-promise-router';
-// import { TodoListService } from './services/TodoListService/types';
-import { MetricType } from "./services/TodoListService/types"
+import { Router } from 'express';
+import pool from './services/TodoListService/db'; // <- MUST match actual path
 
-import { DoraService } from './services/TodoListService/types';
-import { Aggregation } from './services/TodoListService/types';
+export async function createRouter(p0: unknown): Promise<Router> {
+  console.log('[debug] createRouter() called');
 
-export async function createRouter({
-  doraService,
-}: {
-  httpAuth: HttpAuthService;
-  doraService: DoraService;
-}): Promise<express.Router> {
   const router = Router();
-  router.use(express.json());
 
-  router.get('/metrics/:type/:aggregation', async (req, res) => {
-    const { type, aggregation } = req.params;
+  router.get('/dora', async (_req, res) => {
+    try {
+      console.log('[debug] querying from pool');
+      const [rows] = await pool.execute(
+      'SELECT COUNT(*) AS deployments FROM cicd_deployments'
+    );
 
-    // validate the metric type and aggregation
-
-    res.json(await doraService.getMetric(type as MetricType, aggregation as Aggregation));
+      res.json({
+        deploymentFrequency: (rows as any)[0]?.deployments ?? 0,
+        source: 'live from DevLake',
+      });
+    } catch (error) {
+      console.error('Database query failed:', error);
+      res.status(500).json({ error: 'Failed to fetch DORA metrics' });
+    }
   });
 
   return router;
