@@ -31,19 +31,19 @@ export const getSonarQubeFacts = async (
 
     // ------------------------------------------------
     // Facts checks
-    const checkResults = await api.runChecks(entity);
-    const bugsCheck = checkResults.find(r => r.check.id === 'noHighBugsCheck');
-    const vulnerabilitiesCheck = checkResults.find(r => r.check.id === 'vulnerabilitiesCheck');
-    const codeSmellsCheck = checkResults.find(r => r.check.id === 'noHighCodeSmellsCheck');
-    const qualityGateCheck = checkResults.find(r => r.check.id === 'qualityGateCheck');
-    const codeCoverageCheck = checkResults.find(r => r.check.id === 'codeCoverageCheck');
+    // const checkResults = await api.runChecks(entity);
+    // const bugsCheck = checkResults.find(r => r.check.id === 'noHighBugsCheck');
+    // const vulnerabilitiesCheck = checkResults.find(r => r.check.id === 'vulnerabilitiesCheck');
+    // const codeSmellsCheck = checkResults.find(r => r.check.id === 'noHighCodeSmellsCheck');
+    // const qualityGateCheck = checkResults.find(r => r.check.id === 'qualityGateCheck');
+    // const codeCoverageCheck = checkResults.find(r => r.check.id === 'codeCoverageCheck');
     
-    // Log the results of the checks for debugging
-    console.log("Result from Bugs checks:", bugsCheck?.result);
-    console.log("Result from Vulnerabilities checks:", vulnerabilitiesCheck?.result);
-    console.log("Result from Code Smells checks:", codeSmellsCheck?.result);
-    console.log("Result from Quality Gate checks:", qualityGateCheck?.result);
-    console.log("Result from Code Coverage checks:", codeCoverageCheck?.result);
+    // // Log the results of the checks for debugging
+    // console.log("Result from Bugs checks:", bugsCheck?.result);
+    // console.log("Result from Vulnerabilities checks:", vulnerabilitiesCheck?.result);
+    // console.log("Result from Code Smells checks:", codeSmellsCheck?.result);
+    // console.log("Result from Quality Gate checks:", qualityGateCheck?.result);
+    // console.log("Result from Code Coverage checks:", codeCoverageCheck?.result);
 
     // End of facts checks
     // -----------------------------------------------
@@ -117,18 +117,18 @@ export const getSonarQubeChecks = async (
     const checkResults = await api.runChecks(entity);
 
     // Extract the results of each checks
-    const bugsCheck = checkResults.find(r => r.check.id === 'noHighBugsCheck');
-    const vulnerabilitiesCheck = checkResults.find(r => r.check.id === 'vulnerabilitiesCheck');
-    const codeSmellsCheck = checkResults.find(r => r.check.id === 'noHighCodeSmellsCheck');
-    const qualityGateCheck = checkResults.find(r => r.check.id === 'qualityGateCheck');
-    const codeCoverageCheck = checkResults.find(r => r.check.id === 'codeCoverageCheck');
+    const bugsCheck = checkResults.find(r => r.check.id === 'sonarcloud-bugs');
+    const vulnerabilitiesCheck = checkResults.find(r => r.check.id === 'sonarcloud-vulnerabilities');
+    const codeSmellsCheck = checkResults.find(r => r.check.id === 'sonarcloud-code-smells');
+    const qualityGateCheck = checkResults.find(r => r.check.id === 'sonarcloud-quality-gate');
+    const codeCoverageCheck = checkResults.find(r => r.check.id === 'sonarcloud-code-coverage');
     
     // Log the results of the checks for debugging
-    console.log("Result from Bugs checks:", bugsCheck?.result);
-    console.log("Result from Vulnerabilities checks:", vulnerabilitiesCheck?.result);
-    console.log("Result from Code Smells checks:", codeSmellsCheck?.result);
-    console.log("Result from Quality Gate checks:", qualityGateCheck?.result);
-    console.log("Result from Code Coverage checks:", codeCoverageCheck?.result);
+    console.log("Result from Bugs checks for entity:", stringifyEntityRef(entity), bugsCheck?.result);
+    console.log("Result from Vulnerabilities checks for entity:", stringifyEntityRef(entity), vulnerabilitiesCheck?.result);
+    console.log("Result from Code Smells checks for entity:", stringifyEntityRef(entity), codeSmellsCheck?.result);
+    console.log("Result from Quality Gate checks for entity:", stringifyEntityRef(entity),  qualityGateCheck?.result);
+    console.log("Result from Code Coverage checks for entity:", stringifyEntityRef(entity), codeCoverageCheck?.result);
 
     // If no check results are found, log an error and return default values
     if (checkResults.length === 0) {

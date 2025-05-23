@@ -76,7 +76,7 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
      */
     handler: async ctx => {
       const { 
-        config: appConfig,
+        //config: appConfig,
         logger,
         discovery,
         auth,
