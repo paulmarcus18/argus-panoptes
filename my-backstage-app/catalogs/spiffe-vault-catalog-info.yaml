@@ -11,6 +11,7 @@ metadata:
     pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
     foundation/thresholds: '{"minSuccessRate": 95}'
     reporting/workflows: '["CodeQL", "Continuous Integration"]'
+    preproduction/exclude: '["Dependabot Updates"]'
   tags:
     - non-critical
 spec:
@@ -18,6 +19,4 @@ spec:
   lifecycle: experimental
   owner: SEP-ArgusPanoptes
   system: payments-system
-  workflowConfig:
-    exclude:
-      - 'Dependabot Updates'
+

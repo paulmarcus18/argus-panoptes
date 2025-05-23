@@ -5,7 +5,7 @@ export const preproductionPipelineChecks: DynamicThresholdCheck[] = [
     id: 'preproduction-success-rate',
     name: 'Preproduction Pipeline Success Rate',
     type: 'percentage',
-    factIds: ['githubPipelineStatusFactRetriever', 'successWorkflowRunsCount'],
+    factIds: ['githubPipelineStatusFactRetriever', 'successRate'],
     annotationKeyThreshold:
       'tech-insights.io/preproduction-success-rate-threshold',
     annotationKeyOperator:

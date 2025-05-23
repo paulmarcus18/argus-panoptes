@@ -9,6 +9,7 @@ metadata:
     sonarcloud.io/project-key: SEP-ArgusPanoptes_fatt
     sonarcloud.io/enabled: 'true'
     reporting/workflows: '["CodeQL", "Continuous Integration"]'
+    preproduction/exclude: '["Dependabot Updates"]'
   tags:
     - critical
 spec:
