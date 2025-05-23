@@ -53,8 +53,8 @@ export const AISummaries = () => {
         const systemToEntityRefs = getReposBySystem(entities);
         const commitMessagesBySystem = await getCommitMessagesBySystem(techInsightsApi, systemToEntityRefs);
 
-        const ai = new GoogleGenAI({ apiKey: 'AIzaSyC7PNqPNPlfa7v4obQm70xSr_XEfG1ySwA' });
-        const result = await generateSummaries(ai, commitMessagesBySystem);
+        
+        const result = await generateSummaries(commitMessagesBySystem);
         await postSummaries(result, today, apiBaseUrl, fetch);
         setMessagesBySystem(result);
       } catch (err) {
