@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Typography,
   Grid,
@@ -19,11 +19,11 @@ import FilterListIcon from '@material-ui/icons/FilterList';
 import { Header, Page, Content, InfoCard } from '@backstage/core-components';
 import { DialogComponent } from '../DialogComponent';
 import DetailedSemaphoreDialog from '../DetailedSemaphoreDialog';
-import { ThresholdDialog } from '../TresholdDialogComponent';
+//import { ThresholdDialog } from '../TresholdDialogComponent';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
+import { Entity } from '@backstage/catalog-model';
 import { getSonarQubeChecks } from '../../utils/sonarCloudUtils';
 import { getDependabotStatusFromFacts } from '../../utils/factChecker';
 import { getPreproductionPipelineChecks } from '../../utils/preproductionUtils';
@@ -51,23 +51,23 @@ const TrafficLight = ({
 );
 
 // Dependabot traffic light component (existing implementation)
-interface DependabotProps {
-  owner: string;
-  repos: string[];
-  onClick?: () => void;
-}
+// interface DependabotProps {
+//   owner: string;
+//   repos: string[];
+//   onClick?: () => void;
+// }
 
-// Type for semaphore severity
-type Severity = 'critical' | 'high' | 'medium' | 'low';
+// // Type for semaphore severity
+// type Severity = 'critical' | 'high' | 'medium' | 'low';
 
-// Type for issue details - extended with URL and directLink
-interface IssueDetail {
-  severity: Severity;
-  description: string;
-  component?: string;
-  url?: string;
-  directLink?: string;
-}
+// // Type for issue details - extended with URL and directLink
+// interface IssueDetail {
+//   severity: Severity;
+//   description: string;
+//   component?: string;
+//   url?: string;
+//   directLink?: string;
+// }
 
 const Trafficlightdependabot = ({
   entities,
@@ -606,7 +606,7 @@ const GitHubSecurityTrafficLight = ({
 // Main component
 export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
-  const techInsightsApi = useApi(techInsightsApiRef);
+  //const techInsightsApi = useApi(techInsightsApiRef);
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   // Repository data states
@@ -622,7 +622,7 @@ export const TrafficComponent = () => {
   >([]);
 
   // Status data state (for mock statuses)
-  const [statusData, setStatusData] = useState<Record<
+  const [statusData] = useState<Record<
     string,
     { color: 'red' | 'green' | 'yellow' | 'gray' | 'white'; reason: string }
   > | null>(null);

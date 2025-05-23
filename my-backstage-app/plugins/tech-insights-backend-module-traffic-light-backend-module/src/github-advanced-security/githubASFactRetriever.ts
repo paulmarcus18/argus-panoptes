@@ -4,7 +4,7 @@
  */
 import { FactRetriever, TechInsightFact } from '@backstage-community/plugin-tech-insights-node';
 import { CatalogClient } from '@backstage/catalog-client';
-import { JsonObject, JsonValue } from '@backstage/types';
+import { JsonObject } from '@backstage/types';
 
 // Define interfaces for the security findings as JSON-compatible types
 interface SecurityFinding extends JsonObject {

@@ -8,7 +8,6 @@
 import {
   createBackendModule,
   coreServices,
-  LoggerService,
 } from '@backstage/backend-plugin-api';
 // Imports the tech insights extension point that lets you plug in custom FactRetrievers.
 import {

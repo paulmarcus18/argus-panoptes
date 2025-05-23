@@ -1,5 +1,5 @@
 import { createBackend } from '@backstage/backend-defaults';
-import aiPlugin from '@internal/plugin-ai-plugin-backend';
+//import aiPlugin from '@internal/plugin-ai-plugin-backend';
 //import aiPlugin from '';
 //import { techInsightsModuleSonarCloudFactRetriever } from './modules/sonarCloudFactRetriever';
 import dotenv from 'dotenv';

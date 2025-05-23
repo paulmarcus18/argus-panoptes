@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const TrafficLightPage = () => {
   return (
     <div>
