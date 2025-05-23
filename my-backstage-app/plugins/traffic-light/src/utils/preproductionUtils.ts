@@ -85,7 +85,6 @@ export const getPreproductionPipelineChecks = async (
   entity: CompoundEntityRef,
 ): Promise<{
     successRateCheck: boolean;
-    failuresCheck: boolean;
 }> => {
   try {
     // Log which entity is being queried
@@ -96,11 +95,9 @@ export const getPreproductionPipelineChecks = async (
 
     // Extract the results of each checks
     const successRateCheck = checkResults.find(r => r.check.id === 'preproduction-success-rate');
-    const failuresCheck = checkResults.find(r => r.check.id === 'preproduction-max-failures');
     
     // Log the results of the checks for debugging
     console.log("Result from Success rate checks for entity:", stringifyEntityRef(entity), successRateCheck?.result);
-    console.log("Result from Failures checks for entity:", stringifyEntityRef(entity), failuresCheck?.result);
 
     // If no check results are found, log an error and return default values
     if (checkResults.length === 0) {
@@ -108,13 +105,12 @@ export const getPreproductionPipelineChecks = async (
         'No facts found for entity:',
         stringifyEntityRef(entity),
       );
-      return { successRateCheck:false, failuresCheck: false };
+      return { successRateCheck:false,};
     }
 
     // Return the parsed facts, converting to appropriate types and providing defaults
     return {
         successRateCheck: successRateCheck?.result === true,
-        failuresCheck: failuresCheck?.result === true,
     };
   } catch (error) {
     // Log any errors encountered during the fetch process
@@ -124,6 +120,6 @@ export const getPreproductionPipelineChecks = async (
       error,
     );
     // Return default values if an error occurs
-    return { successRateCheck:false, failuresCheck: false};
+    return { successRateCheck:false, };
 }
 };

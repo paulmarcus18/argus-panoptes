@@ -263,142 +263,112 @@ const SonarQubeTrafficLight = ({
 
 
 
-// // Preproduction pipeline traffic light component (new implementation)
-// interface PreproductionTrafficLightProps {
-//   entities: Entity[];
-//   onClick?: () => void;
-// }
+// Preproduction pipeline traffic light component (new implementation)
+interface PreproductionTrafficLightProps {
+  entities: Entity[];
+  onClick?: () => void;
+}
 
-// /**
-//  * PreproductionTrafficLight is a React component that displays a colored traffic light indicator
-//  * representing the overall Preproduction pipeline quality status for a set of entities.
-//  *
-//  * The component fetches Preproduction pipeline fact check results for each provided entity using the Tech Insights API,
-//  * aggregates the results, and determines the appropriate traffic light color:
-//  * - Green: success metric is true and failure is true for all entities.
-//  * - Yellow: success metric is true and failure is false for all entities.
-//  * - Red: success metric and failure is false for all entities.
-//  * - Gray: No entities are selected or data cannot be retrieved.
-//  *
-//  * The component also displays a tooltip with a summary of the check results or error messages.
-//  *
-//  * @param entities - An array of Backstage Entity objects to check Preproduction pipeline status for.
-//  * @param onClick - Optional click handler for the traffic light indicator.
-//  * @returns A React element rendering the traffic light with a tooltip.
-//  */
-// const PreproductionTrafficLight = ({
-//   entities,
-//   onClick,
-// }: PreproductionTrafficLightProps) => {
-//   const [color, setColor] = useState<
-//     'green' | 'red' | 'yellow' | 'gray' | 'white'
-//   >('white');
-//   const [reason, setReason] = useState<string>('Loading Preproduction pipeline data...');
-//   const techInsightsApi = useApi(techInsightsApiRef);
+/**
+ * PreproductionTrafficLight is a React component that displays a colored traffic light indicator
+ * representing the overall Preproduction pipeline quality status for a set of entities.
+ *
+ * The component fetches Preproduction pipeline fact check results for each provided entity using the Tech Insights API,
+ * aggregates the results, and determines the appropriate traffic light color:
+ * - Green: success metric is true and failure is true for all entities.
+ * - Yellow: success metric is true and failure is false for all entities.
+ * - Red: success metric and failure is false for all entities.
+ * - Gray: No entities are selected or data cannot be retrieved.
+ *
+ * The component also displays a tooltip with a summary of the check results or error messages.
+ *
+ * @param entities - An array of Backstage Entity objects to check Preproduction pipeline status for.
+ * @param onClick - Optional click handler for the traffic light indicator.
+ * @returns A React element rendering the traffic light with a tooltip.
+ */
+const PreproductionTrafficLight = ({
+  entities,
+  onClick,
+}: PreproductionTrafficLightProps) => {
+  const [color, setColor] = useState<
+    'green' | 'red' | 'yellow' | 'gray' | 'white'
+  >('white');
+  const [reason, setReason] = useState<string>('Loading Preproduction pipeline data...');
+  const techInsightsApi = useApi(techInsightsApiRef);
 
-//   useEffect(() => {
-//     const fetchPreproductionData = async () => {
-//       // If there are no entities, set color to gray and display reason
-//       if (!entities.length) {
-//         setColor('gray');
-//         setReason('No entities selected');
-//         return;
-//       }
+  useEffect(() => {
+    const fetchPreproductionData = async () => {
+      // If there are no entities, set color to gray and display reason
+      if (!entities.length) {
+        setColor('gray');
+        setReason('No entities selected');
+        return;
+      }
 
-//       try {
-//         // Get the results of the SonarQube fact checks for all entities
-//         const preproductionCheckResults = await Promise.all(
-//           entities.map(entity =>
-//             getPreproductionPipelineChecks(techInsightsApi, {
-//               kind: entity.kind,
-//               namespace: entity.metadata.namespace || 'default',
-//               name: entity.metadata.name,
-//             }),
-//           ),
-//         );
+      try {
+        // Get the results of the SonarQube fact checks for all entities
+        const preproductionCheckResults = await Promise.all(
+          entities.map(entity =>
+            getPreproductionPipelineChecks(techInsightsApi, {
+              kind: entity.kind,
+              namespace: entity.metadata.namespace || 'default',
+              name: entity.metadata.name,
+            }),
+          ),
+        );
 
-//         // Count total number of failed checks for each metric
-//         const totalChecks = preproductionCheckResults.reduce(
-//           (acc, result) => {
-//             acc.successRateCheck += result.successRateCheck === false ? 1 : 0;
-//             acc.failuresCheck +=
-//               result.failuresCheck === false ? 1 : 0;
-//             return acc;
-//           },
-//           {
-//             bugsCheckFalse: 0,
-//             codeSmellsCheckFalse: 0,
-//             vulnerabilitiesCheckFalse: 0,
-//             qualityGateCheckFalse: 0,
-//             codeCoverageCheckFalse: 0,
-//           },
-//         );
+        // Count total number of failed checks for each metric
+        const totalChecks = preproductionCheckResults.reduce(
+          (acc, result) => {
+            acc.successRateCheckFalse += result.successRateCheck === false ? 1 : 0;
+            return acc;
+          },
+          {
+            successRateCheckFalse: 0,
+          },
+        );
 
-//         // An individual check is considered "red" if it fails for more than 1/3 of the entities
-//         let redCount = 0;
+        // Determine traffic light color based on metrics
+        if (
+          // All checks passed for all entities
+          totalChecks.successRateCheckFalse === 0 
+        ) {
+          setColor('green');
+          setReason(`All Preproduction pipeline checks passed for all entities`);
+        } else if (totalChecks.successRateCheckFalse > entities.length / 3) {
+          // at least 1 of the checks are 'red' (failed for more than 1/3 of entities) (!!! for now change this later)
+          setColor('red');
+          setReason(`${totalChecks.successRateCheckFalse} entities failed the success rate check,`);
+        } else {
+          setColor('yellow');
+          setReason(`${totalChecks.successRateCheckFalse} entities failed the success rate check, `);
+        }
+      } catch (err) {
+        // Handle errors
+        console.error('Error fetching SonarQube data:', err);
+        setColor('gray');
+        setReason('Failed to retrieve SonarQube data');
+      }
+    };
+    fetchPreproductionData();
+  }, [entities, techInsightsApi]);
 
-//         // Count the number of "red" checks
-//         if (totalChecks.bugsCheckFalse > entities.length / 3) redCount++;
-//         if (totalChecks.codeSmellsCheckFalse > entities.length / 3) redCount++;
-//         if (totalChecks.vulnerabilitiesCheckFalse > entities.length / 3)
-//           redCount++;
-//         if (totalChecks.qualityGateCheckFalse > entities.length / 3) redCount++;
-//         if (totalChecks.codeCoverageCheckFalse > entities.length / 3)
-//           redCount++;
-
-//         // Determine traffic light color based on metrics
-//         if (
-//           // All checks passed for all entities
-//           totalChecks.bugsCheckFalse === 0 &&
-//           totalChecks.codeSmellsCheckFalse === 0 &&
-//           totalChecks.vulnerabilitiesCheckFalse === 0 &&
-//           totalChecks.qualityGateCheckFalse === 0 &&
-//           totalChecks.codeCoverageCheckFalse === 0
-//         ) {
-//           setColor('green');
-//           setReason(`All SonarQube checks passed for all entities`);
-//         } else if (redCount >= 3) {
-//           // at least 3 of the checks are 'red' (failed for more than 1/3 of entities)
-//           setColor('red');
-//           setReason(`${totalChecks.bugsCheckFalse} entities failed the bugs check, 
-//             ${totalChecks.codeSmellsCheckFalse} entities failed the code smells check, 
-//             ${totalChecks.vulnerabilitiesCheckFalse} entities failed the vulnerabilities check, 
-//             ${totalChecks.qualityGateCheckFalse} entities failed the quality gate check, 
-//             ${totalChecks.codeCoverageCheckFalse} entities failed the code coverage check`);
-//         } else {
-//           setColor('yellow');
-//           setReason(`${totalChecks.bugsCheckFalse} entities failed the bugs check, 
-//             ${totalChecks.codeSmellsCheckFalse} entities failed the code smells check, 
-//             ${totalChecks.vulnerabilitiesCheckFalse} entities failed the vulnerabilities check, 
-//             ${totalChecks.qualityGateCheckFalse} entities failed the quality gate check, 
-//             ${totalChecks.codeCoverageCheckFalse} entities failed the code coverage check`);
-//         }
-//       } catch (err) {
-//         // Handle errors
-//         console.error('Error fetching SonarQube data:', err);
-//         setColor('gray');
-//         setReason('Failed to retrieve SonarQube data');
-//       }
-//     };
-//     fetchPreproductionData();
-//   }, [entities, techInsightsApi]);
-
-//   return (
-//     <Tooltip title={reason}>
-//       <div>
-//         <Box
-//           my={1}
-//           width={50}
-//           height={50}
-//           borderRadius="50%"
-//           bgcolor={color}
-//           onClick={onClick}
-//           style={onClick ? { cursor: 'pointer' } : {}}
-//         />
-//       </div>
-//     </Tooltip>
-//   );
-// };
+  return (
+    <Tooltip title={reason}>
+      <div>
+        <Box
+          my={1}
+          width={50}
+          height={50}
+          borderRadius="50%"
+          bgcolor={color}
+          onClick={onClick}
+          style={onClick ? { cursor: 'pointer' } : {}}
+        />
+      </div>
+    </Tooltip>
+  );
+};
 
 
 
@@ -969,7 +939,7 @@ export const TrafficComponent = () => {
                 },
               ])}
             >
-              <Typography variant="subtitle1">
+              {/* <Typography variant="subtitle1">
                 Pre-Production pipelines
               </Typography>
               <Tooltip
@@ -990,7 +960,13 @@ export const TrafficComponent = () => {
                     }
                   />
                 </div>
-              </Tooltip>
+              </Tooltip> */}
+               <Typography variant="subtitle1">Pre-production pipelines</Typography>
+              {/* SonarQube component that uses real data */}
+              <PreproductionTrafficLight
+                entities={selectedEntities}
+                onClick={() => handleSemaphoreClick('Pre-Production pipelines')}
+              />
             </InfoCard>
           </Grid>
 
