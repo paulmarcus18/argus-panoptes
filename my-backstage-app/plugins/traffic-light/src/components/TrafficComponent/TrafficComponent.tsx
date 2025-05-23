@@ -26,6 +26,8 @@ import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
 import { getSonarQubeFacts } from '../utils';
 import { getDependabotStatusFromFacts } from '../../utils/factChecker';
+import { getTop5CriticalDependabotRepos, RepoAlertSummary } from '../../utils/factChecker';
+
 
 
 // TrafficLight component that renders a colored circle
@@ -66,30 +68,41 @@ const Trafficlightdependabot = ({
   const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray' | 'white'>('white');
   const [reason, setReason] = useState('Fetching Dependabot status...');
   const techInsightsApi = useApi(techInsightsApiRef);
-  const catalogApi = useApi(catalogApiRef); // ✅ added to support annotation-based thresholds
+  const catalogApi = useApi(catalogApiRef);
 
   useEffect(() => {
     if (!entities.length) {
       setColor('gray');
       setReason('No entities available');
-      console.warn('⚠️ No entities passed to dependabot checker');
       return;
     }
 
     const fetchStatus = async () => {
-      console.log('🔌 Dependabot received entities:', entities.map(e => e.metadata.name));
-      console.log('🧭 SystemName passed to checker:', systemName);
+      const fallbackEntity = entities.find(e => typeof e.spec?.system === 'string');
+      const fallbackSystem = fallbackEntity?.spec?.system;
+      const finalSystemName = systemName ?? fallbackSystem;
+      const finalSystemNameString = typeof finalSystemName === 'string' ? finalSystemName : undefined;
 
-      const result = await getDependabotStatusFromFacts(
-        techInsightsApi,
-        entities,
-        systemName ?? '',
-        catalogApi // ✅ passed catalogApi to enable annotation reading
-      );
+      console.log('🔌 Checking Dependabot status for entities:', entities.map(e => e.metadata.name));
+      console.log('🧭 Using system name for threshold:', finalSystemNameString);
 
-      setColor(result.color);
-      setReason(result.reason); // ✅ now includes explanation
+      try {
+        const result = await getDependabotStatusFromFacts(
+          techInsightsApi,
+          entities,
+          finalSystemNameString ?? '',
+          catalogApi
+        );
+
+        setColor(result.color);
+        setReason(result.reason);
+      } catch (err) {
+        console.error('❌ Error fetching Dependabot status:', err);
+        setColor('gray');
+        setReason('Error fetching status');
+      }
     };
+
 
     fetchStatus();
   }, [techInsightsApi, catalogApi, entities, systemName]);
@@ -241,6 +254,8 @@ export const TrafficComponent = () => {
 
   // Filter states
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
+  const [topCriticalRepos, setTopCriticalRepos] = useState<RepoAlertSummary[]>([]);
+
   const [onlyCritical, setOnlyCritical] = useState(true);
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
   const [selectedEntities, setSelectedEntities] = useState<Entity[]>([]);
@@ -340,6 +355,29 @@ export const TrafficComponent = () => {
     setSelectedRepos(filtered.map(r => r.name));
     setSelectedEntities(filtered.map(r => r.entity));
   }, [onlyMyRepos, onlyCritical, repos, selectedSystem]);
+
+  useEffect(() => {
+    const fetchTopRepos = async () => {
+      if (!detailedDialogOpen || currentSemaphoreType !== 'Dependabot') return;
+      if (selectedEntities.length === 0) return;
+  
+      try {
+        const top5 = await getTop5CriticalDependabotRepos(techInsightsApi, selectedEntities);
+        setTopCriticalRepos(top5);
+      } catch (e) {
+        console.error('❌ Failed to fetch top critical repos', e);
+      }
+    };
+  
+    fetchTopRepos();
+  }, [
+    detailedDialogOpen,
+    currentSemaphoreType,
+    selectedEntities,  // ✅ ensures updates when filters change
+    techInsightsApi,
+  ]);
+
+
 
   // Filter systems based on search term
   const filteredSystems = availableSystems.filter(system =>
@@ -720,6 +758,7 @@ export const TrafficComponent = () => {
           entities={selectedEntities}
           systemName={selectedSystem}
           catalogApi={catalogApi}
+          topCriticalRepos={topCriticalRepos}
         />
       </Content>
     </Page>

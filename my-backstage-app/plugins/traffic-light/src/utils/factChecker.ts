@@ -2,6 +2,13 @@ import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { Entity, getCompoundEntityRef } from '@backstage/catalog-model';
 import { CatalogApi } from '@backstage/plugin-catalog-react';
 
+export interface RepoAlertSummary {
+  name: string;
+  critical: number;
+  high: number;
+  medium: number;
+}
+
 async function getSeverityThresholdsFromSystem(
   systemName: string,
   catalogApi: CatalogApi,
@@ -14,8 +21,8 @@ async function getSeverityThresholdsFromSystem(
     const system = systems[0];
     const annotation = system?.metadata?.annotations?.['dependabot/thresholds'];
 
-    console.log('📥 Raw system entities fetched:', systems.map(s => s.metadata.name));
-    console.log('📒 Raw annotation string:', annotation);
+    console.log('📥 Fetched systems:', systems.map(s => s.metadata.name));
+    console.log('📒 Threshold annotation:', annotation);
 
     if (annotation) {
       try {
@@ -26,14 +33,13 @@ async function getSeverityThresholdsFromSystem(
           medium: parsed.medium ?? 10,
         };
       } catch (err) {
-        console.warn(`❌ Failed to parse annotation JSON for system "${systemName}"`, err);
+        console.warn(`❌ Failed to parse JSON thresholds for system "${systemName}"`, err);
       }
     }
   } catch (e) {
-    console.warn(`⚠️ Could not fetch system "${systemName}" from catalog`, e);
+    console.warn(`⚠️ Failed to fetch system "${systemName}" from catalog`, e);
   }
 
-  // Default fallback
   return { critical: 1, high: 3, medium: 10 };
 }
 
@@ -42,9 +48,12 @@ export async function getDependabotStatusFromFacts(
   entities: Entity[],
   systemName: string,
   catalogApi: CatalogApi,
-): Promise<{ color: 'green' | 'yellow' | 'red' | 'gray'; reason: string; alertCounts: number[] }> {
+): Promise<{
+  color: 'green' | 'yellow' | 'red' | 'gray';
+  reason: string;
+  alertCounts: number[];
+}> {
   if (!entities.length) {
-    console.warn('⚠️ No entities provided to getDependabotStatusFromFacts');
     return { color: 'gray', reason: 'No entities provided', alertCounts: [] };
   }
 
@@ -57,31 +66,30 @@ export async function getDependabotStatusFromFacts(
     const entityRef = getCompoundEntityRef(entity);
     try {
       const facts = await techInsightsApi.getFacts(entityRef, ['dependabotFactRetriever']);
-      const factObj = facts['dependabotFactRetriever']?.facts;
+      const fact = facts['dependabotFactRetriever']?.facts;
 
-      if (factObj) {
-        if (typeof factObj.critical === 'number') totalCritical += factObj.critical;
-        if (typeof factObj.high === 'number') totalHigh += factObj.high;
-        if (typeof factObj.medium === 'number') totalMedium += factObj.medium;
+      if (fact) {
+        if (typeof fact.critical === 'number') totalCritical += fact.critical;
+        if (typeof fact.high === 'number') totalHigh += fact.high;
+        if (typeof fact.medium === 'number') totalMedium += fact.medium;
         validCount++;
-      } else {
-        console.warn(`⚠️ No valid dependabot fact for ${entityRef.name}`);
       }
     } catch (err) {
-      console.error(`❌ Failed to fetch facts for ${entityRef.name}`, err);
+      console.warn(`⚠️ Failed to fetch facts for ${entityRef.name}`, err);
     }
   }
 
   if (validCount === 0) {
-    return { color: 'gray', reason: 'No valid facts available', alertCounts:[] };
+    return { color: 'gray', reason: 'No valid facts available', alertCounts: [] };
   }
 
-  const thresholds = catalogApi && systemName
-    ? await getSeverityThresholdsFromSystem(systemName, catalogApi)
-    : { critical: 1, high: 3, medium: 10 };
+  const thresholds =
+    catalogApi && systemName
+      ? await getSeverityThresholdsFromSystem(systemName, catalogApi)
+      : { critical: 1, high: 3, medium: 10 };
 
-  console.log(`📊 Thresholds - critical: ${thresholds.critical}, high: ${thresholds.high}, medium: ${thresholds.medium}`);
-  console.log(`📦 Totals - critical: ${totalCritical}, high: ${totalHigh}, medium: ${totalMedium}`);
+  console.log(`📊 Thresholds:`, thresholds);
+  console.log(`📦 Totals: critical=${totalCritical}, high=${totalHigh}, medium=${totalMedium}`);
 
   let color: 'green' | 'yellow' | 'red' = 'green';
   let reason = '';
@@ -105,4 +113,34 @@ export async function getDependabotStatusFromFacts(
   }
 
   return { color, reason, alertCounts };
+}
+
+export async function getTop5CriticalDependabotRepos(
+  techInsightsApi: TechInsightsApi,
+  entities: Entity[],
+): Promise<RepoAlertSummary[]> {
+  const results: RepoAlertSummary[] = [];
+
+  for (const entity of entities) {
+    const entityRef = getCompoundEntityRef(entity);
+    try {
+      const facts = await techInsightsApi.getFacts(entityRef, ['dependabotFactRetriever']);
+      const fact = facts['dependabotFactRetriever']?.facts;
+
+      if (fact && typeof fact.critical === 'number') {
+        results.push({
+          name: entity.metadata.name,
+          critical: typeof fact.critical === 'number' ? fact.critical : 0,
+          high: typeof fact.high === 'number' ? fact.high : 0,
+          medium: typeof fact.medium === 'number' ? fact.medium : 0,
+        });
+      }
+    } catch (err) {
+      console.warn(`⚠️ Could not fetch dependabot fact for ${entityRef.name}`, err);
+    }
+  }
+
+  return results
+    .sort((a, b) => b.critical - a.critical)
+    .slice(0, 5);
 }

@@ -22,8 +22,10 @@ import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { getSonarQubeFacts } from './utils';
-import {getDependabotStatusFromFacts} from '../utils/factChecker';
+import { getDependabotStatusFromFacts } from '../utils/factChecker';
 import { CatalogApi } from '@backstage/plugin-catalog-react';
+import { RepoAlertSummary } from '../utils/factChecker';
+
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -47,6 +49,7 @@ interface DetailedSemaphoreDialogProps {
   entities?: Entity[];
   systemName: string;
   catalogApi: CatalogApi;
+  topCriticalRepos?: RepoAlertSummary[];
 }
 
 const useStyles = makeStyles(theme => ({
@@ -72,7 +75,8 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   semaphoreType,
   entities = [],
   systemName,
-  catalogApi
+  catalogApi,
+  topCriticalRepos = [], // ✅ Add this line
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
@@ -93,10 +97,10 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
       try {
         const result = await getDependabotStatusFromFacts(techInsightsApi, entities, systemName, catalogApi);
         const { color, reason, alertCounts } = result;
-        const [totalCritical, totalHigh, totalMedium] =alertCounts;
-        
-          setLiveData({
-          color, 
+        const [totalCritical, totalHigh, totalMedium] = alertCounts;
+
+        setLiveData({
+          color,
           summary: reason,
           metrics: {
             critical: totalCritical,
@@ -105,7 +109,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
           },
           details: [],
         });
-        
+
       } catch (e) {
         console.error('❌ Failed to fetch dependabot facts', e);
         setLiveData(null);
@@ -113,7 +117,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
         setIsLoading(false);
       }
     };
-    
+
 
     const fetchSonarQubeData = async () => {
       setIsLoading(true);
@@ -228,6 +232,23 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
         </Paper>
 
         {renderMetrics()}
+        {semaphoreType === 'Dependabot' && topCriticalRepos?.length > 0 && (
+          <Box mt={4}>
+            <Typography variant="h6">Top 5 Repos by Critical Alerts</Typography>
+            <Box mt={1}>
+              {topCriticalRepos.map((repo, index) => (
+                <Box key={repo.name} mb={1}>
+                  <Typography variant="subtitle1">
+                    {index + 1}. {repo.name}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Critical: {repo.critical} | High: {repo.high} | Medium: {repo.medium}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
       </DialogContent>
 
       <DialogActions>
