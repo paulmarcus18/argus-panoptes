@@ -40,8 +40,8 @@ async function getSeverityThresholdsFromSystem(
 export async function getDependabotStatusFromFacts(
   techInsightsApi: TechInsightsApi,
   entities: Entity[],
-  systemName?: string,
-  catalogApi?: CatalogApi,
+  systemName: string,
+  catalogApi: CatalogApi,
 ): Promise<{ color: 'green' | 'yellow' | 'red' | 'gray'; reason: string; alertCounts: number[] }> {
   if (!entities.length) {
     console.warn('⚠️ No entities provided to getDependabotStatusFromFacts');
@@ -100,7 +100,7 @@ export async function getDependabotStatusFromFacts(
     reason = `Medium alerts exceed threshold (${totalMedium} > ${thresholds.medium})`;
     alertCounts = [totalCritical, totalHigh, totalMedium];
   } else {
-    reason = `All severities within thresholds`;
+    reason = `All severities within thresholds(${totalCritical} < ${thresholds.critical})`;
     alertCounts = [totalCritical, totalHigh, totalMedium];
   }
 

@@ -23,7 +23,7 @@ import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { getSonarQubeFacts } from './utils';
 import {getDependabotStatusFromFacts} from '../utils/factChecker';
-import { ResetTvOutlined } from '@mui/icons-material';
+import { CatalogApi } from '@backstage/plugin-catalog-react';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -45,6 +45,8 @@ interface DetailedSemaphoreDialogProps {
   onClose: () => void;
   semaphoreType: string;
   entities?: Entity[];
+  systemName: string;
+  catalogApi: CatalogApi;
 }
 
 const useStyles = makeStyles(theme => ({
@@ -69,6 +71,8 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   onClose,
   semaphoreType,
   entities = [],
+  systemName,
+  catalogApi
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
@@ -87,7 +91,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     const fetchDependabotData = async () => {
       setIsLoading(true);
       try {
-        const result = await getDependabotStatusFromFacts(techInsightsApi, entities);
+        const result = await getDependabotStatusFromFacts(techInsightsApi, entities, systemName, catalogApi);
         const { color, reason, alertCounts } = result;
         const [totalCritical, totalHigh, totalMedium] =alertCounts;
         

@@ -83,7 +83,7 @@ const Trafficlightdependabot = ({
       const result = await getDependabotStatusFromFacts(
         techInsightsApi,
         entities,
-        systemName,
+        systemName ?? '',
         catalogApi // ✅ passed catalogApi to enable annotation reading
       );
 
@@ -718,6 +718,8 @@ export const TrafficComponent = () => {
           onClose={handleCloseDetailedDialog}
           semaphoreType={currentSemaphoreType}
           entities={selectedEntities}
+          systemName={selectedSystem}
+          catalogApi={catalogApi}
         />
       </Content>
     </Page>
