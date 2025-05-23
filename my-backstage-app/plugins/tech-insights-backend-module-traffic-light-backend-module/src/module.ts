@@ -72,10 +72,10 @@ export default createBackendModule({
           config,
           logger,
         );
-        const foundationFactRetriever = foundationPipelineStatusFactRetriever;
+
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
-          foundationFactRetriever,
+          foundationPipelineStatusFactRetriever,
           githubPipelineStatusFactRetriever,
           reportingPipelineStatusFactRetriever,
           dependabotFactRetriever: factRetriever, // Adds the dependabotFactRetriever to the system.
@@ -102,21 +102,17 @@ export default createBackendModule({
         // and pass the checks, logger, and authenticated catalog API to it.
         const sonarCloudFactCheckerFactory =
           new DynamicThresholdFactCheckerFactory({
-            checks: [...sonarCloudChecks, ...foundationPipelineChecks],
-            logger,
-            catalogApi: authenticatedCatalogApi,
-          });
-
-        const preproductionPipelineFactCheckerFactory =
-          new DynamicThresholdFactCheckerFactory({
-            checks: [...preproductionPipelineChecks],
+            checks: [
+              ...sonarCloudChecks,
+              ...foundationPipelineChecks,
+              ...preproductionPipelineChecks,
+            ],
             logger,
             catalogApi: authenticatedCatalogApi,
           });
 
         // Register the fact checker factory with the fact checker provider.
         factCheckerProvider.setFactCheckerFactory(sonarCloudFactCheckerFactory);
-        factCheckerProvider.setFactCheckerFactory(preproductionPipelineFactCheckerFactory);
       },
     });
   },
