@@ -19,6 +19,10 @@ metadata:
     tech-insights.io/foundation-success-rate-operator: 'greaterThanInclusive'
     tech-insights.io/foundation-max-failures-threshold: '2'
     tech-insights.io/foundation-max-failures-operator: 'lessThanInclusive'
+    tech-insights.io/preproduction-success-rate-threshold: '90'
+    tech-insights.io/preproduction-success-rate-operator: 'greaterThanInclusive'
+    tech-insights.io/preproduction-max-failures-threshold: '2'
+    tech-insights.io/preproduction-max-failures-operator: 'lessThanInclusive'
 spec:
   owner: identity-team
   members: [ghristov]

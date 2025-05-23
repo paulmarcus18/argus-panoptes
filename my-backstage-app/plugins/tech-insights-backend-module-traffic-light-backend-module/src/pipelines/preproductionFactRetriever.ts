@@ -6,7 +6,7 @@ import { FactRetriever, TechInsightFact } from '@backstage-community/plugin-tech
 import { CatalogClient } from '@backstage/catalog-client';
 import { JsonObject } from '@backstage/types';
 
-// To exclude some workflows defined in the catalog entity spec
+// To exclude some workflows defined in the catalog entity annotations
 type WorkflowConfig = {
   exclude: string[]; 
 };
@@ -32,7 +32,8 @@ interface PipelineStatusSummary extends JsonObject {
   totalWorkflowRunsCount: number;       
   uniqueWorkflowsCount: number;         
   successWorkflowRunsCount: number;     
-  failureWorkflowRunsCount: number;     
+  failureWorkflowRunsCount: number;
+  successRate: number;     
 }
 
 /**
@@ -59,6 +60,10 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
     failureWorkflowRunsCount: {
       type: 'integer',
       description: 'Number of failed workflow runs (excluding excluded workflows)',
+    },
+    successRate: {
+      type: 'float',
+      description: 'Success rate percentage (0-100) of workflow runs (excluding excluded workflows)',
     }
   },
 
@@ -110,29 +115,30 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
           return null;
         }
 
-        // Extract workflow configuration from entity spec
-        logger.info(`Extracting workflow config for ${entity.metadata.name}`);
+        // Extract workflow configuration from entity annotations instead of spec
+        logger.info(`Extracting workflow config from annotations for ${entity.metadata.name}`);
         
-        // Extract workflow configuration from entity spec with proper type safety
         const workflowConfig: WorkflowConfig = {
           exclude: [],
         };
         
-        // Check if workflowConfig exists in the spec
-        if (entity.spec?.workflowConfig) {
-          console.log(`Found workflowConfig for ${entity.metadata.name}:`, 
-                      JSON.stringify(entity.spec.workflowConfig, null, 2));
-          
-          // Properly handle the typing for workflowConfig
-          const specWorkflowConfig = entity.spec.workflowConfig as JsonObject;
-          
-          // Extract exclude list if it exists and is an array
-          if (specWorkflowConfig.exclude && Array.isArray(specWorkflowConfig.exclude)) {
-            workflowConfig.exclude = specWorkflowConfig.exclude as string[];
-            console.log(`Workflows to exclude by name: ${workflowConfig.exclude.join(', ')}`);
+        // Check if preproduction/exclude annotation exists
+        const excludeAnnotation = entity.metadata.annotations?.['preproduction/exclude'];
+        if (excludeAnnotation) {
+          try {
+            // Parse the JSON array from the annotation
+            const excludeList = JSON.parse(excludeAnnotation);
+            if (Array.isArray(excludeList)) {
+              workflowConfig.exclude = excludeList as string[];
+              console.log(`Workflows to exclude by name: [${workflowConfig.exclude.join(', ')}]`);
+            } else {
+              logger.warn(`preproduction/exclude annotation for ${entity.metadata.name} is not an array: ${excludeAnnotation}`);
+            }
+          } catch (error) {
+            logger.error(`Failed to parse preproduction/exclude annotation for ${entity.metadata.name}: ${error}`);
           }
         } else {
-          console.log(`No workflowConfig found for ${entity.metadata.name}`);
+          console.log(`No preproduction/exclude annotation found for ${entity.metadata.name} - processing all workflows`);
         }
 
         // First, fetch workflow definitions to get an accurate count of unique workflows
@@ -245,6 +251,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
                 uniqueWorkflowsCount: workflowDefinitions.length, // Use actual definition count
                 successWorkflowRunsCount: 0,
                 failureWorkflowRunsCount: 0,
+                successRate: 0,
               } as PipelineStatusSummary,
             } as TechInsightFact;
           }
@@ -270,39 +277,46 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
           const workflowNameToIdMap = new Map<string, number>();
           const excludedWorkflowIds: number[] = [];
           
-          // Build the name to ID mapping and find IDs for excluded workflow names
-          if (workflowDefinitions.length > 0) {
-            workflowDefinitions.forEach(workflow => {
-              workflowNameToIdMap.set(workflow.name, workflow.id);
-              
-              // Check if this workflow name is in the exclude list
-              if (workflowConfig.exclude.includes(workflow.name)) {
-                excludedWorkflowIds.push(workflow.id);
-                console.log(`Mapping excluded workflow name "${workflow.name}" to ID ${workflow.id}`);
-              }
-            });
+          // Only process exclusions if there are workflows to exclude
+          if (workflowConfig.exclude.length > 0) {
+            // Build the name to ID mapping and find IDs for excluded workflow names
+            if (workflowDefinitions.length > 0) {
+              workflowDefinitions.forEach(workflow => {
+                workflowNameToIdMap.set(workflow.name, workflow.id);
+                
+                // Check if this workflow name is in the exclude list
+                if (workflowConfig.exclude.includes(workflow.name)) {
+                  excludedWorkflowIds.push(workflow.id);
+                  console.log(`Mapping excluded workflow name "${workflow.name}" to ID ${workflow.id}`);
+                }
+              });
+            } else {
+              // If we couldn't get workflow definitions, try to match by name directly in the runs
+              // This is less reliable but better than nothing
+              allRuns.forEach(run => {
+                if (workflowConfig.exclude.includes(run.name) && !excludedWorkflowIds.some(id => id === run.workflow_id)) {
+                  excludedWorkflowIds.push(run.workflow_id);
+                  console.log(`Found workflow ID ${run.workflow_id} for excluded name "${run.name}" from runs`);
+                }
+              });
+            }
+            
+            console.log(`Excluding workflow runs with IDs: [${excludedWorkflowIds.join(', ')}]`);
           } else {
-            // If we couldn't get workflow definitions, try to match by name directly in the runs
-            // This is less reliable but better than nothing
-            allRuns.forEach(run => {
-              if (workflowConfig.exclude.includes(run.name) && !excludedWorkflowIds.some(id => id === run.workflow_id)) {
-                excludedWorkflowIds.push(run.workflow_id);
-                console.log(`Found workflow ID ${run.workflow_id} for excluded name "${run.name}" from runs`);
-              }
-            });
+            console.log(`No workflows to exclude - processing all workflow runs`);
           }
           
-          console.log(`Excluding workflow runs with IDs: ${excludedWorkflowIds.join(', ')}`);
-          
-          // Filter runs based on the mapped workflow IDs from names
-          const nonExcludedRuns = allRuns.filter(run => {
-            // Use Array.some() for type-safe checking
-            const shouldExclude = excludedWorkflowIds.some(id => id === run.workflow_id);
-            if (shouldExclude) {
-              console.log(`Excluding run of workflow ID ${run.workflow_id} (name: "${run.name}")`);
-            }
-            return !shouldExclude;
-          });
+          // Filter runs based on the mapped workflow IDs from names (only if there are exclusions)
+          const nonExcludedRuns = excludedWorkflowIds.length > 0 
+            ? allRuns.filter(run => {
+                // Use Array.some() for type-safe checking
+                const shouldExclude = excludedWorkflowIds.some(id => id === run.workflow_id);
+                if (shouldExclude) {
+                  console.log(`Excluding run of workflow ID ${run.workflow_id} (name: "${run.name}")`);
+                }
+                return !shouldExclude;
+              })
+            : allRuns; // If no exclusions, use all runs
           
           console.log(`After exclusion: ${nonExcludedRuns.length} workflow runs remain out of ${allRuns.length} total`);
           
@@ -315,12 +329,19 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             run => run.status === 'completed' && run.conclusion === 'failure'
           ).length;
 
+          // Calculate success rate
+          const totalCompletedRuns = successWorkflowRunsCount + failureWorkflowRunsCount;
+          const successRate = totalCompletedRuns > 0 
+            ? Math.round((successWorkflowRunsCount / totalCompletedRuns) * 100) 
+            : 0;
+
           // Create summary object
           const pipelineSummary: PipelineStatusSummary = {
             totalWorkflowRunsCount,
             uniqueWorkflowsCount,
             successWorkflowRunsCount,
             failureWorkflowRunsCount,
+            successRate,
           };
 
           // Log comprehensive pipeline summary
@@ -329,10 +350,13 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
           console.log(`- Unique workflows: ${uniqueWorkflowsCount}`);
           console.log(`- Success workflow runs (excluding excluded workflows): ${successWorkflowRunsCount}`);
           console.log(`- Failure workflow runs (excluding excluded workflows): ${failureWorkflowRunsCount}`);
+          console.log(`- Success rate: ${successRate}%`);
           
           // Additional diagnostics
-          console.log(`- Excluded workflow runs: ${allRuns.filter(run => excludedWorkflowIds.some(id => id === run.workflow_id)).length}`);
-          console.log(`- Workflow success rate: ${Math.round((successWorkflowRunsCount / (successWorkflowRunsCount + failureWorkflowRunsCount || 1)) * 100)}%`);
+          const excludedRunsCount = excludedWorkflowIds.length > 0 
+            ? allRuns.filter(run => excludedWorkflowIds.some(id => id === run.workflow_id)).length 
+            : 0;
+          console.log(`- Excluded workflow runs: ${excludedRunsCount}`);
 
           // Count in-progress runs
           const inProgressCount = nonExcludedRuns.filter(run => run.status !== 'completed').length;

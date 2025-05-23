@@ -34,6 +34,7 @@ import { CatalogClient } from '@backstage/catalog-client';
 // Import the missing AuthenticatedCatalogApi class or function
 import { AuthenticatedCatalogApi } from './authenticatedCatalogApi';
 import { foundationPipelineChecks } from './pipelines/foundationFactChecker';
+import { preproductionPipelineChecks } from './pipelines/preproductionFactChecker';
 
 // Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({
@@ -71,12 +72,11 @@ export default createBackendModule({
           config,
           logger,
         );
-        const preproductionFactRetriever = githubPipelineStatusFactRetriever;
         const foundationFactRetriever = foundationPipelineStatusFactRetriever;
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
           foundationFactRetriever,
-          preproductionFactRetriever,
+          githubPipelineStatusFactRetriever,
           reportingPipelineStatusFactRetriever,
           dependabotFactRetriever: factRetriever, // Adds the dependabotFactRetriever to the system.
           [sonarCloudFactRetriever.id]: sonarCloudFactRetriever, // Adds the sonarCloudFactRetriever to the system.
@@ -84,6 +84,7 @@ export default createBackendModule({
 
         // Register fact checkers
         logger.info('Registering SonarCloud fact checkers...');
+        logger.info('Registering Preproduction pipeline fact checkers...');
 
         // AuthenticatedCatalogApi is used to authenticate requests to the catalog service.
         const { token: catalogToken } = await auth.getPluginRequestToken({
@@ -106,8 +107,16 @@ export default createBackendModule({
             catalogApi: authenticatedCatalogApi,
           });
 
+        const preproductionPipelineFactCheckerFactory =
+          new DynamicThresholdFactCheckerFactory({
+            checks: [...preproductionPipelineChecks],
+            logger,
+            catalogApi: authenticatedCatalogApi,
+          });
+
         // Register the fact checker factory with the fact checker provider.
         factCheckerProvider.setFactCheckerFactory(sonarCloudFactCheckerFactory);
+        factCheckerProvider.setFactCheckerFactory(preproductionPipelineFactCheckerFactory);
       },
     });
   },
