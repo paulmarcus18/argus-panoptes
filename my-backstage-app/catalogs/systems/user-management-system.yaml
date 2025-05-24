@@ -23,6 +23,8 @@ metadata:
     tech-insights.io/preproduction-success-rate-operator: 'greaterThanInclusive'
     tech-insights.io/preproduction-max-failures-threshold: '35'
     tech-insights.io/preproduction-max-failures-operator: 'lessThanInclusive'
+    tech-insights.io/azure-bugs-threshold: '5'
+    tech-insights.io/azure-bugs-operator: 'lessThanInclusive'
 spec:
   owner: identity-team
   members: [ghristov]

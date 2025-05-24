@@ -27,7 +27,7 @@ import { Entity } from '@backstage/catalog-model';
 import { getSonarQubeChecks } from '../../utils/sonarCloudUtils';
 import { getDependabotStatusFromFacts } from '../../utils/factChecker';
 import { getPreproductionPipelineChecks } from '../../utils/preproductionUtils';
-
+import { getAzureDevOpsBugChecks } from '../../utils/azureUtils'; // adjust path as needed
 import { getGitHubSecurityFacts } from '../utils';
 import { getFoundationPipelineChecks } from '../../utils/foundationUtils';
 
@@ -603,6 +603,96 @@ const GitHubSecurityTrafficLight = ({
   );
 };
 
+interface AzureTrafficLightProps {
+  entities: Entity[];
+  onClick?: () => void;
+}
+
+/**
+ * AzureTrafficLight is a React component that displays a colored traffic light indicator
+ * representing Azure DevOps bug check status across a set of entities.
+ *
+ * @param entities - An array of Backstage Entity objects to check Azure bug counts for.
+ * @param onClick - Optional click handler for the traffic light indicator.
+ * @returns A React element rendering the traffic light with a tooltip.
+ */
+export const AzureTrafficLight = ({
+  entities,
+  onClick,
+}: AzureTrafficLightProps) => {
+  const [color, setColor] = useState<
+    'green' | 'red' | 'yellow' | 'gray' | 'white'
+  >('white');
+  const [reason, setReason] = useState<string>(
+    'Loading Azure DevOps bug data...',
+  );
+  const techInsightsApi = useApi(techInsightsApiRef);
+
+  useEffect(() => {
+    const fetchAzureData = async () => {
+      if (!entities.length) {
+        setColor('gray');
+        setReason('No entities selected');
+        return;
+      }
+
+      try {
+        const azureCheckResults = await Promise.all(
+          entities.map(entity =>
+            getAzureDevOpsBugChecks(techInsightsApi, {
+              kind: entity.kind,
+              namespace: entity.metadata.namespace || 'default',
+              name: entity.metadata.name,
+            }),
+          ),
+        );
+
+        const totalChecks = azureCheckResults.reduce(
+          (acc, result) => {
+            acc.failed += result.bugCountCheck === false ? 1 : 0;
+            return acc;
+          },
+          { failed: 0 },
+        );
+
+        if (totalChecks.failed === 0) {
+          setColor('green');
+          setReason(`All Azure DevOps bug checks passed for all entities`);
+        } else if (totalChecks.failed > entities.length / 3) {
+          setColor('red');
+          setReason(`${totalChecks.failed} entities failed the bug check`);
+        } else {
+          setColor('yellow');
+          setReason(`${totalChecks.failed} entities failed the bug check`);
+        }
+      } catch (err) {
+        console.error('Error fetching Azure DevOps bug data:', err);
+        setColor('gray');
+        setReason('Failed to retrieve Azure DevOps bug data');
+      }
+    };
+
+    fetchAzureData();
+  }, [entities, techInsightsApi]);
+
+  return (
+    <Tooltip title={reason}>
+      <div>
+        <Box
+          my={1}
+          width={50}
+          height={50}
+          borderRadius="50%"
+          bgcolor={color}
+          onClick={onClick}
+          style={onClick ? { cursor: 'pointer' } : {}}
+        />
+      </div>
+    </Tooltip>
+  );
+};
+
+
 // Main component
 export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
@@ -1079,7 +1169,7 @@ export const TrafficComponent = () => {
             >
               <Typography variant="subtitle1">Foundation pipelines</Typography>
               {/* SonarQube component that uses real data */}
-              <FoundationTrafficLight
+              <AzureTrafficLight
                 entities={selectedEntities}
                 onClick={() => handleSemaphoreClick('Foundation pipelines')}
               />
