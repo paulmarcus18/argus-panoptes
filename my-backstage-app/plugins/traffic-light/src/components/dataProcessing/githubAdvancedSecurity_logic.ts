@@ -1,7 +1,7 @@
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 // Import the existing types from your utils file instead of redefining them
-import { getGitHubSecurityFacts, GitHubSecurityFacts } from '../utils';
+import { getGitHubSecurityFacts, GitHubSecurityFacts } from '../../utils/githubAdvancedSecurityUtils';
 
 // ---------------------- Type Definitions ----------------------
 
@@ -221,9 +221,6 @@ function processCodeScanningAlerts(securityResults: GitHubSecurityFacts[]): {
         case 'low':
           severityCounts.low++;
           break;
-        default:
-          // Default to medium if severity is unknown
-          severityCounts.medium++;
       }
       
       // Extract repository and file info

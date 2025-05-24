@@ -5,9 +5,13 @@ metadata:
   description: Integrates SPIFFE SVID authentication with Hashicorp Vault to retrieve a VAULT_TOKEN.
   annotations:
     github.com/project-slug: SEP-ArgusPanoptes/spiffe-vault
-    backstage.io/source-location: url:https://github.com/philips-labs/spiffe-vault
+    backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/spiffe-vault
     sonarcloud.io/project-key: SEP-ArgusPanoptes_spiffe-vault
     sonarcloud.io/enabled: 'true'
+    pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
+    foundation/thresholds: '{"minSuccessRate": 95}'
+    reporting/workflows: '["CodeQL", "Continuous Integration"]'
+    preproduction/exclude: '["Dependabot Updates"]'
   tags:
     - non-critical
 spec:
@@ -15,3 +19,4 @@ spec:
   lifecycle: experimental
   owner: SEP-ArgusPanoptes
   system: payments-system
+

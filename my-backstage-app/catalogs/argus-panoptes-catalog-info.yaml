@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: argus-panoptes
+  description: This is our test repo.
+  annotations:
+    github.com/project-slug: philips-labs/argus-panoptes
+    backstage.io/source-location: url:https://github.com/philips-labs/argus-panoptes
+  tags:
+    - critical
+spec:
+  type: service
+  lifecycle: experimental
+  owner: philips-labs
+  system: payments-system

@@ -5,9 +5,13 @@ metadata:
   description: Allows caregivers and hospital management to start, control, and view the status of medical protocol workflows of patients.
   annotations:
     github.com/project-slug: SEP-ArgusPanoptes/workflow-capability
-    backstage.io/source-location: url:https://github.com/philips-labs/workflow-capability
+    backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/workflow-capability
     sonarcloud.io/project-key: SEP-ArgusPanoptes_workflow-capability
     sonarcloud.io/enabled: 'true'
+    pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
+    foundation/thresholds: '{"minSuccessRate": 95}'
+    reporting/workflows: '["CodeQL", "Continuous Integration"]'
+    preproduction/exclude: '["Dependabot Updates"]'
   tags:
     - non-critical
 spec:
