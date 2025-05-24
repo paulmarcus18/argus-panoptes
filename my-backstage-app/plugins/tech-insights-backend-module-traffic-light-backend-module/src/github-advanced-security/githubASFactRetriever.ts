@@ -4,7 +4,7 @@
  */
 import { FactRetriever, TechInsightFact } from '@backstage-community/plugin-tech-insights-node';
 import { CatalogClient } from '@backstage/catalog-client';
-import { JsonObject, JsonValue } from '@backstage/types';
+import { JsonObject } from '@backstage/types';
 
 // Define interfaces for the security findings as JSON-compatible types
 interface codeScanningFinding extends JsonObject {
@@ -34,6 +34,22 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
   entityFilter: [{ kind: 'component' }],
   // Defines the structure of the facts returned
   schema: {
+    criticalCount: {
+      type: 'integer',
+      description: 'Number of critical Code Scanning alerts',
+    },
+    highCount: {
+      type: 'integer',
+      description: 'Number of high Code Scanning alerts',
+    },
+    mediumCount: {
+      type: 'integer',
+      description: 'Number of medium Code Scanning alerts',
+    },
+    lowCount: {
+      type: 'integer',
+      description: 'Number of low Code Scanning alerts',
+    },
     openCodeScanningAlertCount: {
       type: 'integer',
       description: 'Number of open Code Scanning alerts',
@@ -168,11 +184,41 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
             };
           });
 
+          const severityCounts = {
+            critical: 0,
+            high: 0,
+            medium: 0,
+            low: 0,
+          };
+
+          Object.values(codeScanningAlerts).forEach(alert => {
+            const severityLower = alert.severity.toLowerCase();
+            
+            // Count by severity
+            switch(severityLower) {
+              case 'critical':
+                severityCounts.critical++;
+                break;
+              case 'high':
+                severityCounts.high++;
+                break;
+              case 'medium':
+                severityCounts.medium++;
+                break;
+              case 'low':
+                severityCounts.low++;
+                break;
+          }});
+
           // logger for debugging purposes
-          logger.info(
+          console.log(
             `GitHub security metrics for ${owner}/${repo}: ` +
             `Code Scanning: ${Object.keys(codeScanningAlerts).length}, ` +
-            `Secret Scanning: ${Object.keys(secretScanningAlerts).length}`
+            `Secret Scanning: ${Object.keys(secretScanningAlerts).length}` + 
+            `🐹Critical: ${severityCounts.critical}, ` +
+            `High: ${severityCounts.high}, ` +
+            `Medium: ${severityCounts.medium}, ` +
+            `Low: ${severityCounts.low}`,
           );
 
           // Return the fact result object for this repository as a TechInsightFact
@@ -185,6 +231,11 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
             facts: {
               openCodeScanningAlertCount: Object.keys(codeScanningAlerts).length,
               openSecretScanningAlertCount: Object.keys(secretScanningAlerts).length,
+              // Store counts for each severity level
+              criticalCount: severityCounts.critical,
+              highCount: severityCounts.high,
+              mediumCount: severityCounts.medium,
+              lowCount: severityCounts.low,
               // Store alerts directly in the facts object
               codeScanningAlerts: codeScanningAlerts as JsonObject,
               secretScanningAlerts: secretScanningAlerts as JsonObject
