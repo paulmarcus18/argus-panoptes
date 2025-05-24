@@ -27,9 +27,9 @@ import { Entity } from '@backstage/catalog-model';
 import { getSonarQubeChecks } from '../../utils/sonarCloudUtils';
 import { getDependabotStatusFromFacts } from '../../utils/factChecker';
 import { getPreproductionPipelineChecks } from '../../utils/preproductionUtils';
-
 import { getGitHubSecurityFacts } from '../utils';
 import { getFoundationPipelineChecks } from '../../utils/foundationUtils';
+import { getReportingPipelineChecks } from '../../utils/reportingUtils';
 
 // TrafficLight component that renders a colored circle
 const TrafficLight = ({
@@ -470,6 +470,103 @@ const FoundationTrafficLight = ({
     </Tooltip>
   );
 };
+
+interface ReportingTrafficLightProps {
+  entities: Entity[];
+  onClick?: () => void;
+}
+
+/**
+ * ReportingTrafficLight is a React component that displays a colored traffic light indicator
+ * representing the overall Reporting pipeline quality status for a set of entities.
+ *
+ * @param entities - An array of Backstage Entity objects to check Reporting pipeline status for.
+ * @param onClick - Optional click handler for the traffic light indicator.
+ * @returns A React element rendering the traffic light with a tooltip.
+ */
+const ReportingTrafficLight = ({
+  entities,
+  onClick,
+}: ReportingTrafficLightProps) => {
+  const [color, setColor] = useState<
+    'green' | 'red' | 'yellow' | 'gray' | 'white'
+  >('white');
+  const [reason, setReason] = useState<string>(
+    'Loading Reporting pipeline data...',
+  );
+  const techInsightsApi = useApi(techInsightsApiRef);
+
+  useEffect(() => {
+    const fetchReportingData = async () => {
+      if (!entities.length) {
+        setColor('gray');
+        setReason('No entities selected');
+        return;
+      }
+
+      try {
+        const reportingCheckResults = await Promise.all(
+          entities.map(entity =>
+            getReportingPipelineChecks(techInsightsApi, {
+              kind: entity.kind,
+              namespace: entity.metadata.namespace || 'default',
+              name: entity.metadata.name,
+            }),
+          ),
+        );
+
+        const totalChecks = reportingCheckResults.reduce(
+          (acc, result) => {
+            acc.successRateCheckFalse +=
+              result.successRateCheck === false ? 1 : 0;
+            return acc;
+          },
+          {
+            successRateCheckFalse: 0,
+          },
+        );
+
+        if (totalChecks.successRateCheckFalse === 0) {
+          setColor('green');
+          setReason(`All Reporting pipeline checks passed for all entities`);
+        } else if (totalChecks.successRateCheckFalse > entities.length / 3) {
+          setColor('red');
+          setReason(
+            `${totalChecks.successRateCheckFalse} entities failed the success rate check`,
+          );
+        } else {
+          setColor('yellow');
+          setReason(
+            `${totalChecks.successRateCheckFalse} entities failed the success rate check`,
+          );
+        }
+      } catch (err) {
+        console.error('Error fetching Reporting pipeline data:', err);
+        setColor('gray');
+        setReason('Failed to retrieve Reporting pipeline data');
+      }
+    };
+
+    fetchReportingData();
+  }, [entities, techInsightsApi]);
+
+  return (
+    <Tooltip title={reason}>
+      <div>
+        <Box
+          my={1}
+          width={50}
+          height={50}
+          borderRadius="50%"
+          bgcolor={color}
+          onClick={onClick}
+          style={onClick ? { cursor: 'pointer' } : {}}
+        />
+      </div>
+    </Tooltip>
+  );
+};
+
 
 // Github advanced security traffic light component (new implementation)
 interface GitHubSecurityTrafficLightProps {
@@ -1003,22 +1100,14 @@ export const TrafficComponent = () => {
                 },
               ])}
             >
-              <Typography variant="subtitle1">Reporting Pipeline</Typography>
-              <Tooltip title={statusData?.['Reporting Pipeline']?.reason || ''}>
-                <div>
-                  <TrafficLight
-                    color={
-                      (statusData?.['Reporting Pipeline']?.color as
-                        | 'red'
-                        | 'green'
-                        | 'yellow'
-                        | 'gray'
-                        | 'white') || 'yellow'
-                    }
-                    onClick={() => handleSemaphoreClick('Reporting Pipeline')}
+              <Typography variant="subtitle1">
+                    Reporting pipelines
+                  </Typography>
+                  {/* Reporting pipelines component that uses real data */}
+                  <ReportingTrafficLight
+                    entities={selectedEntities}
+                    onClick={() => handleSemaphoreClick('Reporting pipelines')}
                   />
-                </div>
-              </Tooltip>
             </InfoCard>
           </Grid>
 
