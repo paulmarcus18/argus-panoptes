@@ -22,8 +22,9 @@ import InfoIcon from '@material-ui/icons/Info';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
-import { getGitHubSecurityFacts } from './utils';
-import { getSonarQubeFacts } from '../utils/sonarCloudUtils';
+import { getGitHubSecurityFacts } from '../utils';
+import { getSonarQubeFacts } from '../../utils/sonarCloudUtils';
+import { getAzureDevOpsBugs } from '../utils';
 
 // Type for semaphore severity
 type Severity = 'critical' | 'high' | 'medium' | 'low';
@@ -317,15 +318,61 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     summary: 'No data available for this metric.',
     details: [],
   };
+  //azuredevopsdata
+  const [realAzureDevOpsData, setRealAzureDevOpsData] =
+    React.useState<SemaphoreData | null>(null);
+  React.useEffect(() => {
+    if (semaphoreType === 'Azure DevOps Bugs') {
+      setIsLoading(true);
+
+      const fetchAzureDevOpsData = async () => {
+        try {
+          const bugCount = await getAzureDevOpsBugs();
+
+          let color: 'green' | 'yellow' | 'red' | 'gray' = 'green';
+          if (bugCount > 5) {
+            color = 'red';
+          } else if (bugCount > 0) {
+            color = 'yellow';
+          }
+
+          setRealAzureDevOpsData({
+            color,
+            metrics: { bugCount },
+            summary:
+              bugCount === 0
+                ? 'No active bugs in Azure DevOps.'
+                : `${bugCount} active bug(s) found.`,
+            details:
+              bugCount > 0
+                ? [
+                    {
+                      severity: bugCount > 5 ? 'high' : 'medium',
+                      description: `${bugCount} active bug(s) found in Azure DevOps.`,
+                    },
+                  ]
+                : [],
+          });
+        } catch (err) {
+          console.error('Failed to fetch Azure DevOps bug data:', err);
+          setRealAzureDevOpsData(null);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchAzureDevOpsData();
+    }
+  }, [semaphoreType]);
 
   // State to store real SonarQube data
   const [realSonarQubeData, setRealSonarQubeData] =
     React.useState<SemaphoreData | null>(null);
-    
+
   // State to store real GitHub Security data
   const [realGitHubSecurityData, setRealGitHubSecurityData] =
     React.useState<SemaphoreData | null>(null);
-    
+
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   // Fetch real SonarQube data when needed
@@ -435,7 +482,11 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   // Fetch real GitHub Security data when needed
   React.useEffect(() => {
     // Only fetch data if this is a GitHub Advanced Security semaphore and there are entities
-    if (semaphoreType === 'Github Advanced Security' && entities && entities.length > 0) {
+    if (
+      semaphoreType === 'Github Advanced Security' &&
+      entities &&
+      entities.length > 0
+    ) {
       setIsLoading(true);
 
       const fetchGitHubSecurityData = async () => {
@@ -456,7 +507,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
           let highIssues = 0;
           let mediumIssues = 0;
           let lowIssues = 0;
-          
+
           // Collect all issues for details section
           const details: IssueDetail[] = [];
 
@@ -464,7 +515,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             // Process code scanning alerts
             Object.values(result.codeScanningAlerts || {}).forEach(alert => {
               // Count by severity
-              switch(alert.severity) {
+              switch (alert.severity) {
                 case 'critical':
                   criticalIssues++;
                   break;
@@ -481,19 +532,21 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
                   // Default to medium if severity is unknown
                   mediumIssues++;
               }
-              
+
               // Extract repository name from HTML URL
               // Format is usually: https://github.com/{owner}/{repo}/security/...
               const urlParts = (alert.html_url || '').split('/');
               const repoIndex = urlParts.indexOf('github.com');
               let repoName = '';
               if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
-                repoName = `${urlParts[repoIndex + 1]}/${urlParts[repoIndex + 2]}`;
+                repoName = `${urlParts[repoIndex + 1]}/${
+                  urlParts[repoIndex + 2]
+                }`;
               }
-              
+
               // Add repository name to description if available
-              const description = repoName 
-                ? `[${repoName}] ${alert.description}` 
+              const description = repoName
+                ? `[${repoName}] ${alert.description}`
                 : alert.description;
 
               // Add to details
@@ -502,43 +555,48 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
                 description: description,
                 component: alert.location?.path, // Use file path as component
                 url: alert.html_url, // Store URL for linking
-                directLink: alert.direct_link // Direct link to the specific line
+                directLink: alert.direct_link, // Direct link to the specific line
               });
             });
 
             // Process secret scanning alerts (most secret scanning alerts are high severity)
             Object.values(result.secretScanningAlerts || {}).forEach(alert => {
               highIssues++; // Most secret alerts are high severity
-              
+
               // Extract repository name from HTML URL
               const urlParts = (alert.html_url || '').split('/');
               const repoIndex = urlParts.indexOf('github.com');
               let repoName = '';
               if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
-                repoName = `${urlParts[repoIndex + 1]}/${urlParts[repoIndex + 2]}`;
+                repoName = `${urlParts[repoIndex + 1]}/${
+                  urlParts[repoIndex + 2]
+                }`;
               }
-              
+
               // Add repository name to description if available
-              const description = repoName 
-                ? `[${repoName}] ${alert.description}` 
+              const description = repoName
+                ? `[${repoName}] ${alert.description}`
                 : alert.description;
-              
+
               details.push({
                 severity: 'high',
                 description: description,
-                url: alert.html_url
+                url: alert.html_url,
               });
             });
           });
 
           // Calculate total issues
           const totalCodeScanningAlerts = securityResults.reduce(
-            (sum, result) => sum + result.openCodeScanningAlertCount, 0
+            (sum, result) => sum + result.openCodeScanningAlertCount,
+            0,
           );
           const totalSecretScanningAlerts = securityResults.reduce(
-            (sum, result) => sum + result.openSecretScanningAlertCount, 0
+            (sum, result) => sum + result.openSecretScanningAlertCount,
+            0,
           );
-          const totalIssues = totalCodeScanningAlerts + totalSecretScanningAlerts;
+          const totalIssues =
+            totalCodeScanningAlerts + totalSecretScanningAlerts;
 
           // Determine color based on the presence of issues
           let color: 'red' | 'yellow' | 'green' | 'gray' = 'green';
@@ -566,7 +624,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
               mediumIssues,
               lowIssues,
               totalCodeScanningAlerts,
-              totalSecretScanningAlerts
+              totalSecretScanningAlerts,
             },
             summary,
             details,
@@ -587,11 +645,21 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   const data = React.useMemo(() => {
     if (semaphoreType === 'SonarQube' && realSonarQubeData) {
       return realSonarQubeData;
-    } else if (semaphoreType === 'Github Advanced Security' && realGitHubSecurityData) {
+    } else if (
+      semaphoreType === 'Github Advanced Security' &&
+      realGitHubSecurityData
+    ) {
       return realGitHubSecurityData;
+    } else if (semaphoreType === 'Azure DevOps Bugs' && realAzureDevOpsData) {
+      return realAzureDevOpsData;
     }
     return mockMetricsData[semaphoreType] || defaultData;
-  }, [semaphoreType, realSonarQubeData, realGitHubSecurityData]);
+  }, [
+    semaphoreType,
+    realSonarQubeData,
+    realGitHubSecurityData,
+    realAzureDevOpsData,
+  ]);
 
   const getStatusIcon = (color: string) => {
     switch (color) {
@@ -805,6 +873,21 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             </Grid>
           </Grid>
         );
+      case 'Azure DevOps Bugs':
+        return (
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <Paper className={classes.metricBox} elevation={1}>
+                <Typography variant="h4" className={classes.metricValue}>
+                  {data.metrics.bugCount}
+                </Typography>
+                <Typography className={classes.metricLabel}>
+                  Open Bugs
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        );
 
       // Handle other semaphore types with their specific metrics
       default:
@@ -892,7 +975,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             {/* Metrics section */}
             {renderMetrics()}
 
-                            {/* Details/Issues section */}
+            {/* Details/Issues section */}
             {data.details && data.details.length > 0 && (
               <>
                 <Box mt={3} mb={1}>
@@ -905,57 +988,67 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
                     .slice() // Create a copy of the array to avoid modifying the original
                     .sort((a, b) => {
                       // Sort by severity (critical > high > medium > low)
-                      const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-                      return (severityOrder[b.severity] || 0) - (severityOrder[a.severity] || 0);
+                      const severityOrder = {
+                        critical: 4,
+                        high: 3,
+                        medium: 2,
+                        low: 1,
+                      };
+                      return (
+                        (severityOrder[b.severity] || 0) -
+                        (severityOrder[a.severity] || 0)
+                      );
                     })
                     .map((issue, index) => {
-                    // Get appropriate color for the border based on severity
-                    const borderColor = getSeverityColorHex(issue.severity);
-                    
-                    return (
-                      <Paper 
-                        key={index} 
-                        className={classes.issueItem} 
-                        elevation={0}
-                        style={{ borderLeftColor: borderColor }}
-                      >
-                        <Typography
-                          variant="subtitle1"
-                          className={classes.issueTitle}
+                      // Get appropriate color for the border based on severity
+                      const borderColor = getSeverityColorHex(issue.severity);
+
+                      return (
+                        <Paper
+                          key={index}
+                          className={classes.issueItem}
+                          elevation={0}
+                          style={{ borderLeftColor: borderColor }}
                         >
-                          {issue.url ? (
-                            <Link
-                              href={issue.directLink || issue.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={classes.issueLink}
-                            >
-                              {issue.description}
-                            </Link>
-                          ) : (
-                            issue.description
-                          )}
-                        </Typography>
-                        <Box className={classes.chipContainer}>
-                          <Chip
-                            size="small"
-                            label={issue.severity}
-                            style={{
-                              backgroundColor: getSeverityColorHex(issue.severity),
-                              color: '#fff',
-                            }}
-                          />
-                          {issue.component && (
+                          <Typography
+                            variant="subtitle1"
+                            className={classes.issueTitle}
+                          >
+                            {issue.url ? (
+                              <Link
+                                href={issue.directLink || issue.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={classes.issueLink}
+                              >
+                                {issue.description}
+                              </Link>
+                            ) : (
+                              issue.description
+                            )}
+                          </Typography>
+                          <Box className={classes.chipContainer}>
                             <Chip
                               size="small"
-                              label={issue.component}
-                              variant="outlined"
+                              label={issue.severity}
+                              style={{
+                                backgroundColor: getSeverityColorHex(
+                                  issue.severity,
+                                ),
+                                color: '#fff',
+                              }}
                             />
-                          )}
-                        </Box>
-                      </Paper>
-                    );
-                  })}
+                            {issue.component && (
+                              <Chip
+                                size="small"
+                                label={issue.component}
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
+                        </Paper>
+                      );
+                    })}
                 </List>
               </>
             )}
