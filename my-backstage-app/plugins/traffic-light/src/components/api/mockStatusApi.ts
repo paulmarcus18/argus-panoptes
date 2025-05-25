@@ -1,6 +1,7 @@
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef } from '@backstage/catalog-model';
-import { getAzureDevOpsBugs, getGitHubRepoStatus, getSonarQubeFacts} from '../utils.ts';
+import { getAzureDevOpsBugs, getGitHubRepoStatus} from '../utils.ts';
+import { getSonarQubeFacts } from '../../utils/sonarCloudUtils';
 
 export type TrafficLightColor = 'green' | 'yellow' | 'red';
 
@@ -8,9 +9,9 @@ export type StatusResponse = {
   [checkName: string]: { color: TrafficLightColor; reason: string };
 };
 
-const generateMetricScore = (): number => Math.floor(Math.random() * 100);
+//const generateMetricScore = (): number => Math.floor(Math.random() * 100);
 
-const evaluateColor = (
+/**const evaluateColor = (
   score: number,
 ): { color: TrafficLightColor; reason: string } => {
   if (score >= 70) {
@@ -18,7 +19,7 @@ const evaluateColor = (
     return { color: 'green', reason: `Score ${score} ≥ 70 (green)` };
   }
   return { color: 'red', reason: `Score ${score} < 70 (red)` };
-};
+};*/
 
 const evaluateColorDevOps = (
   score: number,
@@ -42,7 +43,7 @@ const validateTrafficLightColor = (status: any): TrafficLightColor => {
 };
 
 const evaluateSonarCloudStatus = (
-  facts: { bugs: number; code_smells: number; security_hotspots: number }
+  facts: { bugs: number; code_smells: number; vulnerabilities: number }
 ): { color: TrafficLightColor; reason: string } => {
   // Rules based on your fact checker configuration
 
@@ -56,14 +57,14 @@ const evaluateSonarCloudStatus = (
     return { color: 'yellow', reason: `${facts.code_smells} code smells (10-20)` };
   }
   
-  if (facts.security_hotspots > 3) {
-    return { color: 'red', reason: `${facts.security_hotspots} security hotspots (>3)` };
-  } else if (facts.security_hotspots > 0) {
-    return { color: 'yellow', reason: `${facts.security_hotspots} security hotspots (1-3)` };
+  if (facts.vulnerabilities > 3) {
+    return { color: 'red', reason: `${facts.vulnerabilities} vulnerabilities (>3)` };
+  } else if (facts.vulnerabilities > 0) {
+    return { color: 'yellow', reason: `${facts.vulnerabilities} vulnerabilities (1-3)` };
   }
   
   // All good - passes all checks
-  return { color: 'green', reason: 'No bugs, acceptable code smells and security hotspots' };
+  return { color: 'green', reason: 'No bugs, acceptable code smells and vulnerabilities' };
 };
 
 export const fetchRepoStatus = async (
@@ -93,7 +94,7 @@ export const fetchRepoStatus = async (
     const sonarFacts = await getSonarQubeFacts(techInsightsApi, entity);
     console.log("Sonar Qube bugs: ", sonarFacts.bugs);
     console.log("Sonar Qube code smells: ", sonarFacts.code_smells);
-    console.log("Sonar Qube security hotspots: ", sonarFacts.security_hotspots);
+    console.log("Sonar Qube vulnerabilities: ", sonarFacts.vulnerabilities);
     sonarStatus = evaluateSonarCloudStatus(sonarFacts);
   } catch (error) {
     console.error('Failed to get SonarCloud facts:', error);

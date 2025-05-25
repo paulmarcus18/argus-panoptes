@@ -9,17 +9,17 @@
     "plugins/*/migrations",
     "plugins/traffic-light-backend/router.ts",
     "plugins/traffic-light-backend/index.ts",
-    "plugins/traffic-light-backend"
+    "plugins/traffic-light-backend",
+    "**/*.test.ts"
   ],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "outDir": "dist-types",
     "rootDir": ".",
     "jsx": "react-jsx",
-    "baseUrl": ".",                              
+    "baseUrl": ".",
     "paths": {
-      "@internal/*": ["plugins/*/src"]
+      "@internal/*": ["plugins/*/src"],
     }
-
   }
 }
