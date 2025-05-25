@@ -31,10 +31,10 @@ export interface TodoListService {
 
 // might need to change these based on database
 export type MetricType =
-  | 'df_average'
-  | 'lead_time'
-  | 'change_failure_rate'
-  | 'time_to_restore';
+  | 'df'
+  | 'mltc'
+  | 'cfr'
+  | 'mttr';
 
 export type Aggregation = 'weekly' | 'monthly';
 
@@ -47,8 +47,8 @@ export interface DoraService {
   getMetric(
     type: MetricType,
     aggregation: Aggregation,
-    // project: string,
-    // startDate: string,
-    // endDate: string,
+    project: string,
+    from: number,
+    to: number
   ): Promise<MetricItem[]>;
 }

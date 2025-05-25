@@ -30,7 +30,6 @@ export const doraDashboardPlugin = createBackendPlugin({
           await createRouter({
             httpAuth,
             doraService,
-            logger,
           }),
         );
       },
