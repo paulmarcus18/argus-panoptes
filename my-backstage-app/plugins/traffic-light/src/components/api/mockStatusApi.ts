@@ -1,6 +1,7 @@
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef } from '@backstage/catalog-model';
-import { getAzureDevOpsBugs, getGitHubRepoStatus, getSonarQubeFacts} from '../utils.ts';
+import { getAzureDevOpsBugs, getGitHubRepoStatus} from '../utils.ts';
+import { getSonarQubeFacts } from '../../utils/sonarCloudUtils';
 
 export type TrafficLightColor = 'green' | 'yellow' | 'red';
 
@@ -8,9 +9,9 @@ export type StatusResponse = {
   [checkName: string]: { color: TrafficLightColor; reason: string };
 };
 
-const generateMetricScore = (): number => Math.floor(Math.random() * 100);
+//const generateMetricScore = (): number => Math.floor(Math.random() * 100);
 
-const evaluateColor = (
+/**const evaluateColor = (
   score: number,
 ): { color: TrafficLightColor; reason: string } => {
   if (score >= 70) {
@@ -18,7 +19,7 @@ const evaluateColor = (
     return { color: 'green', reason: `Score ${score} ≥ 70 (green)` };
   }
   return { color: 'red', reason: `Score ${score} < 70 (red)` };
-};
+};*/
 
 const evaluateColorDevOps = (
   score: number,
