@@ -7,7 +7,7 @@ import express from 'express';
 import request from 'supertest';
 
 import { createRouter } from './router';
-import { TodoListService } from './services/TodoListService/types';
+import { TodoListService } from './services/DoraService/types';
 
 const mockTodoItem = {
   title: 'Do the thing',

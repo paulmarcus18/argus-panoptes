@@ -4,7 +4,7 @@ import {
 } from '@backstage/backend-plugin-api';
 import { createRouter } from './router';
 import { catalogServiceRef } from '@backstage/plugin-catalog-node';
-import { createDoraService } from './services/TodoListService'; // change this to DoraService
+import { createDoraService } from './services/DoraService'; // change this to DoraService
 
 /**
  * doraDashboardPlugin backend plugin
