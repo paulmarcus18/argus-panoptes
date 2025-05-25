@@ -16,7 +16,7 @@ spec:
   type: service
   lifecycle: experimental
   owner: SEP-ArgusPanoptes
-  system: payments-system
+  system: user-management-system
   workflowConfig:
     exclude:
       - 'Dependabot Updates'

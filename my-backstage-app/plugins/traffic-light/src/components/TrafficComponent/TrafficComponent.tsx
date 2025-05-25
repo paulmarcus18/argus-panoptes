@@ -488,7 +488,7 @@ const GitHubSecurityTrafficLight = ({
     'Loading GitHub Security data...',
   );
   const techInsightsApi = useApi(techInsightsApiRef);
-
+  const catalogApi = useApi(catalogApiRef);
   useEffect(() => {
     const fetchGitHubSecurityData = async () => {
       if (!entities.length) {
@@ -496,6 +496,62 @@ const GitHubSecurityTrafficLight = ({
         setReason('No entities selected');
         return;
       }
+      // Get the system name from the first entity
+      const systemName = entities[0].spec?.system;
+      if (!systemName) {
+        setColor('gray');
+        setReason('No system name found in entities');
+        return;
+      }
+
+      // Fetch system entity metadata from catalog
+      const systemEntity = await catalogApi.getEntityByRef({
+        kind: 'System',
+        namespace: entities[0].metadata.namespace || 'default',
+        name: typeof systemName === 'string' ? systemName : String(systemName),
+      });
+
+      // Thresholds used when the user selects the system
+      const system_critical_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-threshold-red'] || '0',
+      );
+      const system_high_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-high-threshold-red'] || '0',
+      );
+      const system_secrets_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-secrets-threshold-red'] || '0',
+      );
+      const system_medium_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-medium-threshold-red'] || '0.5',
+      )*entities.length;
+      const system_medium_threshold_yellow = parseFloat(  
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-medium-threshold-yellow'] || '0.1',
+      )*entities.length;
+      const system_low_threshold_yellow = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-low-threshold-yellow'] || '0.2',
+      )*entities.length;
+
+      // Thresholds used when the user selects critical in the system
+      const system_critical_critical_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-critical-threshold-red'] || '0',
+      );
+      const system_critical_high_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-high-threshold-red'] || '0',
+      );
+      const system_critical_secrets_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-secrets-threshold-red'] || '0',
+      );
+      const system_critical_medium_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-medium-threshold-red'] || '0.33',
+      )*entities.length;
+      const system_critical_medium_threshold_yellow = parseFloat(  
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-medium-threshold-yellow'] || '0.2',
+      )*entities.length;
+      const system_critical_low_threshold_yellow = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-low-threshold-yellow'] || '0.1',
+      )*entities.length;
+     
+
 
       try {
         // Get the results of the SonarQube fact checks for all entities
@@ -512,53 +568,52 @@ const GitHubSecurityTrafficLight = ({
 
       // Count total number of failed checks for each metric
       // Count total number of failed checks for each metric and track entity names
-const totalChecks = securityData.reduce(
-  (acc, result, index) => {
-    // Get the entity name from the entities array using the same index
-    const entityName = entities[index].metadata.name;
+      const totalChecks = securityData.reduce(
+        (acc, result, index) => {
+          // Get the entity name from the entities array using the same index
+          const entityName = entities[index].metadata.name;
 
-    // Track issues along with entity names
-    if (result.criticalCheck === true) {
-      acc.criticalCheckTrue += 1;
-      acc.criticalEntities.push(entityName);
-    }
-    
-    if (result.highCheck === true) {
-      acc.highCheckTrue += 1;
-      acc.highEntities.push(entityName);
-    }
-    
-    if (result.mediumCheck === true) {
-      acc.mediumCheckTrue += 1; 
-      acc.mediumEntities.push(entityName);
-    }
-    
-    if (result.lowCheck === true) {
-      acc.lowCheckTrue += 1;
-      acc.lowEntities.push(entityName);
-    }
-    
-    if (result.secretCheck === true) {
-      acc.secretCheckTrue += 1;
-      acc.secretEntities.push(entityName);
-    }
-    
-    return acc;
-  },
-  {
-    criticalCheckTrue: 0,
-    highCheckTrue: 0,
-    mediumCheckTrue: 0,
-    lowCheckTrue: 0,
-    secretCheckTrue: 0,
-    criticalEntities: [] as string[],
-    highEntities: [] as string[],
-    mediumEntities: [] as string[],
-    lowEntities: [] as string[],
-    secretEntities: [] as string[]
-  },
-);
-      console.log('Total 🐞checks (high, medium):', totalChecks.highCheckTrue, totalChecks.mediumCheckTrue);
+          // Track issues along with entity names
+          if (result.criticalCheck === true) {
+            acc.criticalCheckTrue += 1;
+            acc.criticalEntities.push(entityName);
+          }
+          
+          if (result.highCheck === true) {
+            acc.highCheckTrue += 1;
+            acc.highEntities.push(entityName);
+          }
+          
+          if (result.mediumCheck === true) {
+            acc.mediumCheckTrue += 1; 
+            acc.mediumEntities.push(entityName);
+          }
+          
+          if (result.lowCheck === true) {
+            acc.lowCheckTrue += 1;
+            acc.lowEntities.push(entityName);
+          }
+          
+          if (result.secretCheck === true) {
+            acc.secretCheckTrue += 1;
+            acc.secretEntities.push(entityName);
+          }
+          
+          return acc;
+        },
+        {
+          criticalCheckTrue: 0,
+          highCheckTrue: 0,
+          mediumCheckTrue: 0,
+          lowCheckTrue: 0,
+          secretCheckTrue: 0,
+          criticalEntities: [] as string[],
+          highEntities: [] as string[],
+          mediumEntities: [] as string[],
+          lowEntities: [] as string[],
+          secretEntities: [] as string[]
+        },
+      );
       // Debug information
       console.log('Security data by entity:', securityData.map((result, i) => ({
         name: entities[i].metadata.name,
@@ -569,18 +624,19 @@ const totalChecks = securityData.reduce(
         secretCheck: result.secretCheck
       })));
           // Add entity names to tooltips
-    if (totalChecks.highCheckTrue > 0 || totalChecks.mediumCheckTrue > 5 || totalChecks.lowCheckTrue > 10) {
+    if (totalChecks.mediumCheckTrue > system_medium_threshold_yellow || totalChecks.lowCheckTrue > system_low_threshold_yellow) {
       setColor('yellow');
       setReason(
-        `High severity issues in: ${totalChecks.highEntities.join(', ') || 'None'}\n` +
         `Medium severity issues (${totalChecks.mediumCheckTrue}) in: ${totalChecks.mediumEntities.slice(0, 5).join(', ')}${totalChecks.mediumEntities.length > 5 ? '...' : ''}\n` +
         `Low severity issues (${totalChecks.lowCheckTrue}) in: ${totalChecks.lowEntities.slice(0, 5).join(', ')}${totalChecks.lowEntities.length > 5 ? '...' : ''}`
       );
-    } else if (totalChecks.criticalCheckTrue > 0 || totalChecks.secretCheckTrue > 0) {
+    } else if (totalChecks.criticalCheckTrue > system_critical_threshold_red || totalChecks.secretCheckTrue > system_secrets_threshold_red || totalChecks.highCheckTrue > system_high_threshold_red || totalChecks.mediumCheckTrue > system_medium_threshold_red) {
       setColor('red');
       setReason(
         `Critical issues in: ${totalChecks.criticalEntities.join(', ') || 'None'}\n` +
-        `Secret scanning issues in: ${totalChecks.secretEntities.join(', ') || 'None'}`
+        `Secret scanning issues in: ${totalChecks.secretEntities.join(', ') || 'None'}` + 
+        `\nHigh severity issues in: ${totalChecks.highEntities.join(', ') || 'None'}` +
+        `\nMedium severity issues in: ${totalChecks.mediumEntities.join(', ') || 'None'}`
       );
     } else {
       setColor('green');
