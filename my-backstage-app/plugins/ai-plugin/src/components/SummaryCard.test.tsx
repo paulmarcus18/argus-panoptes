@@ -1,4 +1,6 @@
-import React from 'react';
+/**
+ * @jest-environment jsdom
+ */
 import { render, screen, fireEvent } from '@testing-library/react';
 import { SummaryCard } from './SummaryCard';
 
@@ -22,7 +24,7 @@ describe('SummaryCard', () => {
         repos={mockRepos}
         repoSearch=""
         handleDownload={handleDownload}
-      />
+      />,
     );
     expect(screen.getByRole('heading', { level: 4 })).toHaveTextContent(system);
   });
@@ -34,7 +36,7 @@ describe('SummaryCard', () => {
         repos={mockRepos}
         repoSearch="One"
         handleDownload={handleDownload}
-      />
+      />,
     );
 
     expect(screen.getByText('Repo One')).toBeInTheDocument();
@@ -48,7 +50,7 @@ describe('SummaryCard', () => {
         repos={mockRepos}
         repoSearch="Nonexistent"
         handleDownload={handleDownload}
-      />
+      />,
     );
 
     expect(screen.getByText(/no new releases/i)).toBeInTheDocument();
@@ -61,7 +63,7 @@ describe('SummaryCard', () => {
         repos={mockRepos}
         repoSearch=""
         handleDownload={handleDownload}
-      />
+      />,
     );
 
     const downloadButton = screen.getByRole('button', { name: /download/i });
@@ -78,7 +80,7 @@ describe('SummaryCard', () => {
         repos={mockRepos}
         repoSearch=""
         handleDownload={handleDownload}
-      />
+      />,
     );
 
     mockRepos.forEach(({ repoName, summary }) => {

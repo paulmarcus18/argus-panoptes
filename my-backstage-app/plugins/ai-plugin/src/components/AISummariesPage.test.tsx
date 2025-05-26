@@ -1,14 +1,13 @@
-import React from 'react';
+/**
+ * @jest-environment jsdom
+ */
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AISummaries } from './AISummariesPage';
 import { TestApiProvider } from '@backstage/test-utils';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-import {
-  discoveryApiRef,
-  fetchApiRef,
-} from '@backstage/core-plugin-api';
+import { discoveryApiRef, fetchApiRef } from '@backstage/core-plugin-api';
 
 const mockCatalogApi = {
   getEntities: jest.fn().mockResolvedValue({ items: [] }),
@@ -17,7 +16,9 @@ const mockCatalogApi = {
 const mockTechInsightsApi = {};
 
 const mockDiscoveryApi = {
-  getBaseUrl: jest.fn().mockResolvedValue('http://localhost:7007/api/ai-plugin'),
+  getBaseUrl: jest
+    .fn()
+    .mockResolvedValue('http://localhost:7007/api/ai-plugin'),
 };
 
 const mockFetch = jest.fn().mockResolvedValue({
@@ -44,7 +45,7 @@ const renderComponent = () =>
       ]}
     >
       <AISummaries />
-    </TestApiProvider>
+    </TestApiProvider>,
   );
 
 describe('AISummaries', () => {
@@ -52,44 +53,43 @@ describe('AISummaries', () => {
     jest.clearAllMocks();
   });
 
-    it('renders loading spinner initially', async () => {
-        renderComponent();
-        expect(screen.getByText(/Loading release notes/i)).toBeInTheDocument();
+  it('renders loading spinner initially', async () => {
+    renderComponent();
+    expect(screen.getByText(/Loading release notes/i)).toBeInTheDocument();
 
-        await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+  });
+
+  it('displays fetched summaries correctly', async () => {
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('repo-a')).toBeInTheDocument();
+      expect(screen.getByText('Summary A')).toBeInTheDocument();
     });
+  });
 
-    it('displays fetched summaries correctly', async () => {
-        renderComponent();
+  it('filters systems correctly via dropdown', async () => {
+    renderComponent();
+    await screen.findByText('repo-a');
 
-        await waitFor(() => {
-        expect(screen.getByText('repo-a')).toBeInTheDocument();
-        expect(screen.getByText('Summary A')).toBeInTheDocument();
-        });
-    });
+    // Simulate selecting system2 via dropdown
+    const systemFilter = screen.getByRole('combobox', { name: /System/i });
+    userEvent.click(systemFilter);
 
-    it('filters systems correctly via dropdown', async () => {
-        renderComponent();
-        await screen.findByText('repo-a');
+    const option = await screen.findByText('system2');
+    userEvent.click(option);
 
-        // Simulate selecting system2 via dropdown
-        const systemFilter = screen.getByRole('combobox', { name: /System/i });
-        userEvent.click(systemFilter);
+    await waitFor(() =>
+      expect(screen.getByText('No new releases.')).toBeInTheDocument(),
+    );
+  });
 
-        const option = await screen.findByText('system2');
-        userEvent.click(option);
+  it('calls callAI when refresh is clicked', async () => {
+    renderComponent();
+    const refreshBtn = await screen.findByLabelText('refresh');
+    userEvent.click(refreshBtn);
 
-        await waitFor(() =>
-        expect(screen.getByText('No new releases.')).toBeInTheDocument()
-        );
-    });
-
-    it('calls callAI when refresh is clicked', async () => {
-        renderComponent();
-        const refreshBtn = await screen.findByLabelText('refresh');
-        userEvent.click(refreshBtn);
-
-        await waitFor(() => expect(mockFetch).toHaveBeenCalled());
-    });
-
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+  });
 });

@@ -1,4 +1,6 @@
-import React from 'react';
+/**
+ * @jest-environment jsdom
+ */
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SummaryGrid } from './SummaryGrid';
@@ -21,7 +23,9 @@ jest.mock('./SummaryCard', () => ({
 }));
 
 // Cast SummaryCard to a Jest mock function for TS
-const MockedSummaryCard = SummaryCard as jest.MockedFunction<typeof SummaryCard>;
+const MockedSummaryCard = SummaryCard as jest.MockedFunction<
+  typeof SummaryCard
+>;
 
 describe('SummaryGrid', () => {
   const mockHandleDownload = jest.fn();
@@ -31,9 +35,7 @@ describe('SummaryGrid', () => {
       { repoName: 'repoB1', summary: 'summary B1' },
       { repoName: 'repoB2', summary: 'summary B2' },
     ],
-    'System A': [
-      { repoName: 'repoA1', summary: 'summary A1' },
-    ],
+    'System A': [{ repoName: 'repoA1', summary: 'summary A1' }],
   };
 
   beforeEach(() => {
@@ -47,7 +49,7 @@ describe('SummaryGrid', () => {
         fullMessages={{}}
         repoSearch="searchText"
         handleDownload={mockHandleDownload}
-      />
+      />,
     );
 
     const cards = screen.getAllByTestId('summary-card');
@@ -61,22 +63,30 @@ describe('SummaryGrid', () => {
         fullMessages={{}}
         repoSearch="searchText"
         handleDownload={mockHandleDownload}
-      />
+      />,
     );
 
-    expect(MockedSummaryCard).toHaveBeenCalledTimes(Object.keys(sampleMessages).length);
+    expect(MockedSummaryCard).toHaveBeenCalledTimes(
+      Object.keys(sampleMessages).length,
+    );
 
     // Sorted order: System A, then System B
     expect(MockedSummaryCard.mock.calls[0][0].system).toBe('System A');
     expect(MockedSummaryCard.mock.calls[1][0].system).toBe('System B');
 
-    expect(MockedSummaryCard.mock.calls[0][0].repos).toEqual(sampleMessages['System A']);
-    expect(MockedSummaryCard.mock.calls[1][0].repos).toEqual(sampleMessages['System B']);
+    expect(MockedSummaryCard.mock.calls[0][0].repos).toEqual(
+      sampleMessages['System A'],
+    );
+    expect(MockedSummaryCard.mock.calls[1][0].repos).toEqual(
+      sampleMessages['System B'],
+    );
 
     expect(MockedSummaryCard.mock.calls[0][0].repoSearch).toBe('searchText');
     expect(MockedSummaryCard.mock.calls[1][0].repoSearch).toBe('searchText');
 
-    expect(MockedSummaryCard.mock.calls[0][0].handleDownload).toBe(mockHandleDownload);
+    expect(MockedSummaryCard.mock.calls[0][0].handleDownload).toBe(
+      mockHandleDownload,
+    );
   });
 
   it('calls handleDownload prop when a card download button is clicked', async () => {
@@ -86,7 +96,7 @@ describe('SummaryGrid', () => {
         fullMessages={{}}
         repoSearch=""
         handleDownload={mockHandleDownload}
-      />
+      />,
     );
 
     const buttons = screen.getAllByRole('button', { name: /download/i });
