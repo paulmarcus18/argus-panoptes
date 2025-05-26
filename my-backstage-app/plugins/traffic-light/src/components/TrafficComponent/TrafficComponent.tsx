@@ -559,7 +559,6 @@ export const TrafficComponent = () => {
               ])}
             >
               <Typography variant="subtitle1">Dependabot</Typography>
-              <Tooltip title="Live check from Tech Insights">
                 <div>
                   <Trafficlightdependabot
                     entities={selectedEntities}
@@ -568,7 +567,7 @@ export const TrafficComponent = () => {
                   />
 
                 </div>
-              </Tooltip>
+            
 
               <Typography variant="subtitle1">BlackDuck</Typography>
               <Tooltip title={statusData?.BlackDuck?.reason || ''}>
