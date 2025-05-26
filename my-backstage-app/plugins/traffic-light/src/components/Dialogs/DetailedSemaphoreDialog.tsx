@@ -22,9 +22,9 @@ import InfoIcon from '@material-ui/icons/Info';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
-import { getGitHubSecurityFacts } from '../utils';
 import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 import { getAzureDevOpsBugs } from '../utils';
+import { GithubAdvancedSecurityUtils } from '../../utils/githubAdvancedSecurityUtils';
 
 // Type for semaphore severity
 type Severity = 'critical' | 'high' | 'medium' | 'low';
@@ -317,6 +317,11 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     [techInsightsApi],
   );
 
+  const githubASUtils = React.useMemo(
+    () => new GithubAdvancedSecurityUtils(techInsightsApi),
+    [techInsightsApi],
+  );
+
   // Get mock data based on semaphore type (or placeholder if not found)
   const defaultData: SemaphoreData = {
     color: 'gray',
@@ -500,7 +505,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
           // Get GitHub security facts for all entities
           const securityResults = await Promise.all(
             entities.map(entity =>
-              getGitHubSecurityFacts(techInsightsApi, {
+              githubASUtils.getGitHubSecurityFacts(techInsightsApi, {
                 kind: entity.kind,
                 namespace: entity.metadata.namespace || 'default',
                 name: entity.metadata.name,

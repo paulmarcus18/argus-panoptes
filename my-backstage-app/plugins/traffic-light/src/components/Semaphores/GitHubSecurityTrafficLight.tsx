@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-import { getGitHubSecurityFacts } from '../../utils/githubAdvancedSecurityUtils';
+import { GithubAdvancedSecurityUtils } from '../../utils/githubAdvancedSecurityUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
+import { Box, Tooltip } from '@material-ui/core';
 
 // export const GitHubSecurityTrafficLight = ({
 //   entities,
@@ -111,6 +112,12 @@ export const GitHubSecurityTrafficLight = ({
   );
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
+
+  const githubASUtils = React.useMemo(
+    () => new GithubAdvancedSecurityUtils(techInsightsApi),
+    [techInsightsApi],
+  );
+
   useEffect(() => {
     const fetchGitHubSecurityData = async () => {
       if (!entities.length) {
@@ -179,7 +186,7 @@ export const GitHubSecurityTrafficLight = ({
         // Get the results of the SonarQube fact checks for all entities
         const securityData = await Promise.all(
           entities.map(entity =>
-            getGitHubSecurityFacts(techInsightsApi, {
+            githubASUtils.getGitHubSecurityFacts(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
               name: entity.metadata.name,
@@ -275,5 +282,17 @@ export const GitHubSecurityTrafficLight = ({
     fetchGitHubSecurityData();
   }, [entities, techInsightsApi]);
 
-return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
+return <Tooltip title={reason}>
+      <div>
+        <Box
+          my={1}
+          width={50}
+          height={50}
+          borderRadius="50%"
+          bgcolor={color}
+          onClick={onClick}
+          style={onClick ? { cursor: 'pointer' } : {}}
+        />
+      </div>
+    </Tooltip>;
  };

@@ -66,7 +66,7 @@ export class SonarCloudUtils {
         stringifyEntityRef(entity),
       );
 
-      const response = await this.api.getFacts(entity, [
+      const response = await techInsightsApi.getFacts(entity, [
         'sonarcloud-fact-retriever',
       ]);
 
@@ -124,7 +124,7 @@ export class SonarCloudUtils {
         'Running SonarCloud checks for entity:',
         stringifyEntityRef(entity),
       );
-      const checkResults = await this.api.runChecks(entity);
+      const checkResults = await techInsightsApi.runChecks(entity);
 
       // Extract the results of each checks
       const bugsCheck = checkResults.find(r => r.check.id === 'sonarcloud-bugs');
