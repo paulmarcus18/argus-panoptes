@@ -29,7 +29,7 @@ type MetricType = {
 
 const METRIC_TYPES: MetricType[] = [
   {
-    id: 'df_average',
+    id: 'df',
     label: 'Deployment Frequency',
     description: 'How often code is deployed to production',
     color: '#4caf50',

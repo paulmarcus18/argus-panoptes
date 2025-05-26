@@ -15,7 +15,7 @@ export type MetricData = {
 };
 
 const METRIC_TYPES = [
-  { id: 'df_average', label: 'Deploy Freq Avg' },
+  { id: 'df', label: 'Deploy Freq Avg' },
   { id: 'mltc', label: 'Lead Time Median' },
   { id: 'cfr', label: 'Change Failure Rate' },
   { id: 'mttr', label: 'Time to Restore' },
@@ -29,20 +29,21 @@ export function useMetricsData(
   endDate?: Date,
 ) {
   return useAsync(async (): Promise<MetricData[]> => {
-    const baseUrl = 'http://localhost:10666/dora/api/metric';
-    const queryParams = new URLSearchParams({ aggregation });
+    const baseUrl = 'http://localhost:7007/api/dora-dashboard/metrics';
+    const group = '_'; // fallback group for all teams
 
-    if (startDate) {
-      queryParams.append('startDate', startDate.toISOString().split('T')[0]);
-    }
+    const defaultStart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const defaultEnd = new Date();
 
-    if (endDate) {
-      queryParams.append('endDate', endDate.toISOString().split('T')[0]);
-    }
+    const start = startDate ?? defaultStart;
+    const end = endDate ?? defaultEnd;
+
+    const startTimestamp = Math.floor(start.getTime() / 1000);
+    const endTimestamp = Math.floor(end.getTime() / 1000);
 
     const results = await Promise.all(
       METRIC_TYPES.map(async metric => {
-        const url = `${baseUrl}?${queryParams.toString()}&type=${metric.id}`;
+        const url = `${baseUrl}/${metric.id}/${aggregation}/${group}/${startTimestamp}/${endTimestamp}`;
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -52,12 +53,11 @@ export function useMetricsData(
         }
 
         const json = await response.json();
-        const dataPoints: DataPoint[] = (json.dataPoints || []).map(
-          (dp: any) => ({
-            ...dp,
-            date: new Date(dp.key),
-          }),
-        );
+        const dataPoints: DataPoint[] = (json || []).map((dp: any) => ({
+          key: dp.data_key,
+          value: dp.data_value,
+          date: new Date(),
+        }));
 
         return {
           id: metric.id,
@@ -65,12 +65,13 @@ export function useMetricsData(
         };
       }),
     );
-
+console.log('Fetched metrics:', results);
     return results;
+    
   }, [aggregation, startDate?.getTime(), endDate?.getTime()]);
 }
 
-// ------------------ Legacy Component ------------------
+// ------------------ Debug Component ------------------
 
 export const ExampleFetchComponent = () => {
   const { value, loading, error } = useMetricsData();
@@ -99,8 +100,8 @@ export const ExampleFetchComponent = () => {
   return (
     <div>
       <p>
-        This component is deprecated. Please use the{' '}
-        <strong>DoraDashboard</strong> component instead.
+        This component is for debug/testing. For visual charts, use{' '}
+        <strong>DoraDashboard</strong>.
       </p>
       <pre>{JSON.stringify(rows, null, 2)}</pre>
     </div>

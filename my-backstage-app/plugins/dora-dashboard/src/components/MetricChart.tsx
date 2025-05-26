@@ -64,10 +64,12 @@ export const MetricChart = ({
               data: chartData,
               color,
               valueFormatter: (value: number | null) => {
-                if (value == null || isNaN(value)) return 'N/A';
+                const numericValue = Number(value);
+                if (isNaN(numericValue)) return 'N/A';
+              
                 return title === 'Change Failure Rate'
-                  ? `${(value * 100).toFixed(1)}%`
-                  : value.toFixed(1);
+                  ? `${(numericValue * 100).toFixed(1)}%`
+                  : numericValue.toFixed(1);
               },
             },
           ]}
