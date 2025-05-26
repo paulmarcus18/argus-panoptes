@@ -13,16 +13,4 @@ export const preproductionPipelineChecks: DynamicThresholdCheck[] = [
     description:
       'Minimum pipeline success rate required for preproduction components',
   },
-  {
-    id: 'preproduction-max-failures',
-    name: 'Preproduction Pipeline Max Failures',
-    type: 'number',
-    factIds: ['githubPipelineStatusFactRetriever', 'failureWorkflowRunsCount'],
-    annotationKeyThreshold:
-      'tech-insights.io/preproduction-max-failures-threshold',
-    annotationKeyOperator:
-      'tech-insights.io/preproduction-max-failures-operator',
-    description:
-      'Maximum number of failed workflow runs allowed for preproduction components',
-  },
 ];

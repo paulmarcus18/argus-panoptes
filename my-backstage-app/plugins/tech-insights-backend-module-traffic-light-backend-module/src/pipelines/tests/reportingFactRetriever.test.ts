@@ -343,7 +343,10 @@ describe('reportingPipelineStatusFactRetriever', () => {
       urlReader: mockUrlReader,
     });
 
-    expect(facts.length).toBe(0);
+    expect(facts.length).toBe(1);
+    const metrics = Array.isArray(facts[0].facts.workflowMetrics) ? facts[0].facts.workflowMetrics : [];
+    expect(metrics.length).toBe(0);
+    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch data for repo1'));
     expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch data for repo1'));
   });
 
@@ -523,7 +526,9 @@ describe('reportingPipelineStatusFactRetriever', () => {
 
     expect(facts.length).toBe(1);
     // 2/3 = 66.666... should round to 66.67
-    expect(facts[0].facts.workflowMetrics[0].successRate).toBe(66.67);
+    const metrics = (facts[0].facts as any).workflowMetrics;
+    expect(metrics && metrics[0] && metrics[0].successRate).toBe(66.67);
+    expect((facts[0].facts as any).overallSuccessRate).toBe(66.67);
   });
 
 // ...existing code...
