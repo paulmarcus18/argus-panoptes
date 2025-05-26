@@ -26,9 +26,11 @@ import { BaseTrafficLight } from './BaseTrafficLight';
  */
 export const SonarQubeTrafficLight = ({
   entities,
+  system,
   onClick,
 }: {
   entities: Entity[];
+  system?: string | undefined;
   onClick?: () => void;
 }) => {
   const [color, setColor] = useState<
@@ -46,19 +48,11 @@ export const SonarQubeTrafficLight = ({
         return;
       }
 
-      // Get the system name from the first entity
-      const systemName = entities[0].spec?.system;
-      if (!systemName) {
-        setColor('gray');
-        setReason('System metadata is missing');
-        return;
-      }
-
       // Fetch system entity metadata from catalog
         const systemEntity = await catalogApi.getEntityByRef({
           kind: 'system',
           namespace: 'default',
-          name: typeof systemName === 'string' ? systemName : String(systemName)
+          name: typeof system === 'string' ? system : String(system)
         });
 
       // Get thresholds for traffic light colour from system annotations
