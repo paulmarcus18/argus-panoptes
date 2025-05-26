@@ -23,7 +23,7 @@ import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { getGitHubSecurityFacts } from '../utils';
-import { getSonarQubeFacts } from '../../utils/sonarCloudUtils';
+import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 import { getAzureDevOpsBugs } from '../utils';
 
 // Type for semaphore severity
@@ -311,6 +311,12 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
 
+  // Instantiate once – memoised so we don’t recreate it on every render
+  const sonarUtils = React.useMemo(
+    () => new SonarCloudUtils(techInsightsApi),
+    [techInsightsApi],
+  );
+
   // Get mock data based on semaphore type (or placeholder if not found)
   const defaultData: SemaphoreData = {
     color: 'gray',
@@ -386,7 +392,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
           // Get SonarQube facts for all entities
           const sonarQubeResults = await Promise.all(
             entities.map(entity =>
-              getSonarQubeFacts(techInsightsApi, {
+              sonarUtils.getSonarQubeFacts(techInsightsApi, {
                 kind: entity.kind,
                 namespace: entity.metadata.namespace || 'default',
                 name: entity.metadata.name,
