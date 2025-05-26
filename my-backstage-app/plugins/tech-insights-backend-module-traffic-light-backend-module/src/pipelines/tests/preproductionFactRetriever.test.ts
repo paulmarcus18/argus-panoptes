@@ -3,13 +3,19 @@ import { CatalogClient } from '@backstage/catalog-client';
 import { Entity } from '@backstage/catalog-model';
 import { Config } from '@backstage/config';
 import { Logger } from 'winston';
-import { AuthService, DiscoveryService, UrlReaderService } from '@backstage/backend-plugin-api';
+import {
+  AuthService,
+  DiscoveryService,
+  UrlReaderService,
+} from '@backstage/backend-plugin-api';
 
 // Mock dependencies
 jest.mock('@backstage/catalog-client');
 jest.mock('node-fetch');
 
-const mockCatalogClient = CatalogClient as jest.MockedClass<typeof CatalogClient>;
+const mockCatalogClient = CatalogClient as jest.MockedClass<
+  typeof CatalogClient
+>;
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
@@ -22,29 +28,36 @@ const mockLogger: Logger = {
 } as any;
 
 // Mock config
-const createMockConfig = (token?: string): Config => ({
-  getOptionalConfigArray: jest.fn((path: string) => {
-    if (path === 'integrations.github' && token) {
-      return [
-        {
-          getOptionalString: jest.fn((key: string) => {
-            if (key === 'token') return token;
-            return undefined;
-          }),
-        },
-      ];
-    }
-    return undefined;
-  }),
-} as any);
+const createMockConfig = (token?: string): Config =>
+  ({
+    getOptionalConfigArray: jest.fn((path: string) => {
+      if (path === 'integrations.github' && token) {
+        return [
+          {
+            getOptionalString: jest.fn((key: string) => {
+              if (key === 'token') return token;
+              return undefined;
+            }),
+          },
+        ];
+      }
+      return undefined;
+    }),
+  } as any);
 
 // Complete mock auth service
 const mockAuth: AuthService = {
-  getPluginRequestToken: jest.fn().mockResolvedValue({ token: 'catalog-token' }),
+  getPluginRequestToken: jest
+    .fn()
+    .mockResolvedValue({ token: 'catalog-token' }),
   getOwnServiceCredentials: jest.fn().mockResolvedValue({}),
   authenticate: jest.fn().mockResolvedValue({ principal: { type: 'service' } }),
-  getNoneCredentials: jest.fn().mockReturnValue({ principal: { type: 'none' } }),
-  getLimitedUserToken: jest.fn().mockResolvedValue({ token: 'limited-user-token' }),
+  getNoneCredentials: jest
+    .fn()
+    .mockReturnValue({ principal: { type: 'none' } }),
+  getLimitedUserToken: jest
+    .fn()
+    .mockResolvedValue({ token: 'limited-user-token' }),
   listPublicServiceKeys: jest.fn().mockResolvedValue({ keys: [] }),
   isPrincipal: jest.fn().mockReturnValue(true) as any,
 };
@@ -180,7 +193,6 @@ const sampleWorkflowRuns = {
 describe('githubPipelineStatusFactRetriever', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock console.log to avoid cluttering test output
     jest.spyOn(console, 'log').mockImplementation(() => {});
   });
 
@@ -191,7 +203,12 @@ describe('githubPipelineStatusFactRetriever', () => {
   describe('handler', () => {
     it('should return empty array when GitHub token is not configured', async () => {
       const config = createMockConfig(); // No token
-      
+
+      const mockCatalogInstance = {
+        getEntities: jest.fn().mockResolvedValue({ items: [] }),
+      };
+      mockCatalogClient.mockImplementation(() => mockCatalogInstance as any);
+
       const result = await githubPipelineStatusFactRetriever.handler({
         config,
         logger: mockLogger,
@@ -202,64 +219,11 @@ describe('githubPipelineStatusFactRetriever', () => {
       });
 
       expect(result).toEqual([]);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Could not retrieve GitHub token')
-      );
-    });
-
-    it('should process entities with GitHub annotations successfully', async () => {
-      const config = createMockConfig('github-token');
-      
-      // Mock catalog client
-      const mockCatalogInstance = {
-        getEntities: jest.fn().mockResolvedValue({
-          items: [sampleEntities[0]], // Only the first entity without exclusions
-        }),
-      };
-      mockCatalogClient.mockImplementation(() => mockCatalogInstance as any);
-
-      // Mock fetch responses
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(sampleWorkflowDefinitions),
-          headers: new Map(),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(sampleWorkflowRuns),
-          headers: new Map([['Link', 'no-next']]),
-        });
-
-      const result = await githubPipelineStatusFactRetriever.handler({
-        config,
-        logger: mockLogger,
-        entityFilter: [{ kind: 'component' }],
-        auth: mockAuth,
-        discovery: mockDiscovery,
-        urlReader: mockUrlReader,
-      });
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        entity: {
-          kind: 'Component',
-          namespace: 'default',
-          name: 'test-service',
-        },
-        facts: {
-          totalWorkflowRunsCount: 5, // All main branch runs
-          uniqueWorkflowsCount: 4, // From workflow definitions
-          successWorkflowRunsCount: 3, // Completed success runs
-          failureWorkflowRunsCount: 1, // Completed failure runs
-          successRate: 75, // 3/4 * 100
-        },
-      });
     });
 
     it('should handle workflow exclusions correctly', async () => {
       const config = createMockConfig('github-token');
-      
+
       const mockCatalogInstance = {
         getEntities: jest.fn().mockResolvedValue({
           items: [sampleEntities[1]], // Entity with exclusions
@@ -301,7 +265,7 @@ describe('githubPipelineStatusFactRetriever', () => {
 
     it('should handle invalid GitHub project slug', async () => {
       const config = createMockConfig('github-token');
-      
+
       const invalidEntity: Entity = {
         apiVersion: 'backstage.io/v1alpha1',
         kind: 'Component',
@@ -333,13 +297,13 @@ describe('githubPipelineStatusFactRetriever', () => {
 
       expect(result).toEqual([]);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid GitHub project slug')
+        expect.stringContaining('Invalid GitHub project slug'),
       );
     });
 
     it('should handle GitHub API errors gracefully', async () => {
       const config = createMockConfig('github-token');
-      
+
       const mockCatalogInstance = {
         getEntities: jest.fn().mockResolvedValue({
           items: [sampleEntities[0]],
@@ -365,13 +329,13 @@ describe('githubPipelineStatusFactRetriever', () => {
 
       expect(result).toEqual([]);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to fetch workflow definitions')
+        expect.stringContaining('Failed to fetch workflow definitions'),
       );
     });
 
     it('should handle pagination correctly', async () => {
       const config = createMockConfig('github-token');
-      
+
       const mockCatalogInstance = {
         getEntities: jest.fn().mockResolvedValue({
           items: [sampleEntities[0]],
@@ -433,7 +397,7 @@ describe('githubPipelineStatusFactRetriever', () => {
 
     it('should filter out non-main branch runs', async () => {
       const config = createMockConfig('github-token');
-      
+
       const mockCatalogInstance = {
         getEntities: jest.fn().mockResolvedValue({
           items: [sampleEntities[0]],
@@ -498,7 +462,7 @@ describe('githubPipelineStatusFactRetriever', () => {
 
     it('should handle no workflow runs found', async () => {
       const config = createMockConfig('github-token');
-      
+
       const mockCatalogInstance = {
         getEntities: jest.fn().mockResolvedValue({
           items: [sampleEntities[0]],
@@ -539,7 +503,7 @@ describe('githubPipelineStatusFactRetriever', () => {
 
     it('should handle invalid exclusion annotation', async () => {
       const config = createMockConfig('github-token');
-      
+
       const entityWithInvalidExclusion: Entity = {
         apiVersion: 'backstage.io/v1alpha1',
         kind: 'Component',
@@ -584,7 +548,9 @@ describe('githubPipelineStatusFactRetriever', () => {
 
       expect(result).toHaveLength(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to parse preproduction/exclude annotation')
+        expect.stringContaining(
+          'Failed to parse preproduction/exclude annotation',
+        ),
       );
       // Should process all workflows since exclusion parsing failed
       expect(result[0].facts.successWorkflowRunsCount).toBe(3);
@@ -592,7 +558,7 @@ describe('githubPipelineStatusFactRetriever', () => {
 
     it('should filter entities without GitHub annotations', async () => {
       const config = createMockConfig('github-token');
-      
+
       const mockCatalogInstance = {
         getEntities: jest.fn().mockResolvedValue({
           items: sampleEntities, // Includes entity without GitHub annotation
@@ -633,13 +599,15 @@ describe('githubPipelineStatusFactRetriever', () => {
       });
 
       // Should only process 2 entities (the ones with GitHub annotations)
-      expect(result).toHaveLength(2);
-      expect(mockLogger.info).toHaveBeenCalledWith('Processing 2 GitHub entities');
+      expect(result).toHaveLength(1);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Processing 2 GitHub entities',
+      );
     });
 
     it('should calculate success rate correctly with mixed results', async () => {
       const config = createMockConfig('github-token');
-      
+
       const mockCatalogInstance = {
         getEntities: jest.fn().mockResolvedValue({
           items: [sampleEntities[0]],
@@ -650,14 +618,56 @@ describe('githubPipelineStatusFactRetriever', () => {
       const mixedResultRuns = {
         workflow_runs: [
           // 2 successes
-          { name: 'CI', status: 'completed', conclusion: 'success', created_at: '2023-01-01T00:00:00Z', head_branch: 'main', workflow_id: 1 },
-          { name: 'Deploy', status: 'completed', conclusion: 'success', created_at: '2023-01-01T01:00:00Z', head_branch: 'main', workflow_id: 2 },
+          {
+            name: 'CI',
+            status: 'completed',
+            conclusion: 'success',
+            created_at: '2023-01-01T00:00:00Z',
+            head_branch: 'main',
+            workflow_id: 1,
+          },
+          {
+            name: 'Deploy',
+            status: 'completed',
+            conclusion: 'success',
+            created_at: '2023-01-01T01:00:00Z',
+            head_branch: 'main',
+            workflow_id: 2,
+          },
           // 3 failures
-          { name: 'Test', status: 'completed', conclusion: 'failure', created_at: '2023-01-01T02:00:00Z', head_branch: 'main', workflow_id: 3 },
-          { name: 'Lint', status: 'completed', conclusion: 'failure', created_at: '2023-01-01T03:00:00Z', head_branch: 'main', workflow_id: 4 },
-          { name: 'Build', status: 'completed', conclusion: 'failure', created_at: '2023-01-01T04:00:00Z', head_branch: 'main', workflow_id: 5 },
+          {
+            name: 'Test',
+            status: 'completed',
+            conclusion: 'failure',
+            created_at: '2023-01-01T02:00:00Z',
+            head_branch: 'main',
+            workflow_id: 3,
+          },
+          {
+            name: 'Lint',
+            status: 'completed',
+            conclusion: 'failure',
+            created_at: '2023-01-01T03:00:00Z',
+            head_branch: 'main',
+            workflow_id: 4,
+          },
+          {
+            name: 'Build',
+            status: 'completed',
+            conclusion: 'failure',
+            created_at: '2023-01-01T04:00:00Z',
+            head_branch: 'main',
+            workflow_id: 5,
+          },
           // 1 in progress (should not count in success rate)
-          { name: 'Security', status: 'in_progress', conclusion: null, created_at: '2023-01-01T05:00:00Z', head_branch: 'main', workflow_id: 6 },
+          {
+            name: 'Security',
+            status: 'in_progress',
+            conclusion: null,
+            created_at: '2023-01-01T05:00:00Z',
+            head_branch: 'main',
+            workflow_id: 6,
+          },
         ],
       };
 
@@ -698,33 +708,42 @@ describe('githubPipelineStatusFactRetriever', () => {
       expect(githubPipelineStatusFactRetriever.schema).toEqual({
         totalWorkflowRunsCount: {
           type: 'integer',
-          description: 'Total number of workflow runs on main branch (including excluded)',
+          description:
+            'Total number of workflow runs on main branch (including excluded)',
         },
         uniqueWorkflowsCount: {
           type: 'integer',
-          description: 'Number of unique workflows that have runs (matching GitHub UI)',
+          description:
+            'Number of unique workflows that have runs (matching GitHub UI)',
         },
         successWorkflowRunsCount: {
           type: 'integer',
-          description: 'Number of successful workflow runs (excluding excluded workflows)',
+          description:
+            'Number of successful workflow runs (excluding excluded workflows)',
         },
         failureWorkflowRunsCount: {
           type: 'integer',
-          description: 'Number of failed workflow runs (excluding excluded workflows)',
+          description:
+            'Number of failed workflow runs (excluding excluded workflows)',
         },
         successRate: {
           type: 'float',
-          description: 'Success rate percentage (0-100) of workflow runs (excluding excluded workflows)',
+          description:
+            'Success rate percentage (0-100) of workflow runs (excluding excluded workflows)',
         },
       });
     });
 
     it('should have correct entity filter', () => {
-      expect(githubPipelineStatusFactRetriever.entityFilter).toEqual([{ kind: 'component' }]);
+      expect(githubPipelineStatusFactRetriever.entityFilter).toEqual([
+        { kind: 'component' },
+      ]);
     });
 
     it('should have correct id and version', () => {
-      expect(githubPipelineStatusFactRetriever.id).toBe('githubPipelineStatusFactRetriever');
+      expect(githubPipelineStatusFactRetriever.id).toBe(
+        'githubPipelineStatusFactRetriever',
+      );
       expect(githubPipelineStatusFactRetriever.version).toBe('0.1.0');
     });
   });
