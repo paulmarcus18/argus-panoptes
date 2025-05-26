@@ -50,7 +50,7 @@ const DEFAULT_CHECKS: SonarQubeChecks = {
  * methods for dealing with SonarCloud facts and checks.
  */
 export class SonarCloudUtils {
-  constructor(private readonly api: TechInsightsApi) {}
+  constructor() {}
 
   /**
    * Fetches SonarCloud facts for the provided entity.

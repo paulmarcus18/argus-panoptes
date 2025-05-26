@@ -40,7 +40,7 @@ const DEFAULT_CHECKS: FoundationPipelineChecks = {
  * evaluating Foundation‑pipeline data.
  */
 export class FoundationUtils {
-  constructor(private readonly api: TechInsightsApi) {}
+  constructor() {}
 
   /**
    * Fetches Foundation pipeline facts for a given entity using the Tech Insights API.

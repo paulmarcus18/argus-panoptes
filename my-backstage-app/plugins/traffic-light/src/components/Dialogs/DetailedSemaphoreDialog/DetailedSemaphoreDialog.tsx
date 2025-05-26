@@ -22,9 +22,9 @@ import InfoIcon from '@material-ui/icons/Info';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
-import { SonarCloudUtils } from 'plugins/traffic-light/src/utils/sonarCloudUtils';
+import { SonarCloudUtils } from '../../../utils/sonarCloudUtils';
 import { getAzureDevOpsBugs } from '../../utils';
-import { GithubAdvancedSecurityUtils } from 'plugins/traffic-light/src/utils/githubAdvancedSecurityUtils';
+import { GithubAdvancedSecurityUtils } from '../../../utils/githubAdvancedSecurityUtils';
 
 // Type for semaphore severity
 type Severity = 'critical' | 'high' | 'medium' | 'low';
