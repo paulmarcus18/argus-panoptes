@@ -10,7 +10,7 @@ import { TechInsightsApi } from '@backstage/plugin-tech-insights';
  *
  * @param api - The TechInsightsApi instance used to fetch facts.
  * @param entity - The entity reference for which to fetch Preproduction pipeline facts.
- * @returns An object containing SonarQube metrics for the entity.
+ * @returns An object containing Preproduction pipeline metrics for the entity.
  */
 export const getPreproductionPipelineFacts = async (
   api: TechInsightsApi,
@@ -23,7 +23,7 @@ export const getPreproductionPipelineFacts = async (
   successRate: number;
 }> => {
   try {
-    // Log which entity is being queried
+    
     console.log('Fetching Preproduction pipeline facts for entity:', stringifyEntityRef(entity));
 
     // Fetch facts from the Tech Insights API for the given entity and retriever
