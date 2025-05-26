@@ -18,7 +18,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { Header, Page, Content, InfoCard } from '@backstage/core-components';
 import { DialogComponent } from '../Dialogs/DialogComponent';
-import DetailedSemaphoreDialog from '../Dialogs/DetailedSemaphoreDialog';
+import DetailedSemaphoreDialog from '../Dialogs/DetailedSemaphoreDialog/DetailedSemaphoreDialog';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
@@ -47,7 +47,7 @@ export const TrafficComponent = () => {
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
   const [selectedEntities, setSelectedEntities] = useState<Entity[]>([]);
   const [availableSystems, setAvailableSystems] = useState<string[]>([]);
-  const [selectedSystem, setSelectedSystem] = useState<string>('all');
+  const [selectedSystem, setSelectedSystem] = useState<string>('');
   const [systemSearchTerm, setSystemSearchTerm] = useState<string>('');
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
 
@@ -104,6 +104,12 @@ export const TrafficComponent = () => {
           ),
         ).sort();
         setAvailableSystems(systems);
+        if (systems.length > 0) {
+          const randomSystem =
+            systems[Math.floor(Math.random() * systems.length)];
+          setSelectedSystem(randomSystem);
+        }
+
         setSelectedRepos(simplified.map(r => r.name));
         setSelectedEntities(simplified.map(r => r.entity));
       } catch (err) {
@@ -168,7 +174,7 @@ export const TrafficComponent = () => {
               startIcon={<FilterListIcon />}
               fullWidth
             >
-              {selectedSystem === 'all' ? 'All Systems' : selectedSystem}
+              {selectedSystem || 'Select System'}
             </Button>
             <Popover
               open={systemMenuOpen}
@@ -197,16 +203,13 @@ export const TrafficComponent = () => {
                 />
               </Box>
               <Box overflow="auto" maxHeight="300px">
-                <MenuItem
-                  onClick={() => setSelectedSystem('all')}
-                  selected={selectedSystem === 'all'}
-                >
-                  <em>All Systems</em>
-                </MenuItem>
                 {filteredSystems.map(system => (
                   <MenuItem
                     key={system}
-                    onClick={() => setSelectedSystem(system)}
+                    onClick={() => {
+                      setSelectedSystem(system);
+                      setSystemMenuOpen(false);
+                    }}
                     selected={selectedSystem === system}
                   >
                     {system}
