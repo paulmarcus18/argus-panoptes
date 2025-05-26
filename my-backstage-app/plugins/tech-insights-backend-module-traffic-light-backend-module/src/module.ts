@@ -21,6 +21,8 @@ import { githubPipelineStatusFactRetriever } from './pipelines/preproductionFact
 import { foundationPipelineStatusFactRetriever } from './pipelines/foundationFactRetriever';
 import { reportingPipelineStatusFactRetriever } from './pipelines/reportingFactRetriever';
 //import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
+// Imports retriever that queries Azure DevOps bugs data.
+import { createAzureDevOpsBugsRetriever } from './azure/azureDevOpsFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 // Imports the fact checker factory that evaluates dynamic thresholds.
@@ -72,6 +74,7 @@ export default createBackendModule({
 
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
+          'azure-devops-bugs-retriever': createAzureDevOpsBugsRetriever,
           foundationPipelineStatusFactRetriever,
           githubPipelineStatusFactRetriever,
           reportingPipelineStatusFactRetriever,
