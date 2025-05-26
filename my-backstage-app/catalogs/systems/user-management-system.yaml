@@ -24,6 +24,7 @@ metadata:
     tech-insights.io/preproduction-max-failures-threshold: '35'
     tech-insights.io/preproduction-max-failures-operator: 'lessThanInclusive'
     
+    # Github Advanced Security Annotations
     tech-insights.io/github-advanced-security-secrets-threshold: '0'
     tech-insights.io/github-advanced-security-secrets-operator: 'graterThan'
 
@@ -38,6 +39,26 @@ metadata:
 
     tech-insights.io/github-advanced-security-low-count-threshold: '10'
     tech-insights.io/github-advanced-security-low-count-operator: 'greaterThan'
+    
+    # Thresholds for system
+    github-advanced-security-system-critical-threshold-red: '0'
+    github-advanced-security-system-secrets-threshold-red: '0'
+    github-advanced-security-system-high-threshold-red: '0'
+    github-advanced-security-system-medium-threshold-red: '0.5'
+    github-advanced-security-system-medium-threshold-yellow: '0.1'
+    github-advanced-security-system-low-threshold-yellow: '0.2'
+
+    # Threshold for system with critical tag
+    github-advanced-security-system-critical-critical-threshold-red: '0'
+    github-advanced-security-system-critical-secrets-threshold-red: '0'
+    github-advanced-security-system-critical-high-threshold-red: '0'
+    github-advanced-security-system-critical-medium-threshold-red: '0.33'
+    github-advanced-security-system-critical-medium-threshold-yellow: '0.2'
+    github-advanced-security-system-critical-low-threshold-yellow: '0.1'
+
+    
+
+
 spec:
   owner: identity-team
   members: [ghristov]
