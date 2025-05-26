@@ -23,8 +23,6 @@ import { reportingPipelineStatusFactRetriever } from './pipelines/reportingFactR
 //import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
-// Import SonarCloud fact checkers.
-import { sonarCloudChecks } from './sonarCloud/sonarCloudFactCheckers';
 // Imports the fact checker factory that evaluates dynamic thresholds.
 import { DynamicThresholdFactCheckerFactory } from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 // Imports the CatalogClient to interact with the Backstage catalog.
@@ -102,7 +100,6 @@ export default createBackendModule({
         const sonarCloudFactCheckerFactory =
           new DynamicThresholdFactCheckerFactory({
             checks: [
-              ...sonarCloudChecks,
               ...foundationPipelineChecks,
               ...preproductionPipelineChecks,
             ],
