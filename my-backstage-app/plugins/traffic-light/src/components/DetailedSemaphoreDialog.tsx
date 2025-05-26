@@ -214,7 +214,6 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
       onClose={onClose}
       aria-labelledby="semaphore-details-dialog"
       classes={{ paper: classes.dialogPaper }}
-      maxWidth="md"
     >
       <DialogTitle id="semaphore-details-dialog">
         <div className={classes.statusIndicator}>
@@ -234,21 +233,37 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
         {renderMetrics()}
         {semaphoreType === 'Dependabot' && topCriticalRepos?.length > 0 && (
           <Box mt={4}>
-            <Typography variant="h6">Top 5 Repos by Critical Alerts</Typography>
-            <Box mt={1}>
+            <Typography variant="h6" gutterBottom>
+              Top 5 Repos by Critical Alerts
+            </Typography>
+            <Grid container spacing={2}>
               {topCriticalRepos.map((repo, index) => (
-                <Box key={repo.name} mb={1}>
-                  <Typography variant="subtitle1">
-                    {index + 1}. {repo.name}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    Critical: {repo.critical} | High: {repo.high} | Medium: {repo.medium}
-                  </Typography>
-                </Box>
+                <Grid item xs={12} key={repo.name}>
+                  <Paper variant="outlined" style={{ padding: '12px 16px' }}>
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box>
+                        <Typography variant="subtitle1" style={{ fontWeight: 600 }}>
+                          {index + 1}. {repo.name}
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          High: {repo.high} | Medium: {repo.medium}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Chip
+                          label={`Critical: ${repo.critical}`}
+                          color={repo.critical > 0 ? 'secondary' : 'default'}
+                          style={{ fontWeight: 600 }}
+                        />
+                      </Box>
+                    </Box>
+                  </Paper>
+                </Grid>
               ))}
-            </Box>
+            </Grid>
           </Box>
         )}
+
       </DialogContent>
 
       <DialogActions>

@@ -127,20 +127,50 @@ export async function getTop5CriticalDependabotRepos(
       const facts = await techInsightsApi.getFacts(entityRef, ['dependabotFactRetriever']);
       const fact = facts['dependabotFactRetriever']?.facts;
 
-      if (fact && typeof fact.critical === 'number') {
-        results.push({
-          name: entity.metadata.name,
-          critical: typeof fact.critical === 'number' ? fact.critical : 0,
-          high: typeof fact.high === 'number' ? fact.high : 0,
-          medium: typeof fact.medium === 'number' ? fact.medium : 0,
-        });
-      }
+      results.push({
+        name: entity.metadata.name,
+        critical: typeof fact?.critical === 'number' ? fact.critical : 0,
+        high: typeof fact?.high === 'number' ? fact.high : 0,
+        medium: typeof fact?.medium === 'number' ? fact.medium : 0,
+      });
     } catch (err) {
       console.warn(`⚠️ Could not fetch dependabot fact for ${entityRef.name}`, err);
+      results.push({
+        name: entity.metadata.name,
+        critical: 0,
+        high: 0,
+        medium: 0,
+      });
     }
   }
 
-  return results
-    .sort((a, b) => b.critical - a.critical)
-    .slice(0, 5);
+  const selected: RepoAlertSummary[] = [];
+
+  const criticalRepos = results
+    .filter(r => r.critical > 0)
+    .sort((a, b) => b.critical - a.critical);
+  selected.push(...criticalRepos.slice(0, 5));
+
+  if (selected.length < 5) {
+    const highRepos = results
+      .filter(r => !selected.includes(r) && r.high > 0)
+      .sort((a, b) => b.high - a.high);
+    selected.push(...highRepos.slice(0, 5 - selected.length));
+  }
+
+  if (selected.length < 5) {
+    const mediumRepos = results
+      .filter(r => !selected.includes(r) && r.medium > 0)
+      .sort((a, b) => b.medium - a.medium);
+    selected.push(...mediumRepos.slice(0, 5 - selected.length));
+  }
+
+  if (selected.length < 5) {
+    const fallback = results
+      .filter(r => !selected.includes(r))
+      .slice(0, 5 - selected.length);
+    selected.push(...fallback);
+  }
+
+  return selected;
 }
