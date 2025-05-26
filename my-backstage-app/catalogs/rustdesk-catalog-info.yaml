@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: rustdesk
+  description: This is another test repo.
+  annotations:
+    github.com/project-slug: rustdesk/rustdesk
+    backstage.io/source-location: url:https://github.com/rustdesk/rustdesk
+  tags:
+    - critical
+spec:
+  type: service
+  lifecycle: experimental
+  owner: rustdesk
+  system: payments-system

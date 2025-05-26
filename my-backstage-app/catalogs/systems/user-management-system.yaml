@@ -5,6 +5,17 @@ metadata:
   title: User Management System
   annotations:
     dependabot/thresholds: '{"critical": 99, "high": 99, "medium": 99}'
+  annotations:
+    tech-insights.io/sonarcloud-quality-gate-red-threshold-percentage: '50'
+    tech-insights.io/sonarcloud-quality-gate-yellow-threshold-percentage: '25'
+    tech-insights.io/foundation-success-rate-threshold: '100'
+    tech-insights.io/foundation-success-rate-operator: 'greaterThanInclusive'
+    tech-insights.io/foundation-max-failures-threshold: '2'
+    tech-insights.io/foundation-max-failures-operator: 'lessThanInclusive'
+    tech-insights.io/preproduction-success-rate-threshold: '70'
+    tech-insights.io/preproduction-success-rate-operator: 'greaterThanInclusive'
+    tech-insights.io/preproduction-max-failures-threshold: '35'
+    tech-insights.io/preproduction-max-failures-operator: 'lessThanInclusive'
 spec:
   owner: identity-team
   members: [ghristov]

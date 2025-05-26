@@ -8,6 +8,10 @@ metadata:
     backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/terraform-provider-cloudfoundry
     sonarcloud.io/project-key: SEP-ArgusPanoptes_terraform-provider-cloudfoundry
     sonarcloud.io/enabled: 'true'
+    pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
+    foundation/thresholds: '{"minSuccessRate": 95}'
+    reporting/workflows: '["CodeQL", "Continuous Integration"]'
+    preproduction/exclude: '["Dependabot Updates"]'
   tags:
     - non-critical
 spec:
@@ -15,3 +19,4 @@ spec:
   lifecycle: experimental
   owner: SEP-ArgusPanoptes
   system: user-management-system
+

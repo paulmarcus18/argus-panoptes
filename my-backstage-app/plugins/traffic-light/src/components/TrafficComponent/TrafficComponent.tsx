@@ -17,14 +17,23 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { Header, Page, Content, InfoCard } from '@backstage/core-components';
-import { DialogComponent } from '../DialogComponent';
-import DetailedSemaphoreDialog from '../DetailedSemaphoreDialog';
-import { ThresholdDialog } from '../TresholdDialogComponent';
+import { DialogComponent } from '../Dialogs/DialogComponent';
+import DetailedSemaphoreDialog from '../Dialogs/DetailedSemaphoreDialog';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import {
+  TrafficLightDependabot,
+  GitHubSecurityTrafficLight,
+  SonarQubeTrafficLight,
+  PreproductionTrafficLight,
+  FoundationTrafficLight,
+  AzureDevOpsBugsTrafficLight,
+  BaseTrafficLight,
+} from '../Semaphores';
+
+//TO-DO! 
+
 import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
-import { getSonarQubeFacts } from '../utils';
 import { getDependabotStatusFromFacts } from '../../utils/factChecker';
 import { getTop5CriticalDependabotRepos, RepoAlertSummary } from '../../utils/factChecker';
 
@@ -220,39 +229,14 @@ const SonarQubeTrafficLight = ({
 // Main component
 export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
-  const techInsightsApi = useApi(techInsightsApiRef);
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Repository data states
-  const [repos, setRepos] = useState<
-    {
-      name: string;
-      description: string;
-      owner?: string;
-      system?: string;
-      tags?: string[];
-      entity: Entity;
-    }[]
-  >([]);
-
-  // Status data state (for mock statuses)
-  const [statusData, setStatusData] = useState<Record<
-    string,
-    { color: 'red' | 'green' | 'yellow' | 'gray' | 'white'; reason: string }
-  > | null>(null);
-
-  // Dialog states
+  const [repos, setRepos] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState('');
-  const [dialogItems, setDialogItems] = useState<
-    { name: string; color: string }[]
-  >([]);
-
-  // New detailed dialog states
+  const [dialogItems, setDialogItems] = useState<any[]>([]);
   const [detailedDialogOpen, setDetailedDialogOpen] = useState(false);
   const [currentSemaphoreType, setCurrentSemaphoreType] = useState('');
-
-  // Filter states
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
   const [topCriticalRepos, setTopCriticalRepos] = useState<RepoAlertSummary[]>([]);
 
@@ -264,22 +248,16 @@ export const TrafficComponent = () => {
   const [systemSearchTerm, setSystemSearchTerm] = useState<string>('');
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
 
-  // Dialog handlers
-  const handleClick = (
-    title: string,
-    items: { name: string; color: string }[],
-  ) => {
+  const handleClick = (title: string, items: any[]) => {
     setDialogTitle(title);
     setDialogItems(items);
     setDialogOpen(true);
   };
 
-  //closes the dialog
   const handleClose = () => {
     setDialogOpen(false);
   };
 
-  // New detailed dialog handlers
   const handleSemaphoreClick = (semaphoreType: string) => {
     setCurrentSemaphoreType(semaphoreType);
     setDetailedDialogOpen(true);
@@ -289,21 +267,18 @@ export const TrafficComponent = () => {
     setDetailedDialogOpen(false);
   };
 
-  const cardAction = (
-    title: string,
-    items: { name: string; color: string }[],
-  ) => (
+  const cardAction = (title: string, items: any[]) => (
     <IconButton onClick={() => handleClick(title, items)}>
       <MoreVertIcon />
     </IconButton>
   );
 
-  // Fetch catalog data on component mount
   useEffect(() => {
     const fetchCatalogRepos = async () => {
       try {
-        const entities = await catalogApi.getEntities({ filter: { kind: 'Component' } });
-
+        const entities = await catalogApi.getEntities({
+          filter: { kind: 'Component' },
+        });
         const simplified = entities.items.map((entity: Entity) => ({
           name: entity.metadata.name,
           description: entity.metadata.description ?? 'No description',
@@ -316,7 +291,7 @@ export const TrafficComponent = () => {
               ? entity.spec.system
               : undefined,
           tags: entity.metadata?.tags,
-          entity,
+          entity: entity,
         }));
 
         console.log('📋 All loaded catalog components:');
@@ -325,12 +300,12 @@ export const TrafficComponent = () => {
         });
 
         setRepos(simplified);
-
         const systems = Array.from(
-          new Set(simplified.map(repo => repo.system).filter(Boolean) as string[]),
+          new Set(
+            simplified.map(repo => repo.system).filter(Boolean) as string[],
+          ),
         ).sort();
         setAvailableSystems(systems);
-
         setSelectedRepos(simplified.map(r => r.name));
         setSelectedEntities(simplified.map(r => r.entity));
       } catch (err) {
@@ -340,7 +315,6 @@ export const TrafficComponent = () => {
 
     fetchCatalogRepos();
   }, [catalogApi]);
-
 
   // Apply filters when filter settings change
   useEffect(() => {
@@ -355,6 +329,30 @@ export const TrafficComponent = () => {
     setSelectedRepos(filtered.map(r => r.name));
     setSelectedEntities(filtered.map(r => r.entity));
   }, [onlyMyRepos, onlyCritical, repos, selectedSystem]);
+
+    // Filter systems based on search term
+  useEffect(() => {
+    const fetchTopRepos = async () => {
+      if (!detailedDialogOpen || currentSemaphoreType !== 'Dependabot') return;
+      if (selectedEntities.length === 0) return;
+  
+      try {
+        const top5 = await getTop5CriticalDependabotRepos(techInsightsApi, selectedEntities);
+        setTopCriticalRepos(top5);
+      } catch (e) {
+        console.error('❌ Failed to fetch top critical repos', e);
+      }
+    };
+  
+    fetchTopRepos();
+  }, [
+    detailedDialogOpen,
+    currentSemaphoreType,
+    selectedEntities,  // ✅ ensures updates when filters change
+    techInsightsApi,
+  ]);
+
+
 
   useEffect(() => {
     const fetchTopRepos = async () => {
@@ -379,30 +377,14 @@ export const TrafficComponent = () => {
 
 
 
-  // Filter systems based on search term
   const filteredSystems = availableSystems.filter(system =>
     system.toLowerCase().includes(systemSearchTerm.toLowerCase()),
   );
-
-  // System menu handlers
-  const handleSystemSelect = (system: string) => {
-    setSelectedSystem(system);
-    setSystemMenuOpen(false);
-  };
-
-  const handleOpenSystemMenu = () => {
-    setSystemMenuOpen(true);
-  };
-
-  const handleCloseSystemMenu = () => {
-    setSystemMenuOpen(false);
-  };
 
   return (
     <Page themeId="tool">
       <Header title="Traffic light plugin" subtitle="" />
       <Content>
-        {/* Filters */}
         <Box display="flex" mb={3} alignItems="center" flexWrap="wrap">
           <FormControlLabel
             control={
@@ -432,7 +414,7 @@ export const TrafficComponent = () => {
             <Button
               ref={systemMenuButtonRef}
               variant="outlined"
-              onClick={handleOpenSystemMenu}
+              onClick={() => setSystemMenuOpen(true)}
               startIcon={<FilterListIcon />}
               fullWidth
             >
@@ -441,18 +423,10 @@ export const TrafficComponent = () => {
             <Popover
               open={systemMenuOpen}
               anchorEl={systemMenuButtonRef.current}
-              onClose={handleCloseSystemMenu}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
-              }}
-              PaperProps={{
-                style: { width: '300px', maxHeight: '400px' },
-              }}
+              onClose={() => setSystemMenuOpen(false)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+              PaperProps={{ style: { width: '300px', maxHeight: '400px' } }}
             >
               <Box p={2}>
                 <TextField
@@ -474,7 +448,7 @@ export const TrafficComponent = () => {
               </Box>
               <Box overflow="auto" maxHeight="300px">
                 <MenuItem
-                  onClick={() => handleSystemSelect('all')}
+                  onClick={() => setSelectedSystem('all')}
                   selected={selectedSystem === 'all'}
                 >
                   <em>All Systems</em>
@@ -482,7 +456,7 @@ export const TrafficComponent = () => {
                 {filteredSystems.map(system => (
                   <MenuItem
                     key={system}
-                    onClick={() => handleSystemSelect(system)}
+                    onClick={() => setSelectedSystem(system)}
                     selected={selectedSystem === system}
                   >
                     {system}
@@ -500,7 +474,6 @@ export const TrafficComponent = () => {
           </Box>
         </Box>
 
-        {/* Selected Repositories Display */}
         {selectedRepos.length > 0 && (
           <Box mb={4}>
             <InfoCard title={`Selected Repositories (${selectedRepos.length})`}>
@@ -508,7 +481,7 @@ export const TrafficComponent = () => {
                 <Grid container spacing={1}>
                   {selectedRepos.map(repo => (
                     <Grid item xs={12} sm={6} md={4} lg={3} key={repo}>
-                      <Typography variant="body2" component="div">
+                      <Typography variant="body2">
                         <Box
                           bgcolor="rgba(0, 0, 0, 0.04)"
                           p={1}
@@ -529,220 +502,95 @@ export const TrafficComponent = () => {
           </Box>
         )}
 
-        {/* Traffic Light Cards */}
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <InfoCard
               title="Security Checks"
-              action={cardAction('Security Checks', [
-                { name: 'Dependabot', color: 'green' },
-                {
-                  name: 'BlackDuck',
-                  color:
-                    (statusData?.BlackDuck?.color as
-                      | 'red'
-                      | 'green'
-                      | 'yellow'
-                      | 'gray'
-                      | 'white') || 'yellow',
-                },
-                {
-                  name: 'Fortify',
-                  color:
-                    (statusData?.Fortify?.color as
-                      | 'red'
-                      | 'green'
-                      | 'yellow'
-                      | 'gray'
-                      | 'white') || 'yellow',
-                },
-              ])}
+              action={cardAction('Security Checks', [])}
             >
               <Typography variant="subtitle1">Dependabot</Typography>
-              <Tooltip title="Live check from Tech Insights">
-                <div>
-                  <Trafficlightdependabot
-                    entities={selectedEntities}
+              <TrafficLightDependabot
+                entities={selectedEntities}
                     systemName={selectedSystem !== 'all' ? selectedSystem : undefined}
-                    onClick={() => handleSemaphoreClick('Dependabot')}
-                  />
+                onClick={() => handleSemaphoreClick('Dependabot')}
+              />
 
-                </div>
-              </Tooltip>
 
               <Typography variant="subtitle1">BlackDuck</Typography>
-              <Tooltip title={statusData?.BlackDuck?.reason || ''}>
-                <div>
-                  <TrafficLight
-                    color={
-                      (statusData?.BlackDuck?.color as
-                        | 'red'
-                        | 'green'
-                        | 'yellow'
-                        | 'gray'
-                        | 'white') || 'yellow'
-                    }
-                    onClick={() => handleSemaphoreClick('BlackDuck')}
-                  />
-                </div>
-              </Tooltip>
+              <BaseTrafficLight
+                color="yellow"
+                tooltip="BlackDuck security scan status"
+                onClick={() => handleSemaphoreClick('BlackDuck')}
+              />
 
-              <Typography variant="subtitle1">Fortify</Typography>
-              <Tooltip title={statusData?.Fortify?.reason || ''}>
-                <div>
-                  <TrafficLight
-                    color={
-                      (statusData?.Fortify?.color as
-                        | 'red'
-                        | 'green'
-                        | 'yellow'
-                        | 'gray'
-                        | 'white') || 'yellow'
-                    }
-                    onClick={() => handleSemaphoreClick('Fortify')}
-                  />
-                </div>
-              </Tooltip>
+              <Typography variant="subtitle1">
+                Github Advanced Security
+              </Typography>
+              <GitHubSecurityTrafficLight
+                entities={selectedEntities}
+                onClick={() => handleSemaphoreClick('Github Advanced Security')}
+              />
+            </InfoCard>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <InfoCard title="Pipelines" action={cardAction('Pipelines', [])}>
+              <Typography variant="subtitle1">Reporting Pipeline</Typography>
+              <BaseTrafficLight
+                color="yellow"
+                tooltip="Reporting pipeline status"
+                onClick={() => handleSemaphoreClick('Reporting Pipeline')}
+              />
+
+              <Typography variant="subtitle1">
+                Pre-production pipelines
+              </Typography>
+              <PreproductionTrafficLight
+                entities={selectedEntities}
+                onClick={() => handleSemaphoreClick('Pre-Production pipelines')}
+              />
+
+              <Typography variant="subtitle1">Foundation pipelines</Typography>
+              <FoundationTrafficLight
+                entities={selectedEntities}
+                onClick={() => handleSemaphoreClick('Foundation pipelines')}
+              />
             </InfoCard>
           </Grid>
 
           <Grid item xs={12} md={6}>
             <InfoCard
               title="Software Quality"
-              action={cardAction('Software Quality', [
-                { name: 'SonarQube', color: 'yellow' },
-                {
-                  name: 'CodeScene',
-                  color:
-                    (statusData?.CodeScene?.color as
-                      | 'red'
-                      | 'green'
-                      | 'yellow'
-                      | 'gray'
-                      | 'white') || 'yellow',
-                },
-              ])}
+              action={cardAction('Software Quality', [])}
             >
               <Typography variant="subtitle1">SonarQube</Typography>
-              {/* SonarQube component that uses real data */}
               <SonarQubeTrafficLight
                 entities={selectedEntities}
                 onClick={() => handleSemaphoreClick('SonarQube')}
               />
 
               <Typography variant="subtitle1">CodeScene</Typography>
-              <Tooltip title={statusData?.CodeScene?.reason || ''}>
-                <div>
-                  <TrafficLight
-                    color={
-                      (statusData?.CodeScene?.color as
-                        | 'red'
-                        | 'green'
-                        | 'yellow'
-                        | 'gray'
-                        | 'white') || 'yellow'
-                    }
-                    onClick={() => handleSemaphoreClick('CodeScene')}
-                  />
-                </div>
-              </Tooltip>
+              <BaseTrafficLight
+                color="yellow"
+                tooltip="CodeScene code quality status"
+                onClick={() => handleSemaphoreClick('CodeScene')}
+              />
             </InfoCard>
           </Grid>
 
           <Grid item xs={12} md={6}>
             <InfoCard
-              title="Reporting Pipelines"
-              action={cardAction('Reporting Pipelines', [
-                {
-                  name: 'Reporting Pipeline',
-                  color: statusData?.['Reporting Pipeline']?.color || 'yellow',
-                },
-              ])}
+              title="Azure DevOps"
+              action={cardAction('Azure DevOps', [])}
             >
-              <Typography variant="subtitle1">Reporting Pipeline</Typography>
-              <Tooltip title={statusData?.['Reporting Pipeline']?.reason || ''}>
-                <div>
-                  <TrafficLight
-                    color={
-                      (statusData?.['Reporting Pipeline']?.color as
-                        | 'red'
-                        | 'green'
-                        | 'yellow'
-                        | 'gray'
-                        | 'white') || 'yellow'
-                    }
-                    onClick={() => handleSemaphoreClick('Reporting Pipeline')}
-                  />
-                </div>
-              </Tooltip>
-            </InfoCard>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <InfoCard
-              title="Pre-Production Environment Status"
-              action={cardAction('Pre-Production Environment', [
-                {
-                  name: 'Pre-Production pipelines',
-                  color:
-                    statusData?.['Pre-Production pipelines']?.color || 'yellow',
-                },
-              ])}
-            >
-              <Typography variant="subtitle1">
-                Pre-Production pipelines
-              </Typography>
-              <Tooltip
-                title={statusData?.['Pre-Production pipelines']?.reason || ''}
-              >
-                <div>
-                  <TrafficLight
-                    color={
-                      (statusData?.['Pre-Production pipelines']?.color as
-                        | 'red'
-                        | 'green'
-                        | 'yellow'
-                        | 'gray'
-                        | 'white') || 'yellow'
-                    }
-                    onClick={() =>
-                      handleSemaphoreClick('Pre-Production pipelines')
-                    }
-                  />
-                </div>
-              </Tooltip>
-            </InfoCard>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <InfoCard
-              title="Foundation Pipelines"
-              action={cardAction('Foundation Pipelines', [
-                {
-                  name: 'Foundation Pipelines',
-                  color:
-                    statusData?.['Foundation Pipelines']?.color || 'yellow',
-                },
-              ])}
-            >
-              <Typography variant="subtitle1">Foundation Pipelines</Typography>
-              <Tooltip
-                title={statusData?.['Foundation Pipelines']?.reason || ''}
-              >
-                <div>
-                  <TrafficLight
-                    color={
-                      statusData?.['Foundation Pipelines']?.color || 'yellow'
-                    }
-                    onClick={() => handleSemaphoreClick('Foundation Pipelines')}
-                  />
-                </div>
-              </Tooltip>
+              <Typography variant="subtitle1">Bugs</Typography>
+              <AzureDevOpsBugsTrafficLight
+                onClick={() => handleSemaphoreClick('Azure DevOps Bugs')}
+              />
             </InfoCard>
           </Grid>
         </Grid>
 
-        {/* Regular Dialog Component */}
         <DialogComponent
           open={dialogOpen}
           onClose={handleClose}
@@ -750,7 +598,6 @@ export const TrafficComponent = () => {
           items={dialogItems}
         />
 
-        {/* Detailed Semaphore Dialog Component */}
         <DetailedSemaphoreDialog
           open={detailedDialogOpen}
           onClose={handleCloseDetailedDialog}
