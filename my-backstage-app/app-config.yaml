@@ -187,7 +187,7 @@ techInsights:
         kind: Component
     azure-devops-bugs-retriever:
       enabled: true
-      cadence: '0 */4 * * *' # Every 4 hours
+      cadence: '*/2 * * * *' 
       filter:
         kind: Component
     dependabotFactRetriever:
@@ -202,6 +202,8 @@ techInsights:
     reportingPipelineStatusFactRetriever:
       cadence: '1 * * * *' # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
+    githubAdvancedSecurityFactRetriever:
+      cadence: "0 * * * *" # every hour
   factChecker:
     checks:
       noHighBugsCheck:
@@ -300,18 +302,6 @@ techInsights:
               - fact: openAlertCount
                 operator: lessThan
                 value: 5
-      githubCodeScanningCheck:
-        type: json-rules-engine
-        name: Code Scanning Alerts Below Threshold
-        description: Checks if Code Scanning alerts are below acceptable threshold
-        factIds:
-          - githubAdvancedSecurityFactRetriever
-        rule:
-          conditions:
-            all:
-              - fact: openCodeScanningAlertCount
-                operator: lessThan
-                value: 5
       githubSecretScanningCheck:
         type: json-rules-engine
         name: No Secret Scanning Alerts
@@ -360,3 +350,5 @@ techInsights:
               - fact: successWorkflowRunsCount
                 operator: moreThan
                 value: 80
+     
+      
