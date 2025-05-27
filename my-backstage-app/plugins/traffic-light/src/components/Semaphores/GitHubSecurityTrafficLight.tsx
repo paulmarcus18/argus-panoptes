@@ -17,6 +17,12 @@ export const GitHubSecurityTrafficLight = ({
   >('white');
   const [reason, setReason] = useState('Loading GitHub Security data...');
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
+
+  const githubASUtils = React.useMemo(
+    () => new GithubAdvancedSecurityUtils(),
+    [techInsightsApi],
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,6 +31,62 @@ export const GitHubSecurityTrafficLight = ({
         setReason('No entities selected');
         return;
       }
+      // Get the system name from the first entity
+      const systemName = entities[0].spec?.system;
+      if (!systemName) {
+        setColor('gray');
+        setReason('No system name found in entities');
+        return;
+      }
+
+      // Fetch system entity metadata from catalog
+      const systemEntity = await catalogApi.getEntityByRef({
+        kind: 'System',
+        namespace: entities[0].metadata.namespace || 'default',
+        name: typeof systemName === 'string' ? systemName : String(systemName),
+      });
+
+      // Thresholds used when the user selects the system
+      const system_critical_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-threshold-red'] || '0',
+      );
+      const system_high_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-high-threshold-red'] || '0',
+      );
+      const system_secrets_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-secrets-threshold-red'] || '0',
+      );
+      const system_medium_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-medium-threshold-red'] || '0.5',
+      )*entities.length;
+      const system_medium_threshold_yellow = parseFloat(  
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-medium-threshold-yellow'] || '0.1',
+      )*entities.length;
+      const system_low_threshold_yellow = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-low-threshold-yellow'] || '0.2',
+      )*entities.length;
+
+      // Thresholds used when the user selects critical in the system
+      const system_critical_critical_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-critical-threshold-red'] || '0',
+      );
+      const system_critical_high_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-high-threshold-red'] || '0',
+      );
+      const system_critical_secrets_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-secrets-threshold-red'] || '0',
+      );
+      const system_critical_medium_threshold_red = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-medium-threshold-red'] || '0.33',
+      )*entities.length;
+      const system_critical_medium_threshold_yellow = parseFloat(  
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-med-threshold-yellow'] || '0.2',
+      )*entities.length;
+      const system_critical_low_threshold_yellow = parseFloat(
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-low-threshold-yellow'] || '0.1',
+      )*entities.length;
+     
+
 
       try {
         const results = await Promise.all(

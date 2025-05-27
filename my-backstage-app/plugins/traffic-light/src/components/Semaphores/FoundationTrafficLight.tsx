@@ -18,6 +18,11 @@ export const FoundationTrafficLight = ({
   const [reason, setReason] = useState('Loading Foundation pipeline data...');
   const techInsightsApi = useApi(techInsightsApiRef);
 
+  const foundationUtils = React.useMemo(
+    () => new FoundationUtils(),
+    [techInsightsApi],
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       if (!entities.length) {

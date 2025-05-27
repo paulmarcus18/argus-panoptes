@@ -39,6 +39,11 @@ export const SonarQubeTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
+  const sonarUtils = React.useMemo(
+    () => new SonarCloudUtils(),
+    [techInsightsApi],
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       if (!entities.length) {

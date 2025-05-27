@@ -20,6 +20,11 @@ export const PreproductionTrafficLight = ({
   );
   const techInsightsApi = useApi(techInsightsApiRef);
 
+  const preproductionUtils = React.useMemo(
+    () => new PreproductionUtils(),
+    [techInsightsApi],
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       if (!entities.length) {
