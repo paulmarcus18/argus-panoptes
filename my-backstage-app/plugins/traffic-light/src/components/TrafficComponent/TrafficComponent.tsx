@@ -323,12 +323,15 @@ export const TrafficComponent = () => {
               action={cardAction('Security Checks', [])}
             >
               <Typography variant="subtitle1">Dependabot</Typography>
-              <TrafficLightDependabot
-                entities={selectedEntities}
-                systemName={selectedSystem}
-                onClick={() => handleSemaphoreClick('Dependabot')}
-              />
+                <div>
+                  <Trafficlightdependabot
+                    entities={selectedEntities}
+                    systemName={selectedSystem !== 'all' ? selectedSystem : undefined}
+                    onClick={() => handleSemaphoreClick('Dependabot')}
+                  />
 
+                </div>
+            
 
               <Typography variant="subtitle1">BlackDuck</Typography>
               <BaseTrafficLight
