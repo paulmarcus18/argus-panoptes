@@ -336,6 +336,7 @@ export const TrafficComponent = () => {
             >
               <Typography variant="subtitle1">Bugs</Typography>
               <AzureDevOpsBugsTrafficLight
+                entities={selectedEntities}
                 onClick={() => handleSemaphoreClick('Azure DevOps Bugs')}
               />
             </InfoCard>
