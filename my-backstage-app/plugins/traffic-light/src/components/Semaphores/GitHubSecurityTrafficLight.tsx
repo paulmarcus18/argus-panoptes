@@ -114,7 +114,7 @@ export const GitHubSecurityTrafficLight = ({
   const catalogApi = useApi(catalogApiRef);
 
   const githubASUtils = React.useMemo(
-    () => new GithubAdvancedSecurityUtils(techInsightsApi),
+    () => new GithubAdvancedSecurityUtils(),
     [techInsightsApi],
   );
 
@@ -174,7 +174,7 @@ export const GitHubSecurityTrafficLight = ({
         systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-medium-threshold-red'] || '0.33',
       )*entities.length;
       const system_critical_medium_threshold_yellow = parseFloat(  
-        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-medium-threshold-yellow'] || '0.2',
+        systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-med-threshold-yellow'] || '0.2',
       )*entities.length;
       const system_critical_low_threshold_yellow = parseFloat(
         systemEntity?.metadata.annotations?.['github-advanced-security-system-critical-low-threshold-yellow'] || '0.1',

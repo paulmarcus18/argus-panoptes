@@ -53,7 +53,7 @@ metadata:
     github-advanced-security-system-critical-secrets-threshold-red: '0'
     github-advanced-security-system-critical-high-threshold-red: '0'
     github-advanced-security-system-critical-medium-threshold-red: '0.33'
-    github-advanced-security-system-critical-medium-threshold-yellow: '0.2'
+    github-advanced-security-system-critical-med-threshold-yellow: '0.2'
     github-advanced-security-system-critical-low-threshold-yellow: '0.1'
 
     

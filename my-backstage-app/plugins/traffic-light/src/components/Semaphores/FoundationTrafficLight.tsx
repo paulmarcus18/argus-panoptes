@@ -19,7 +19,7 @@ export const FoundationTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
 
   const foundationUtils = React.useMemo(
-    () => new FoundationUtils(techInsightsApi),
+    () => new FoundationUtils(),
     [techInsightsApi],
   );
 

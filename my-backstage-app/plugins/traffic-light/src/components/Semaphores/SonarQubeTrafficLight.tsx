@@ -19,7 +19,7 @@ export const SonarQubeTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
 
   const sonarUtils = React.useMemo(
-    () => new SonarCloudUtils(techInsightsApi),
+    () => new SonarCloudUtils(),
     [techInsightsApi],
   );
 
