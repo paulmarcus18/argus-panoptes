@@ -22,16 +22,12 @@ import InfoIcon from '@material-ui/icons/Info';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
-import { getDependabotStatusFromFacts } from '../../utils/factChecker';
-import { CatalogApi } from '@backstage/plugin-catalog-react';
-import { RepoAlertSummary } from '../../utils/factChecker';
+import { SonarCloudUtils } from '../../../utils/sonarCloudUtils';
+import { getAzureDevOpsBugs } from '../../utils';
+import { GithubAdvancedSecurityUtils} from '../../../utils/githubAdvancedSecurityUtils';
 
-import { getGitHubSecurityFacts } from '../utils';
-import { getSonarQubeFacts } from '../../utils/sonarCloudUtils';
-import { getAzureDevOpsBugs } from '../utils';
-
-type Severity = 'critical' | 'high' | 'medium' | 'low';
-
+// Type for semaphore severity../../utils
+type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 // Type for issue details - extended with URL and directLink
 interface IssueDetail {
   severity: Severity;
@@ -41,6 +37,7 @@ interface IssueDetail {
   directLink?: string;
 }
 
+// Types for metrics data
 interface SemaphoreData {
   color: 'red' | 'yellow' | 'green' | 'gray';
   metrics: Record<string, any>;
@@ -302,40 +299,29 @@ interface DetailedSemaphoreDialogProps {
   onClose: () => void;
   semaphoreType: string;
   entities?: Entity[];
-  systemName: string;
-  catalogApi: CatalogApi;
-  topCriticalRepos?: RepoAlertSummary[];
 }
-
-const useStyles = makeStyles(theme => ({
-  dialogPaper: { minWidth: '500px' },
-  statusIndicator: { display: 'flex', alignItems: 'center', marginBottom: theme.spacing(2) },
-  statusCircle: { width: '24px', height: '24px', borderRadius: '50%', marginRight: theme.spacing(1) },
-  metricBox: { padding: theme.spacing(2), marginBottom: theme.spacing(2), display: 'flex', flexDirection: 'column' },
-  metricValue: { fontWeight: 'bold', fontSize: '22px' },
-  metricLabel: { color: theme.palette.text.secondary },
-  warningIcon: { color: theme.palette.warning.main, marginRight: theme.spacing(1) },
-  errorIcon: { color: theme.palette.error.main, marginRight: theme.spacing(1) },
-  successIcon: { color: theme.palette.success.main, marginRight: theme.spacing(1) },
-  infoIcon: { color: theme.palette.info.main, marginRight: theme.spacing(1) },
-  issueItem: { borderLeft: `4px solid ${theme.palette.error.main}`, padding: theme.spacing(1, 1, 1, 2), marginBottom: theme.spacing(1) },
-  issueTitle: { fontWeight: 'bold' },
-  chipContainer: { marginTop: theme.spacing(1), '& > *': { margin: theme.spacing(0.5) } },
-  summarySection: { padding: theme.spacing(2), marginBottom: theme.spacing(2) },
-}));
 
 const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   open,
   onClose,
   semaphoreType,
   entities = [],
-  systemName,
-  catalogApi,
-  topCriticalRepos = [], // ✅ Add this line
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
 
+  // Instantiate once – memoised so we don’t recreate it on every render
+  const sonarUtils = React.useMemo(
+    () => new SonarCloudUtils(),
+    [techInsightsApi],
+  );
+
+  const githubASUtils = React.useMemo(
+    () => new GithubAdvancedSecurityUtils(),
+    [techInsightsApi],
+  );
+
+  // Get mock data based on semaphore type (or placeholder if not found)
   const defaultData: SemaphoreData = {
     color: 'gray',
     metrics: {},
@@ -399,58 +385,63 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
 
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
+  // Fetch real SonarQube data when needed
   React.useEffect(() => {
-    const fetchDependabotData = async () => {
+    // Only fetch data if this is a SonarQube semaphore and there are entities
+    if (semaphoreType === 'SonarQube' && entities && entities.length > 0) {
       setIsLoading(true);
-      try {
-        const result = await getDependabotStatusFromFacts(techInsightsApi, entities, systemName, catalogApi);
-        const { color, reason, alertCounts } = result;
-        const [totalCritical, totalHigh, totalMedium] = alertCounts;
 
-        setLiveData({
-          color,
-          summary: reason,
-          metrics: {
-            critical: totalCritical,
-            high: totalHigh,
-            medium: totalMedium,
-          },
-          details: [],
-        });
+      const fetchSonarQubeData = async () => {
+        try {
+          // Get SonarQube facts for all entities
+          const sonarQubeResults = await Promise.all(
+            entities.map(entity =>
+              sonarUtils.getSonarQubeFacts(techInsightsApi, {
+                kind: entity.kind,
+                namespace: entity.metadata.namespace || 'default',
+                name: entity.metadata.name,
+              }),
+            ),
+          );
 
-      } catch (e) {
-        console.error('❌ Failed to fetch dependabot facts', e);
-        setLiveData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+          // Count totals
+          const totals = sonarQubeResults.reduce(
+            (acc, result) => {
+              acc.bugs += result.bugs || 0;
+              acc.code_smells += result.code_smells || 0;
+              acc.vulnerabilities += result.vulnerabilities || 0;
+              acc.coverage = result.coverage || '0%';
+              acc.duplications = result.duplications || '0%';
+              return acc;
+            },
+            {
+              bugs: 0,
+              code_smells: 0,
+              vulnerabilities: 0,
+              coverage: '0%',
+              duplications: '0%',
+              technicalDebt: '0d',
+            },
+          );
 
+          // Create details array from results
+          const details: IssueDetail[] = [];
 
-    const fetchSonarQubeData = async () => {
-      setIsLoading(true);
-      try {
-        const sonarQubeResults = await Promise.all(
-          entities.map(entity =>
-            getSonarQubeFacts(techInsightsApi, {
-              kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
-              name: entity.metadata.name,
-            }),
-          ),
-        );
+          // Add bug issues
+          if (totals.bugs > 0) {
+            details.push({
+              severity: totals.bugs > 5 ? 'high' : 'medium',
+              description: `${totals.bugs} bugs detected across projects`,
+            });
+          }
 
-        const totals = sonarQubeResults.reduce(
-          (acc, result) => {
-            acc.bugs += result.bugs || 0;
-            acc.code_smells += result.code_smells || 0;
-            acc.security_hotspots += result.security_hotspots || 0;
-            acc.coverage = result.coverage || '0%';
-            acc.duplications = result.duplications || '0%';
-            return acc;
-          },
-          { bugs: 0, code_smells: 0, security_hotspots: 0, coverage: '0%', duplications: '0%' },
-        );
+          // Add code smell issues
+          if (totals.code_smells > 0) {
+            details.push({
+              severity: totals.code_smells > 50 ? 'medium' : 'low',
+              description: `${totals.code_smells} code smells detected across projects`,
+            });
+          }
 
           // Add vulnerabilities issues
           if (totals.vulnerabilities > 0) {
@@ -468,23 +459,34 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             color = 'yellow';
           }
 
-        let summary = 'Code quality is excellent.';
-        if (color === 'red') summary = 'Critical issues require attention.';
-        else if (color === 'yellow') summary = 'Code quality issues exist.';
+          // Create the summary
+          let summary = 'Code quality is excellent with no significant issues.';
+          if (color === 'red') {
+            summary =
+              'Critical code quality issues require immediate attention.';
+          } else if (color === 'yellow') {
+            summary =
+              'Code quality issues need to be addressed before release.';
+          }
 
-        setLiveData({ color, summary, metrics: totals, details });
-      } catch (err) {
-        console.error('Error fetching SonarQube data:', err);
-        setLiveData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+          // Set the real data
+          setRealSonarQubeData({
+            color,
+            metrics: totals,
+            summary,
+            details,
+          });
+        } catch (err) {
+          console.error('Error fetching SonarQube data:', err);
+          // Fall back to mock data if there's an error
+          setRealSonarQubeData(null);
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
-    if (!semaphoreType || entities.length === 0) return;
-
-    if (semaphoreType === 'SonarQube') fetchSonarQubeData();
-    if (semaphoreType === 'Dependabot') fetchDependabotData();
+      fetchSonarQubeData();
+    }
   }, [semaphoreType, entities, techInsightsApi]);
 
   // Fetch real GitHub Security data when needed
@@ -502,7 +504,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
           // Get GitHub security facts for all entities
           const securityResults = await Promise.all(
             entities.map(entity =>
-              getGitHubSecurityFacts(techInsightsApi, {
+              githubASUtils.getGitHubSecurityFacts(techInsightsApi, {
                 kind: entity.kind,
                 namespace: entity.metadata.namespace || 'default',
                 name: entity.metadata.name,
@@ -543,7 +545,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
 
               // Extract repository name from HTML URL
               // Format is usually: https://github.com/{owner}/{repo}/security/...
-              const urlParts = (alert.html_url || '').split('/');
+              const urlParts = (alert.direct_link || '').split('/');
               const repoIndex = urlParts.indexOf('github.com');
               let repoName = '';
               if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
@@ -698,8 +700,9 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   };
 
   const renderMetrics = () => {
+    // Render different metrics based on semaphore type
     switch (semaphoreType) {
-      case 'Dependabot':
+      case 'SonarQube':
         return (
           <Grid container spacing={2}>
             <Grid item xs={4}>
@@ -898,7 +901,50 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
 
       // Handle other semaphore types with their specific metrics
       default:
-        return <Typography>No metrics available.</Typography>;
+        // Generic metrics rendering for other types
+        return (
+          <Grid container spacing={2}>
+            {Object.entries(data.metrics).map(([key, value], index) => {
+              // Handle nested objects (like in Pre-Production pipelines)
+              if (typeof value === 'object' && value !== null) {
+                return (
+                  <Grid item xs={12} sm={6} key={key}>
+                    <Paper className={classes.metricBox} elevation={1}>
+                      <Typography
+                        variant="subtitle1"
+                        className={classes.issueTitle}
+                      >
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                      </Typography>
+                      <Box mt={1}>
+                        {Object.entries(value).map(([subKey, subValue]) => (
+                          <Typography key={subKey} variant="body2">
+                            <strong>{subKey}:</strong> {subValue}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Paper>
+                  </Grid>
+                );
+              }
+
+              return (
+                <Grid item xs={6} md={4} key={key}>
+                  <Paper className={classes.metricBox} elevation={1}>
+                    <Typography variant="h4" className={classes.metricValue}>
+                      {value}
+                    </Typography>
+                    <Typography className={classes.metricLabel}>
+                      {key
+                        .replace(/([A-Z])/g, ' $1')
+                        .replace(/^./, str => str.toUpperCase())}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              );
+            })}
+          </Grid>
+        );
     }
   };
 
@@ -908,6 +954,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
       onClose={onClose}
       aria-labelledby="semaphore-details-dialog"
       classes={{ paper: classes.dialogPaper }}
+      maxWidth="md"
     >
       <DialogTitle id="semaphore-details-dialog">
         <div className={classes.statusIndicator}>
@@ -917,45 +964,6 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
       </DialogTitle>
 
       <DialogContent>
-        <Paper className={classes.summarySection} elevation={0} variant="outlined">
-          <Box display="flex" alignItems="center">
-            {getStatusIcon(data.color)}
-            <Typography variant="body1">{data.summary}</Typography>
-          </Box>
-        </Paper>
-
-        {renderMetrics()}
-        {semaphoreType === 'Dependabot' && topCriticalRepos?.length > 0 && (
-          <Box mt={4}>
-            <Typography variant="h6" gutterBottom>
-              Top 5 Repos by Critical Alerts
-            </Typography>
-            <Grid container spacing={2}>
-              {topCriticalRepos.map((repo, index) => (
-                <Grid item xs={12} key={repo.name}>
-                  <Paper variant="outlined" style={{ padding: '12px 16px' }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="subtitle1" style={{ fontWeight: 600 }}>
-                          {index + 1}. {repo.name}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          High: {repo.high} | Medium: {repo.medium}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Chip
-                          label={`Critical: ${repo.critical}`}
-                          color={repo.critical > 0 ? 'secondary' : 'default'}
-                          style={{ fontWeight: 600 }}
-                        />
-                      </Box>
-                    </Box>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
         {isLoading ? (
           <Box className={classes.loadingIndicator}>
             <Typography>Loading data...</Typography>
@@ -1056,11 +1064,12 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             )}
           </>
         )}
-
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} color="primary">Close</Button>
+        <Button onClick={onClose} color="primary">
+          Close
+        </Button>
       </DialogActions>
     </Dialog>
   );

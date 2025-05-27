@@ -4,8 +4,9 @@ metadata:
   name: payments-system
   title: Payments System
   annotations:
-    dependabot/thresholds: '{"critical": 2, "high": 5, "medium": 15}'
-  annotations:
+    tech-inights.io./dependabot-critical-alert-threshold: '99'
+    tech-insights.io/dependabot-high-alert-threshold: '99'
+    tech-insights.io/dependabot-medium-alert-threshold: '99'
     tech-insights.io/sonarcloud-quality-gate-red-threshold-percentage: '50'
     tech-insights.io/sonarcloud-quality-gate-yellow-threshold-percentage: '25'
     tech-insights.io/foundation-success-rate-threshold: '0'

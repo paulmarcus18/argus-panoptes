@@ -18,9 +18,10 @@ import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { Header, Page, Content, InfoCard } from '@backstage/core-components';
 import { DialogComponent } from '../Dialogs/DialogComponent';
-import DetailedSemaphoreDialog from '../Dialogs/DetailedSemaphoreDialog';
+import DetailedSemaphoreDialog from '../Dialogs/DetailedSemaphoreDialog/DetailedSemaphoreDialog';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
+import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
 import {
   TrafficLightDependabot,
   GitHubSecurityTrafficLight,
@@ -31,200 +32,12 @@ import {
   BaseTrafficLight,
 } from '../Semaphores';
 
-//TO-DO! 
-
-import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
-import { getDependabotStatusFromFacts } from '../../utils/factChecker';
-import { getTop5CriticalDependabotRepos, RepoAlertSummary } from '../../utils/factChecker';
-
-
-
-// TrafficLight component that renders a colored circle
-const TrafficLight = ({
-  color,
-  onClick,
-}: {
-  color: 'red' | 'green' | 'yellow' | 'gray' | 'white';
-  onClick?: () => void;
-}) => (
-  <Box
-    my={1}
-    width={50}
-    height={50}
-    borderRadius="50%"
-    bgcolor={color}
-    onClick={onClick}
-    style={onClick ? { cursor: 'pointer' } : {}}
-  />
-);
-
 // Dependabot traffic light component (existing implementation)
-interface DependabotProps {
-  owner: string;
-  repos: string[];
-  onClick?: () => void;
-}
-
-const Trafficlightdependabot = ({
-  entities,
-  systemName,
-  onClick,
-}: {
-  entities: Entity[];
-  systemName?: string;
-  onClick?: () => void;
-}) => {
-  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray' | 'white'>('white');
-  const [reason, setReason] = useState('Fetching Dependabot status...');
-  const techInsightsApi = useApi(techInsightsApiRef);
-  const catalogApi = useApi(catalogApiRef);
-
-  useEffect(() => {
-    if (!entities.length) {
-      setColor('gray');
-      setReason('No entities available');
-      return;
-    }
-
-    const fetchStatus = async () => {
-      const fallbackEntity = entities.find(e => typeof e.spec?.system === 'string');
-      const fallbackSystem = fallbackEntity?.spec?.system;
-      const finalSystemName = systemName ?? fallbackSystem;
-      const finalSystemNameString = typeof finalSystemName === 'string' ? finalSystemName : undefined;
-
-      console.log('🔌 Checking Dependabot status for entities:', entities.map(e => e.metadata.name));
-      console.log('🧭 Using system name for threshold:', finalSystemNameString);
-
-      try {
-        const result = await getDependabotStatusFromFacts(
-          techInsightsApi,
-          entities,
-          finalSystemNameString ?? '',
-          catalogApi
-        );
-
-        setColor(result.color);
-        setReason(result.reason);
-      } catch (err) {
-        console.error('❌ Error fetching Dependabot status:', err);
-        setColor('gray');
-        setReason('Error fetching status');
-      }
-    };
-
-
-    fetchStatus();
-  }, [techInsightsApi, catalogApi, entities, systemName]);
-
-  return (
-    <Tooltip title={reason}>
-      <Box
-        my={1}
-        width={50}
-        height={50}
-        borderRadius="50%"
-        bgcolor={color}
-        onClick={onClick}
-        style={onClick ? { cursor: 'pointer' } : {}}
-      />
-    </Tooltip>
-  );
-};
-
-
-
-
-
-// SonarQube traffic light component (new implementation)
-interface SonarQubeTrafficLightProps {
-  entities: Entity[];
-  onClick?: () => void;
-}
-
-const SonarQubeTrafficLight = ({
-  entities,
-  onClick,
-}: SonarQubeTrafficLightProps) => {
-  const [color, setColor] = useState<
-    'green' | 'red' | 'yellow' | 'gray' | 'white'
-  >('white');
-  const [reason, setReason] = useState<string>('Loading SonarQube data...');
-  const techInsightsApi = useApi(techInsightsApiRef);
-
-  useEffect(() => {
-    const fetchSonarQubeData = async () => {
-      if (!entities.length) {
-        setColor('gray');
-        setReason('No entities selected');
-        return;
-      }
-
-      try {
-        // Get SonarQube facts for all entities
-        const sonarQubeResults = await Promise.all(
-          entities.map(entity =>
-            getSonarQubeFacts(techInsightsApi, {
-              kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
-              name: entity.metadata.name,
-            }),
-          ),
-        );
-
-        // Count totals
-        const totals = sonarQubeResults.reduce(
-          (acc, result) => {
-            acc.bugs += result.bugs;
-            acc.code_smells += result.code_smells;
-            acc.security_hotspots += result.security_hotspots;
-            return acc;
-          },
-          { bugs: 0, code_smells: 0, security_hotspots: 0 },
-        );
-
-        // Determine traffic light color based on metrics
-        if (
-          totals.bugs > 0 ||
-          totals.security_hotspots > 0 ||
-          totals.code_smells > 10
-        ) {
-          setColor('red');
-          setReason(
-            `Quality issues found: ${totals.bugs} bugs, ${totals.code_smells} code smells, ${totals.security_hotspots} security hotspots`,
-          );
-        } else if (totals.code_smells > 1) {
-          setColor('yellow');
-          setReason(`${totals.code_smells} code smells found`);
-        } else {
-          setColor('green');
-          setReason('All code quality metrics pass thresholds');
-        }
-      } catch (err) {
-        console.error('Error fetching SonarQube data:', err);
-        setColor('gray');
-        setReason('Failed to retrieve SonarQube data');
-      }
-    };
-
-    fetchSonarQubeData();
-  }, [entities, techInsightsApi]);
-
-  return (
-    <Tooltip title={reason}>
-      <div>
-        <Box
-          my={1}
-          width={50}
-          height={50}
-          borderRadius="50%"
-          bgcolor={color}
-          onClick={onClick}
-          style={onClick ? { cursor: 'pointer' } : {}}
-        />
-      </div>
-    </Tooltip>
-  );
-};
+// interface DependabotProps {
+//   owner: string;
+//   repos: string[];
+//   onClick?: () => void;
+// }
 
 // Main component
 export const TrafficComponent = () => {
@@ -238,7 +51,7 @@ export const TrafficComponent = () => {
   const [detailedDialogOpen, setDetailedDialogOpen] = useState(false);
   const [currentSemaphoreType, setCurrentSemaphoreType] = useState('');
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
-  const [topCriticalRepos, setTopCriticalRepos] = useState<RepoAlertSummary[]>([]);
+  // const [topCriticalRepos, setTopCriticalRepos] = useState<RepoAlertSummary[]>([]);
 
   const [onlyCritical, setOnlyCritical] = useState(true);
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
@@ -306,6 +119,11 @@ export const TrafficComponent = () => {
           ),
         ).sort();
         setAvailableSystems(systems);
+        if (systems.length > 0) {
+          const randomSystem =
+            systems[Math.floor(Math.random() * systems.length)];
+          setSelectedSystem(randomSystem);
+        }
         setSelectedRepos(simplified.map(r => r.name));
         setSelectedEntities(simplified.map(r => r.entity));
       } catch (err) {
@@ -330,52 +148,51 @@ export const TrafficComponent = () => {
     setSelectedEntities(filtered.map(r => r.entity));
   }, [onlyMyRepos, onlyCritical, repos, selectedSystem]);
 
+
     // Filter systems based on search term
-  useEffect(() => {
-    const fetchTopRepos = async () => {
-      if (!detailedDialogOpen || currentSemaphoreType !== 'Dependabot') return;
-      if (selectedEntities.length === 0) return;
+  // useEffect(() => {
+  //   const fetchTopRepos = async () => {
+  //     if (!detailedDialogOpen || currentSemaphoreType !== 'Dependabot') return;
+  //     if (selectedEntities.length === 0) return;
   
-      try {
-        const top5 = await getTop5CriticalDependabotRepos(techInsightsApi, selectedEntities);
-        setTopCriticalRepos(top5);
-      } catch (e) {
-        console.error('❌ Failed to fetch top critical repos', e);
-      }
-    };
+  //     try {
+  //       const top5 = await getTop5CriticalDependabotRepos(techInsightsApi, selectedEntities);
+  //       setTopCriticalRepos(top5);
+  //     } catch (e) {
+  //       console.error('❌ Failed to fetch top critical repos', e);
+  //     }
+  //   };
   
-    fetchTopRepos();
-  }, [
-    detailedDialogOpen,
-    currentSemaphoreType,
-    selectedEntities,  // ✅ ensures updates when filters change
-    techInsightsApi,
-  ]);
+  //   fetchTopRepos();
+  // }, [
+  //   detailedDialogOpen,
+  //   currentSemaphoreType,
+  //   selectedEntities,  // ✅ ensures updates when filters change
+  //   techInsightsApi,
+  // ]);
 
 
 
-  useEffect(() => {
-    const fetchTopRepos = async () => {
-      if (!detailedDialogOpen || currentSemaphoreType !== 'Dependabot') return;
-      if (selectedEntities.length === 0) return;
+  // useEffect(() => {
+  //   const fetchTopRepos = async () => {
+  //     if (!detailedDialogOpen || currentSemaphoreType !== 'Dependabot') return;
+  //     if (selectedEntities.length === 0) return;
   
-      try {
-        const top5 = await getTop5CriticalDependabotRepos(techInsightsApi, selectedEntities);
-        setTopCriticalRepos(top5);
-      } catch (e) {
-        console.error('❌ Failed to fetch top critical repos', e);
-      }
-    };
+  //     try {
+  //       const top5 = await getTop5CriticalDependabotRepos(techInsightsApi, selectedEntities);
+  //       setTopCriticalRepos(top5);
+  //     } catch (e) {
+  //       console.error('❌ Failed to fetch top critical repos', e);
+  //     }
+  //   };
   
-    fetchTopRepos();
-  }, [
-    detailedDialogOpen,
-    currentSemaphoreType,
-    selectedEntities,  // ✅ ensures updates when filters change
-    techInsightsApi,
-  ]);
-
-
+  //   fetchTopRepos();
+  // }, [
+  //   detailedDialogOpen,
+  //   currentSemaphoreType,
+  //   selectedEntities,  // ✅ ensures updates when filters change
+  //   techInsightsApi,
+  // ]);
 
   const filteredSystems = availableSystems.filter(system =>
     system.toLowerCase().includes(systemSearchTerm.toLowerCase()),
@@ -447,16 +264,13 @@ export const TrafficComponent = () => {
                 />
               </Box>
               <Box overflow="auto" maxHeight="300px">
-                <MenuItem
-                  onClick={() => setSelectedSystem('all')}
-                  selected={selectedSystem === 'all'}
-                >
-                  <em>All Systems</em>
-                </MenuItem>
                 {filteredSystems.map(system => (
                   <MenuItem
                     key={system}
-                    onClick={() => setSelectedSystem(system)}
+                    onClick={() => {
+                      setSelectedSystem(system);
+                      setSystemMenuOpen(false);
+                    }}
                     selected={selectedSystem === system}
                   >
                     {system}
@@ -511,7 +325,7 @@ export const TrafficComponent = () => {
               <Typography variant="subtitle1">Dependabot</Typography>
               <TrafficLightDependabot
                 entities={selectedEntities}
-                    systemName={selectedSystem !== 'all' ? selectedSystem : undefined}
+                systemName={selectedSystem}
                 onClick={() => handleSemaphoreClick('Dependabot')}
               />
 
@@ -603,9 +417,6 @@ export const TrafficComponent = () => {
           onClose={handleCloseDetailedDialog}
           semaphoreType={currentSemaphoreType}
           entities={selectedEntities}
-          systemName={selectedSystem}
-          catalogApi={catalogApi}
-          topCriticalRepos={topCriticalRepos}
         />
       </Content>
     </Page>
