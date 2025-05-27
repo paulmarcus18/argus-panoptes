@@ -7,6 +7,7 @@ metadata:
     tech-inights.io./dependabot-critical-alert-threshold: '2'
     tech-insights.io/dependabot-high-alert-threshold: '25'
     tech-insights.io/dependabot-medium-alert-threshold: '30'
+    tech-insights.io/dependabot-operator: 'lessThanInclusive'
     tech-insights.io/sonarcloud-quality-gate-red-threshold-percentage: '50'
     tech-insights.io/sonarcloud-quality-gate-yellow-threshold-percentage: '25'
     tech-insights.io/foundation-success-rate-threshold: '100'
