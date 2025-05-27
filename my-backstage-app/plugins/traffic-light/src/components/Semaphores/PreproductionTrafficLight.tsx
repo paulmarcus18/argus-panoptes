@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-import { PreproductionUtils } from '../../utils/preproductionUtils';
+import { getPreproductionPipelineChecks } from '../../utils/preproductionUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
 
 export const PreproductionTrafficLight = ({
@@ -20,11 +20,6 @@ export const PreproductionTrafficLight = ({
   );
   const techInsightsApi = useApi(techInsightsApiRef);
 
-  const preproductionUtils = React.useMemo(
-    () => new PreproductionUtils(techInsightsApi),
-    [techInsightsApi],
-  );
-
   useEffect(() => {
     const fetchData = async () => {
       if (!entities.length) {
@@ -36,7 +31,7 @@ export const PreproductionTrafficLight = ({
       try {
         const results = await Promise.all(
           entities.map(entity =>
-            preproductionUtils.getPreproductionPipelineChecks(techInsightsApi, {
+            getPreproductionPipelineChecks(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
               name: entity.metadata.name,

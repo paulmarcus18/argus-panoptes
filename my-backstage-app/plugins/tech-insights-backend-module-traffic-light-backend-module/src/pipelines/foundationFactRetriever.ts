@@ -161,7 +161,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
             workflowDefinitions = workflowsData.workflows || [];
           } else {
             logger.error(
-              `&&&Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`,
+              `Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`,
             );
           }
         } catch (error: any) {

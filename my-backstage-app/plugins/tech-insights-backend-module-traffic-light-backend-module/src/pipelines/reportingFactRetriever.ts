@@ -151,7 +151,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             const workflowsData = await workflowsResponse.json();
             workflowDefinitions = workflowsData.workflows || [];
           } else {
-            logger.error(`@@@Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`);
+            logger.error(`Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`);
           }
         } catch (error: any) {
           logger.error(`Error fetching workflow definitions for ${repoName}: ${error.message}`);
