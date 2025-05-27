@@ -41,12 +41,12 @@ export async function get_weekly_cfr(project:string, from: number, to: number): 
 }
 
 
-export async function get_monthly_df(project:string, from: number, to: number): Promise<MetricItem[]> {
+export async function get_monthly_df(project: string, from: number, to: number): Promise<MetricItem[]> {
   
   const sqlFilePath = path.join(__dirname, 'queries/df_monthly.sql');
   const sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
-  const params = [project, project, from, to];
+  const params = [from, to];
 
   try {
     const [rows] = await pool.execute(sqlQuery, params);
