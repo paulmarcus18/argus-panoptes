@@ -169,7 +169,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
               console.log(`Workflow ID: ${workflow.id}, Name: "${workflow.name}", Path: ${workflow.path}`);
             });
           } else {
-            logger.error(`Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`);
+            logger.error(`###Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`);
           }
         } catch (error: any) {
           logger.error(`Error fetching workflow definitions for ${repoName}: ${error.message}`);

@@ -3,7 +3,7 @@ import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import { getSonarQubeFacts } from '../../utils/sonarCloudUtils';
+import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
 
 
@@ -40,6 +40,11 @@ export const SonarQubeTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
+  const sonarUtils = React.useMemo(
+    () => new SonarCloudUtils(techInsightsApi),
+    [techInsightsApi],
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       if (!entities.length) {
@@ -66,7 +71,7 @@ export const SonarQubeTrafficLight = ({
       try {
         const results = await Promise.all(
           entities.map(entity =>
-            getSonarQubeFacts(techInsightsApi, {
+            sonarUtils.getSonarQubeFacts(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
               name: entity.metadata.name,

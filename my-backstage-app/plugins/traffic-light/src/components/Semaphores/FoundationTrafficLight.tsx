@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-import { getFoundationPipelineChecks } from '../../utils/foundationUtils';
+import { FoundationUtils } from '../../utils/foundationUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
 
 export const FoundationTrafficLight = ({
@@ -18,6 +18,11 @@ export const FoundationTrafficLight = ({
   const [reason, setReason] = useState('Loading Foundation pipeline data...');
   const techInsightsApi = useApi(techInsightsApiRef);
 
+  const foundationUtils = React.useMemo(
+    () => new FoundationUtils(techInsightsApi),
+    [techInsightsApi],
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       if (!entities.length) {
@@ -29,7 +34,7 @@ export const FoundationTrafficLight = ({
       try {
         const results = await Promise.all(
           entities.map(entity =>
-            getFoundationPipelineChecks(techInsightsApi, {
+            foundationUtils.getFoundationPipelineChecks(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
               name: entity.metadata.name,
