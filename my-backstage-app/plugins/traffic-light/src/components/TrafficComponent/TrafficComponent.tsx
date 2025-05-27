@@ -324,9 +324,9 @@ export const TrafficComponent = () => {
             >
               <Typography variant="subtitle1">Dependabot</Typography>
                 <div>
-                  <Trafficlightdependabot
+                  <TrafficLightDependabot
                     entities={selectedEntities}
-                    systemName={selectedSystem !== 'all' ? selectedSystem : undefined}
+                    systemName={selectedSystem}
                     onClick={() => handleSemaphoreClick('Dependabot')}
                   />
 
