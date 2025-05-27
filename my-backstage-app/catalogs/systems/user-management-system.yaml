@@ -56,9 +56,7 @@ metadata:
     github-advanced-security-system-critical-med-threshold-yellow: '0.2'
     github-advanced-security-system-critical-low-threshold-yellow: '0.1'
 
-    
-
-
+    # Azure DevOps Annotations
     tech-insights.io/azure-bugs-threshold: '5'
     tech-insights.io/azure-bugs-operator: 'lessThanInclusive'
 spec:
