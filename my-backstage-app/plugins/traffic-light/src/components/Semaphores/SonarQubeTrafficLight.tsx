@@ -26,7 +26,6 @@ import { BaseTrafficLight } from './BaseTrafficLight';
  */
 export const SonarQubeTrafficLight = ({
   entities,
-  system,
   onClick,
 }: {
   entities: Entity[];
@@ -48,12 +47,20 @@ export const SonarQubeTrafficLight = ({
         return;
       }
 
+      // Get the system name from the first entity
+      const systemName = entities[0].spec?.system;
+      if (!systemName) {
+        setColor('gray');
+        setReason('System metadata is missing');
+        return;
+      }
+
       // Fetch system entity metadata from catalog
-        const systemEntity = await catalogApi.getEntityByRef({
-          kind: 'system',
-          namespace: 'default',
-          name: typeof system === 'string' ? system : String(system)
-        });
+      const systemEntity = await catalogApi.getEntityByRef({
+        kind: 'system',
+        namespace: 'default',
+        name: typeof systemName === 'string' ? systemName : String(systemName)
+      });
 
       // Get thresholds for traffic light colour from system annotations
       const redThreshold = parseFloat(
@@ -63,6 +70,8 @@ export const SonarQubeTrafficLight = ({
         systemEntity?.metadata.annotations?.['tech-insights.io/sonarcloud-quality-gate-yellow-threshold-percentage'] || '25'
       );
 
+      console.log(
+        `Red threshold: ${redThreshold}, Yellow threshold: ${yellowThreshold}`);
       try {
         const results = await Promise.all(
           entities.map(entity =>

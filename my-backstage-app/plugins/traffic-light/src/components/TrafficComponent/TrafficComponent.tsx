@@ -314,7 +314,6 @@ export const TrafficComponent = () => {
               <Typography variant="subtitle1">SonarQube</Typography>
               <SonarQubeTrafficLight
                 entities={selectedEntities}
-                system={selectedSystem}
                 onClick={() => handleSemaphoreClick('SonarQube')}
               />
 
