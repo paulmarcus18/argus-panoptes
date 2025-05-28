@@ -313,12 +313,12 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
 
   // Instantiate once – memoised so we don’t recreate it on every render
   const sonarUtils = React.useMemo(
-    () => new SonarCloudUtils(techInsightsApi),
+    () => new SonarCloudUtils(),
     [techInsightsApi],
   );
 
   const githubASUtils = React.useMemo(
-    () => new GithubAdvancedSecurityUtils(techInsightsApi),
+    () => new GithubAdvancedSecurityUtils(),
     [techInsightsApi],
   );
 
