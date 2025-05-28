@@ -33,7 +33,8 @@ import { sonarCloudChecks } from './sonarCloud/sonarCloudFactCheckers';
 import { DynamicThresholdFactCheckerFactory } from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 // Imports the CatalogClient to interact with the Backstage catalog.
 import { CatalogClient } from '@backstage/catalog-client';
-
+// Imports the Black Duck checks for security risk evaluation.
+import { BlackDuckChecks } from './blackduck/blackduckFactChecker';
 // Import the missing AuthenticatedCatalogApi class or function
 import { AuthenticatedCatalogApi } from './authenticatedCatalogApi';
 import { foundationPipelineChecks } from './pipelines/foundationFactChecker';
@@ -114,6 +115,7 @@ export default createBackendModule({
           new DynamicThresholdFactCheckerFactory({
             checks: [
               ...sonarCloudChecks,
+              ...BlackDuckChecks,
               ...foundationPipelineChecks,
               ...preproductionPipelineChecks,
             ],

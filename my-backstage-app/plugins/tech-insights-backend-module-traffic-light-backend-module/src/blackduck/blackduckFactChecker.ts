@@ -1,6 +1,6 @@
 import { DynamicThresholdCheck } from '../argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 
-export const sonarCloudChecks: DynamicThresholdCheck[] = [
+export const BlackDuckChecks: DynamicThresholdCheck[] = [
   { // BlackDuck critical security risk check
     id: 'blackduck-critical-security-risk',
     name: 'BlackDuck Critical Security Risk',
