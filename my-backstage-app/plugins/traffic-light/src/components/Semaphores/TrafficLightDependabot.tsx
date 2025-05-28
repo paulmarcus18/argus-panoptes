@@ -5,7 +5,6 @@ import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { getDependabotChecks } from '../../utils/dependabotUtils';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import { readSchedulerServiceTaskScheduleDefinitionFromConfig } from '@backstage/backend-plugin-api';
 
 export const TrafficLightDependabot = ({
   entities,
@@ -68,16 +67,17 @@ export const TrafficLightDependabot = ({
           
           );
 
+          //color logic:
 
 
         //Color logic must be fixed!!
-        if (totalChecks.critical < 2 ) {
+        if (totalChecks.critical < entities.length * 0.5 && totalChecks.high < entities.length *0.5) {
           setColor('green');
           setReason('All dependabot checks passed');
           console.log(`${totalChecks.critical} alerts found`)
-        } else if (totalChecks.critical > 2 ) {
+        } else if (totalChecks.critical > entities.length *0.5 ) {
           setColor('red');
-          setReason(`${totalChecks.critical} critical dependabot failures`);
+          setReason(`Critical alerts exceed threshold (${totalChecks.critical} > ${entities.length * 0.5})`);
           console.log(`${totalChecks.critical} alerts found`)
         } else {
           setColor('yellow');
