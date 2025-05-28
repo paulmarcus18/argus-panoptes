@@ -206,7 +206,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             page++;
           }
           
-          // If no runs found, return early with empty data
+          // Handle case where no workflow runs are found and return early with empty data
           if (allRuns.length === 0) {
             console.log(`No workflow runs found for ${repoName}`);
             return {
@@ -227,8 +227,6 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
 
           // Filter runs to only include those on the main branch 
           const mainBranchRuns = allRuns.filter(run => run.head_branch === 'main');
-          
-          // Use mainBranchRuns for all further processing
           allRuns = mainBranchRuns;
 
           // Count all workflow runs on main branch (including excluded ones)
@@ -241,14 +239,12 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
           
           console.log(`Number of unique workflows: ${uniqueWorkflowsCount}`);
           
-          // Count non-excluded workflow runs - we only want runs that aren't in the exclude list
           // Map workflow names to workflow IDs using the workflow definitions
           const workflowNameToIdMap = new Map<string, number>();
           const excludedWorkflowIds: number[] = [];
           
           // Only process exclusions if there are workflows to exclude
           if (workflowConfig.exclude.length > 0) {
-            // Build the name to ID mapping and find IDs for excluded workflow names
             if (workflowDefinitions.length > 0) {
               workflowDefinitions.forEach(workflow => {
                 workflowNameToIdMap.set(workflow.name, workflow.id);
@@ -256,40 +252,29 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
                 // Check if this workflow name is in the exclude list
                 if (workflowConfig.exclude.includes(workflow.name)) {
                   excludedWorkflowIds.push(workflow.id);
-                  console.log(`Mapping excluded workflow name "${workflow.name}" to ID ${workflow.id}`);
                 }
               });
             } else {
-              // If we couldn't get workflow definitions, try to match by name directly in the runs
-              // This is less reliable but better than nothing
+              // Match excluded names directly from the runs
               allRuns.forEach(run => {
                 if (workflowConfig.exclude.includes(run.name) && !excludedWorkflowIds.some(id => id === run.workflow_id)) {
                   excludedWorkflowIds.push(run.workflow_id);
-                  console.log(`Found workflow ID ${run.workflow_id} for excluded name "${run.name}" from runs`);
                 }
               });
-            }
-            
-            console.log(`Excluding workflow runs with IDs: [${excludedWorkflowIds.join(', ')}]`);
+            }           
           } else {
             console.log(`No workflows to exclude - processing all workflow runs`);
           }
           
-          // Filter runs based on the mapped workflow IDs from names (only if there are exclusions)
+          // Filter out excluded workflow runs for success/failure calculations
           const nonExcludedRuns = excludedWorkflowIds.length > 0 
             ? allRuns.filter(run => {
-                // Use Array.some() for type-safe checking
                 const shouldExclude = excludedWorkflowIds.some(id => id === run.workflow_id);
-                if (shouldExclude) {
-                  console.log(`Excluding run of workflow ID ${run.workflow_id} (name: "${run.name}")`);
-                }
                 return !shouldExclude;
               })
             : allRuns; // If no exclusions, use all runs
-          
-          console.log(`After exclusion: ${nonExcludedRuns.length} workflow runs remain out of ${allRuns.length} total`);
-          
-          // Count successful and failed runs among the non-excluded runs
+                    
+          // Calculate success and failure runs from the non-excluded runs
           const successWorkflowRunsCount = nonExcludedRuns.filter(
             run => run.status === 'completed' && run.conclusion === 'success'
           ).length;
@@ -298,13 +283,13 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             run => run.status === 'completed' && run.conclusion === 'failure'
           ).length;
 
-          // Calculate success rate
+          // Calculate success rate as percentage
           const totalCompletedRuns = successWorkflowRunsCount + failureWorkflowRunsCount;
           const successRate = totalCompletedRuns > 0 
             ? Math.round((successWorkflowRunsCount / totalCompletedRuns) * 100) 
             : 0;
 
-          // Create summary object
+          // Construct pipelines status summary object
           const pipelineSummary: PipelineStatusSummary = {
             totalWorkflowRunsCount,
             uniqueWorkflowsCount,
@@ -313,25 +298,15 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             successRate,
           };
 
-          // Log comprehensive pipeline summary
-          console.log(`📊 Pipeline Status Summary for ${repoName}:`);
-          console.log(`- Total workflow runs (all): ${totalWorkflowRunsCount}`);
-          console.log(`- Unique workflows: ${uniqueWorkflowsCount}`);
-          console.log(`- Success workflow runs (excluding excluded workflows): ${successWorkflowRunsCount}`);
-          console.log(`- Failure workflow runs (excluding excluded workflows): ${failureWorkflowRunsCount}`);
-          console.log(`- Success rate: ${successRate}%`);
+          // Log pipeline summary
+          logger.info(`Pipeline status summary for ${owner}/${repoName}: `) + 
+          `Total runs: ${totalWorkflowRunsCount}, ` +
+          `Unique workflows: ${uniqueWorkflowsCount}, ` +
+          `Success runs: ${successWorkflowRunsCount}, ` +
+          `Failure runs: ${failureWorkflowRunsCount}, ` +
+          `Success rate: ${successRate}%`;
           
-          // Additional diagnostics
-          const excludedRunsCount = excludedWorkflowIds.length > 0 
-            ? allRuns.filter(run => excludedWorkflowIds.some(id => id === run.workflow_id)).length 
-            : 0;
-          console.log(`- Excluded workflow runs: ${excludedRunsCount}`);
-
-          // Count in-progress runs
-          const inProgressCount = nonExcludedRuns.filter(run => run.status !== 'completed').length;
-          console.log(`- In progress workflow runs: ${inProgressCount}`);
-          
-          // Return the fact result object for this repository
+          // Return the fact result object for this repo
           return {
             entity: {
               kind: entity.kind,
@@ -347,7 +322,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
       }),
     );
 
-    // Filter null results and ensure they match TechInsightFact type
+    // Filter out null results and return valid pipeline metrics
     const validResults = results.filter((r): r is TechInsightFact => r !== null);
     return validResults;
   },
