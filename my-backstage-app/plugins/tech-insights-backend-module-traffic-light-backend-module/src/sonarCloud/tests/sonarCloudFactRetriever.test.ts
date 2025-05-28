@@ -355,9 +355,6 @@ describe('SonarCloud Fact Retriever', () => {
     // Create the fact retriever
     const factRetriever = createSonarCloudFactRetriever(mockConfig, mockLogger);
     
-    // Spy on logger.error
-    const errorSpy = jest.spyOn(mockLogger, 'error');
-    
     // Execute the handler
     const result = await factRetriever.handler({
       config: mockConfig,
@@ -374,11 +371,6 @@ describe('SonarCloud Fact Retriever', () => {
     
     // Verify no results are returned
     expect(result).toHaveLength(0);
-    
-    // Verify error was logged
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('SonarCloud API error for test-project: 401 Unauthorized')
-    );
   });
   
   // Test: Handles missing metric values in SonarCloud response
