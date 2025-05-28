@@ -177,7 +177,7 @@ sonarcloud:
 
 blackduck:
   token: ${BLACKDUCK_TOKEN}
-  baseUrl: ${BLACKDUCK_BASE_URL}
+  host: ${BLACKDUCK_BASE_URL}
 
 techInsights:
   factRetrievers:
