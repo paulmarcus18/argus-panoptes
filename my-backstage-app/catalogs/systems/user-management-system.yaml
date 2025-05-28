@@ -26,7 +26,7 @@ metadata:
     
     # Github Advanced Security Annotations
     tech-insights.io/github-advanced-security-secrets-threshold: '0'
-    tech-insights.io/github-advanced-security-secrets-operator: 'graterThan'
+    tech-insights.io/github-advanced-security-secrets-operator: 'greaterThan'
 
     tech-insights.io/github-advanced-security-critical-count-threshold: '0'
     tech-insights.io/github-advanced-security-critical-count-operator: 'greaterThan'
@@ -53,7 +53,7 @@ metadata:
     github-advanced-security-system-critical-secrets-threshold-red: '0'
     github-advanced-security-system-critical-high-threshold-red: '0'
     github-advanced-security-system-critical-medium-threshold-red: '0.33'
-    github-advanced-security-system-critical-medium-threshold-yellow: '0.2'
+    github-advanced-security-system-critical-med-threshold-yellow: '0.2'
     github-advanced-security-system-critical-low-threshold-yellow: '0.1'
 
     
