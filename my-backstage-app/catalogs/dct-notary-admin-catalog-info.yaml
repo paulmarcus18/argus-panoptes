@@ -8,6 +8,9 @@ metadata:
     backstage.io/source-location: url:https://github.com/philips-labs/dct-notary-admin
     sonarcloud.io/project-key: SEP-ArgusPanoptes_dct-notary-admin
     sonarcloud.io/enabled: 'true'
+    # 'blackduck.io/enabled': 'true'
+    # 'blackduck.io/project-name': 'dct-notary-admin'
+    # 'blackduck.io/project-version': '1.0.0'
     pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
     foundation/thresholds: '{"minSuccessRate": 95}'
     reporting/workflows: '["CodeQL", "Continuous Integration"]'
