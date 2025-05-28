@@ -23,8 +23,6 @@ import { reportingPipelineStatusFactRetriever } from './pipelines/reportingFactR
 
 // import { createGitHubSecretScanningCheck } from './github-advanced-security/githubASFactChecker';
 // Import JsonRulesEngineFactCheckerFactory
-import { JsonRulesEngineFactCheckerFactory } from '@backstage/plugin-tech-insights-backend-module-jsonfc';
-
 // Imports retriever that queries Azure DevOps bugs data.
 import { createAzureDevOpsBugsRetriever } from './azure/azureDevOpsFactRetriever';
 // Imports retriever that queries SonarCloud data.
@@ -42,6 +40,7 @@ import { foundationPipelineChecks } from './pipelines/foundationFactChecker';
 import { preproductionPipelineChecks } from './pipelines/preproductionFactChecker';
 import { githubAdvancedSecuritychecks } from './github-advanced-security/githubASFactChecker';
 
+import { azureBugsChecks } from './azure/azureDevOpsFactChecker';
 
 // Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({
@@ -116,6 +115,7 @@ export default createBackendModule({
               ...foundationPipelineChecks,
               ...preproductionPipelineChecks,
               ...githubAdvancedSecuritychecks,
+              ...azureBugsChecks,
             ],
             logger,
             catalogApi: authenticatedCatalogApi,

@@ -22,23 +22,21 @@ import InfoIcon from '@material-ui/icons/Info';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
-import { getGitHubSecurityFacts } from './utils';
-import { getSonarQubeFacts } from '../utils/sonarCloudUtils';
-import { processGitHubSecurityData, IssueDetail, Severity } from './dataProcessing/githubAdvancedSecurity_logic';
-
+import { SonarCloudUtils } from '../../../utils/sonarCloudUtils';
+import { getAzureDevOpsBugs } from '../../utils';
+import { GithubAdvancedSecurityUtils } from '../../../utils/githubAdvancedSecurityUtils';
 
 // Type for semaphore severity
-//type Severity = 'critical' | 'high' | 'medium' | 'low';
+type Severity = 'critical' | 'high' | 'medium' | 'low';
 
 // Type for issue details - extended with URL and directLink
-// interface IssueDetail {
-//   severity: Severity;
-//   description: string;
-//   component?: string;
-//   url?: string;
-//   directLink?: string;
-// }
-
+interface IssueDetail {
+  severity: Severity;
+  description: string;
+  component?: string;
+  url?: string;
+  directLink?: string;
+}
 
 // Types for metrics data
 interface SemaphoreData {
@@ -304,34 +302,6 @@ interface DetailedSemaphoreDialogProps {
   entities?: Entity[];
 }
 
-// Utility function to extract repository and file path from the direct_link
-const extractInfoFromDirectLink = (directLink: string): { repoName: string; filePath: string } => {
-  const result = { repoName: '', filePath: '' };
-  
-  if (!directLink) return result;
-  
-  try {
-    // Format is usually: https://github.com/{owner}/{repo}/blob/{commit}/{path}#L{line}
-    const url = new URL(directLink);
-    const pathParts = url.pathname.split('/');
-    
-    if (url.hostname === 'github.com' && pathParts.length >= 5) {
-      // Extract owner/repo
-      result.repoName = `${pathParts[1]}/${pathParts[2]}`;
-      
-      // Extract file path - everything after the /blob/{commit}/ part
-      if (pathParts[3] === 'blob' && pathParts.length > 5) {
-        result.filePath = pathParts.slice(5).join('/');
-      }
-    }
-  } catch (e) {
-    // If URL parsing fails, return empty strings
-    console.error('Failed to parse direct_link:', e);
-  }
-  
-  return result;
-};
-
 const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   open,
   onClose,
@@ -341,6 +311,17 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
 
+  // Instantiate once – memoised so we don’t recreate it on every render
+  const sonarUtils = React.useMemo(
+    () => new SonarCloudUtils(techInsightsApi),
+    [techInsightsApi],
+  );
+
+  const githubASUtils = React.useMemo(
+    () => new GithubAdvancedSecurityUtils(techInsightsApi),
+    [techInsightsApi],
+  );
+
   // Get mock data based on semaphore type (or placeholder if not found)
   const defaultData: SemaphoreData = {
     color: 'gray',
@@ -348,15 +329,61 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     summary: 'No data available for this metric.',
     details: [],
   };
+  //azuredevopsdata
+  const [realAzureDevOpsData, setRealAzureDevOpsData] =
+    React.useState<SemaphoreData | null>(null);
+  React.useEffect(() => {
+    if (semaphoreType === 'Azure DevOps Bugs') {
+      setIsLoading(true);
+
+      const fetchAzureDevOpsData = async () => {
+        try {
+          const bugCount = await getAzureDevOpsBugs();
+
+          let color: 'green' | 'yellow' | 'red' | 'gray' = 'green';
+          if (bugCount > 5) {
+            color = 'red';
+          } else if (bugCount > 0) {
+            color = 'yellow';
+          }
+
+          setRealAzureDevOpsData({
+            color,
+            metrics: { bugCount },
+            summary:
+              bugCount === 0
+                ? 'No active bugs in Azure DevOps.'
+                : `${bugCount} active bug(s) found.`,
+            details:
+              bugCount > 0
+                ? [
+                    {
+                      severity: bugCount > 5 ? 'high' : 'medium',
+                      description: `${bugCount} active bug(s) found in Azure DevOps.`,
+                    },
+                  ]
+                : [],
+          });
+        } catch (err) {
+          console.error('Failed to fetch Azure DevOps bug data:', err);
+          setRealAzureDevOpsData(null);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchAzureDevOpsData();
+    }
+  }, [semaphoreType]);
 
   // State to store real SonarQube data
   const [realSonarQubeData, setRealSonarQubeData] =
     React.useState<SemaphoreData | null>(null);
-    
+
   // State to store real GitHub Security data
   const [realGitHubSecurityData, setRealGitHubSecurityData] =
     React.useState<SemaphoreData | null>(null);
-    
+
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   // Fetch real SonarQube data when needed
@@ -370,7 +397,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
           // Get SonarQube facts for all entities
           const sonarQubeResults = await Promise.all(
             entities.map(entity =>
-              getSonarQubeFacts(techInsightsApi, {
+              sonarUtils.getSonarQubeFacts(techInsightsApi, {
                 kind: entity.kind,
                 namespace: entity.metadata.namespace || 'default',
                 name: entity.metadata.name,
@@ -463,46 +490,187 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     }
   }, [semaphoreType, entities, techInsightsApi]);
 
-  // Fetch and process real GitHub Security data when needed
-React.useEffect(() => {
-  // Only fetch data if this is a GitHub Advanced Security semaphore and there are entities
-  if (semaphoreType === 'Github Advanced Security' && entities && entities.length > 0) {
-    setIsLoading(true);
+  // Fetch real GitHub Security data when needed
+  React.useEffect(() => {
+    // Only fetch data if this is a GitHub Advanced Security semaphore and there are entities
+    if (
+      semaphoreType === 'Github Advanced Security' &&
+      entities &&
+      entities.length > 0
+    ) {
+      setIsLoading(true);
 
-    const fetchGitHubSecurityData = async () => {
-      try {
-        // Use the imported utility function to process GitHub security data
-        const processedData = await processGitHubSecurityData(techInsightsApi, entities);
-        
-        // The utility function already handles all the processing logic
-        // Just set the returned data directly
-        setRealGitHubSecurityData({
-          color: processedData.color,
-          metrics: processedData.metrics,
-          summary: processedData.summary,
-          details: processedData.details
-        });
-      } catch (err) {
-        console.error('Error fetching GitHub Security data:', err);
-        setRealGitHubSecurityData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      const fetchGitHubSecurityData = async () => {
+        try {
+          // Get GitHub security facts for all entities
+          const securityResults = await Promise.all(
+            entities.map(entity =>
+              githubASUtils.getGitHubSecurityFacts(techInsightsApi, {
+                kind: entity.kind,
+                namespace: entity.metadata.namespace || 'default',
+                name: entity.metadata.name,
+              }),
+            ),
+          );
 
-    fetchGitHubSecurityData();
-  }
-}, [semaphoreType, entities, techInsightsApi]);
+          // Process the results to categorize findings by severity
+          let criticalIssues = 0;
+          let highIssues = 0;
+          let mediumIssues = 0;
+          let lowIssues = 0;
+
+          // Collect all issues for details section
+          const details: IssueDetail[] = [];
+
+          securityResults.forEach(result => {
+            // Process code scanning alerts
+            Object.values(result.codeScanningAlerts || {}).forEach(alert => {
+              // Count by severity
+              switch (alert.severity) {
+                case 'critical':
+                  criticalIssues++;
+                  break;
+                case 'high':
+                  highIssues++;
+                  break;
+                case 'medium':
+                  mediumIssues++;
+                  break;
+                case 'low':
+                  lowIssues++;
+                  break;
+                default:
+                  // Default to medium if severity is unknown
+                  mediumIssues++;
+              }
+
+              // Extract repository name from HTML URL
+              // Format is usually: https://github.com/{owner}/{repo}/security/...
+              const urlParts = (alert.html_url || '').split('/');
+              const repoIndex = urlParts.indexOf('github.com');
+              let repoName = '';
+              if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
+                repoName = `${urlParts[repoIndex + 1]}/${
+                  urlParts[repoIndex + 2]
+                }`;
+              }
+
+              // Add repository name to description if available
+              const description = repoName
+                ? `[${repoName}] ${alert.description}`
+                : alert.description;
+
+              // Add to details
+              details.push({
+                severity: (alert.severity as Severity) || 'medium',
+                description: description,
+                component: alert.location?.path, // Use file path as component
+                url: alert.html_url, // Store URL for linking
+                directLink: alert.direct_link, // Direct link to the specific line
+              });
+            });
+
+            // Process secret scanning alerts (most secret scanning alerts are high severity)
+            Object.values(result.secretScanningAlerts || {}).forEach(alert => {
+              highIssues++; // Most secret alerts are high severity
+
+              // Extract repository name from HTML URL
+              const urlParts = (alert.html_url || '').split('/');
+              const repoIndex = urlParts.indexOf('github.com');
+              let repoName = '';
+              if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
+                repoName = `${urlParts[repoIndex + 1]}/${
+                  urlParts[repoIndex + 2]
+                }`;
+              }
+
+              // Add repository name to description if available
+              const description = repoName
+                ? `[${repoName}] ${alert.description}`
+                : alert.description;
+
+              details.push({
+                severity: 'high',
+                description: description,
+                url: alert.html_url,
+              });
+            });
+          });
+
+          // Calculate total issues
+          const totalCodeScanningAlerts = securityResults.reduce(
+            (sum, result) => sum + result.openCodeScanningAlertCount,
+            0,
+          );
+          const totalSecretScanningAlerts = securityResults.reduce(
+            (sum, result) => sum + result.openSecretScanningAlertCount,
+            0,
+          );
+          const totalIssues =
+            totalCodeScanningAlerts + totalSecretScanningAlerts;
+
+          // Determine color based on the presence of issues
+          let color: 'red' | 'yellow' | 'green' | 'gray' = 'green';
+          if (criticalIssues > 0 || highIssues > 0) {
+            color = 'red';
+          } else if (mediumIssues > 0) {
+            color = 'yellow';
+          }
+
+          // Create summary
+          let summary = 'No security issues found.';
+          if (color === 'red') {
+            summary = 'Critical security issues require immediate attention.';
+          } else if (color === 'yellow') {
+            summary = 'Security issues need to be addressed.';
+          }
+
+          // Set the data
+          setRealGitHubSecurityData({
+            color,
+            metrics: {
+              totalIssues,
+              criticalIssues,
+              highIssues,
+              mediumIssues,
+              lowIssues,
+              totalCodeScanningAlerts,
+              totalSecretScanningAlerts,
+            },
+            summary,
+            details,
+          });
+        } catch (err) {
+          console.error('Error fetching GitHub Security data:', err);
+          setRealGitHubSecurityData(null);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchGitHubSecurityData();
+    }
+  }, [semaphoreType, entities, techInsightsApi]);
 
   // Use real data if available, otherwise fall back to mock data
   const data = React.useMemo(() => {
     if (semaphoreType === 'SonarQube' && realSonarQubeData) {
       return realSonarQubeData;
-    } else if (semaphoreType === 'Github Advanced Security' && realGitHubSecurityData) {
+    } else if (
+      semaphoreType === 'Github Advanced Security' &&
+      realGitHubSecurityData
+    ) {
       return realGitHubSecurityData;
+    } else if (semaphoreType === 'Azure DevOps Bugs' && realAzureDevOpsData) {
+      return realAzureDevOpsData;
     }
     return mockMetricsData[semaphoreType] || defaultData;
-  }, [semaphoreType, realSonarQubeData, realGitHubSecurityData]);
+  }, [
+    semaphoreType,
+    realSonarQubeData,
+    realGitHubSecurityData,
+    realAzureDevOpsData,
+  ]);
 
   const getStatusIcon = (color: string) => {
     switch (color) {
@@ -716,6 +884,21 @@ React.useEffect(() => {
             </Grid>
           </Grid>
         );
+      case 'Azure DevOps Bugs':
+        return (
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <Paper className={classes.metricBox} elevation={1}>
+                <Typography variant="h4" className={classes.metricValue}>
+                  {data.metrics.bugCount}
+                </Typography>
+                <Typography className={classes.metricLabel}>
+                  Open Bugs
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        );
 
       // Handle other semaphore types with their specific metrics
       default:
@@ -816,64 +999,67 @@ React.useEffect(() => {
                     .slice() // Create a copy of the array to avoid modifying the original
                     .sort((a, b) => {
                       // Sort by severity (critical > high > medium > low)
-                      const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-                      return (severityOrder[b.severity] || 0) - (severityOrder[a.severity] || 0);
+                      const severityOrder = {
+                        critical: 4,
+                        high: 3,
+                        medium: 2,
+                        low: 1,
+                      };
+                      return (
+                        (severityOrder[b.severity] || 0) -
+                        (severityOrder[a.severity] || 0)
+                      );
                     })
                     .map((issue, index) => {
-                    // Get appropriate color for the border based on severity
-                    const borderColor = getSeverityColorHex(issue.severity);
-                    
-                    return (
-                      <Paper 
-                        key={index} 
-                        className={classes.issueItem} 
-                        elevation={0}
-                        style={{ borderLeftColor: borderColor }}
-                      >
-                        <Typography
-                          variant="subtitle1"
-                          className={classes.issueTitle}
+                      // Get appropriate color for the border based on severity
+                      const borderColor = getSeverityColorHex(issue.severity);
+
+                      return (
+                        <Paper
+                          key={index}
+                          className={classes.issueItem}
+                          elevation={0}
+                          style={{ borderLeftColor: borderColor }}
                         >
-                          {issue.directLink ? (
-                            <Link
-                              href={issue.directLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={classes.issueLink}
-                            >
-                              {issue.description}
-                            </Link>
-                          ) : (
-                            issue.description
-                          )}
-                        </Typography>
-                        <Box className={classes.chipContainer}>
-                          <Chip
-                            size="small"
-                            label={issue.severity}
-                            style={{
-                              backgroundColor: getSeverityColorHex(issue.severity),
-                              color: '#fff',
-                            }}
-                          />
-                          {issue.component && (
+                          <Typography
+                            variant="subtitle1"
+                            className={classes.issueTitle}
+                          >
+                            {issue.url ? (
+                              <Link
+                                href={issue.directLink || issue.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={classes.issueLink}
+                              >
+                                {issue.description}
+                              </Link>
+                            ) : (
+                              issue.description
+                            )}
+                          </Typography>
+                          <Box className={classes.chipContainer}>
                             <Chip
                               size="small"
-                              label={issue.component}
-                              variant="outlined"
+                              label={issue.severity}
+                              style={{
+                                backgroundColor: getSeverityColorHex(
+                                  issue.severity,
+                                ),
+                                color: '#fff',
+                              }}
                             />
-                          )}
-                          {issue.created_at && (
-                            <Chip
-                              size="small"
-                              label={new Date(issue.created_at).toLocaleDateString()}
-                              variant="outlined"
-                            />
-                          )}
-                        </Box>
-                      </Paper>
-                    );
-                  })}
+                            {issue.component && (
+                              <Chip
+                                size="small"
+                                label={issue.component}
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
+                        </Paper>
+                      );
+                    })}
                 </List>
               </>
             )}

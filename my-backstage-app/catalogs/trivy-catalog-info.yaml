@@ -16,4 +16,4 @@ spec:
   type: service
   lifecycle: experimental
   owner: aquasecurity
-  system: new-system
+  system: payments-system
