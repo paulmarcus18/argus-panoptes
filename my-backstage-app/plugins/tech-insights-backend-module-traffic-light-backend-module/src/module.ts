@@ -34,6 +34,8 @@ import { CatalogClient } from '@backstage/catalog-client';
 import { AuthenticatedCatalogApi } from './authenticatedCatalogApi';
 import { foundationPipelineChecks } from './pipelines/foundationFactChecker';
 import { preproductionPipelineChecks } from './pipelines/preproductionFactChecker';
+import { DependabotChecks } from './dependabot/dependabotFactChecker';
+
 
 // Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({
@@ -105,6 +107,7 @@ export default createBackendModule({
             checks: [
               ...foundationPipelineChecks,
               ...preproductionPipelineChecks,
+              ...DependabotChecks,
             ],
             logger,
             catalogApi: authenticatedCatalogApi,

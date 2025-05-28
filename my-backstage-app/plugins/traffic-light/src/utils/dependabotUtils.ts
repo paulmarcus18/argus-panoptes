@@ -25,16 +25,15 @@ export const getDependabotFacts = async (
       stringifyEntityRef(entity),
     );
 
-    const response = await api.getFacts(entity, [
-      'DependabotFactRetriever',
-    ]);
+    const response = await api.getFacts(entity, ['dependabotFactRetriever']);
 
     console.log(
       'Raw Tech Insights API response:',
       JSON.stringify(response, null, 2),
     );
 
-    const facts = response?.['DependabotFactRetriever']?.facts;
+    const facts = response?.['dependabotFactRetriever']?.facts;
+
 
     if (!facts) {
       console.error('No facts found for entity:', stringifyEntityRef(entity));
@@ -81,44 +80,26 @@ export const getDependabotFacts = async (
 export const getDependabotChecks = async (
   api: TechInsightsApi,
   entity: CompoundEntityRef,
-): Promise<{
-  successRateCheck: boolean;
-}> => {
+): Promise<{ allDependabotChecksPass: boolean }> => {
   try {
-    console.log(
-      'Running checks on Dependabot facts for entity:',
-      stringifyEntityRef(entity),
-    );
-
     const checkResults = await api.runChecks(entity);
+    console.log('[🐛 Raw Check Results]', checkResults);
 
-    const successRateCheck = checkResults.find(
-      r => r.check.id === 'dependabot-success-rate',
-    );
+    const critical = checkResults.find(r => r.check.id === 'dependabot-critical-alerts');
+    const high = checkResults.find(r => r.check.id === 'dependabot-high-alerts');
+    const medium = checkResults.find(r => r.check.id === 'dependabot-medium-alerts');
 
-    console.log(
-      'Result from Dependabot success rate check:',
-      stringifyEntityRef(entity),
-      successRateCheck?.result,
-    );
+    console.log('[✅ Check Results]', {
+      critical: critical?.result,
+      high: high?.result,
+      medium: medium?.result,
+    });
 
-    if (checkResults.length === 0) {
-      console.error(
-        'No check results found for entity:',
-        stringifyEntityRef(entity),
-      );
-      return { successRateCheck: false };
-    }
+    const allPass = [critical?.result, high?.result, medium?.result].every(Boolean);
 
-    return {
-      successRateCheck: successRateCheck?.result === true,
-    };
+    return { allDependabotChecksPass: allPass };
   } catch (error) {
-    console.error(
-      'Error running Dependabot checks for entity:',
-      stringifyEntityRef(entity),
-      error,
-    );
-    return { successRateCheck: false };
+    console.error('[❌ Error] getDependabotChecks failed:', error);
+    return { allDependabotChecksPass: false };
   }
 };
