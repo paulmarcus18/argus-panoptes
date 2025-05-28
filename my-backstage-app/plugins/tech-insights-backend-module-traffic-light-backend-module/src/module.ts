@@ -25,6 +25,8 @@ import { reportingPipelineStatusFactRetriever } from './pipelines/reportingFactR
 import { createAzureDevOpsBugsRetriever } from './azure/azureDevOpsFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
+// Imports the fact retriever that collects data from Black Duck.
+import {createBlackDuckFactRetriever} from './blackduck/blackduckFactRetriever';
 // Import SonarCloud fact checkers.
 import { sonarCloudChecks } from './sonarCloud/sonarCloudFactCheckers';
 // Imports the fact checker factory that evaluates dynamic thresholds.
@@ -74,6 +76,11 @@ export default createBackendModule({
           logger,
         );
 
+        const blackDuckFactRetriever = createBlackDuckFactRetriever(
+          config,
+          logger,
+        );
+
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
           'azure-devops-bugs-retriever': createAzureDevOpsBugsRetriever,
@@ -82,6 +89,7 @@ export default createBackendModule({
           reportingPipelineStatusFactRetriever,
           dependabotFactRetriever: factRetriever, // Adds the dependabotFactRetriever to the system.
           [sonarCloudFactRetriever.id]: sonarCloudFactRetriever, // Adds the sonarCloudFactRetriever to the system.
+          [blackDuckFactRetriever.id]: blackDuckFactRetriever, // Adds the blackDuckFactRetriever to the system.
         });
 
         // Register fact checkers
