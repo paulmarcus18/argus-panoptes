@@ -175,6 +175,10 @@ sonarcloud:
   token: ${SONARCLOUD_TOKEN}
   organization: sep-arguspanoptes
 
+blackduck:
+  token: ${BLACKDUCK_TOKEN}
+  baseUrl: ${BLACKDUCK_BASE_URL}
+
 techInsights:
   factRetrievers:
     sonarcloud-fact-retriever: # Change from array to object
@@ -202,6 +206,9 @@ techInsights:
     reportingPipelineStatusFactRetriever:
       cadence: '1 * * * *' # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
+    blackduck-fact-retriever:
+      enabled: true
+      cadence: '0 */4 * * *' # Every 4 hours
   factChecker:
     checks:
       noHighBugsCheck:
