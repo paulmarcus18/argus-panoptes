@@ -5,6 +5,7 @@ import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { getDependabotChecks } from '../../utils/dependabotUtils';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
+import { readSchedulerServiceTaskScheduleDefinitionFromConfig } from '@backstage/backend-plugin-api';
 
 export const TrafficLightDependabot = ({
   entities,
@@ -52,22 +53,36 @@ export const TrafficLightDependabot = ({
           // finalSystemNameString ?? '',
           // catalogApi
         );
+        	const totalChecks = result.reduce(
+          (acc,res) => {
+            acc.critical += res.criticalAlertCheck === false ?  1:0;
+            acc.high += res.highAlertCheck === false ? 1 : 0;
+            acc.medium += res.mediumAlertCheck === false ? 1 : 0;
+            return acc; 
+          },
+          {
+            critical: 0,
+            high: 0,
+            medium: 0,
+          }, 
+          
+          );
 
 
-        const failures = result.filter(
-          r => r.successRateCheck === false,
-        ).length;
 
         //Color logic must be fixed!!
-        if (failures === 0) {
+        if (totalChecks.critical < 2 ) {
           setColor('green');
           setReason('All dependabot checks passed');
-        } else if (failures > entities.length / 3) {
+          console.log(`${totalChecks.critical} alerts found`)
+        } else if (totalChecks.critical > 2 ) {
           setColor('red');
-          setReason(`${failures} dependabot failures`);
+          setReason(`${totalChecks.critical} critical dependabot failures`);
+          console.log(`${totalChecks.critical} alerts found`)
         } else {
           setColor('yellow');
-          setReason(`${failures} minor issues in dependabot alerts`);
+          setReason(`${totalChecks.critical} minor critical issues in dependabot alerts`);
+          console.log(`${totalChecks.critical} alerts found`)
         }
       } catch (err) {
         console.error('Dependabot error:', err);

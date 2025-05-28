@@ -80,7 +80,11 @@ export const getDependabotFacts = async (
 export const getDependabotChecks = async (
   api: TechInsightsApi,
   entity: CompoundEntityRef,
-): Promise<{ allDependabotChecksPass: boolean }> => {
+): Promise<{ 
+  criticalAlertCheck: boolean;
+  highAlertCheck: boolean;
+  mediumAlertCheck: boolean;
+ }> => {
   try {
     console.log('[🔎] Running Dependabot checks for entity:', stringifyEntityRef(entity));
 
@@ -88,28 +92,40 @@ export const getDependabotChecks = async (
 
     console.log('[🐛 Raw Check Results]', checkResults);
 
-    // Filter only Dependabot-related checks
-    const dependabotChecks = checkResults.filter(r =>
-      r.check.id.startsWith('dependabot-'),
-    );
+    // // Filter only Dependabot-related checks
+    // const dependabotChecks = checkResults.filter(r =>
+    //   r.check.id.startsWith('dependabot-'),
+    // );
 
-    // Log individual check results
-    dependabotChecks.forEach(result => {
-      console.log(
-        `[🔍 ${result.check.id}]`,
-        '→ result:', result.result,
-        '→ fact value:', result.facts?.[result.check.factIds?.[0]]?.value,
-      );
-    });
+    // // Log individual check results
+    // dependabotChecks.forEach(result => {
+    //   console.log(
+    //     `[🔍 ${result.check.id}]`,
+    //     '→ result:', result.result,
+    //     '→ fact value:', result.facts?.[result.check.factIds?.[0]]?.value,
+    //   );
+    // });
+    
+    const criticalCheck = checkResults.find(r => r.check.id === 'dependabot-critical-alerts');
+    const highCheck = checkResults.find(r => r.check.id === 'dependabot-high-alerts');
+    const mediumCheck = checkResults.find(r => r.check.id === 'dependabot-medium-alerts');
+    // const allPass = dependabotChecks.every(r => r.result === true);
 
-    const allPass = dependabotChecks.every(r => r.result === true);
+    if(checkResults.length === 0) {
+      console.error('[❌ No Dependabot checks found for entity]', stringifyEntityRef(entity));
+       return {criticalAlertCheck: false, highAlertCheck: false, mediumAlertCheck: false};
+    }
+   
+    return{
+      criticalAlertCheck: criticalCheck?.result === true,
+      highAlertCheck: highCheck?.result === true,
+      mediumAlertCheck: mediumCheck?.result === true,}
+    // console.log('[✅ All Dependabot checks pass?]', allPass);
 
-    console.log('[✅ All Dependabot checks pass?]', allPass);
-
-    return { allDependabotChecksPass: allPass };
+    // return { allDependabotChecksPass: allPass };
   } catch (error) {
     console.error('[❌ Error] getDependabotChecks failed:', error);
-    return { allDependabotChecksPass: false };
+    return { criticalAlertCheck: false, highAlertCheck: false, mediumAlertCheck: false };
   }
 };
 

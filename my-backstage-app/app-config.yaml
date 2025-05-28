@@ -194,13 +194,13 @@ techInsights:
       cadence: '* * * * *' # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
     githubPipelineStatusFactRetriever:
-      cadence: '*/2 * * * *' # every minute
+      cadence: '0 0 * * *' # every day at 00:00 (midnight)
       lifecycle: { timeToLive: { weeks: 2 } }
     foundationPipelineStatusFactRetriever:
-      cadence: '1 * * * *' # every minute
+      cadence: '0 0 * * *' # every day at 00:00 (midnight)
       lifecycle: { timeToLive: { weeks: 2 } }
     reportingPipelineStatusFactRetriever:
-      cadence: '1 * * * *' # every minute
+      cadence: '0 0 * * *' # every day at 00:00 (midnight)
       lifecycle: { timeToLive: { weeks: 2 } }
   factChecker:
     checks:

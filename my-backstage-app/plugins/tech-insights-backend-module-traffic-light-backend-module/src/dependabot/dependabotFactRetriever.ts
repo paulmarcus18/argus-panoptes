@@ -12,15 +12,15 @@ export const createDependabotFactRetriever = (
     version: '0.3.0',
     entityFilter: [{ kind: 'Component' }],
     schema: {
-      'dependabot:alerts:critical': {
+      'critical': {
         type: 'integer',
         description: 'Number of critical severity Dependabot alerts',
       },
-      'dependabot:alerts:high': {
+      'high': {
         type: 'integer',
         description: 'Number of high severity Dependabot alerts',
       },
-      'dependabot:alerts:medium': {
+      'medium': {
         type: 'integer',
         description: 'Number of medium severity Dependabot alerts',
       },
@@ -81,9 +81,9 @@ export const createDependabotFactRetriever = (
                 namespace: entity.metadata.namespace ?? 'default',
               },
               facts: {
-                'dependabot:alerts:critical': critical,
-                'dependabot:alerts:high': high,
-                'dependabot:alerts:medium': medium,
+                'critical': critical,
+                'high': high,
+                'medium': medium,
               },
             };
           } catch (e) {
