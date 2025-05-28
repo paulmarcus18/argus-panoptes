@@ -167,7 +167,8 @@ export const createBlackDuckFactRetriever = (
 
                     // If projectDetail is not found, log an error
                     if (projectDetail === undefined) {
-                        logger.error('Provide full project name');
+                        logger.error('No project found with the provided name');
+                        return null;
                     }
 
                     // Retrieve the project version from Black Duck
@@ -207,7 +208,8 @@ export const createBlackDuckFactRetriever = (
 
                     // If versionDetail is not found, log an error
                     if (versionDetail === undefined) {
-                        logger.error('Provide full version name');
+                        logger.error('No version found with the provided name');  
+                        return null;
                     }
 
                     // Log the successful retrieval of project and version details
