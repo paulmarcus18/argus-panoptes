@@ -191,7 +191,7 @@ techInsights:
       filter:
         kind: Component
     dependabotFactRetriever:
-      cadence: '0 * * * *' # every  hour
+      cadence: '* * * * *' # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
     githubPipelineStatusFactRetriever:
       cadence: '*/2 * * * *' # every minute

@@ -82,20 +82,29 @@ export const getDependabotChecks = async (
   entity: CompoundEntityRef,
 ): Promise<{ allDependabotChecksPass: boolean }> => {
   try {
+    console.log('[🔎] Running Dependabot checks for entity:', stringifyEntityRef(entity));
+
     const checkResults = await api.runChecks(entity);
+
     console.log('[🐛 Raw Check Results]', checkResults);
 
-    const critical = checkResults.find(r => r.check.id === 'dependabot-critical-alerts');
-    const high = checkResults.find(r => r.check.id === 'dependabot-high-alerts');
-    const medium = checkResults.find(r => r.check.id === 'dependabot-medium-alerts');
+    // Filter only Dependabot-related checks
+    const dependabotChecks = checkResults.filter(r =>
+      r.check.id.startsWith('dependabot-'),
+    );
 
-    console.log('[✅ Check Results]', {
-      critical: critical?.result,
-      high: high?.result,
-      medium: medium?.result,
+    // Log individual check results
+    dependabotChecks.forEach(result => {
+      console.log(
+        `[🔍 ${result.check.id}]`,
+        '→ result:', result.result,
+        '→ fact value:', result.facts?.[result.check.factIds?.[0]]?.value,
+      );
     });
 
-    const allPass = [critical?.result, high?.result, medium?.result].every(Boolean);
+    const allPass = dependabotChecks.every(r => r.result === true);
+
+    console.log('[✅ All Dependabot checks pass?]', allPass);
 
     return { allDependabotChecksPass: allPass };
   } catch (error) {
@@ -103,3 +112,4 @@ export const getDependabotChecks = async (
     return { allDependabotChecksPass: false };
   }
 };
+

@@ -663,41 +663,32 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   
       const fetchData = async () => {
         try {
-          const entity = entities[0];
-          const entityRef = getCompoundEntityRef(entity);
+          const entity = entities[0]; // Assumes you're evaluating the first entity only
+          console.log('[🚦] Running Dependabot checks for entity:', entity.metadata.name);
   
           const { criticalAlertsCount, highAlertsCount, mediumAlertsCount } =
-            await getDependabotFacts(techInsightsApi, entityRef);
+            await getDependabotFacts(techInsightsApi, {
+              kind: entity.kind,
+              namespace: entity.metadata.namespace ?? 'default',
+              name: entity.metadata.name,
+            });
   
-            const { allDependabotChecksPass } = await getDependabotChecks(
-              techInsightsApi,
-              entityRef,
-            );
+          const { allDependabotChecksPass } = await getDependabotChecks(
+            techInsightsApi,
+            {
+              kind: entity.kind,
+              namespace: entity.metadata.namespace ?? 'default',
+              name: entity.metadata.name,
+            },
+          );
   
-            const color = allDependabotChecksPass ? 'green' : 'red';
-            const summary = allDependabotChecksPass
-              ? 'All Dependabot thresholds passed'
-              : 'One or more thresholds exceeded';
-          const details = [
-            ...(criticalAlertsCount > 0
-              ? [{
-                  severity: 'critical' as const,
-                  description: `${criticalAlertsCount} critical alerts`,
-                }]
-              : []),
-            ...(highAlertsCount > 0
-              ? [{
-                  severity: 'high' as const,
-                  description: `${highAlertsCount} high alerts`,
-                }]
-              : []),
-            ...(mediumAlertsCount > 0
-              ? [{
-                  severity: 'medium' as const,
-                  description: `${mediumAlertsCount} medium alerts`,
-                }]
-              : []),
-          ];
+          const color = allDependabotChecksPass ? 'green' : 'red';
+          const summary = allDependabotChecksPass
+            ? 'All Dependabot thresholds passed ✅'
+            : 'One or more Dependabot thresholds failed ❌';
+  
+          console.log('[🎨] Final Dependabot Color:', color);
+          console.log('[📊] Alert counts — Critical:', criticalAlertsCount, 'High:', highAlertsCount, 'Medium:', mediumAlertsCount);
   
           setRealDependabotData({
             color,
@@ -707,10 +698,20 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
               medium: mediumAlertsCount,
             },
             summary,
-            details,
+            details: [
+              ...(criticalAlertsCount > 0
+                ? [{ severity: 'critical' as const, description: `${criticalAlertsCount} critical alerts` }]
+                : []),
+              ...(highAlertsCount > 0
+                ? [{ severity: 'high' as const, description: `${highAlertsCount} high alerts` }]
+                : []),
+              ...(mediumAlertsCount > 0
+                ? [{ severity: 'medium' as const, description: `${mediumAlertsCount} medium alerts` }]
+                : []),
+            ],
           });
         } catch (err) {
-          console.error('❌ Error in fetchData for Dependabot:', err);
+          console.error('❌ Error during Dependabot fetch in DetailedSemaphoreDialog:', err);
         } finally {
           setIsLoading(false);
         }
@@ -719,6 +720,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
       fetchData();
     }
   }, [semaphoreType, entities, techInsightsApi]);
+  
   
 
   // Use real data if available, otherwise fall back to mock data
