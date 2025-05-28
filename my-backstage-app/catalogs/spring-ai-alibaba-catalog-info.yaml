@@ -7,6 +7,10 @@ metadata:
     github.com/project-slug: alibaba/spring-ai-alibaba
     backstage.io/source-location: url:https://github.com/alibaba/spring-ai-alibaba
     reporting/workflows: '["CodeQL", "Continuous Integration"]'
+    azure.com/organization: argus-panoptes-dev
+    azure.com/project: repo_2
+    azure.com/bugs-query-id: b2fdb928-a73e-4cba-82c9-e605a194666d
+    azure.com/pat: 9APDLq54nbzmerzTCuD50qLNWFHSprSivK7Q6zTuvqqP3PNMFPW0JQQJ99BDACAAAAAAAAAAAAASAZDOrt3M
   tags:
     - critical
 spec:
