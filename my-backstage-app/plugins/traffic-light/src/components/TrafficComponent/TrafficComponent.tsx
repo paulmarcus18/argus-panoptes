@@ -31,6 +31,7 @@ import {
   AzureDevOpsBugsTrafficLight,
   BaseTrafficLight,
 } from '../Semaphores';
+import { ReportingTrafficLight } from '../Semaphores/ReportingTrafficLight';
 
 export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
@@ -287,9 +288,8 @@ export const TrafficComponent = () => {
           <Grid item xs={12} md={6}>
             <InfoCard title="Pipelines" action={cardAction('Pipelines', [])}>
               <Typography variant="subtitle1">Reporting Pipeline</Typography>
-              <BaseTrafficLight
-                color="yellow"
-                tooltip="Reporting pipeline status"
+              <ReportingTrafficLight
+                entities={selectedEntities}
                 onClick={() => handleSemaphoreClick('Reporting Pipeline')}
               />
 
