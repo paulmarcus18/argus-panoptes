@@ -29,6 +29,7 @@ import {
   PreproductionTrafficLight,
   FoundationTrafficLight,
   AzureDevOpsBugsTrafficLight,
+  BlackDuckTrafficLight,
   BaseTrafficLight,
 } from '../Semaphores';
 
@@ -268,9 +269,8 @@ export const TrafficComponent = () => {
               />
 
               <Typography variant="subtitle1">BlackDuck</Typography>
-              <BaseTrafficLight
-                color="yellow"
-                tooltip="BlackDuck security scan status"
+              <BlackDuckTrafficLight
+                entities={selectedEntities}
                 onClick={() => handleSemaphoreClick('BlackDuck')}
               />
 
