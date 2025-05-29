@@ -17,7 +17,7 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { Header, Page, Content, InfoCard } from '@backstage/core-components';
-import { DialogComponent } from '../Dialogs/DialogComponent';
+import { DialogComponent } from '../SemaphoreDialogs/DialogComponent';
 import DetailedSemaphoreDialog from '../Dialogs/DetailedSemaphoreDialog/DetailedSemaphoreDialog';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
