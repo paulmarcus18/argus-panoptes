@@ -19,7 +19,7 @@ import { BaseTrafficLight } from './BaseTrafficLight';
  *
  * The component also displays a tooltip with a summary of the check results or error messages.
  *
- * @param entities - An array of Backstage Entity objects to check SonarQube status for.
+ * @param entities - An array of Backstage Entity objects to check BlackDuck status for.
  * @param onClick - Optional click handler for the traffic light indicator.
  * @returns A React element rendering the traffic light with a tooltip.
  */
