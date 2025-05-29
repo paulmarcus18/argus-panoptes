@@ -20,7 +20,9 @@ import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/
 import { githubPipelineStatusFactRetriever } from './pipelines/preproductionFactRetriever';
 import { foundationPipelineStatusFactRetriever } from './pipelines/foundationFactRetriever';
 import { reportingPipelineStatusFactRetriever } from './pipelines/reportingFactRetriever';
-//import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
+
+// import { createGitHubSecretScanningCheck } from './github-advanced-security/githubASFactChecker';
+// Import JsonRulesEngineFactCheckerFactory
 // Imports retriever that queries Azure DevOps bugs data.
 import { createAzureDevOpsBugsRetriever } from './azure/azureDevOpsFactRetriever';
 // Imports retriever that queries SonarCloud data.
@@ -39,6 +41,9 @@ import { BlackDuckChecks } from './blackduck/blackduckFactChecker';
 import { AuthenticatedCatalogApi } from './authenticatedCatalogApi';
 import { foundationPipelineChecks } from './pipelines/foundationFactChecker';
 import { preproductionPipelineChecks } from './pipelines/preproductionFactChecker';
+import { githubAdvancedSecuritychecks } from './github-advanced-security/githubASFactChecker';
+
+import { azureBugsChecks } from './azure/azureDevOpsFactChecker';
 
 // Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({
@@ -60,6 +65,7 @@ export default createBackendModule({
         discovery: coreServices.discovery,
         auth: coreServices.auth,
       },
+
       //initialization function that will run during backend's startup
       async init({
         providers,
@@ -118,6 +124,8 @@ export default createBackendModule({
               ...BlackDuckChecks,
               ...foundationPipelineChecks,
               ...preproductionPipelineChecks,
+              ...githubAdvancedSecuritychecks,
+              ...azureBugsChecks,
             ],
             logger,
             catalogApi: authenticatedCatalogApi,
