@@ -3,11 +3,10 @@ import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
-import { SemaphoreData, IssueDetail, SemaphoreDialogProps } from './types';
-import type { GridSize } from '@material-ui/core';
+import { SemaphoreData, IssueDetail } from './types';
+import { Entity } from '@backstage/catalog-model';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -25,14 +24,20 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-export const SonarQubeSemaphoreDialog: React.FC<SemaphoreDialogProps> = ({
+interface SonarSemaphoreDialogProps {
+  open: boolean;
+  onClose: () => void;
+  entities?: Entity[];
+}
+
+export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
   open,
   onClose,
   entities = [],
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
-  const sonarUtils = React.useMemo(() => new SonarCloudUtils(), []);
+  const sonarUtils = React.useMemo(() => new SonarCloudUtils(), [techInsightsApi]);
 
   const [data, setData] = React.useState<SemaphoreData>({
     color: 'gray',

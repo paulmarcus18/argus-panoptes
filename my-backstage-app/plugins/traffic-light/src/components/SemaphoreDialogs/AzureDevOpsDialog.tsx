@@ -4,9 +4,9 @@ import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
-import { getAzureDevOpsBugs } from '../utils'; //this is the utils.ts file, not the utils folder
-import { SemaphoreData, IssueDetail, SemaphoreDialogProps } from './types';
-import type { GridSize } from '@material-ui/core';
+import { AzureUtils } from '../../utils/azureUtils';
+import { SemaphoreData, IssueDetail} from './types';
+import type { Entity } from '@backstage/catalog-model';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -24,12 +24,23 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-export const AzureDevOpsSemaphoreDialog: React.FC<SemaphoreDialogProps> = ({
+interface AzureSemaphoreDialogProps {
+  open: boolean;
+  onClose: () => void;
+  entities?: Entity[];
+}
+
+export const AzureDevOpsSemaphoreDialog: React.FC<AzureSemaphoreDialogProps> = ({
   open,
   onClose,
+  entities = [],
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
+  const azureUtils = React.useMemo(
+    () => new AzureUtils(), 
+    [techInsightsApi],
+  );
 
   const [data, setData] = React.useState<SemaphoreData>({
     color: 'gray',
@@ -45,7 +56,20 @@ export const AzureDevOpsSemaphoreDialog: React.FC<SemaphoreDialogProps> = ({
 
     const fetchAzureData = async () => {
       try {
-        const bugCount = await getAzureDevOpsBugs();
+        const bugMetricsArray = await Promise.all(
+            entities.map(entity =>
+              azureUtils.getAzureDevOpsBugFacts(techInsightsApi, {
+                kind: entity.kind,
+                namespace: entity.metadata.namespace || 'default',
+                name: entity.metadata.name,
+              }),
+            ),
+          );
+          const bugCount = bugMetricsArray.reduce(
+            (sum, metrics) => sum + (metrics.azureBugCount || 0),
+            0,
+          );
+
         let color: 'green' | 'yellow' | 'red' | 'gray' = 'green';
         if (bugCount > 5) color = 'red';
         else if (bugCount > 0) color = 'yellow';

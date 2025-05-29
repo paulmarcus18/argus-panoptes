@@ -23,7 +23,7 @@ import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { SonarCloudUtils } from '../../../utils/sonarCloudUtils';
-import { getAzureDevOpsBugs } from '../../utils';
+import { AzureUtils } from '../../../utils/azureUtils';
 import { GithubAdvancedSecurityUtils } from '../../../utils/githubAdvancedSecurityUtils';
 
 // Type for semaphore severity
@@ -322,6 +322,11 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     [techInsightsApi],
   );
 
+  const azureUtils = React.useMemo(
+    () => new AzureUtils(), 
+    [techInsightsApi],
+  );
+
   // Get mock data based on semaphore type (or placeholder if not found)
   const defaultData: SemaphoreData = {
     color: 'gray',
@@ -338,7 +343,19 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
 
       const fetchAzureDevOpsData = async () => {
         try {
-          const bugCount = await getAzureDevOpsBugs();
+          const bugMetricsArray = await Promise.all(
+            entities.map(entity =>
+              azureUtils.getAzureDevOpsBugFacts(techInsightsApi, {
+                kind: entity.kind,
+                namespace: entity.metadata.namespace || 'default',
+                name: entity.metadata.name,
+              }),
+            ),
+          );
+          const bugCount = bugMetricsArray.reduce(
+            (sum, metrics) => sum + (metrics.azureBugCount || 0),
+            0,
+          );
 
           let color: 'green' | 'yellow' | 'red' | 'gray' = 'green';
           if (bugCount > 5) {
