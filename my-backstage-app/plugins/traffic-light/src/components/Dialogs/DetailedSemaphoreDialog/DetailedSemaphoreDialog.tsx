@@ -25,11 +25,15 @@ import { Entity } from '@backstage/catalog-model';
 import { SonarCloudUtils } from '../../../utils/sonarCloudUtils';
 import { getAzureDevOpsBugs } from '../../utils';
 import { GithubAdvancedSecurityUtils } from '../../../utils/githubAdvancedSecurityUtils';
-import { getDependabotChecks } from '../../../utils/dependabotUtils';
-import { getDependabotFacts } from '../../../utils/dependabotUtils';
+import{DependabotUtils} from '../../../utils/dependabotUtils';
+import { TrafficLightDependabot } from '../../Semaphores';
 import { getCompoundEntityRef } from '@backstage/catalog-model';
 
-
+const techInsightsApi = useApi(techInsightsApiRef);
+const dependabotUtils = React.useMemo(
+      () => new DependabotUtils(),
+      [techInsightsApi],
+    );
 
 // Type for semaphore severity../../utils
 type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
@@ -663,53 +667,55 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
   
       const fetchData = async () => {
         try {
-          const entity = entities[0]; // Assumes you're evaluating the first entity only
-          console.log('[🚦] Running Dependabot checks for entity:', entity.metadata.name);
+          // const color = TrafficLightDependabot{, };
+          // const entity = entities[0]; // Assumes you're evaluating the first entity only
+          // console.log('[🚦] Running Dependabot checks for entity:', entity.metadata.name);
   
-          const { criticalAlertsCount, highAlertsCount, mediumAlertsCount } =
-            await getDependabotFacts(techInsightsApi, {
-              kind: entity.kind,
-              namespace: entity.metadata.namespace ?? 'default',
-              name: entity.metadata.name,
-            });
+          // const { criticalAlertsCount, highAlertsCount, mediumAlertsCount } =
+          //   await dependabotUtils.getDependabotFacts(techInsightsApi, {
+          //     kind: entity.kind,
+          //     namespace: entity.metadata.namespace ?? 'default',
+          //     name: entity.metadata.name,
+          //   });
+          
+          // const color = TrafficLightDependabot.fetch();
+          // const { criticalAlertCheck, highAlertCheck, mediumAlertCheck } = await dependabotUtils.getDependabotChecks(
+          //   techInsightsApi,
+          //   {
+          //     kind: entity.kind,
+          //     namespace: entity.metadata.namespace ?? 'default',
+          //     name: entity.metadata.name,
+          //   },
+          // );
+          
+          // const color = allDependabotChecksPass ? 'green' : 'red';
+          // const summary = allDependabotChecksPass
+          //   ? 'All Dependabot thresholds passed ✅'
+          //   : 'One or more Dependabot thresholds failed ❌';
   
-          const { allDependabotChecksPass } = await getDependabotChecks(
-            techInsightsApi,
-            {
-              kind: entity.kind,
-              namespace: entity.metadata.namespace ?? 'default',
-              name: entity.metadata.name,
-            },
-          );
+          // console.log('[🎨] Final Dependabot Color:', color);
+          // console.log('[📊] Alert counts — Critical:', criticalAlertsCount, 'High:', highAlertsCount, 'Medium:', mediumAlertsCount);
   
-          const color = allDependabotChecksPass ? 'green' : 'red';
-          const summary = allDependabotChecksPass
-            ? 'All Dependabot thresholds passed ✅'
-            : 'One or more Dependabot thresholds failed ❌';
-  
-          console.log('[🎨] Final Dependabot Color:', color);
-          console.log('[📊] Alert counts — Critical:', criticalAlertsCount, 'High:', highAlertsCount, 'Medium:', mediumAlertsCount);
-  
-          setRealDependabotData({
-            color,
-            metrics: {
-              critical: criticalAlertsCount,
-              high: highAlertsCount,
-              medium: mediumAlertsCount,
-            },
-            summary,
-            details: [
-              ...(criticalAlertsCount > 0
-                ? [{ severity: 'critical' as const, description: `${criticalAlertsCount} critical alerts` }]
-                : []),
-              ...(highAlertsCount > 0
-                ? [{ severity: 'high' as const, description: `${highAlertsCount} high alerts` }]
-                : []),
-              ...(mediumAlertsCount > 0
-                ? [{ severity: 'medium' as const, description: `${mediumAlertsCount} medium alerts` }]
-                : []),
-            ],
-          });
+          // setRealDependabotData({
+          //   color,
+          //   metrics: {
+          //     critical: criticalAlertsCount,
+          //     high: highAlertsCount,
+          //     medium: mediumAlertsCount,
+          //   },
+          //   summary,
+          //   details: [
+          //     ...(criticalAlertsCount > 0
+          //       ? [{ severity: 'critical' as const, description: `${criticalAlertsCount} critical alerts` }]
+          //       : []),
+          //     ...(highAlertsCount > 0
+          //       ? [{ severity: 'high' as const, description: `${highAlertsCount} high alerts` }]
+          //       : []),
+          //     ...(mediumAlertsCount > 0
+          //       ? [{ severity: 'medium' as const, description: `${mediumAlertsCount} medium alerts` }]
+          //       : []),
+          //   ],
+          // });
         } catch (err) {
           console.error('❌ Error during Dependabot fetch in DetailedSemaphoreDialog:', err);
         } finally {

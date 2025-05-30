@@ -6,7 +6,6 @@ import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { SonarCloudUtils} from '../../utils/sonarCloudUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
 
-
 /**
  * SonarQubeTrafficLight is a React component that displays a colored traffic light indicator
  * representing the overall SonarQube quality status for a set of entities.
@@ -37,7 +36,7 @@ export const SonarQubeTrafficLight = ({
   const [reason, setReason] = useState('Loading SonarQube data...');
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-    const sonarUtils = React.useMemo(
+  const sonarUtils = React.useMemo(
       () => new SonarCloudUtils(),
       [techInsightsApi],
     );

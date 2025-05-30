@@ -3,7 +3,7 @@ import { BaseTrafficLight } from './BaseTrafficLight';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
-import { getDependabotChecks } from '../../utils/dependabotUtils';
+import { DependabotUtils } from '../../utils/dependabotUtils';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 
 export const TrafficLightDependabot = ({
@@ -21,6 +21,10 @@ export const TrafficLightDependabot = ({
   const [reason, setReason] = useState('Fetching Dependabot status...');
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
+  const dependabotUtils = React.useMemo(
+      () => new DependabotUtils(),
+      [techInsightsApi],
+    );
 
   useEffect(() => {
     if (!entities.length) {
@@ -41,7 +45,7 @@ export const TrafficLightDependabot = ({
       try {
         const result = await Promise.all(
           entities.map(entity =>
-            getDependabotChecks(techInsightsApi, {
+            dependabotUtils.getDependabotChecks(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
               name: entity.metadata.name,
@@ -68,8 +72,6 @@ export const TrafficLightDependabot = ({
           );
 
           //color logic:
-
-
         //Color logic must be fixed!!
         if (totalChecks.critical < entities.length * 0.5 && totalChecks.high < entities.length *0.5) {
           setColor('green');
