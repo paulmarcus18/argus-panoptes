@@ -70,19 +70,22 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
             acc.bugs += r.bugs || 0;
             acc.code_smells += r.code_smells || 0;
             acc.vulnerabilities += r.vulnerabilities || 0;
-            acc.code_coverage = r.code_coverage || acc.code_coverage;
-            acc.quality_gate = r.quality_gate || acc.quality_gate;
+            acc.code_coverage += r.code_coverage / entities.length
+            acc.quality_gate += r.quality_gate==="OK" ? 0 : 1;
             return acc;
           },
           {
             bugs: 0,
             code_smells: 0,
             vulnerabilities: 0,
-            code_coverage: '0%',
-            quality_gate: '0%',
+            code_coverage: 0,
+            quality_gate: 0,
           } as Record<string, any>,
         );
 
+        // Round code_coverage to 2 decimal places
+        totals.code_coverage = Number(totals.code_coverage.toFixed(2));
+        
         // Create details array from results
         const details: IssueDetail[] = [];
         
@@ -169,17 +172,17 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
       <Grid item xs={6}>
         <Paper className={classes.metricBox} elevation={1}>
           <Typography variant="h4" className={classes.metricValue}>
-            {data.metrics.coverage}
+            {data.metrics.code_coverage}%
           </Typography>
-          <Typography className={classes.metricLabel}>Test Coverage</Typography>
+          <Typography className={classes.metricLabel}>Average Code Coverage</Typography>
         </Paper>
       </Grid>
       <Grid item xs={6}>
         <Paper className={classes.metricBox} elevation={1}>
           <Typography variant="h4" className={classes.metricValue}>
-            {data.metrics.technicalDebt}
+            {data.metrics.quality_gate}
           </Typography>
-          <Typography className={classes.metricLabel}>Technical Debt</Typography>
+          <Typography className={classes.metricLabel}>Failed Quality Gate</Typography>
         </Paper>
       </Grid>
     </Grid>
