@@ -1,39 +1,31 @@
-import {
-  CompoundEntityRef,
-  stringifyEntityRef,
-} from '@backstage/catalog-model';
-import { TechInsightsApi } from '@backstage/plugin-tech-insights';
+// export async function getAzureDevOpsBugs() {
+//   const organization = 'argus-panoptes-dev';
+//   const project = 'repo_2';
+//   const queryId = 'b2fdb928-a73e-4cba-82c9-e605a194666d';
+//   const pat =
+//     '9APDLq54nbzmerzTCuD50qLNWFHSprSivK7Q6zTuvqqP3PNMFPW0JQQJ99BDACAAAAAAAAAAAAASAZDOrt3M';
 
-import { JsonObject } from '@backstage/types';
+//   const encodedPat = btoa(':' + pat);
 
-export async function getAzureDevOpsBugs() {
-  const organization = 'argus-panoptes-dev';
-  const project = 'repo_2';
-  const queryId = 'b2fdb928-a73e-4cba-82c9-e605a194666d';
-  const pat =
-    '9APDLq54nbzmerzTCuD50qLNWFHSprSivK7Q6zTuvqqP3PNMFPW0JQQJ99BDACAAAAAAAAAAAAASAZDOrt3M';
+//   const response = await fetch(
+//     `https://dev.azure.com/${organization}/${project}/_apis/wit/wiql/${queryId}?api-version=7.0`,
+//     {
+//       method: 'GET',
+//       headers: {
+//         Authorization: `Basic ${encodedPat}`,
+//         Accept: 'application/json',
+//       },
+//     },
+//   );
 
-  const encodedPat = btoa(':' + pat);
+//   const data = await response.json();
+//   const bugs = data.workItems;
+//   const bugCount = bugs.length;
 
-  const response = await fetch(
-    `https://dev.azure.com/${organization}/${project}/_apis/wit/wiql/${queryId}?api-version=7.0`,
-    {
-      method: 'GET',
-      headers: {
-        Authorization: `Basic ${encodedPat}`,
-        Accept: 'application/json',
-      },
-    },
-  );
+//   console.log('Azure DevOps bugs:', bugs);
 
-  const data = await response.json();
-  const bugs = data.workItems;
-  const bugCount = bugs.length;
-
-  console.log('Azure DevOps bugs:', bugs);
-
-  return bugCount;
-}
+//   return bugCount;
+// }
 
 export type TrafficLightColor = 'green' | 'yellow' | 'red';
 
@@ -156,94 +148,3 @@ export async function getGitHubRepoStatus(
   }
 }
 
-/**
- * Interface defining the shape of GitHub security facts
- */
-export interface GitHubSecurityFacts {
-  openCodeScanningAlertCount: number;
-  openSecretScanningAlertCount: number;
-  codeScanningAlerts: Record<string, {
-    severity: string;
-    description: string;
-    html_url: string;
-    direct_link?: string;
-    location?: {
-      path: string;
-      start_line: number;
-      commit_sha: string;
-    };
-    created_at: string;
-    rule?: {
-      id: string;
-      name: string;
-      description?: string;
-    };
-  }>;
-  secretScanningAlerts: Record<string, {
-    severity: string;
-    description: string;
-    html_url: string;
-    created_at: string;
-  }>;
-}
-
-/**
- * Function to fetch GitHub security facts for a given entity
- */
-export const getGitHubSecurityFacts = async (
-  api: TechInsightsApi,
-  entity: CompoundEntityRef,
-): Promise<GitHubSecurityFacts> => {
-  try {
-    console.log(
-      'Fetching GitHub Security facts for entity:',
-      stringifyEntityRef(entity),
-    );
-    
-    const response = await api.getFacts(entity, ['githubAdvancedSecurityFactRetriever']);
-    
-    console.log(
-      'Raw Tech Insights API response:',
-      JSON.stringify(response, null, 2),
-    );
-    
-    const facts = response?.['githubAdvancedSecurityFactRetriever']?.facts;
-    
-    if (!facts) {
-      console.error(
-        'No GitHub Security facts found for entity:',
-        stringifyEntityRef(entity),
-      );
-      return {
-        openCodeScanningAlertCount: 0,
-        openSecretScanningAlertCount: 0,
-        codeScanningAlerts: {},
-        secretScanningAlerts: {},
-      };
-    }
-    
-    // Type assertion to handle the JSON types correctly
-    const codeScanningAlerts = (facts.codeScanningAlerts as JsonObject) || {};
-    const secretScanningAlerts = (facts.secretScanningAlerts as JsonObject) || {};
-    
-    return {
-      openCodeScanningAlertCount: Number(facts.openCodeScanningAlertCount ?? 0),
-      openSecretScanningAlertCount: Number(facts.openSecretScanningAlertCount ?? 0),
-      // Cast to the expected types 
-      codeScanningAlerts: codeScanningAlerts as GitHubSecurityFacts['codeScanningAlerts'],
-      secretScanningAlerts: secretScanningAlerts as GitHubSecurityFacts['secretScanningAlerts'],
-    };
-  } catch (error) {
-    console.error(
-      'Error fetching GitHub Security facts for entity:',
-      stringifyEntityRef(entity),
-      error,
-    );
-    return {
-      openCodeScanningAlertCount: 0,
-      openSecretScanningAlertCount: 0,
-      codeScanningAlerts: {},
-      secretScanningAlerts: {},
-    };
-  }
-};

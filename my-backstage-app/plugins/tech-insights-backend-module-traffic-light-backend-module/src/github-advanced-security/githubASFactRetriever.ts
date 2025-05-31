@@ -7,28 +7,18 @@ import { CatalogClient } from '@backstage/catalog-client';
 import { JsonObject } from '@backstage/types';
 
 // Define interfaces for the security findings as JSON-compatible types
-interface SecurityFinding extends JsonObject {
+interface codeScanningFinding extends JsonObject {
   severity: string;
   description: string;
-  html_url: string;
-  direct_link?: string;
-  location?: {
-    path: string;
-    start_line: number;
-    commit_sha: string;
-  };
+  direct_link: string;
   created_at: string;
-  rule?: {
-    id: string;
-    name: string;
-    description?: string;
-  };
 }
 
 // Dictionary structure for security findings where the key is the alert number/id
 // Must be JsonObject compatible
-interface SecurityFindingsDict extends JsonObject {
-  [alertId: string]: SecurityFinding;
+// This way we store all the issues per repository
+interface codeScanningFindingsDict extends JsonObject {
+  [alertId: string]: codeScanningFinding;
 }
 
 /**
@@ -44,6 +34,22 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
   entityFilter: [{ kind: 'component' }],
   // Defines the structure of the facts returned
   schema: {
+    criticalCount: {
+      type: 'integer',
+      description: 'Number of critical Code Scanning alerts',
+    },
+    highCount: {
+      type: 'integer',
+      description: 'Number of high Code Scanning alerts',
+    },
+    mediumCount: {
+      type: 'integer',
+      description: 'Number of medium Code Scanning alerts',
+    },
+    lowCount: {
+      type: 'integer',
+      description: 'Number of low Code Scanning alerts',
+    },
     openCodeScanningAlertCount: {
       type: 'integer',
       description: 'Number of open Code Scanning alerts',
@@ -62,23 +68,18 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
     },
   },
 
-  // Main logic of the retriever
+  // Main logic of the retriever 
   async handler({ config, logger, entityFilter, auth, discovery }): Promise<TechInsightFact[]> {
     // Retrieve GitHub token from config
     let token: string | undefined;
     try {
       const githubConfigs = config.getOptionalConfigArray('integrations.github');
       const githubConfig = githubConfigs?.[0];
-      token = githubConfig?.getOptionalString('token');
+      token = githubConfig?.getOptionalString('token'); 
 
-      logger.info(`🔍 Retrieved GitHub token: ${token ? '✔️ Present' : '❌ Missing'}`);
+      logger.info(`Retrieved GitHub token: ${token ? 'Present' : 'Missing'}`);
     } catch (e) {
-      logger.error(`❌ Could not retrieve GitHub token: ${e}`);
-      return [];
-    }
-
-    if (!token) {
-      logger.error('❌ GitHub token is not defined.');
+      logger.error(`Could not retrieve GitHub token: ${e}`);
       return [];
     }
 
@@ -97,15 +98,10 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
       { token: catalogToken },
     );
 
-    logger.info(`📋 Found ${entities.length} entities matching the filter`);
-
     // Filter entities that have GitHub repositories
-    // The standard Backstage annotation for GitHub repositories is 'github.com/project-slug'
     const githubEntities = entities.filter(entity => {
       return entity.metadata.annotations?.['github.com/project-slug'];
     });
-
-    logger.info(`🔍 Found ${githubEntities.length} entities with GitHub annotations`);
 
     // Use dynamic import for Octokit
     const { Octokit } = await import('@octokit/rest');
@@ -122,11 +118,11 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
         const [owner, repo] = projectSlug.split('/');
 
         if (!owner || !repo) {
-          logger.warn(`⚠️ Invalid GitHub project slug for entity ${entity.metadata.name}: ${projectSlug}`);
+          logger.warn(`Invalid GitHub project slug for entity ${entity.metadata.name}: ${projectSlug}`);
           return null;
         }
 
-        logger.info(`📊 Retrieving GitHub security data for ${owner}/${repo}`);
+        logger.info(`Retrieving GitHub security data for ${owner}/${repo}`);
 
         try {
           // Fetch Code Scanning alerts
@@ -151,46 +147,30 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
             },
           );
 
-          // Process code scanning alerts to extract detailed information and create a dictionary
-          const codeScanningAlerts: SecurityFindingsDict = {};
+          // Process code scanning alerts to extract only the required information
+          const codeScanningAlerts: codeScanningFindingsDict = {};
           
           codeScanningResponse.data.forEach(alert => {
             // Extract necessary information for code scanning alerts
             const alertId = `code-${alert.number}`;
             const instance = alert.most_recent_instance;
             const location = instance?.location;
+            const start_line = location?.start_line || 1; // Default to line 1 if not provided
             
-            // Ensure required string properties have fallback values
-            const finding: SecurityFinding = {
+            // Create finding with only the requested fields
+            const finding: codeScanningFinding = {
               severity: alert.rule?.security_severity_level || 'unknown',
               description: alert.rule?.description || alert.rule?.name || 'No description available',
-              html_url: alert.html_url || '', // Ensure it's not undefined
-              created_at: alert.created_at || '', // Ensure it's not undefined
-              rule: {
-                id: alert.rule?.id || '',
-                name: alert.rule?.name || '',
-                description: alert.rule?.description || '',
-              },
+              created_at: alert.created_at || '',
+              direct_link: `https://github.com/${owner}/${repo}/blob/${instance?.commit_sha}/${location?.path}#L${start_line}`
             };
-            
-            // Only add location if all required fields are present and valid
-            if (location && typeof location.path === 'string' && location.path && instance?.commit_sha) {
-              finding.location = {
-                path: location.path,
-                start_line: typeof location.start_line === 'number' ? location.start_line : 1, // Default to line 1 if not a number
-                commit_sha: instance.commit_sha,
-              };
-              
-              // Create a direct link to the specific line in the file
-              finding.direct_link = `https://github.com/${owner}/${repo}/blob/${finding.location.commit_sha}/${finding.location.path}#L${finding.location.start_line}`;
-            }
             
             // Add to dictionary with alert number as the key
             codeScanningAlerts[alertId] = finding;
           });
 
-          // Process secret scanning alerts to create a dictionary with basic information
-          const secretScanningAlerts: SecurityFindingsDict = {};
+          // Process secret scanning alerts to create a dictionary with only the requested fields
+          const secretScanningAlerts: codeScanningFindingsDict = {};
           
           secretScanningResponse.data.forEach(alert => {
             const alertId = `secret-${alert.number}`;
@@ -199,15 +179,46 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
             secretScanningAlerts[alertId] = {
               severity: 'high', // Secret scanning alerts are typically high severity
               description: `Secret of type ${alert.secret_type || 'unknown'} found`,
-              html_url: alert.html_url || '',
-              created_at: alert.created_at || ''
+              created_at: alert.created_at || '',
+              direct_link: alert.html_url || ''
             };
           });
 
-          logger.info(
-            `📊 GitHub security metrics for ${owner}/${repo}: ` +
+          const severityCounts = {
+            critical: 0,
+            high: 0,
+            medium: 0,
+            low: 0,
+          };
+
+          Object.values(codeScanningAlerts).forEach(alert => {
+            const severityLower = alert.severity.toLowerCase();
+            
+            // Count by severity
+            switch(severityLower) {
+              case 'critical':
+                severityCounts.critical++;
+                break;
+              case 'high':
+                severityCounts.high++;
+                break;
+              case 'medium':
+                severityCounts.medium++;
+                break;
+              case 'low':
+                severityCounts.low++;
+                break;
+          }});
+
+          // logger for debugging purposes
+          console.log(
+            `GitHub security metrics for ${owner}/${repo}: ` +
             `Code Scanning: ${Object.keys(codeScanningAlerts).length}, ` +
-            `Secret Scanning: ${Object.keys(secretScanningAlerts).length}`
+            `Secret Scanning: ${Object.keys(secretScanningAlerts).length}` + 
+            `🐹Critical: ${severityCounts.critical}, ` +
+            `High: ${severityCounts.high}, ` +
+            `Medium: ${severityCounts.medium}, ` +
+            `Low: ${severityCounts.low}`,
           );
 
           // Return the fact result object for this repository as a TechInsightFact
@@ -220,6 +231,11 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
             facts: {
               openCodeScanningAlertCount: Object.keys(codeScanningAlerts).length,
               openSecretScanningAlertCount: Object.keys(secretScanningAlerts).length,
+              // Store counts for each severity level
+              criticalCount: severityCounts.critical,
+              highCount: severityCounts.high,
+              mediumCount: severityCounts.medium,
+              lowCount: severityCounts.low,
               // Store alerts directly in the facts object
               codeScanningAlerts: codeScanningAlerts as JsonObject,
               secretScanningAlerts: secretScanningAlerts as JsonObject
@@ -228,12 +244,12 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
         } catch (err: any) {
           if (err.status === 403 || err.status === 404) {
             logger.warn(
-              `⚠️ Access denied to security data for ${owner}/${repo} (status ${err.status}) — skipping`,
+              `Access denied to security data for ${owner}/${repo} (status ${err.status}) — skipping`,
             );
             return null;
           }
           logger.error(
-            `❌ Error fetching security data for ${owner}/${repo}: ${err.message} (status ${err.status})`,
+            `Error fetching security data for ${owner}/${repo}: ${err.message} (status ${err.status})`,
           );
           return null;
         }
