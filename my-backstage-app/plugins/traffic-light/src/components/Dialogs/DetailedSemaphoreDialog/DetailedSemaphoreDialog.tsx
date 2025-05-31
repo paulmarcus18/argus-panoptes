@@ -29,11 +29,7 @@ import{DependabotUtils} from '../../../utils/dependabotUtils';
 import { TrafficLightDependabot } from '../../Semaphores';
 import { getCompoundEntityRef } from '@backstage/catalog-model';
 
-// const techInsightsApi = useApi(techInsightsApiRef);
-// const dependabotUtils = React.useMemo(
-//       () => new DependabotUtils(),
-//       [techInsightsApi],
-//     );
+
 
 // Type for semaphore severity../../utils
 type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';

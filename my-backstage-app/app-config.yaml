@@ -182,7 +182,7 @@ techInsights:
       cadence: '1 * * * *' # Every 4 hours
     github-commit-message-retriever:
       enabled: true
-      cadence: '0 */4 * * *' # Every minute
+      cadence: '0 6 * * *' # Every day at 06:00
       filter:
         kind: Component
     azure-devops-bugs-retriever:
