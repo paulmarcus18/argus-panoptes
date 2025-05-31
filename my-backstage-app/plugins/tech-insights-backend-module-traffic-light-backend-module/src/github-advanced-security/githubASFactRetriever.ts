@@ -244,12 +244,12 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
         } catch (err: any) {
           if (err.status === 403 || err.status === 404) {
             logger.warn(
-              `Access denied to security data for ${owner}/${repo} (status ${err.status}) — skipping`,
+              `🦐🦐🦐🦋Access denied to security data for ${owner}/${repo} (status ${err.status}) — skipping`,
             );
             return null;
           }
           logger.error(
-            `Error fetching security data for ${owner}/${repo}: ${err.message} (status ${err.status})`,
+            `🦐🦐🦐🦋Error fetching security data for ${owner}/${repo}: ${err.message} (status ${err.status})`,
           );
           return null;
         }
@@ -257,6 +257,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
     );
 
     // Filter null results and ensure they match TechInsightFact type
+    //console.log(`Retrieved ${results.filter((r): r is TechInsightFact => r !== null)} GitHub Advanced Security facts!!!!!!!!!!!!!!!!!!!!!!`);
     return results.filter((r): r is TechInsightFact => r !== null);
   },
 };

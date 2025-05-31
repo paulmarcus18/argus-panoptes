@@ -38,6 +38,7 @@ interface IssueDetail {
   directLink?: string;
 }
 
+
 // Types for metrics data
 interface SemaphoreData {
   color: 'red' | 'yellow' | 'green' | 'gray';
@@ -546,7 +547,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
 
               // Extract repository name from HTML URL
               // Format is usually: https://github.com/{owner}/{repo}/security/...
-              const urlParts = (alert.html_url || '').split('/');
+              const urlParts = (alert.direct_link || '').split('/');
               const repoIndex = urlParts.indexOf('github.com');
               let repoName = '';
               if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
@@ -564,8 +565,8 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
               details.push({
                 severity: (alert.severity as Severity) || 'medium',
                 description: description,
-                component: alert.location?.path, // Use file path as component
-                url: alert.html_url, // Store URL for linking
+                //component: alert.location?.path, // Use file path as component
+                //url: alert.html_url, // Store URL for linking
                 directLink: alert.direct_link, // Direct link to the specific line
               });
             });
@@ -592,7 +593,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
               details.push({
                 severity: 'high',
                 description: description,
-                url: alert.html_url,
+                directLink: alert.html_url,
               });
             });
           });
@@ -1025,9 +1026,9 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
                             variant="subtitle1"
                             className={classes.issueTitle}
                           >
-                            {issue.url ? (
+                            {issue.directLink ? (
                               <Link
-                                href={issue.directLink || issue.url}
+                                href={issue.directLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className={classes.issueLink}
