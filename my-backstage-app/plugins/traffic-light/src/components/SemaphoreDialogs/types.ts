@@ -10,6 +10,14 @@ export interface IssueDetail {
   directLink?: string;
 }
 
+export interface PreproductionDetail {
+  successMetric: string;
+  description: string;
+  component?: string;
+  url?: string;
+  directLink?: string;
+}
+
 export interface SemaphoreData {
   color: 'red' | 'yellow' | 'green' | 'gray';
   metrics: Record<string, any>;

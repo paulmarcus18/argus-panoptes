@@ -36,6 +36,7 @@ import {
   BaseTrafficLight,
 } from '../Semaphores';
 import { ReportingTrafficLight } from '../Semaphores/ReportingTrafficLight';
+import { PreproductionSemaphoreDialog } from '../SemaphoreDialogs/PreProductionDialog';
 
 export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
@@ -60,6 +61,8 @@ export const TrafficComponent = () => {
   const [blackDuckDialogOpen, setBlackDuckDialogOpen] = useState(false);
   const [githubSecurityDialogOpen, setGithubSecurityDialogOpen] =
     useState(false);
+  const [preproductionDialogOpen, setPreproductionDialogOpen] = useState(false);
+
   const [azureDevOpsDialogOpen, setAzureDevOpsDialogOpen] = useState(false);
   const [sonarQubeDialogOpen, setSonarQubeDialogOpen] = useState(false);
 
@@ -81,6 +84,7 @@ export const TrafficComponent = () => {
       case 'Github Advanced Security':
         setGithubSecurityDialogOpen(true);
         break;
+
       case 'Azure DevOps Bugs':
         setAzureDevOpsDialogOpen(true);
         break;
@@ -89,6 +93,8 @@ export const TrafficComponent = () => {
         break;
       case 'Dependabot':
       case 'Pre-Production pipelines':
+        setPreproductionDialogOpen(true);
+        break;
       case 'Foundation pipelines':
       case 'Reporting Pipeline':
       case 'CodeScene':
@@ -111,6 +117,10 @@ export const TrafficComponent = () => {
 
   const handleCloseGithubSecurityDialog = () => {
     setGithubSecurityDialogOpen(false);
+  };
+
+  const handleClosePreproductionDialog = () => {
+    setPreproductionDialogOpen(false);
   };
 
   const handleCloseAzureDevOpsDialog = () => {
@@ -404,6 +414,12 @@ export const TrafficComponent = () => {
         <GitHubSemaphoreDialog
           open={githubSecurityDialogOpen}
           onClose={handleCloseGithubSecurityDialog}
+          entities={selectedEntities}
+        />
+
+        <PreproductionSemaphoreDialog
+          open={preproductionDialogOpen}
+          onClose={handleClosePreproductionDialog}
           entities={selectedEntities}
         />
 
