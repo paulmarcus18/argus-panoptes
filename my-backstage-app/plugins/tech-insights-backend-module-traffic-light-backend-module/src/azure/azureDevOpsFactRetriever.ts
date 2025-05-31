@@ -45,6 +45,16 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
 
       if (!organization || !project || !bugsQueryId || !pat) {
         console.warn(`⚠️ Missing Azure DevOps annotations for ${entity.metadata.name}`);
+        results.push({
+          entity: {
+            name: entity.metadata.name,
+            namespace: entity.metadata.namespace ?? 'default',
+            kind: entity.kind,
+          },
+          facts: {
+            azure_bug_count: -1,
+          },
+        });
         continue;
       }
 

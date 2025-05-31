@@ -17,8 +17,12 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { Header, Page, Content, InfoCard } from '@backstage/core-components';
-import { DialogComponent } from '../Dialogs/DialogComponent';
-import DetailedSemaphoreDialog from '../Dialogs/DetailedSemaphoreDialog/DetailedSemaphoreDialog';
+import { DialogComponent } from '../SemaphoreDialogs/DialogComponent';
+//import DetailedSemaphoreDialog from '../Dialogs/DetailedSemaphoreDialog/DetailedSemaphoreDialog';
+//import { BlackDuckSemaphoreDialog } from '../SemaphoreDialogs/BlackDuckSemaphoreDialog';
+import { GitHubSemaphoreDialog } from '../SemaphoreDialogs/GitHubAdvancedSecurityDialog';
+import { AzureDevOpsSemaphoreDialog } from '../SemaphoreDialogs/AzureDevOpsDialog';
+import { SonarQubeSemaphoreDialog } from '../SemaphoreDialogs/SonarQubeDialog';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
@@ -51,6 +55,13 @@ export const TrafficComponent = () => {
   const [systemSearchTerm, setSystemSearchTerm] = useState<string>('');
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
 
+  // New state for specific semaphore dialogs
+  const [blackDuckDialogOpen, setBlackDuckDialogOpen] = useState(false);
+  const [githubSecurityDialogOpen, setGithubSecurityDialogOpen] =
+    useState(false);
+  const [azureDevOpsDialogOpen, setAzureDevOpsDialogOpen] = useState(false);
+  const [sonarQubeDialogOpen, setSonarQubeDialogOpen] = useState(false);
+
   const handleClick = (title: string, items: any[]) => {
     setDialogTitle(title);
     setDialogItems(items);
@@ -62,12 +73,51 @@ export const TrafficComponent = () => {
   };
 
   const handleSemaphoreClick = (semaphoreType: string) => {
-    setCurrentSemaphoreType(semaphoreType);
-    setDetailedDialogOpen(true);
+    switch (semaphoreType) {
+      //  case 'BlackDuck':
+      //  setBlackDuckDialogOpen(true);
+      // break;
+      case 'Github Advanced Security':
+        setGithubSecurityDialogOpen(true);
+        break;
+      case 'Azure DevOps Bugs':
+        setAzureDevOpsDialogOpen(true);
+        break;
+      case 'SonarQube':
+        setSonarQubeDialogOpen(true);
+        break;
+      case 'Dependabot':
+      case 'Pre-Production pipelines':
+      case 'Foundation pipelines':
+      case 'Reporting Pipeline':
+      case 'CodeScene':
+        // For these, use the existing detailed dialog
+        setCurrentSemaphoreType(semaphoreType);
+        setDetailedDialogOpen(true);
+        break;
+      default:
+        console.warn(`No dialog handler for semaphore type: ${semaphoreType}`);
+    }
   };
 
   const handleCloseDetailedDialog = () => {
     setDetailedDialogOpen(false);
+  };
+
+  const handleCloseBlackDuckDialog = () => {
+    setBlackDuckDialogOpen(false);
+  };
+
+  const handleCloseGithubSecurityDialog = () => {
+    setGithubSecurityDialogOpen(false);
+  };
+
+  const handleCloseAzureDevOpsDialog = () => {
+    setAzureDevOpsDialogOpen(false);
+  };
+
+  const handleCloseSonarQubeDialog = () => {
+    setSonarQubeDialogOpen(false);
   };
 
   const cardAction = (title: string, items: any[]) => (
@@ -336,12 +386,14 @@ export const TrafficComponent = () => {
             >
               <Typography variant="subtitle1">Bugs</Typography>
               <AzureDevOpsBugsTrafficLight
+                entities={selectedEntities}
                 onClick={() => handleSemaphoreClick('Azure DevOps Bugs')}
               />
             </InfoCard>
           </Grid>
         </Grid>
 
+        {/* Existing generic dialogs */}
         <DialogComponent
           open={dialogOpen}
           onClose={handleClose}
@@ -349,10 +401,21 @@ export const TrafficComponent = () => {
           items={dialogItems}
         />
 
-        <DetailedSemaphoreDialog
-          open={detailedDialogOpen}
-          onClose={handleCloseDetailedDialog}
-          semaphoreType={currentSemaphoreType}
+        <GitHubSemaphoreDialog
+          open={githubSecurityDialogOpen}
+          onClose={handleCloseGithubSecurityDialog}
+          entities={selectedEntities}
+        />
+
+        <AzureDevOpsSemaphoreDialog
+          open={azureDevOpsDialogOpen}
+          onClose={handleCloseAzureDevOpsDialog}
+          entities={selectedEntities}
+        />
+
+        <SonarQubeSemaphoreDialog
+          open={sonarQubeDialogOpen}
+          onClose={handleCloseSonarQubeDialog}
           entities={selectedEntities}
         />
       </Content>

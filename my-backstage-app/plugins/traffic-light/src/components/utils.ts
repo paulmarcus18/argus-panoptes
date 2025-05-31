@@ -1,39 +1,31 @@
-import {
-  CompoundEntityRef,
-  stringifyEntityRef,
-} from '@backstage/catalog-model';
-import { TechInsightsApi } from '@backstage/plugin-tech-insights';
+// export async function getAzureDevOpsBugs() {
+//   const organization = 'argus-panoptes-dev';
+//   const project = 'repo_2';
+//   const queryId = 'b2fdb928-a73e-4cba-82c9-e605a194666d';
+//   const pat =
+//     '9APDLq54nbzmerzTCuD50qLNWFHSprSivK7Q6zTuvqqP3PNMFPW0JQQJ99BDACAAAAAAAAAAAAASAZDOrt3M';
 
-import { JsonObject } from '@backstage/types';
+//   const encodedPat = btoa(':' + pat);
 
-export async function getAzureDevOpsBugs() {
-  const organization = 'argus-panoptes-dev';
-  const project = 'repo_2';
-  const queryId = 'b2fdb928-a73e-4cba-82c9-e605a194666d';
-  const pat =
-    '9APDLq54nbzmerzTCuD50qLNWFHSprSivK7Q6zTuvqqP3PNMFPW0JQQJ99BDACAAAAAAAAAAAAASAZDOrt3M';
+//   const response = await fetch(
+//     `https://dev.azure.com/${organization}/${project}/_apis/wit/wiql/${queryId}?api-version=7.0`,
+//     {
+//       method: 'GET',
+//       headers: {
+//         Authorization: `Basic ${encodedPat}`,
+//         Accept: 'application/json',
+//       },
+//     },
+//   );
 
-  const encodedPat = btoa(':' + pat);
+//   const data = await response.json();
+//   const bugs = data.workItems;
+//   const bugCount = bugs.length;
 
-  const response = await fetch(
-    `https://dev.azure.com/${organization}/${project}/_apis/wit/wiql/${queryId}?api-version=7.0`,
-    {
-      method: 'GET',
-      headers: {
-        Authorization: `Basic ${encodedPat}`,
-        Accept: 'application/json',
-      },
-    },
-  );
+//   console.log('Azure DevOps bugs:', bugs);
 
-  const data = await response.json();
-  const bugs = data.workItems;
-  const bugCount = bugs.length;
-
-  console.log('Azure DevOps bugs:', bugs);
-
-  return bugCount;
-}
+//   return bugCount;
+// }
 
 export type TrafficLightColor = 'green' | 'yellow' | 'red';
 
