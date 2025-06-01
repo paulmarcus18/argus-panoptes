@@ -1,8 +1,23 @@
 import {
   CompoundEntityRef,
   stringifyEntityRef,
+  Entity, 
+  getCompoundEntityRef
 } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
+
+
+/**
+ * Summary of SonarCloud facts for a repository.
+ */
+export interface SonarCloudSummary {
+  entity: CompoundEntityRef;
+  quality_gate: number;
+  vulnerabilities: number;
+  code_coverage: number;
+  bugs: number;
+  code_smells: number;
+}
 
 /**
  * Metrics returned by SonarCloud for a Backstage entity.
@@ -90,5 +105,96 @@ export class SonarCloudUtils {
       );
       return { ...DEFAULT_METRICS };
     }
+  }
+
+  /**
+   * Retrieves the top 5 critical SonarCloud repositories based on quality gate status,
+   * vulnerabilities, bugs, code smells, and code coverage.
+   * 
+   * @param techInsightsApi - The TechInsightsApi instance used to fetch SonarCloud facts.
+   * @param entities - An array of Backstage Entity objects to check SonarCloud status for.
+   * @returns A promise that resolves to an array of SonarCloudSummary objects,
+   *          containing the top 5 critical repositories based on the defined criteria. 
+   */
+  async  getTop5CriticalSonarCloudRepos(
+    techInsightsApi: TechInsightsApi,
+    entities: Entity[],
+  ): Promise<SonarCloudSummary[]> {
+    const results: SonarCloudSummary[] = [];
+
+    for (const entity of entities) {
+      const entityRef = getCompoundEntityRef(entity);
+      try {
+        // Fetch SonarCloud facts for the entity
+        const facts = await this.getSonarQubeFacts(techInsightsApi, entityRef);
+        results.push({
+          entity: entityRef,
+          quality_gate: facts.quality_gate === 'OK' ? 0 : 1,
+          vulnerabilities: typeof facts.vulnerabilities === 'number' ? facts.vulnerabilities : 0,
+          code_coverage: typeof facts.code_coverage === 'number' ? facts.code_coverage : 0,
+          bugs: typeof facts.bugs === 'number' ? facts.bugs : 0,
+          code_smells: typeof facts.code_smells === 'number' ? facts.code_smells : 0,
+        });
+      } catch (err) {
+        results.push({
+          entity: entityRef,
+          quality_gate: 1, // Assume failed quality gate if we can't fetch facts
+          vulnerabilities: 0,
+          code_coverage: 0,
+          bugs: 0,
+          code_smells: 0,
+        });
+      }
+    }
+
+    // Sort results by quality gate status, then by vulnerabilities, bugs, code smells, and code coverage
+    const selected: SonarCloudSummary[] = [];
+
+    // First, select repositories that failed the quality gate
+    const failedQualityGate = results
+      .filter(r => r.quality_gate === 1)
+    selected.push(...failedQualityGate.slice(0, 5));
+
+    // If we have less than 5, fill with repositories that have vulnerabilities
+    if (selected.length < 5) {
+      const vulnerableRepos = results
+        .filter(r => !selected.includes(r) && r.vulnerabilities > 0)
+        .sort((a, b) => b.vulnerabilities - a.vulnerabilities);
+      selected.push(...vulnerableRepos.slice(0, 5 - selected.length));
+    }
+
+    // If we still have less than 5, fill with repositories that have bugs
+    if (selected.length < 5) {
+      const highBugsRepos = results
+        .filter(r => !selected.includes(r) && r.bugs > 0)
+        .sort((a, b) => b.bugs - a.bugs);
+      selected.push(...highBugsRepos.slice(0, 5 - selected.length));
+    }
+
+    // If we still have less than 5, fill with repositories that have code smells
+    if (selected.length < 5) {
+      const highCodeSmellsRepos = results
+        .filter(r => !selected.includes(r) && r.code_smells > 0)
+        .sort((a, b) => b.code_smells - a.code_smells);
+      selected.push(...highCodeSmellsRepos.slice(0, 5 - selected.length));
+    }
+
+    // If we still have less than 5, fill with repositories that have low code coverage
+    if (selected.length < 5) {
+      const lowCoverageRepos = results
+        .filter(r => !selected.includes(r) && r.code_coverage < 80)
+        .sort((a, b) => a.code_coverage - b.code_coverage);
+      selected.push(...lowCoverageRepos.slice(0, 5 - selected.length));
+    }
+
+    // If we still have less than 5, fill with any remaining repositories
+    if (selected.length < 5) {
+      const fallback = results
+        .filter(r => !selected.includes(r))
+        .slice(0, 5 - selected.length);
+      selected.push(...fallback);
+    }
+
+    return selected;
   }
 }
