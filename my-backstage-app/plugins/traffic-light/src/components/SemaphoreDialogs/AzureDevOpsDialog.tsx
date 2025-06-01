@@ -3,6 +3,7 @@ import {
   Grid,
   Paper,
   Typography,
+  Link,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -25,6 +26,9 @@ const useStyles = makeStyles(theme => ({
   metricLabel: {
     color: theme.palette.text.secondary,
   },
+  projectList: {
+    marginTop: theme.spacing(3),
+  },
 }));
 
 interface AzureBugInsightsDialogProps {
@@ -41,8 +45,11 @@ export const AzureDevOpsSemaphoreDialog: React.FC<AzureBugInsightsDialogProps> =
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const azureUtils = React.useMemo(() => new AzureUtils(), []);
+
   const [isLoading, setIsLoading] = React.useState(false);
-  const [totalUniqueProjectBugCount, setTotalUniqueProjectBugCount] = React.useState(0);
+  const [projectBugs, setProjectBugs] = React.useState<
+    { project: string; bugCount: number; url: string }[]
+  >([]);
 
   React.useEffect(() => {
     if (!open || entities.length === 0) return;
@@ -51,7 +58,10 @@ export const AzureDevOpsSemaphoreDialog: React.FC<AzureBugInsightsDialogProps> =
 
     const fetchBugMetrics = async () => {
       try {
-        const projectBugMap: Record<string, number> = {};
+        const projectBugMap = new Map<
+          string,
+          { bugCount: number; url: string }
+        >();
 
         for (const entity of entities) {
           const ref = {
@@ -63,27 +73,36 @@ export const AzureDevOpsSemaphoreDialog: React.FC<AzureBugInsightsDialogProps> =
           const projectName =
             entity.metadata.annotations?.['azure.com/project'] ?? 'unknown';
 
-          if (!(projectName in projectBugMap) && projectName !== 'unknown') {
-            const metrics = await azureUtils.getAzureDevOpsBugFacts(techInsightsApi, {
-              kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
-              name: entity.metadata.name,
+          if (!projectBugMap.has(projectName) && projectName !== 'unknown') {
+            const metrics = await azureUtils.getAzureDevOpsBugFacts(
+              techInsightsApi,
+              ref,
+            );
+
+            const orgName =
+              entity.metadata.annotations?.['azure.com/organization'] ?? 'unknown-org';
+
+            const projectUrl = `https://dev.azure.com/${orgName}/${projectName}/_workitems/`;
+
+            projectBugMap.set(projectName, {
+              bugCount: metrics.azureBugCount,
+              url: projectUrl,
             });
-            projectBugMap[projectName] = metrics.azureBugCount;
-            console.log(
-              `🔍 Fetched Azure DevOps bug count for project "${projectName}": ${metrics.azureBugCount}`,)
           }
         }
 
-        const totalBugCount = Object.values(projectBugMap).reduce(
-          (sum, count) => sum + count,
-          0,
-        );
+        const projectList = Array.from(projectBugMap.entries())
+          .map(([project, { bugCount, url }]) => ({
+            project,
+            bugCount,
+            url,
+          }))
+          .sort((a, b) => b.bugCount - a.bugCount);
 
-        setTotalUniqueProjectBugCount(totalBugCount);
+        setProjectBugs(projectList);
       } catch (e) {
         console.error('❌ Failed to fetch Azure DevOps bug data:', e);
-        setTotalUniqueProjectBugCount(0);
+        setProjectBugs([]);
       } finally {
         setIsLoading(false);
       }
@@ -92,23 +111,53 @@ export const AzureDevOpsSemaphoreDialog: React.FC<AzureBugInsightsDialogProps> =
     fetchBugMetrics();
   }, [open, entities, techInsightsApi, azureUtils]);
 
+  const totalBugCount = projectBugs.reduce((sum, p) => sum + p.bugCount, 0);
+  const top5Projects = projectBugs.slice(0, 5);
+
   const renderMetrics = () => (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Paper className={classes.metricBox} elevation={1}>
-          <Typography
-            variant="h4"
-            className={classes.metricValue}
-            style={{ color: '#e53935' }}
-          >
-            {totalUniqueProjectBugCount}
-          </Typography>
-          <Typography className={classes.metricLabel}>
-            Total Azure DevOps Bugs (Unique Projects Only)
-          </Typography>
-        </Paper>
+    <>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Paper className={classes.metricBox} elevation={1}>
+            <Typography
+              variant="h4"
+              className={classes.metricValue}
+              style={{ color: '#e53935' }}
+            >
+              {totalBugCount}
+            </Typography>
+            <Typography className={classes.metricLabel}>
+              Total Azure DevOps Bugs (Unique Projects Only)
+            </Typography>
+          </Paper>
+        </Grid>
       </Grid>
-    </Grid>
+
+      {top5Projects.length > 0 && (
+        <div className={classes.projectList}>
+          <Typography variant="h6">Top 5 Projects with Most Bugs</Typography>
+          <Grid container spacing={2} className={classes.projectList}>
+            {top5Projects.map(project => (
+              <Grid item xs={12} key={project.project}>
+                <Paper className={classes.metricBox} elevation={1}>
+                  <Link
+                    href={project.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={classes.metricValue}
+                  >
+                    {project.project}
+                  </Link>
+                  <Typography className={classes.metricLabel}>
+                    Bugs: {project.bugCount}
+                  </Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </div>
+      )}
+    </>
   );
 
   return (
