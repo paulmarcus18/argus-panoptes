@@ -27,7 +27,7 @@ export const determineSonarQubeColor = async (
   catalogApi: any,
   techInsightsApi: any,
   sonarUtils: SonarCloudUtils
-): Promise<{ color: 'green' | 'red' | 'yellow' | 'gray' | 'white'; reason: string }> => {
+): Promise<{ color: 'green' | 'red' | 'yellow' | 'gray'; reason: string }> => {
 
   // If no entities are provided, return gray color 
   if (!entities.length) {
@@ -112,8 +112,8 @@ export const SonarQubeTrafficLight = ({
   onClick?: () => void;
 }) => {
   const [color, setColor] = useState<
-    'green' | 'red' | 'yellow' | 'gray' | 'white'
-  >('white');
+    'green' | 'red' | 'yellow' | 'gray' 
+  >('gray');
   const [reason, setReason] = useState('Loading SonarQube data...');
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);

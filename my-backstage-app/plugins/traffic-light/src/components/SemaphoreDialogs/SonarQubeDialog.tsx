@@ -3,10 +3,12 @@ import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 import { SemaphoreData, IssueDetail } from './types';
 import { Entity } from '@backstage/catalog-model';
+import { determineSonarQubeColor } from '../Semaphores/SonarQubeTrafficLight';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -37,6 +39,7 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
   const sonarUtils = React.useMemo(() => new SonarCloudUtils(), [techInsightsApi]);
 
   const [data, setData] = React.useState<SemaphoreData>({
@@ -114,15 +117,12 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
         }
 
         // Determine the overall status color
-        let color: 'red' | 'yellow' | 'green' | 'gray' = 'green';
-        if (totals.bugs > 0 || totals.vulnerabilities > 0) {
-          color = 'red';
-        } else if (totals.code_smells > 10) {
-          color = 'yellow';
-        }
+        const trafficLightcolor = await determineSonarQubeColor(entities, catalogApi, techInsightsApi, sonarUtils);
+        let color: 'green' | 'red' | 'yellow' | 'gray' = 'green';
+        color = trafficLightcolor.color;
 
         // Create the summary
-        let summary = 'Code quality is excellent with no significant issues.';
+        let summary = 'No critical code quality issues were found.';
         if (color === 'red') {
           summary = 'Critical code quality issues require immediate attention.';
         } else if (color === 'yellow') {
