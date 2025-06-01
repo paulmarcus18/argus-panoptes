@@ -92,27 +92,42 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
         // Create details array from results
         const details: IssueDetail[] = [];
         
-        // Add bug issues
-        if (totals.bugs > 0) {
-          details.push({
-            severity: totals.bugs > 5 ? 'high' : 'medium',
-            description: `${totals.bugs} bugs detected across projects`,
-          });
-        }
+        const displayedRepos = await sonarUtils.getTop5CriticalSonarCloudRepos(techInsightsApi, entities);
 
-        // Add code smell issues
-        if (totals.code_smells > 0) {
-          details.push({
-            severity: totals.code_smells > 50 ? 'medium' : 'low',
-            description: `${totals.code_smells} code smells detected across projects`,
+        for (const repo of displayedRepos) {
+          // Fetch entity metadata from catalog
+          const entity = await catalogApi.getEntityByRef({
+            kind: 'Component',
+            namespace: 'default',
+            name: typeof repo.entity.name === 'string' ? repo.entity.name : String(repo.entity.name)
           });
-        }
 
-        // Add vulnerabilities issues
-        if (totals.vulnerabilities > 0) {
+          // Create a description and determine severity based on the repo's issues
+          let description = ``;
+          let severity = '';
+
+          if (repo.quality_gate === 1) {
+            description = `Repository ${repo.entity.name} has a failed quality gate.`;
+            severity = 'critical';
+          } else if (repo.vulnerabilities > 0) {
+            description = `Repository ${repo.entity.name} has ${repo.vulnerabilities} vulnerabilities.`;
+            severity = 'high';
+          } else if (repo.bugs > 0) {
+            description = `Repository ${repo.entity.name} has ${repo.bugs} bugs.`;
+            severity = 'high';
+          } else if (repo.code_smells > 0) {
+            description = `Repository ${repo.entity.name} has ${repo.code_smells} code smells.`;
+            severity = 'medium';
+          } else if (repo.code_coverage < 80) {
+            description = `Repository ${repo.entity.name} has a code coverage of ${repo.code_coverage}%.`;  
+            severity = 'low';
+          }
+
+          // Add the detail to the array
           details.push({
-            severity: 'high',
-            description: `${totals.vulnerabilities} vulnerabilities need review`,
+            severity: severity as 'critical' | 'high' | 'medium' | 'low',
+            description: description,
+            url: `https://sonarcloud.io/project/overview?id=${entity?.metadata.annotations?.['sonarcloud.io/project-key']}`,
           });
         }
 
