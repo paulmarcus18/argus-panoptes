@@ -200,7 +200,7 @@ techInsights:
       cadence: '1 * * * *' # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
     reportingPipelineStatusFactRetriever:
-      cadence: '1 * * * *' # every minute
+      cadence: '*/2 * * * *' # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
     githubAdvancedSecurityFactRetriever:
       cadence: "0 * * * *" # every hour

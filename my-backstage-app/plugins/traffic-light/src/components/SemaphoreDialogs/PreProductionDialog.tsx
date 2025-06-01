@@ -4,8 +4,6 @@ import {
   Paper,
   Typography,
   Link,
-  List,
-  ListItem,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';

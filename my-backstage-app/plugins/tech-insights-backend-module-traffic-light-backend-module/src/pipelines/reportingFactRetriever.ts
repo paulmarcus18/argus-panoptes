@@ -166,7 +166,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
           let page = 1;
           let hasMorePages = true;
           let allRuns: WorkflowRun[] = [];
-          const maxPages = 30; // Limit to 30 pages to avoid excessive API calls
+          const maxPages = 100; // Limit to 30 pages to avoid excessive API calls
           
           // Paginate through all workflow runs
           while (hasMorePages && page <= maxPages) {

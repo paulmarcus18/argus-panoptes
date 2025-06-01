@@ -38,6 +38,7 @@ import {
 import { ReportingTrafficLight } from '../Semaphores/ReportingTrafficLight';
 import { PreproductionSemaphoreDialog } from '../SemaphoreDialogs/PreProductionDialog';
 import { FoundationSemaphoreDialog } from '../SemaphoreDialogs/FoundationDialog';
+import { ReportingSemaphoreDialog } from '../SemaphoreDialogs/ReportingDialog';
 
 export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
@@ -64,6 +65,7 @@ export const TrafficComponent = () => {
     useState(false);
   const [preproductionDialogOpen, setPreproductionDialogOpen] = useState(false);
   const [foundationDialogOpen, setFoundationDialogOpen] = useState(false);
+  const [reportingDialogOpen, setReportingDialogOpen] = useState(false);
 
   const [azureDevOpsDialogOpen, setAzureDevOpsDialogOpen] = useState(false);
   const [sonarQubeDialogOpen, setSonarQubeDialogOpen] = useState(false);
@@ -101,6 +103,8 @@ export const TrafficComponent = () => {
         setFoundationDialogOpen(true);
         break;
       case 'Reporting Pipeline':
+        setReportingDialogOpen(true);
+        break;
       case 'CodeScene':
         // For these, use the existing detailed dialog
         setCurrentSemaphoreType(semaphoreType);
@@ -129,6 +133,10 @@ export const TrafficComponent = () => {
 
   const handleCloseFoundationDialog = () => {
     setFoundationDialogOpen(false);
+  };
+
+  const handleCloseReportingDialog = () => {
+    setReportingDialogOpen(false);
   };
 
   const handleCloseAzureDevOpsDialog = () => {
@@ -434,6 +442,12 @@ export const TrafficComponent = () => {
         <FoundationSemaphoreDialog
           open={foundationDialogOpen}
           onClose={handleCloseFoundationDialog}
+          entities={selectedEntities}
+        />
+
+        <ReportingSemaphoreDialog
+          open={reportingDialogOpen}
+          onClose={handleCloseReportingDialog}
           entities={selectedEntities}
         />
 
