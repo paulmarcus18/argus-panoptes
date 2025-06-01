@@ -20,10 +20,12 @@ export const doraDashboardPlugin = createBackendPlugin({
         httpAuth: coreServices.httpAuth,
         httpRouter: coreServices.httpRouter,
         catalog: catalogServiceRef,
+        config: coreServices.rootConfig,
+
       },
-      async init({ logger, httpAuth, httpRouter}) {
+      async init({ logger, httpAuth, httpRouter, config}) {
         const doraService = await createDoraService({
-          logger
+          logger, config
         });
 
         httpRouter.use(

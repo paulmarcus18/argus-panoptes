@@ -275,3 +275,11 @@ techInsights:
                 operator: equal
                 value: {}
       
+dora:
+  db:
+    host: localhost
+    port: 3306
+    user: merico
+    password: merico
+    database: lake
+
