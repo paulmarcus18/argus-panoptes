@@ -8,6 +8,9 @@ import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { DependabotUtils, RepoAlertSummary } from '../../utils/dependabotUtils';
 import { SemaphoreData } from './types';
 import type { GridSize } from '@material-ui/core';
+import { determineDependabotColor } from '../Semaphores/TrafficLightDependabot';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
+
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -57,11 +60,12 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
   open,
   onClose,
   entities = [],
-  system,
+  system
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const dependabotUtils = React.useMemo(() => new DependabotUtils(), [techInsightsApi]);
+  const catalogApi = useApi(catalogApiRef);
 
   const [data, setData] = React.useState<SemaphoreData>({
     color: 'gray',
@@ -71,6 +75,8 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
   });
   const [topRepos, setTopRepos] = React.useState<RepoAlertSummary[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [color, setColor] = React.useState<'green' | 'red' | 'yellow' | 'gray' >('green');
+
 
   React.useEffect(() => {
     if (!open || entities.length === 0) {
@@ -126,12 +132,12 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
           .slice(0, 5);
 
         const totalIssues = totalCritical + totalHigh + totalMedium;
-        const color =
-          totalCritical > 0
-            ? 'red'
-            : totalHigh > 0 || totalMedium > 0
-            ? 'yellow'
-            : 'green';
+        // const color =
+        //   totalCritical > 0
+        //     ? 'red'
+        //     : totalHigh > 0 || totalMedium > 0
+        //     ? 'yellow'
+        //     : 'green';
 
         const summary =
           totalCritical > 0
@@ -142,8 +148,12 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
             ? `${totalMedium} medium severity issues found`
             : 'No Dependabot security issues found.';
 
+        const trafficLightcolor = await determineDependabotColor(system, entities, catalogApi, techInsightsApi, dependabotUtils);
+        let color: 'green' | 'red' | 'yellow' | 'gray' = 'green';
+        color = trafficLightcolor.color;
+
         setData({
-          color,
+          color: color,
           metrics: {
             criticalIssues: totalCritical,
             highIssues: totalHigh,

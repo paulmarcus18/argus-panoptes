@@ -428,6 +428,7 @@ export const TrafficComponent = () => {
 
         <DependabotSemaphoreDialog
           open={DependabotDialogOpen}
+          system={selectedSystem}
           onClose={handleCloseDependabotDialog}
           entities={selectedEntities}
         />

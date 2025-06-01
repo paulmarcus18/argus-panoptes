@@ -6,34 +6,16 @@ import { Entity } from '@backstage/catalog-model';
 import { DependabotUtils } from '../../utils/dependabotUtils';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 
-export const TrafficLightDependabot = ({
-  entities,
-  systemName,
-  onClick,
-}: {
-  entities: Entity[];
-  systemName: string;
-  onClick?: () => void;
-}) => {
-  const [color, setColor] = useState<
-    'green' | 'red' | 'yellow' | 'gray' | 'white'
-  >('white');
-  const [reason, setReason] = useState('Fetching Dependabot status...');
-  const techInsightsApi = useApi(techInsightsApiRef);
-  const catalogApi = useApi(catalogApiRef);
-  const dependabotUtils = React.useMemo(
-      () => new DependabotUtils(),
-      [techInsightsApi],
-    );
-
-  useEffect(() => {
-    if (!entities.length) {
-      setColor('gray');
-      setReason('No entities available');
-      return;
+export const determineDependabotColor = async(
+  systemName: string,
+  entities: Entity[],
+  catalogApi: any,
+  techInsightsApi: any,
+  dependabotUtils: DependabotUtils
+): Promise<{color: 'green' | 'red' | 'yellow' | 'gray' , reason: string}> => {
+  if (!entities.length) {
+      return { color: 'gray', reason: 'No entities available' };
     }
-
-    const fetchStatus = async () => {
       const fallbackEntity = entities.find(e => typeof e.spec?.system === 'string');
       const fallbackSystem = fallbackEntity?.spec?.system;
       const finalSystemName = systemName ?? fallbackSystem;
@@ -73,28 +55,65 @@ export const TrafficLightDependabot = ({
 
           //color logic:
         //Color logic must be fixed!!
-        if (totalChecks.critical < entities.length * 0.5 && totalChecks.high < entities.length *0.5) {
-          setColor('green');
-          setReason('All dependabot checks passed');
+        if (totalChecks.critical < 4  && totalChecks.high < 4) {
+          return { color: 'green', reason: 'All dependabot checks passed' };
           console.log(`${totalChecks.critical} alerts found`)
-        } else if (totalChecks.critical > entities.length *0.5 ) {
-          setColor('red');
-          setReason(`Critical alerts exceed threshold (${totalChecks.critical} > ${entities.length * 0.5})`);
+        } else if (totalChecks.critical > 4) {
+          return { color: 'red', reason: `Critical alerts exceed threshold (${totalChecks.critical} > ${entities.length * 0.5})` };
           console.log(`${totalChecks.critical} alerts found`)
         } else {
-          setColor('yellow');
-          setReason(`${totalChecks.critical} minor critical issues in dependabot alerts`);
+          return { color: 'yellow', reason: `${totalChecks.critical} minor critical issues in dependabot alerts` };
           console.log(`${totalChecks.critical} alerts found`)
         }
+
       } catch (err) {
+        return { color: 'gray', reason: 'Error fetching dependabot data' };
         console.error('Dependabot error:', err);
-        setColor('gray');
-        setReason('Error fetching dependabot data');
       }
     };
 
-    fetchStatus();
-  }, [techInsightsApi, entities]);
+
+export const TrafficLightDependabot = ({
+  entities,
+  systemName,
+  onClick,
+}: {
+  entities: Entity[];
+  systemName: string;
+  onClick?: () => void;
+}) => {
+  const [color, setColor] = useState<
+    'green' | 'red' | 'yellow' | 'gray' 
+  >('green');
+  const [reason, setReason] = useState('Fetching Dependabot status...')
+
+  const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
+  const dependabotUtils = React.useMemo(
+      () => new DependabotUtils(),
+      [techInsightsApi],
+    );
+
+  useEffect(() => {
+    // if (!entities.length) {
+    //   setColor('gray');
+    //   setReason('No entities available');
+    //   return;
+    // }
+    const fetchData = async () => {
+      const dependabotColorAndReason = await determineDependabotColor(
+        systemName,
+        entities,
+        catalogApi,
+        techInsightsApi,
+        dependabotUtils
+      );
+      setColor(dependabotColorAndReason.color);
+      setReason(dependabotColorAndReason.reason);
+    };
+    fetchData();
+  }, [entities, techInsightsApi]);
+
 
   return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
 };
