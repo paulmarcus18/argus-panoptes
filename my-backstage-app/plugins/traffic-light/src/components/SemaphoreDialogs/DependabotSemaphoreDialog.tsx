@@ -75,13 +75,22 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
   });
   const [topRepos, setTopRepos] = React.useState<RepoAlertSummary[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [color, setColor] = React.useState<'green' | 'red' | 'yellow' | 'gray' >('green');
+  const [color, setColor] = React.useState<'green' | 'red' | 'yellow' | 'gray' >('gray');
 
 
   React.useEffect(() => {
-    if (!open || entities.length === 0) {
-      console.log('[🔕] Dialog closed or no entities provided.');
-      return;
+    if (!open || entities.length === 0  ) {
+      setData({
+      color: 'gray',
+      metrics: {},
+      summary: 'No data available for this metric.',
+      details: [],
+    });
+    setTopRepos([]);
+    setIsLoading(false);
+    return;
+      // console.log('[🔕] Dialog closed or no entities provided.');
+      // return;
     }
 
     setIsLoading(true);
@@ -132,12 +141,6 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
           .slice(0, 5);
 
         const totalIssues = totalCritical + totalHigh + totalMedium;
-        // const color =
-        //   totalCritical > 0
-        //     ? 'red'
-        //     : totalHigh > 0 || totalMedium > 0
-        //     ? 'yellow'
-        //     : 'green';
 
         const summary =
           totalCritical > 0
@@ -149,7 +152,7 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
             : 'No Dependabot security issues found.';
 
         const trafficLightcolor = await determineDependabotColor(system, entities, catalogApi, techInsightsApi, dependabotUtils);
-        let color: 'green' | 'red' | 'yellow' | 'gray' = 'green';
+        let color: 'green' | 'red' | 'yellow' | 'gray' = 'gray';
         color = trafficLightcolor.color;
 
         setData({

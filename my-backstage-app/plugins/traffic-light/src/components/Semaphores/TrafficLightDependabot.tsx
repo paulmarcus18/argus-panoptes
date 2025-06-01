@@ -13,9 +13,21 @@ export const determineDependabotColor = async(
   techInsightsApi: any,
   dependabotUtils: DependabotUtils
 ): Promise<{color: 'green' | 'red' | 'yellow' | 'gray' , reason: string}> => {
-  if (!entities.length) {
-      return { color: 'gray', reason: 'No entities available' };
-    }
+//   if (!Array.isArray(entities) || entities.length === 0) {
+//     console.log('📦 determineDependabotColor called with entities:', entities);
+//     return { color: 'gray', reason: 'No entities provided' };
+// }
+      const filteredEntities = entities.filter(
+        e => e.spec?.system === systemName
+      );
+
+      if (!systemName || !Array.isArray(entities) || filteredEntities.length === 0) {
+        console.log('📦 determineDependabotColor called with entities:', entities);
+        return { color: 'gray', reason: `No entities found for system: ${systemName}` };
+      }
+  // if (!entities.length) {
+  //     return { color: 'gray', reason: 'No entities available' };
+  //   }
       const fallbackEntity = entities.find(e => typeof e.spec?.system === 'string');
       const fallbackSystem = fallbackEntity?.spec?.system;
       const finalSystemName = systemName ?? fallbackSystem;
@@ -33,10 +45,6 @@ export const determineDependabotColor = async(
               name: entity.metadata.name,
             }),
           ),
-          // techInsightsApi,
-          // entities,
-          // finalSystemNameString ?? '',
-          // catalogApi
         );
         	const totalChecks = result.reduce(
           (acc,res) => {
@@ -53,8 +61,6 @@ export const determineDependabotColor = async(
           
           );
 
-          //color logic:
-        //Color logic must be fixed!!
         if (totalChecks.critical < 4  && totalChecks.high < 4) {
           return { color: 'green', reason: 'All dependabot checks passed' };
           console.log(`${totalChecks.critical} alerts found`)
@@ -84,7 +90,7 @@ export const TrafficLightDependabot = ({
 }) => {
   const [color, setColor] = useState<
     'green' | 'red' | 'yellow' | 'gray' 
-  >('green');
+  >('gray');
   const [reason, setReason] = useState('Fetching Dependabot status...')
 
   const techInsightsApi = useApi(techInsightsApiRef);
@@ -95,19 +101,37 @@ export const TrafficLightDependabot = ({
     );
 
   useEffect(() => {
-    // if (!entities.length) {
-    //   setColor('gray');
-    //   setReason('No entities available');
-    //   return;
-    // }
-    const fetchData = async () => {
+      if (!entities.length) {
+      setColor('gray');
+      setReason('No entities selected');
+      return ;
+    }
+
+    console.log('🚦 Rendering with entities:', entities);
+      const fetchData = async () => {
+      //   if (!Array.isArray(entities) || entities.length === 0) {
+      //   setColor('gray');
+      //   setReason('No entities selected');
+      //   return;
+      // }
+
+      const filteredEntities = entities.filter(
+        e => e.spec?.system === systemName
+      );
+
+      if (!systemName || filteredEntities.length === 0) {
+        setColor('gray');
+        setReason(`No entities found for system: ${systemName}`);
+        return;
+      }
       const dependabotColorAndReason = await determineDependabotColor(
         systemName,
-        entities,
+        filteredEntities,
         catalogApi,
         techInsightsApi,
         dependabotUtils
       );
+
       setColor(dependabotColorAndReason.color);
       setReason(dependabotColorAndReason.reason);
     };
