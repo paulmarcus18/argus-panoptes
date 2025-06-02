@@ -43,11 +43,11 @@ export class AzureUtils {
         stringifyEntityRef(entity),
       );
 
-      const response = await api.getFacts(entity, ['azureDevOpsBugsRetriever']);
+      const response = await api.getFacts(entity, ['azure-devops-bugs-retriever']);
 
       console.log('📦 Raw Azure DevOps facts:', response);
 
-      const facts = response?.['azureDevOpsBugsRetriever']?.facts;
+      const facts = response?.['azure-devops-bugs-retriever']?.facts;
 
       if (!facts) {
         console.warn('⚠️ No facts found for entity:', stringifyEntityRef(entity));
