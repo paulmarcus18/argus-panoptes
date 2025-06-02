@@ -127,7 +127,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<AzureBugInsightsDialogProps> =
               {totalBugCount}
             </Typography>
             <Typography className={classes.metricLabel}>
-              Total Azure DevOps Bugs (Unique Projects Only)
+              Total Azure DevOps Bugs
             </Typography>
           </Paper>
         </Grid>
@@ -135,7 +135,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<AzureBugInsightsDialogProps> =
 
       {top5Projects.length > 0 && (
         <div className={classes.projectList}>
-          <Typography variant="h6">Top 5 Projects with Most Bugs</Typography>
+          <Typography variant="h6">Projects with Most Bugs</Typography>
           <Grid container spacing={2} className={classes.projectList}>
             {top5Projects.map(project => (
               <Grid item xs={12} key={project.project}>

@@ -216,7 +216,6 @@ export const TrafficComponent = () => {
 
   return (
     <Page themeId="tool">
-      <Header title="Traffic light plugin" subtitle="" />
       <Content>
         <Box display="flex" mb={3} alignItems="center" flexWrap="wrap">
           <FormControlLabel
