@@ -183,12 +183,12 @@ export const TrafficComponent = () => {
         setAvailableSystems(systems);
         if (systems.length > 0) {
           const randomSystem =
-            systems[Math.floor(Math.random() * systems.length)];
+            systems[0];
           setSelectedSystem(randomSystem);
         }
 
-        setSelectedRepos(simplified.map(r => r.name));
-        setSelectedEntities(simplified.map(r => r.entity));
+        //setSelectedRepos(simplified.map(r => r.name));
+        //setSelectedEntities(simplified.map(r => r.entity));
       } catch (err) {
         console.error('Failed to load catalog entities', err);
       }

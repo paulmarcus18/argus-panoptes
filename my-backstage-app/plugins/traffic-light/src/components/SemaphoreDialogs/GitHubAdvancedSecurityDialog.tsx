@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Paper, Typography } from '@material-ui/core';
+import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -51,6 +51,20 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
   });
   const [isLoading, setIsLoading] = React.useState(false);
 
+  // Helper function to extract repository name from GitHub URL
+  const extractRepoName = (url: string): string => {
+    if (!url) return '';
+    
+    const urlParts = url.split('/');
+    const repoIndex = urlParts.indexOf('github.com');
+    
+    if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
+      return `${urlParts[repoIndex + 1]}/${urlParts[repoIndex + 2]}`;
+    }
+    
+    return '';
+  };
+
   React.useEffect(() => {
     if (!open || entities.length === 0) return;
 
@@ -75,45 +89,64 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
         const details: IssueDetail[] = [];
 
         results.forEach(result => {
+          // Process code scanning alerts
           Object.values(result.codeScanningAlerts || {}).forEach(alert => {
             const a = alert as any;
 
+            // Count by severity
             const severity = (a.severity as Severity) || 'medium';
-            if (severity === 'critical') critical++;
-            else if (severity === 'high') high++;
-            else if (severity === 'medium') medium++;
-            else if (severity === 'low') low++;
-            else medium++;
+            switch (severity) {
+              case 'critical':
+                critical++;
+                break;
+              case 'high':
+                high++;
+                break;
+              case 'medium':
+                medium++;
+                break;
+              case 'low':
+                low++;
+                break;
+              default:
+                medium++;
+            }
 
-            const urlParts = (a.html_url || '').split('/');
-            const repo =
-              urlParts.indexOf('github.com') !== -1
-                ? `${urlParts[4]}/${urlParts[5]}`
-                : '';
+            // Extract repository name from direct_link or html_url
+            const repoName = extractRepoName(a.direct_link || a.html_url || '');
+
+            // Add repository name to description if available
+            const description = repoName
+              ? `[${repoName}] ${a.description}`
+              : a.description;
 
             details.push({
               severity,
-              description: repo ? `[${repo}] ${a.description}` : a.description,
+              description,
               component: a.location?.path,
-              url: a.html_url,
-              directLink: a.direct_link,
+              url: a.html_url || a.direct_link, // Ensure url is always set for clickable links
+              directLink: a.direct_link, // Use direct_link for more specific navigation
             });
           });
 
+          // Process secret scanning alerts (most are high severity)
           Object.values(result.secretScanningAlerts || {}).forEach(alert => {
             const a = alert as any;
             high++;
 
-            const urlParts = (a.html_url || '').split('/');
-            const repo =
-              urlParts.indexOf('github.com') !== -1
-                ? `${urlParts[4]}/${urlParts[5]}`
-                : '';
+            // Extract repository name from html_url
+            const repoName = extractRepoName(a.html_url || '');
+
+            // Add repository name to description if available
+            const description = repoName
+              ? `[${repoName}] ${a.description}`
+              : a.description;
 
             details.push({
               severity: 'high',
-              description: repo ? `[${repo}] ${a.description}` : a.description,
-              url: a.html_url,
+              description,
+              url: a.html_url, // Ensure url is set for clickable links
+              directLink: a.html_url, // For secret scanning, html_url is the direct link
             });
           });
         });
@@ -127,6 +160,7 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
           0,
         );
 
+        // Determine color based on severity
         const color =
           critical > 0 || high > 0
             ? 'red'
@@ -134,6 +168,7 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
             ? 'yellow'
             : 'green';
 
+        // Create appropriate summary message
         const summary =
           color === 'red'
             ? 'Critical security issues require immediate attention.'
@@ -196,6 +231,24 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
       ))}
     </Grid>
   );
+
+  // Custom issue renderer to handle clickable links
+  const renderIssueDescription = (issue: IssueDetail) => {
+    if (issue.directLink) {
+      return (
+        <Link
+          href={issue.directLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          color="primary"
+          underline="hover"
+        >
+          {issue.description}
+        </Link>
+      );
+    }
+    return issue.description;
+  };
 
   return (
     <BaseSemaphoreDialog
