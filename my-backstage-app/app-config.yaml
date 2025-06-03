@@ -182,7 +182,7 @@ techInsights:
       cadence: '1 * * * *' # Every 4 hours
     github-commit-message-retriever:
       enabled: true
-      cadence: '0 */4 * * *' # Every minute
+      cadence: '0 6 * * *' # Every day at 06:00
       filter:
         kind: Component
     azure-devops-bugs-retriever:
@@ -191,13 +191,13 @@ techInsights:
       filter:
         kind: Component
     dependabotFactRetriever:
-      cadence: '0 * * * *' # every  hour
+      cadence: '* * * * *' # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
     githubPipelineStatusFactRetriever:
-      cadence: '*/2 * * * *' # every minute
+      cadence: '0 0 * * *' # every day at 00:00 (midnight)
       lifecycle: { timeToLive: { weeks: 2 } }
     foundationPipelineStatusFactRetriever:
-      cadence: '1 * * * *' # every minute
+      cadence: '0 0 * * *' # every day at 00:00 (midnight)
       lifecycle: { timeToLive: { weeks: 2 } }
     reportingPipelineStatusFactRetriever:
       cadence: '*/2 * * * *' # every minute

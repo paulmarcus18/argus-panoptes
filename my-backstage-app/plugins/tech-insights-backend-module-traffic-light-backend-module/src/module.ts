@@ -27,8 +27,6 @@ import { reportingPipelineStatusFactRetriever } from './pipelines/reportingFactR
 import { createAzureDevOpsBugsRetriever } from './azure/azureDevOpsFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
-// Import SonarCloud fact checkers.
-import { sonarCloudChecks } from './sonarCloud/sonarCloudFactCheckers';
 // Imports the fact checker factory that evaluates dynamic thresholds.
 import { DynamicThresholdFactCheckerFactory } from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 // Imports the CatalogClient to interact with the Backstage catalog.
@@ -42,6 +40,8 @@ import { reportingPipelineChecks } from './pipelines/reportingFactChecker';
 import { githubAdvancedSecuritychecks } from './github-advanced-security/githubASFactChecker';
 
 import { azureBugsChecks } from './azure/azureDevOpsFactChecker';
+import { DependabotChecks } from './dependabot/dependabotFactChecker';
+
 
 // Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({
@@ -112,12 +112,12 @@ export default createBackendModule({
         const sonarCloudFactCheckerFactory =
           new DynamicThresholdFactCheckerFactory({
             checks: [
-              ...sonarCloudChecks,
               ...foundationPipelineChecks,
               ...preproductionPipelineChecks,
               ...reportingPipelineChecks,
               ...githubAdvancedSecuritychecks,
               ...azureBugsChecks,
+              ...DependabotChecks,
             ],
             logger,
             catalogApi: authenticatedCatalogApi,

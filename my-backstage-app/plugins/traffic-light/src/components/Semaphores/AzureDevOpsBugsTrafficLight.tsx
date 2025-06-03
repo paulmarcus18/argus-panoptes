@@ -6,6 +6,7 @@ import { AzureUtils } from '../../utils/azureUtils';
 import { Box, Tooltip } from '@material-ui/core';
 
 export const AzureDevOpsBugsTrafficLight = ({
+
   entities,
   onClick,
 }: {

@@ -102,6 +102,9 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
             const factId = check.factIds[0];
             const factContainer = factValues[factId];
             const rawValue = factContainer?.facts?.[check.factIds[1]];
+            this.logger.warn(`🔥[DEBUG] fact keys: ${Object.keys(factContainer?.facts || {}).join(', ')}`);
+
+
 
             const operator = systemEntity.metadata.annotations?.[check.annotationKeyOperator];
             const isNumber = typeof rawValue === 'number';
@@ -183,6 +186,7 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
    * @returns Promise resolving to an array of DynamicThresholdCheck objects.
    */
   async getChecks(): Promise<DynamicThresholdCheck[]> {
+    
     return this.checks;
   }
 }
@@ -212,6 +216,7 @@ export class DynamicThresholdFactCheckerFactory {
    * Constructs a new DynamicThresholdFactChecker using the provided TechInsightsStore.
    */
   construct(repository: TechInsightsStore) {
+    
     return new DynamicThresholdFactChecker(
       this.catalogApi,
       repository,

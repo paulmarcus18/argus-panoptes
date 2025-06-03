@@ -24,11 +24,16 @@ import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { SonarCloudUtils } from '../../../utils/sonarCloudUtils';
 import { AzureUtils } from '../../../utils/azureUtils';
+// import { getAzureDevOpsBugs } from '../../utils';
 import { GithubAdvancedSecurityUtils } from '../../../utils/githubAdvancedSecurityUtils';
+import{DependabotUtils} from '../../../utils/dependabotUtils';
+import { TrafficLightDependabot } from '../../Semaphores';
+import { getCompoundEntityRef } from '@backstage/catalog-model';
 
-// Type for semaphore severity
-type Severity = 'critical' | 'high' | 'medium' | 'low';
 
+
+// Type for semaphore severity../../utils
+type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 // Type for issue details - extended with URL and directLink
 interface IssueDetail {
   severity: Severity;
@@ -326,6 +331,8 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     () => new AzureUtils(), 
     [techInsightsApi],
   );
+  const [realDependabotData, setRealDependabotData] = React.useState<SemaphoreData | null>(null);
+
 
   // Get mock data based on semaphore type (or placeholder if not found)
   const defaultData: SemaphoreData = {
@@ -374,11 +381,11 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             details:
               bugCount > 0
                 ? [
-                    {
-                      severity: bugCount > 5 ? 'high' : 'medium',
-                      description: `${bugCount} active bug(s) found in Azure DevOps.`,
-                    },
-                  ]
+                  {
+                    severity: bugCount > 5 ? 'high' : 'medium',
+                    description: `${bugCount} active bug(s) found in Azure DevOps.`,
+                  },
+                ]
                 : [],
           });
         } catch (err) {
@@ -563,13 +570,12 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
 
               // Extract repository name from HTML URL
               // Format is usually: https://github.com/{owner}/{repo}/security/...
-              const urlParts = (alert.html_url || '').split('/');
+              const urlParts = (alert.direct_link || '').split('/');
               const repoIndex = urlParts.indexOf('github.com');
               let repoName = '';
               if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
-                repoName = `${urlParts[repoIndex + 1]}/${
-                  urlParts[repoIndex + 2]
-                }`;
+                repoName = `${urlParts[repoIndex + 1]}/${urlParts[repoIndex + 2]
+                  }`;
               }
 
               // Add repository name to description if available
@@ -596,9 +602,8 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
               const repoIndex = urlParts.indexOf('github.com');
               let repoName = '';
               if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
-                repoName = `${urlParts[repoIndex + 1]}/${
-                  urlParts[repoIndex + 2]
-                }`;
+                repoName = `${urlParts[repoIndex + 1]}/${urlParts[repoIndex + 2]
+                  }`;
               }
 
               // Add repository name to description if available
@@ -669,21 +674,91 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     }
   }, [semaphoreType, entities, techInsightsApi]);
 
+  React.useEffect(() => {
+    if (semaphoreType === 'Dependabot' && entities && entities.length > 0) {
+      setIsLoading(true);
+  
+      const fetchData = async () => {
+        try {
+          // const color = TrafficLightDependabot{, };
+          // const entity = entities[0]; // Assumes you're evaluating the first entity only
+          // console.log('[🚦] Running Dependabot checks for entity:', entity.metadata.name);
+  
+          // const { criticalAlertsCount, highAlertsCount, mediumAlertsCount } =
+          //   await dependabotUtils.getDependabotFacts(techInsightsApi, {
+          //     kind: entity.kind,
+          //     namespace: entity.metadata.namespace ?? 'default',
+          //     name: entity.metadata.name,
+          //   });
+          
+          // const color = TrafficLightDependabot.fetch();
+          // const { criticalAlertCheck, highAlertCheck, mediumAlertCheck } = await dependabotUtils.getDependabotChecks(
+          //   techInsightsApi,
+          //   {
+          //     kind: entity.kind,
+          //     namespace: entity.metadata.namespace ?? 'default',
+          //     name: entity.metadata.name,
+          //   },
+          // );
+          
+          // const color = allDependabotChecksPass ? 'green' : 'red';
+          // const summary = allDependabotChecksPass
+          //   ? 'All Dependabot thresholds passed ✅'
+          //   : 'One or more Dependabot thresholds failed ❌';
+  
+          // console.log('[🎨] Final Dependabot Color:', color);
+          // console.log('[📊] Alert counts — Critical:', criticalAlertsCount, 'High:', highAlertsCount, 'Medium:', mediumAlertsCount);
+  
+          // setRealDependabotData({
+          //   color,
+          //   metrics: {
+          //     critical: criticalAlertsCount,
+          //     high: highAlertsCount,
+          //     medium: mediumAlertsCount,
+          //   },
+          //   summary,
+          //   details: [
+          //     ...(criticalAlertsCount > 0
+          //       ? [{ severity: 'critical' as const, description: `${criticalAlertsCount} critical alerts` }]
+          //       : []),
+          //     ...(highAlertsCount > 0
+          //       ? [{ severity: 'high' as const, description: `${highAlertsCount} high alerts` }]
+          //       : []),
+          //     ...(mediumAlertsCount > 0
+          //       ? [{ severity: 'medium' as const, description: `${mediumAlertsCount} medium alerts` }]
+          //       : []),
+          //   ],
+          // });
+        } catch (err) {
+          console.error('❌ Error during Dependabot fetch in DetailedSemaphoreDialog:', err);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+  
+      fetchData();
+    }
+  }, [semaphoreType, entities, techInsightsApi]);
+  
+  
+
   // Use real data if available, otherwise fall back to mock data
   const data = React.useMemo(() => {
-    if (semaphoreType === 'SonarQube' && realSonarQubeData) {
+    if (semaphoreType === 'Dependabot' && realDependabotData) {
+      console.log('[🔍 DEBUG] realDependabotData:', realDependabotData);
+      return realDependabotData;
+    } else if (semaphoreType === 'SonarQube' && realSonarQubeData) {
       return realSonarQubeData;
-    } else if (
-      semaphoreType === 'Github Advanced Security' &&
-      realGitHubSecurityData
-    ) {
+    } else if (semaphoreType === 'Github Advanced Security' && realGitHubSecurityData) {
       return realGitHubSecurityData;
     } else if (semaphoreType === 'Azure DevOps Bugs' && realAzureDevOpsData) {
       return realAzureDevOpsData;
     }
+
     return mockMetricsData[semaphoreType] || defaultData;
   }, [
     semaphoreType,
+    realDependabotData,          // ✅ ADD THIS
     realSonarQubeData,
     realGitHubSecurityData,
     realAzureDevOpsData,
@@ -901,6 +976,38 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
             </Grid>
           </Grid>
         );
+
+      case 'Dependabot':
+        return (
+          <Grid container spacing={2}>
+            <Grid item xs={4}>
+              <Paper className={classes.metricBox} elevation={1}>
+                <Typography variant="h4" className={classes.metricValue} style={{ color: '#d32f2f' }}>
+                  {data.metrics.critical ?? 0}
+                </Typography>
+                <Typography className={classes.metricLabel}>Critical Alerts</Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={4}>
+              <Paper className={classes.metricBox} elevation={1}>
+                <Typography variant="h4" className={classes.metricValue} style={{ color: '#f44336' }}>
+                  {data.metrics.high ?? 0}
+                </Typography>
+                <Typography className={classes.metricLabel}>High Alerts</Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={4}>
+              <Paper className={classes.metricBox} elevation={1}>
+                <Typography variant="h4" className={classes.metricValue} style={{ color: '#ff9800' }}>
+                  {data.metrics.medium ?? 0}
+                </Typography>
+                <Typography className={classes.metricLabel}>Medium Alerts</Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        );
+
+
       case 'Azure DevOps Bugs':
         return (
           <Grid container spacing={2}>
