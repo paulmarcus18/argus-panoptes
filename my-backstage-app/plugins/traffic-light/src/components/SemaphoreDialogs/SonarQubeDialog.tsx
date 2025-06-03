@@ -147,7 +147,6 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
         // Set the real data
         setData({ color, metrics: totals, summary, details });
       } catch (err) {
-        console.error('SonarQube fetch error:', err);
         // Set default data in case of error
         setData({ color: 'gray', metrics: {}, summary: 'Failed to load SonarQube data.', details: [] });
       } finally {

@@ -88,7 +88,6 @@ export const determineSonarQubeColor = async (
       return { color: 'green', reason: `${totalFailedQualityGate} entities failed the quality gate check` };
     }
   } catch (err) {
-    console.error('SonarQube error:', err);
     return { color: 'gray', reason: 'Error fetching SonarQube data' };
   }
 }
