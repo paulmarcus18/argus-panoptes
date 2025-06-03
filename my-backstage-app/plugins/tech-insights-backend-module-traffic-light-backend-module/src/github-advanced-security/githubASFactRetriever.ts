@@ -215,7 +215,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
             `GitHub security metrics for ${owner}/${repo}: ` +
             `Code Scanning: ${Object.keys(codeScanningAlerts).length}, ` +
             `Secret Scanning: ${Object.keys(secretScanningAlerts).length}` + 
-            `🐹Critical: ${severityCounts.critical}, ` +
+            `Critical: ${severityCounts.critical}, ` +
             `High: ${severityCounts.high}, ` +
             `Medium: ${severityCounts.medium}, ` +
             `Low: ${severityCounts.low}`,
