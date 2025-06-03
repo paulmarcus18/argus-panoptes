@@ -33,12 +33,17 @@ export const determineDependabotColor = async(
       const finalSystemName = systemName ?? fallbackSystem;
       const finalSystemNameString = typeof finalSystemName === 'string' ? finalSystemName : undefined;
 
-      console.log('🔌 Checking Dependabot status for entities:', entities.map(e => e.metadata.name));
+      console.log('🔌 Checking Dependabot status for entities:', filteredEntities.map(e => e.metadata.name));
       console.log('🧭 Using system name for threshold:', finalSystemNameString);
+    
+      if (!finalSystemNameString) {
+      return { color: 'gray', reason: 'No valid system name available' };
+      } 
+
 
       try {
         const result = await Promise.all(
-          entities.map(entity =>
+          filteredEntities.map(entity =>
             dependabotUtils.getDependabotChecks(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
@@ -60,13 +65,16 @@ export const determineDependabotColor = async(
           }, 
           
           );
-
-        if (totalChecks.critical < 4  && totalChecks.high < 4) {
+        //issue is if facts and threshold not found, check returns false, and then code thinks the repo(s) failed checks but theres no facts actually
+        //no high repo and no critical repo -> green
+        if (totalChecks.high === 0 && totalChecks.critical === 0) {
           return { color: 'green', reason: 'All dependabot checks passed' };
           console.log(`${totalChecks.critical} alerts found`)
-        } else if (totalChecks.critical > 4) {
-          return { color: 'red', reason: `Critical alerts exceed threshold (${totalChecks.critical} > ${entities.length * 0.5})` };
-          console.log(`${totalChecks.critical} alerts found`)
+        } else if (totalChecks.critical > 0 ) {
+
+          //if atleast 1 critical repo -> red
+            console.log(`${totalChecks.critical} alerts found`)
+            return { color: 'red', reason: `Critical alerts exceed threshold (${totalChecks.critical} > ${entities.length * 0.5})` };
         } else {
           return { color: 'yellow', reason: `${totalChecks.critical} minor critical issues in dependabot alerts` };
           console.log(`${totalChecks.critical} alerts found`)
