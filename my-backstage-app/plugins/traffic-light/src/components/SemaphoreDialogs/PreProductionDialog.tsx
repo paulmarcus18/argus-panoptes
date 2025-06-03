@@ -1,17 +1,15 @@
 import React from 'react';
-import {
-  Grid,
-  Paper,
-  Typography,
-  Link,
-} from '@material-ui/core';
+import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { PreproductionUtils } from '../../utils/preproductionUtils';
 import type { GridSize } from '@material-ui/core';
+import { SemaphoreData } from './types';
+import { determineSemaphoreColor } from '../utils';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -46,6 +44,7 @@ export const PreproductionSemaphoreDialog: React.FC<
 > = ({ open, onClose, entities = [] }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
   const preprodUtils = React.useMemo(() => new PreproductionUtils(), []);
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -60,6 +59,13 @@ export const PreproductionSemaphoreDialog: React.FC<
     { name: string; url: string; successRate: number }[]
   >([]);
 
+  const [data, setData] = React.useState<SemaphoreData>({
+    color: 'gray',
+    metrics: {},
+    summary: 'No data available for this metric.',
+    details: [],
+  });
+
   React.useEffect(() => {
     if (!open || entities.length === 0) return;
 
@@ -67,6 +73,37 @@ export const PreproductionSemaphoreDialog: React.FC<
 
     const fetchPipelineMetrics = async () => {
       try {
+        // 1. Get threshold from system annotations
+        let redThreshold = 0.33;
+        try {
+          const systemName = entities[0].spec?.system;
+          const namespace = entities[0].metadata.namespace || 'default';
+
+          if (systemName) {
+            const systemEntity = await catalogApi.getEntityByRef({
+              kind: 'System',
+              namespace,
+              name:
+                typeof systemName === 'string'
+                  ? systemName
+                  : String(systemName),
+            });
+
+            const thresholdAnnotation =
+              systemEntity?.metadata.annotations?.[
+                'preproduction-check-threshold-red'
+              ];
+            if (thresholdAnnotation) {
+              redThreshold = parseFloat(thresholdAnnotation);
+            }
+          }
+        } catch (err) {
+          console.warn(
+            'Failed to get threshold annotation, using default 0.33',
+          );
+        }
+
+        // 2. Gather facts + checks in parallel
         const results = await Promise.all(
           entities.map(async entity => {
             const ref = {
@@ -75,10 +112,10 @@ export const PreproductionSemaphoreDialog: React.FC<
               name: entity.metadata.name,
             };
 
-            const facts = await preprodUtils.getPreproductionPipelineFacts(
-              techInsightsApi,
-              ref,
-            );
+            const [facts, check] = await Promise.all([
+              preprodUtils.getPreproductionPipelineFacts(techInsightsApi, ref),
+              preprodUtils.getPreproductionPipelineChecks(techInsightsApi, ref),
+            ]);
 
             const successRate =
               facts.successWorkflowRunsCount + facts.failureWorkflowRunsCount >
@@ -101,11 +138,12 @@ export const PreproductionSemaphoreDialog: React.FC<
               successRate: parseFloat(successRate.toFixed(2)),
               successWorkflowRunsCount: facts.successWorkflowRunsCount,
               failureWorkflowRunsCount: facts.failureWorkflowRunsCount,
+              failedCheck: check.successRateCheck === false,
             };
           }),
         );
 
-        // Global metrics
+        // 3. Metrics aggregation
         const totalSuccess = results.reduce(
           (sum, r) => sum + r.successWorkflowRunsCount,
           0,
@@ -118,7 +156,23 @@ export const PreproductionSemaphoreDialog: React.FC<
         const successRate =
           totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
 
-        // Bottom 5 by success rate
+        const failures = results.filter(r => r.failedCheck).length;
+
+        // 4. Determine traffic light color
+        const { color } = determineSemaphoreColor(
+          failures,
+          entities.length,
+          redThreshold,
+        );
+
+        let summary = 'Code quality is excellent with no significant issues.';
+        if (color === 'red') {
+          summary = 'Critical code quality issues require immediate attention.';
+        } else if (color === 'yellow') {
+          summary = 'Code quality issues need to be addressed before release.';
+        }
+
+        // 5. Bottom 5 repos by success rate
         const lowest = [...results]
           .sort((a, b) => a.successRate - b.successRate)
           .slice(0, 5)
@@ -134,7 +188,20 @@ export const PreproductionSemaphoreDialog: React.FC<
           totalRuns,
           successRate: parseFloat(successRate.toFixed(2)),
         });
+
         setLowestSuccessRepos(lowest);
+
+        setData({
+          color,
+          summary,
+          metrics: {
+            totalSuccess,
+            totalFailure,
+            totalRuns,
+            successRate: parseFloat(successRate.toFixed(2)),
+          },
+          details: [],
+        });
       } catch (e) {
         console.error('Failed to fetch pipeline data:', e);
         setMetrics({
@@ -144,13 +211,19 @@ export const PreproductionSemaphoreDialog: React.FC<
           successRate: 0,
         });
         setLowestSuccessRepos([]);
+        setData({
+          color: 'gray',
+          metrics: {},
+          summary: 'Failed to load metrics.',
+          details: [],
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchPipelineMetrics();
-  }, [open, entities, techInsightsApi, preprodUtils]);
+  }, [open, entities, techInsightsApi, catalogApi, preprodUtils]);
 
   const renderMetrics = () => (
     <>
@@ -175,7 +248,6 @@ export const PreproductionSemaphoreDialog: React.FC<
         ))}
       </Grid>
 
-      {/* Bottom 5 repos by success rate */}
       {lowestSuccessRepos.length > 0 && (
         <div className={classes.repoList}>
           <Typography variant="h6">Lowest Success Rate Repositories</Typography>
@@ -208,7 +280,7 @@ export const PreproductionSemaphoreDialog: React.FC<
       open={open}
       onClose={onClose}
       title="Preproduction Pipeline Insights"
-      data={{ color: 'gray', summary: '', metrics: {}, details: [] }}
+      data={data}
       isLoading={isLoading}
       renderMetrics={renderMetrics}
     />

@@ -5,6 +5,7 @@ import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { FoundationUtils } from '../../utils/foundationUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
+import { determineSemaphoreColor } from '../utils';
 
 export const FoundationTrafficLight = ({
   entities,
@@ -72,7 +73,7 @@ export const FoundationTrafficLight = ({
         ).length;
 
         // Step 4: Apply modular logic
-        const { color: newColor, reason: newReason } = determineFoundationColor(
+        const { color: newColor, reason: newReason } = determineSemaphoreColor(
           failures,
           entities.length,
           redThreshold,
@@ -92,23 +93,3 @@ export const FoundationTrafficLight = ({
 
   return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
 };
-
-// Modular logic with threshold
-export function determineFoundationColor(
-  failures: number,
-  totalEntities: number,
-  redThreshold: number,
-): { color: 'green' | 'yellow' | 'red'; reason: string } {
-  const redLimit = Math.ceil(redThreshold * totalEntities);
-
-  if (failures === 0) {
-    return { color: 'green', reason: 'All foundation checks passed' };
-  } else if (failures > redLimit) {
-    return { color: 'red', reason: `${failures} foundation failures` };
-  } else {
-    return {
-      color: 'yellow',
-      reason: `${failures} minor issues in foundation pipelines`,
-    };
-  }
-}

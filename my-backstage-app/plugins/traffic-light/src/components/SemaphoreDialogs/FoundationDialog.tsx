@@ -8,8 +8,8 @@ import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { FoundationUtils } from '../../utils/foundationUtils';
 import type { GridSize } from '@material-ui/core';
-import { determineFoundationColor } from '../Semaphores';
 import { SemaphoreData } from './types';
+import { determineSemaphoreColor } from '../utils';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -154,7 +154,7 @@ export const FoundationSemaphoreDialog: React.FC<
 
         // 3. Determine color using imported utility
         const failures = results.filter(r => r.failedCheck).length;
-        const { color } = determineFoundationColor(
+        const { color } = determineSemaphoreColor(
           failures,
           totalRuns,
           redThreshold,
