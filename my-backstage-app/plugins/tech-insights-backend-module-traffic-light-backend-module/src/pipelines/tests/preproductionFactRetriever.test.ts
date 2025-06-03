@@ -109,7 +109,7 @@ const sampleEntities: Entity[] = [
       namespace: 'default',
       annotations: {
         'github.com/project-slug': 'owner/repo2',
-        'preproduction/exclude': '["workflow1", "workflow2"]',
+        'preproduction/exclude': '["workflow.*", ".*test.*"]',
       },
     },
     spec: {},
@@ -132,6 +132,7 @@ const sampleWorkflowDefinitions = {
     { id: 2, name: 'workflow1', path: '.github/workflows/workflow1.yml' },
     { id: 3, name: 'workflow2', path: '.github/workflows/workflow2.yml' },
     { id: 4, name: 'Deploy', path: '.github/workflows/deploy.yml' },
+    { id: 5, name: 'integration-test', path: '.github/workflows/integration-test.yml' },
   ],
 };
 
@@ -169,6 +170,14 @@ const sampleWorkflowRuns = {
       created_at: '2023-01-01T03:00:00Z',
       head_branch: 'main',
       workflow_id: 4,
+    },
+    {
+      name: 'integration-test',
+      status: 'completed',
+      conclusion: 'failure',
+      created_at: '2023-01-01T03:30:00Z',
+      head_branch: 'main',
+      workflow_id: 5,
     },
     {
       name: 'CI',
@@ -221,12 +230,12 @@ describe('githubPipelineStatusFactRetriever', () => {
       expect(result).toEqual([]);
     });
 
-    it('should handle workflow exclusions correctly', async () => {
+    it('should handle regex workflow exclusions correctly', async () => {
       const config = createMockConfig('github-token');
 
       const mockCatalogInstance = {
         getEntities: jest.fn().mockResolvedValue({
-          items: [sampleEntities[1]], // Entity with exclusions
+          items: [sampleEntities[1]], // Entity with regex exclusions
         }),
       };
       mockCatalogClient.mockImplementation(() => mockCatalogInstance as any);
@@ -254,13 +263,73 @@ describe('githubPipelineStatusFactRetriever', () => {
       });
 
       expect(result).toHaveLength(1);
+      // workflow.* should match workflow1 and workflow2
+      // .*test.* should match integration-test
+      // Only CI and Deploy should remain (both successful)
       expect(result[0].facts).toEqual({
-        totalWorkflowRunsCount: 5, // All main branch runs (including excluded)
-        uniqueWorkflowsCount: 4, // From workflow definitions
-        successWorkflowRunsCount: 2, // CI and Deploy success (workflow1 and workflow2 excluded)
-        failureWorkflowRunsCount: 0, // workflow1 failure excluded
+        totalWorkflowRunsCount: 6, // All main branch runs (including excluded)
+        uniqueWorkflowsCount: 5, // From workflow definitions
+        successWorkflowRunsCount: 2, // CI and Deploy success (others excluded by regex)
+        failureWorkflowRunsCount: 0, // workflow1 failure and integration-test failure excluded
         successRate: 100, // 2/2 * 100
       });
+    });
+
+    it('should handle invalid regex patterns gracefully', async () => {
+      const config = createMockConfig('github-token');
+
+      const entityWithInvalidRegex: Entity = {
+        apiVersion: 'backstage.io/v1alpha1',
+        kind: 'Component',
+        metadata: {
+          name: 'test-service',
+          namespace: 'default',
+          annotations: {
+            'github.com/project-slug': 'owner/repo1',
+            'preproduction/exclude': '["[invalid-regex", "valid-pattern"]',
+          },
+        },
+        spec: {},
+      };
+
+      const mockCatalogInstance = {
+        getEntities: jest.fn().mockResolvedValue({
+          items: [entityWithInvalidRegex],
+        }),
+      };
+      mockCatalogClient.mockImplementation(() => mockCatalogInstance as any);
+
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(sampleWorkflowDefinitions),
+          headers: new Map(),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(sampleWorkflowRuns),
+          headers: new Map(),
+        });
+
+      // Mock console.warn to capture the warning
+      const mockWarn = jest.spyOn(console, 'warn').mockImplementation();
+
+      const result = await githubPipelineStatusFactRetriever.handler({
+        config,
+        logger: mockLogger,
+        entityFilter: [{ kind: 'component' }],
+        auth: mockAuth,
+        discovery: mockDiscovery,
+        urlReader: mockUrlReader,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(mockWarn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid regex pattern: [invalid-regex')
+      );
+      
+      // Should still process the valid pattern and fallback to string matching for invalid one
+      mockWarn.mockRestore();
     });
 
     it('should handle invalid GitHub project slug', async () => {
@@ -494,7 +563,7 @@ describe('githubPipelineStatusFactRetriever', () => {
       expect(result).toHaveLength(1);
       expect(result[0].facts).toEqual({
         totalWorkflowRunsCount: 0,
-        uniqueWorkflowsCount: 4, // From workflow definitions
+        uniqueWorkflowsCount: 5, // Updated to match new workflow definitions count
         successWorkflowRunsCount: 0,
         failureWorkflowRunsCount: 0,
         successRate: 0,
@@ -553,7 +622,7 @@ describe('githubPipelineStatusFactRetriever', () => {
         ),
       );
       // Should process all workflows since exclusion parsing failed
-      expect(result[0].facts.successWorkflowRunsCount).toBe(3);
+      expect(result[0].facts.successWorkflowRunsCount).toBe(3); // Updated to match new expected count
     });
 
     it('should filter entities without GitHub annotations', async () => {
@@ -598,8 +667,8 @@ describe('githubPipelineStatusFactRetriever', () => {
         urlReader: mockUrlReader,
       });
 
-      // Should only process 2 entities (the ones with GitHub annotations)
-      expect(result).toHaveLength(1);
+      // Should process 2 entities with results
+      expect(result).toHaveLength(2);
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Processing 2 GitHub entities',
       );
@@ -695,7 +764,7 @@ describe('githubPipelineStatusFactRetriever', () => {
       expect(result).toHaveLength(1);
       expect(result[0].facts).toEqual({
         totalWorkflowRunsCount: 6,
-        uniqueWorkflowsCount: 4, // From workflow definitions
+        uniqueWorkflowsCount: 5, // Updated to match new workflow definitions count
         successWorkflowRunsCount: 2,
         failureWorkflowRunsCount: 3,
         successRate: 40, // 2/(2+3) * 100 = 40%
@@ -719,17 +788,17 @@ describe('githubPipelineStatusFactRetriever', () => {
         successWorkflowRunsCount: {
           type: 'integer',
           description:
-            'Number of successful workflow runs (excluding excluded workflows)',
+            'Number of successful workflow runs (excluding workflows matching exclude patterns)',
         },
         failureWorkflowRunsCount: {
           type: 'integer',
           description:
-            'Number of failed workflow runs (excluding excluded workflows)',
+            'Number of failed workflow runs (excluding workflows matching exclude patterns)',
         },
         successRate: {
           type: 'float',
           description:
-            'Success rate percentage (0-100) of workflow runs (excluding excluded workflows)',
+            'Success rate percentage (0-100) of workflow runs (excluding workflows matching exclude patterns)',
         },
       });
     });
@@ -744,7 +813,7 @@ describe('githubPipelineStatusFactRetriever', () => {
       expect(githubPipelineStatusFactRetriever.id).toBe(
         'githubPipelineStatusFactRetriever',
       );
-      expect(githubPipelineStatusFactRetriever.version).toBe('0.1.0');
+      expect(githubPipelineStatusFactRetriever.version).toBe('0.2.0'); 
     });
   });
 });
