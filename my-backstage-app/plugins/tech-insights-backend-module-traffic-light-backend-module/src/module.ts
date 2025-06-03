@@ -67,10 +67,7 @@ export default createBackendModule({
         //logs to the console to confirm module is being registered
         logger.info('Registering dependabot-facts module...');
         const factRetriever = createDependabotFactRetriever(config, logger);
-        const sonarCloudFactRetriever = createSonarCloudFactRetriever(
-          config,
-          logger,
-        );
+        const sonarCloudFactRetriever = createSonarCloudFactRetriever(config);
 
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
