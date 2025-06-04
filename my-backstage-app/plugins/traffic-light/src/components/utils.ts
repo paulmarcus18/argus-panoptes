@@ -91,7 +91,10 @@ export async function getGitHubRepoStatus(
 
   if (!response.ok) {
     console.error('Failed to fetch GitHub data:', response.statusText);
-    return { color: 'red', reason: `GitHub API error: ${response.statusText} `};
+    return {
+      color: 'red',
+      reason: `GitHub API error: ${response.statusText} `,
+    };
   }
 
   const data = await response.json();
@@ -148,3 +151,18 @@ export async function getGitHubRepoStatus(
   }
 }
 
+export function determineSemaphoreColor(
+  failures: number,
+  totalEntities: number,
+  redThreshold: number,
+): { color: 'green' | 'yellow' | 'red'; reason: string } {
+  const redLimit = Math.ceil(redThreshold * totalEntities);
+
+  if (failures === 0) {
+    return { color: 'green', reason: 'All preproduction checks passed' };
+  } else if (failures > redLimit) {
+    return { color: 'red', reason: `${failures} preproduction failures` };
+  } else {
+    return { color: 'yellow', reason: `${failures} minor issues in pipelines` };
+  }
+}
