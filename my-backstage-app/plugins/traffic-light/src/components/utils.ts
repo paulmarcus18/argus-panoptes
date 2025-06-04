@@ -70,7 +70,10 @@ export async function getGitHubRepoStatus(
 
   if (!response.ok) {
     console.error('Failed to fetch GitHub data:', response.statusText);
-    return { color: 'red', reason: `GitHub API error: ${response.statusText} `};
+    return {
+      color: 'red',
+      reason: `GitHub API error: ${response.statusText} `,
+    };
   }
 
   const data = await response.json();
@@ -127,35 +130,56 @@ export async function getGitHubRepoStatus(
   }
 }
 
+export function determineSemaphoreColor(
+  failures: number,
+  totalEntities: number,
+  redThreshold: number,
+): { color: 'green' | 'yellow' | 'red'; reason: string } {
+  const redLimit = Math.ceil(redThreshold * totalEntities);
+
+  if (failures === 0) {
+    return { color: 'green', reason: 'All preproduction checks passed' };
+  } else if (failures > redLimit) {
+    return { color: 'red', reason: `${failures} preproduction failures` };
+  } else {
+    return { color: 'yellow', reason: `${failures} minor issues in pipelines` };
+  }
+}
 /**
  * Interface defining the shape of GitHub security facts
  */
 export interface GitHubSecurityFacts {
   openCodeScanningAlertCount: number;
   openSecretScanningAlertCount: number;
-  codeScanningAlerts: Record<string, {
-    severity: string;
-    description: string;
-    html_url: string;
-    direct_link?: string;
-    location?: {
-      path: string;
-      start_line: number;
-      commit_sha: string;
-    };
-    created_at: string;
-    rule?: {
-      id: string;
-      name: string;
-      description?: string;
-    };
-  }>;
-  secretScanningAlerts: Record<string, {
-    severity: string;
-    description: string;
-    html_url: string;
-    created_at: string;
-  }>;
+  codeScanningAlerts: Record<
+    string,
+    {
+      severity: string;
+      description: string;
+      html_url: string;
+      direct_link?: string;
+      location?: {
+        path: string;
+        start_line: number;
+        commit_sha: string;
+      };
+      created_at: string;
+      rule?: {
+        id: string;
+        name: string;
+        description?: string;
+      };
+    }
+  >;
+  secretScanningAlerts: Record<
+    string,
+    {
+      severity: string;
+      description: string;
+      html_url: string;
+      created_at: string;
+    }
+  >;
 }
 
 /**
@@ -170,16 +194,18 @@ export const getGitHubSecurityFacts = async (
       'Fetching GitHub Security facts for entity:',
       stringifyEntityRef(entity),
     );
-    
-    const response = await api.getFacts(entity, ['githubAdvancedSecurityFactRetriever']);
-    
+
+    const response = await api.getFacts(entity, [
+      'githubAdvancedSecurityFactRetriever',
+    ]);
+
     console.log(
       'Raw Tech Insights API response:',
       JSON.stringify(response, null, 2),
     );
-    
+
     const facts = response?.['githubAdvancedSecurityFactRetriever']?.facts;
-    
+
     if (!facts) {
       console.error(
         'No GitHub Security facts found for entity:',
@@ -192,17 +218,22 @@ export const getGitHubSecurityFacts = async (
         secretScanningAlerts: {},
       };
     }
-    
+
     // Type assertion to handle the JSON types correctly
     const codeScanningAlerts = (facts.codeScanningAlerts as JsonObject) || {};
-    const secretScanningAlerts = (facts.secretScanningAlerts as JsonObject) || {};
-    
+    const secretScanningAlerts =
+      (facts.secretScanningAlerts as JsonObject) || {};
+
     return {
       openCodeScanningAlertCount: Number(facts.openCodeScanningAlertCount ?? 0),
-      openSecretScanningAlertCount: Number(facts.openSecretScanningAlertCount ?? 0),
-      // Cast to the expected types 
-      codeScanningAlerts: codeScanningAlerts as GitHubSecurityFacts['codeScanningAlerts'],
-      secretScanningAlerts: secretScanningAlerts as GitHubSecurityFacts['secretScanningAlerts'],
+      openSecretScanningAlertCount: Number(
+        facts.openSecretScanningAlertCount ?? 0,
+      ),
+      // Cast to the expected types
+      codeScanningAlerts:
+        codeScanningAlerts as GitHubSecurityFacts['codeScanningAlerts'],
+      secretScanningAlerts:
+        secretScanningAlerts as GitHubSecurityFacts['secretScanningAlerts'],
     };
   } catch (error) {
     console.error(

@@ -1,17 +1,16 @@
+
 import React from 'react';
-import {
-  Grid,
-  Paper,
-  Typography,
-  Link,
-} from '@material-ui/core';
+import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { ReportingUtils } from '../../utils/reportingUtils';
 import type { GridSize } from '@material-ui/core';
+import { SemaphoreData } from './types';
+import { determineSemaphoreColor } from '../utils';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -33,41 +32,7 @@ const useStyles = makeStyles(theme => ({
   repoLink: {
     fontWeight: 500,
   },
-  workflowSection: {
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  },
-  workflowMetricBox: {
-    padding: theme.spacing(1.5),
-    marginBottom: theme.spacing(1),
-    backgroundColor: theme.palette.background.default,
-  },
-  workflowName: {
-    fontWeight: 600,
-    fontSize: '16px',
-    marginBottom: theme.spacing(0.5),
-  },
-  workflowStats: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
 }));
-
-interface WorkflowMetrics {
-  workflowName: string;
-  totalRuns: number;
-  successfulRuns: number;
-  successRate: number;
-}
-
-interface RepoWorkflowData {
-  name: string;
-  url: string;
-  overallSuccessRate: number;
-  workflowMetrics: WorkflowMetrics[];
-}
 
 interface ReportingSemaphoreDialogProps {
   open: boolean;
@@ -80,21 +45,27 @@ export const ReportingSemaphoreDialog: React.FC<
 > = ({ open, onClose, entities = [] }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
   const reportingUtils = React.useMemo(() => new ReportingUtils(), []);
 
   const [isLoading, setIsLoading] = React.useState(false);
-  const [aggregateMetrics, setAggregateMetrics] = React.useState({
+  const [metrics, setMetrics] = React.useState({
     totalSuccess: 0,
     totalFailure: 0,
     totalRuns: 0,
     successRate: 0,
   });
 
-  const [aggregatedWorkflowMetrics, setAggregatedWorkflowMetrics] = React.useState<WorkflowMetrics[]>([]);
-  const [repoWorkflowData, setRepoWorkflowData] = React.useState<RepoWorkflowData[]>([]);
   const [lowestSuccessRepos, setLowestSuccessRepos] = React.useState<
-    { name: string; url: string; overallSuccessRate: number; workflowMetrics: WorkflowMetrics[] }[]
+    { name: string; url: string; successRate: number }[]
   >([]);
+
+  const [data, setData] = React.useState<SemaphoreData>({
+    color: 'gray',
+    metrics: {},
+    summary: 'No data available for this metric.',
+    details: [],
+  });
 
   React.useEffect(() => {
     if (!open || entities.length === 0) return;
@@ -103,6 +74,37 @@ export const ReportingSemaphoreDialog: React.FC<
 
     const fetchPipelineMetrics = async () => {
       try {
+        // 1. Get threshold from system annotations
+        let redThreshold = 0.33;
+        try {
+          const systemName = entities[0].spec?.system;
+          const namespace = entities[0].metadata.namespace || 'default';
+
+          if (systemName) {
+            const systemEntity = await catalogApi.getEntityByRef({
+              kind: 'System',
+              namespace,
+              name:
+                typeof systemName === 'string'
+                  ? systemName
+                  : String(systemName),
+            });
+
+            const thresholdAnnotation =
+              systemEntity?.metadata.annotations?.[
+                'reporting-check-threshold-red'
+              ];
+            if (thresholdAnnotation) {
+              redThreshold = parseFloat(thresholdAnnotation);
+            }
+          }
+        } catch (err) {
+          console.warn(
+            'Failed to get threshold annotation, using default 0.33',
+          );
+        }
+
+        // 2. Gather facts + checks in parallel
         const results = await Promise.all(
           entities.map(async entity => {
             const ref = {
@@ -111,11 +113,19 @@ export const ReportingSemaphoreDialog: React.FC<
               name: entity.metadata.name,
             };
 
-            // Get the reporting pipeline facts using your fact retriever data
-            const facts = await reportingUtils.getReportingPipelineFacts(
-              techInsightsApi,
-              ref,
-            );
+            const [facts, check] = await Promise.all([
+              reportingUtils.getReportingPipelineFacts(techInsightsApi, ref),
+              reportingUtils.getReportingPipelineChecks(techInsightsApi, ref),
+            ]);
+
+            const successRate =
+              facts.successfulRuns + facts.failedRuns >
+              0
+                ? (facts.successfulRuns /
+                    (facts.successfulRuns +
+                      facts.failedRuns)) *
+                  100
+                : 0;
 
             const projectSlug =
               entity.metadata.annotations?.['github.com/project-slug'];
@@ -123,114 +133,106 @@ export const ReportingSemaphoreDialog: React.FC<
               ? `https://github.com/${projectSlug}/actions`
               : '#';
 
-            // Extract workflow metrics from the facts with proper type checking
-            const workflowMetrics: WorkflowMetrics[] = Array.isArray(facts.workflowMetrics) 
-              ? facts.workflowMetrics 
-              : [];
-            const overallSuccessRate = typeof facts.overallSuccessRate === 'number' 
-              ? facts.overallSuccessRate 
-              : 0;
-            
-            // Calculate totals for aggregate metrics
-            const totalRuns = workflowMetrics.reduce((sum, wf) => sum + wf.totalRuns, 0);
-            const totalSuccessful = workflowMetrics.reduce((sum, wf) => sum + wf.successfulRuns, 0);
-            const totalFailure = totalRuns - totalSuccessful;
-
             return {
               name: entity.metadata.name,
               url,
-              overallSuccessRate,
-              workflowMetrics,
-              totalRuns,
-              totalSuccessful,
-              totalFailure,
+              successRate: parseFloat(successRate.toFixed(2)),
+              successWorkflowRunsCount: facts.successfulRuns,
+              failureWorkflowRunsCount: facts.failedRuns,
+              failedCheck: check.successRateCheck === false,
             };
           }),
         );
 
-        // Aggregate workflow metrics across all entities
-        const workflowAggregation = new Map<string, { totalRuns: number; successfulRuns: number }>();
-        
-        results.forEach(result => {
-          result.workflowMetrics.forEach(workflow => {
-            const existing = workflowAggregation.get(workflow.workflowName) || { totalRuns: 0, successfulRuns: 0 };
-            workflowAggregation.set(workflow.workflowName, {
-              totalRuns: existing.totalRuns + workflow.totalRuns,
-              successfulRuns: existing.successfulRuns + workflow.successfulRuns,
-            });
-          });
-        });
-
-        const aggregatedWorkflows: WorkflowMetrics[] = Array.from(workflowAggregation.entries()).map(([workflowName, data]) => ({
-          workflowName,
-          totalRuns: data.totalRuns,
-          successfulRuns: data.successfulRuns,
-          successRate: data.totalRuns > 0 ? parseFloat(((data.successfulRuns / data.totalRuns) * 100).toFixed(2)) : 0,
-        }));
-
-        // Calculate global aggregate metrics
-        const totalSuccess = results.reduce((sum, r) => sum + r.totalSuccessful, 0);
-        const totalFailure = results.reduce((sum, r) => sum + r.totalFailure, 0);
+        // 3. Metrics aggregation
+        const totalSuccess = results.reduce(
+          (sum, r) => sum + r.successWorkflowRunsCount,
+          0,
+        );
+        const totalFailure = results.reduce(
+          (sum, r) => sum + r.failureWorkflowRunsCount,
+          0,
+        );
         const totalRuns = totalSuccess + totalFailure;
-        const successRate = totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
+        const successRate =
+          totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
 
-        // Prepare repo workflow data
-        const repoData: RepoWorkflowData[] = results.map(({ name, url, overallSuccessRate, workflowMetrics }) => ({
-          name,
-          url,
-          overallSuccessRate,
-          workflowMetrics,
-        }));
+        const failures = results.filter(r => r.failedCheck).length;
 
-        // Bottom 5 repos by success rate - now showing individual workflow metrics
+        // 4. Determine traffic light color
+        const { color } = determineSemaphoreColor(
+          failures,
+          entities.length,
+          redThreshold,
+        );
+
+        let summary = 'Code quality is excellent with no significant issues.';
+        if (color === 'red') {
+          summary = 'Critical code quality issues require immediate attention.';
+        } else if (color === 'yellow') {
+          summary = 'Code quality issues need to be addressed before release.';
+        }
+
+        // 5. Bottom 5 repos by success rate
         const lowest = [...results]
-          .sort((a, b) => a.overallSuccessRate - b.overallSuccessRate)
+          .sort((a, b) => a.successRate - b.successRate)
           .slice(0, 5)
-          .map(({ name, url, overallSuccessRate, workflowMetrics }) => ({
+          .map(({ name, url, successRate }) => ({
             name,
             url,
-            overallSuccessRate,
-            workflowMetrics,
+            successRate,
           }));
 
-        setAggregateMetrics({
+        setMetrics({
           totalSuccess,
           totalFailure,
           totalRuns,
           successRate: parseFloat(successRate.toFixed(2)),
         });
-        setAggregatedWorkflowMetrics(aggregatedWorkflows);
-        setRepoWorkflowData(repoData);
+
         setLowestSuccessRepos(lowest);
+
+        setData({
+          color,
+          summary,
+          metrics: {
+            totalSuccess,
+            totalFailure,
+            totalRuns,
+            successRate: parseFloat(successRate.toFixed(2)),
+          },
+          details: [],
+        });
       } catch (e) {
         console.error('Failed to fetch pipeline data:', e);
-        setAggregateMetrics({
+        setMetrics({
           totalSuccess: 0,
           totalFailure: 0,
           totalRuns: 0,
           successRate: 0,
         });
-        setAggregatedWorkflowMetrics([]);
-        setRepoWorkflowData([]);
         setLowestSuccessRepos([]);
+        setData({
+          color: 'gray',
+          metrics: {},
+          summary: 'Failed to load metrics.',
+          details: [],
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchPipelineMetrics();
-  }, [open, entities, techInsightsApi, reportingUtils]);
-
-
+  }, [open, entities, techInsightsApi, catalogApi, reportingUtils]);
 
   const renderMetrics = () => (
     <>
-      {/* Aggregate Metrics */}
       <Grid container spacing={2}>
         {[
-          ['Successful Runs', aggregateMetrics.totalSuccess, 4, '#4caf50'],
-          ['Failed Runs', aggregateMetrics.totalFailure, 4, '#f44336'],
-          ['Success Rate (%)', aggregateMetrics.successRate, 4, '#2196f3'],
+          ['Successful Runs', metrics.totalSuccess, 4, '#4caf50'],
+          ['Failed Runs', metrics.totalFailure, 4, '#f44336'],
+          ['Success Rate (%)', metrics.successRate, 4, '#2196f3'],
         ].map(([label, value, size, color], index) => (
           <Grid item xs={size as GridSize} key={index}>
             <Paper className={classes.metricBox} elevation={1}>
@@ -247,35 +249,6 @@ export const ReportingSemaphoreDialog: React.FC<
         ))}
       </Grid>
 
-      {/* Aggregated Workflow Metrics Across All Entities (Only Reporting Workflows) */}
-      {aggregatedWorkflowMetrics.length > 0 && (
-        <div className={classes.workflowSection}>
-          <Typography variant="h6" style={{ marginBottom: '16px' }}>
-            Reporting Workflow Metrics
-          </Typography>
-          <Grid container spacing={1}>
-            {aggregatedWorkflowMetrics.map((workflow, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Paper className={classes.workflowMetricBox} elevation={1}>
-                  <Typography className={classes.workflowName}>
-                    {workflow.workflowName}
-                  </Typography>
-                  <div className={classes.workflowStats}>
-                    <Typography variant="body2" className={classes.metricLabel}>
-                      {workflow.successfulRuns}/{workflow.totalRuns} runs
-                    </Typography>
-                    <Typography variant="body2">
-                      {workflow.successRate}%
-                    </Typography>
-                  </div>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
-        </div>
-      )}
-
-      {/* Bottom 5 repos by success rate - showing individual workflow metrics */}
       {lowestSuccessRepos.length > 0 && (
         <div className={classes.repoList}>
           <Typography variant="h6">Lowest Success Rate Repositories</Typography>
@@ -291,37 +264,9 @@ export const ReportingSemaphoreDialog: React.FC<
                   >
                     {repo.name}
                   </Link>
-                  
-                  {/* Show overall success rate */}
-                  <Typography 
-                    className={classes.metricLabel}
-                    style={{ marginTop: '8px', fontSize: '16px', fontWeight: 500 }}
-                  >
-                    Overall Success Rate: {repo.overallSuccessRate}%
+                  <Typography className={classes.metricLabel}>
+                    Success Rate: {repo.successRate}%
                   </Typography>
-                  
-                  {/* Show individual reporting workflow metrics for this repo */}
-                  {repo.workflowMetrics.length > 0 && (
-                    <div style={{ marginTop: '12px' }}>
-                      <Typography variant="body2" className={classes.metricLabel} style={{ marginBottom: '8px' }}>
-                        Reporting Workflow Success Rates:
-                      </Typography>
-                      <Grid container spacing={1}>
-                        {repo.workflowMetrics.map((workflow, index) => (
-                          <Grid item xs={12} sm={6} key={index}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
-                              <Typography variant="body2" style={{ fontSize: '14px' }}>
-                                {workflow.workflowName}
-                              </Typography>
-                              <Typography variant="body2" style={{ fontSize: '14px', fontWeight: 500 }}>
-                                {workflow.successRate}% ({workflow.successfulRuns}/{workflow.totalRuns})
-                              </Typography>
-                            </div>
-                          </Grid>
-                        ))}
-                      </Grid>
-                    </div>
-                  )}
                 </Paper>
               </Grid>
             ))}
@@ -332,13 +277,13 @@ export const ReportingSemaphoreDialog: React.FC<
   );
 
   return (
-  <BaseSemaphoreDialog
-    open={open}
-    onClose={onClose}
-    title="Reporting Pipeline Insights"
-    data={{ color: 'gray', summary: '', metrics: {}, details: [] }}
-    isLoading={isLoading}
-    renderMetrics={renderMetrics}
-  />
-);
-}
+    <BaseSemaphoreDialog
+      open={open}
+      onClose={onClose}
+      title="Reporting Pipeline Insights"
+      data={data}
+      isLoading={isLoading}
+      renderMetrics={renderMetrics}
+    />
+  );
+};

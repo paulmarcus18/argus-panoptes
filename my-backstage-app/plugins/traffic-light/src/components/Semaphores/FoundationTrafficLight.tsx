@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { FoundationUtils } from '../../utils/foundationUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
+import { determineSemaphoreColor } from '../utils';
 
 export const FoundationTrafficLight = ({
   entities,
@@ -17,6 +19,7 @@ export const FoundationTrafficLight = ({
   >('white');
   const [reason, setReason] = useState('Loading Foundation pipeline data...');
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
 
   const foundationUtils = React.useMemo(
     () => new FoundationUtils(),
@@ -32,6 +35,29 @@ export const FoundationTrafficLight = ({
       }
 
       try {
+        // Step 1: Determine system entity (assumes all entities belong to the same system)
+        const systemName = entities[0].spec?.system;
+        const namespace = entities[0].metadata.namespace || 'default';
+
+        const systemEntity = systemName
+          ? await catalogApi.getEntityByRef({
+              kind: 'System',
+              namespace,
+              name:
+                typeof systemName === 'string'
+                  ? systemName
+                  : String(systemName),
+            })
+          : null;
+
+        // Step 2: Get threshold from annotation or default to 0.33 (i.e. 1/3)
+        const redThresholdRaw =
+          systemEntity?.metadata.annotations?.[
+            'foundation-check-threshold-red'
+          ] || '0.33';
+        const redThreshold = parseFloat(redThresholdRaw);
+
+        // Step 3: Get foundation results
         const results = await Promise.all(
           entities.map(entity =>
             foundationUtils.getFoundationPipelineChecks(techInsightsApi, {
@@ -46,16 +72,15 @@ export const FoundationTrafficLight = ({
           r => r.successRateCheck === false,
         ).length;
 
-        if (failures === 0) {
-          setColor('green');
-          setReason('All foundation checks passed');
-        } else if (failures > entities.length / 3) {
-          setColor('red');
-          setReason(`${failures} foundation failures`);
-        } else {
-          setColor('yellow');
-          setReason(`${failures} minor issues in foundation pipelines`);
-        }
+        // Step 4: Apply modular logic
+        const { color: newColor, reason: newReason } = determineSemaphoreColor(
+          failures,
+          entities.length,
+          redThreshold,
+        );
+
+        setColor(newColor);
+        setReason(newReason);
       } catch (err) {
         console.error('Foundation error:', err);
         setColor('gray');
@@ -64,7 +89,7 @@ export const FoundationTrafficLight = ({
     };
 
     fetchData();
-  }, [entities, techInsightsApi]);
+  }, [entities, techInsightsApi, catalogApi]);
 
   return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
 };
