@@ -89,15 +89,12 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
     setTopRepos([]);
     setIsLoading(false);
     return;
-      // console.log('[🔕] Dialog closed or no entities provided.');
-      // return;
     }
 
     setIsLoading(true);
 
     const fetchDependabotData = async () => {
       try {
-        console.log('[📡] Fetching facts for all entities...');
 
         const results = await Promise.all(
           entities.map(async entity => {
@@ -106,7 +103,6 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
               namespace: entity.metadata.namespace || 'default',
               name: entity.metadata.name,
             });
-            console.log(`[📦 Parsed DB facts for ${entity.metadata.name}]`, facts);
             return { entity, facts };
           }),
         );

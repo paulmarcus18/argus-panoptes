@@ -99,12 +99,7 @@ export class DependabotUtils {
     entity: CompoundEntityRef,
   ): Promise<DependabotFacts> {
     try {
-      console.log('📡 Fetching Dependabot facts for entity:', stringifyEntityRef(entity));
-
       const response = await api.getFacts(entity, ['dependabotFactRetriever']);
-
-      console.log('📦 Raw Tech Insights API response:', JSON.stringify(response, null, 2));
-
       const facts = response?.['dependabotFactRetriever']?.facts;
 
       if (!facts) {
@@ -112,20 +107,12 @@ export class DependabotUtils {
         return { critical: 0, high: 0, medium: 0 };
       }
 
-      console.log(
-        '✅ Parsed Dependabot facts:',
-        'critical:', facts.critical,
-        'high:', facts.high,
-        'medium:', facts.medium,
-      );
-
       return {
         critical: Number(facts.critical ?? 0),
         high: Number(facts.high ?? 0),
         medium: Number(facts.medium ?? 0),
       };
     } catch (error) {
-      console.error('❌ Error fetching Dependabot facts for entity:', stringifyEntityRef(entity), error);
       return { critical: 0, high: 0, medium: 0 };
     }
   }
@@ -139,18 +126,12 @@ export class DependabotUtils {
     entity: CompoundEntityRef,
   ): Promise<DependabotChecks> {
     try {
-      console.log('[🔎] Running Dependabot checks for entity:', stringifyEntityRef(entity));
-
       const checkResults = await api.runChecks(entity);
-
-      console.log('[🐛 Raw Check Results]', checkResults);
-
       const criticalCheck = checkResults.find(r => r.check.id === 'dependabot-critical-alerts');
       const highCheck = checkResults.find(r => r.check.id === 'dependabot-high-alerts');
       const mediumCheck = checkResults.find(r => r.check.id === 'dependabot-medium-alerts');
 
       if (checkResults.length === 0) {
-        console.error('[❌ No Dependabot checks found for entity]', stringifyEntityRef(entity));
         return {
           criticalAlertCheck: false,
           highAlertCheck: false,
@@ -164,7 +145,6 @@ export class DependabotUtils {
         mediumAlertCheck: mediumCheck?.result === true,
       };
     } catch (error) {
-      console.error('[❌ Error] getDependabotChecks failed:', error);
       return {
         criticalAlertCheck: false,
         highAlertCheck: false,
