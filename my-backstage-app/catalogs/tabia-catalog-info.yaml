@@ -13,8 +13,8 @@ metadata:
     reporting/workflows: '["CodeQL", "Continuous Integration"]'
     preproduction/exclude: '["Dependabot Updates"]'
     azure.com/organization: argus-panoptes-dev
-    azure.com/project: project_1
-    azure.com/bugs-query-id: 38d4d504-f147-45ce-9658-c27a9d3b9908
+    azure.com/project: project_2
+    azure.com/bugs-query-id: b2fdb928-a73e-4cba-82c9-e605a194666d
   tags:
     - non-critical
 spec:
