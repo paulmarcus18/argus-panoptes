@@ -9,7 +9,6 @@ metadata:
     azure.com/organization: argus-panoptes-dev
     azure.com/project: project_2
     azure.com/bugs-query-id: b2fdb928-a73e-4cba-82c9-e605a194666d
-    azure.com/pat: 9APDLq54nbzmerzTCuD50qLNWFHSprSivK7Q6zTuvqqP3PNMFPW0JQQJ99BDACAAAAAAAAAAAAASAZDOrt3M
     reporting/workflows: '["Auto-close issues", "Canary build"]'
   tags:
     - critical

@@ -45,6 +45,9 @@ integrations:
   github:
     - host: github.com
       token: ${GITHUB_TOKEN}
+  azure:
+    - host: dev.azure.com
+      token: ${AZURE_DEVOPS_TOKEN}
 proxy:
   ### Example for how to add a proxy endpoint for the frontend.
   ### A typical reason to do this is to handle HTTPS and CORS for internal services.
