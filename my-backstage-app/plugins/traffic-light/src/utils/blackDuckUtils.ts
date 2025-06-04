@@ -65,36 +65,15 @@ export class BlackDuckUtils {
    */
   async getBlackDuckFacts(techInsightsApi: TechInsightsApi, entity: CompoundEntityRef): Promise<BlackDuckMetrics> {
     try {
-      console.log(
-        'Fetching BlackDuck facts for entity:',
-        stringifyEntityRef(entity),
-      );
-
       const response = await techInsightsApi.getFacts(entity, [
         'blackduck-fact-retriever',
       ]);
 
-      console.log(
-        'Raw Tech Insights API response:',
-        JSON.stringify(response, null, 2),
-      );
-
       const facts = response?.['blackduck-fact-retriever']?.facts;
 
       if (!facts) {
-        console.error(
-          'No BlackDuck facts found for entity:',
-          stringifyEntityRef(entity),
-        );
-        return { security_risks_critical: 0, security_risks_high: 0, security_risks_medium: 0 };
+        return { ...DEFAULT_METRICS };
       }
-
-      console.log(
-        'Parsed BlackDuck facts:',
-        facts.security_risks_critical,
-        facts.security_risks_high,
-        facts.security_risks_medium,
-      );
 
       return {
         security_risks_critical: Number(facts.security_risks_critical ?? 0),
@@ -102,12 +81,7 @@ export class BlackDuckUtils {
         security_risks_medium: Number(facts.security_risks_medium ?? 0),
       };
     } catch (error) {
-      console.error(
-        'Error while fetching BlackDuck facts for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
-      return { ...DEFAULT_METRICS };
+        return { ...DEFAULT_METRICS };
     }
   }
 
@@ -120,28 +94,15 @@ export class BlackDuckUtils {
    */
   async getBlackDuckChecks(techInsightsApi: TechInsightsApi, entity: CompoundEntityRef): Promise<BlackDuckChecks> {
     try {
-      console.log(
-        'Running BlackDuck checks for entity:',
-        stringifyEntityRef(entity),
-      );
       const checkResults = await techInsightsApi.runChecks(entity);
 
       // Extract the results of each checks
       const criticalSecurityCheck = checkResults.find(r => r.check.id === 'blackduck-critical-security-risk');
       const highSecurityCheck = checkResults.find(r => r.check.id === 'blackduck-high-security-risk');
       const mediumSecurityCheck = checkResults.find(r => r.check.id === 'blackduck-medium-security-risk');
-      
-      // Log the results of the checks for debugging
-      console.log("Result from critical security checks for entity:", stringifyEntityRef(entity), criticalSecurityCheck?.result);
-      console.log("Result from high security checks for entity:", stringifyEntityRef(entity), highSecurityCheck?.result);
-      console.log("Result from medium security checks for entity:", stringifyEntityRef(entity), mediumSecurityCheck?.result);
 
       // If no check results are found, log an error and return default values
       if (checkResults.length === 0) {
-        console.error(
-          'No checks found for entity:',
-          stringifyEntityRef(entity),
-        );
         return { ...DEFAULT_CHECKS };
       }
 
@@ -152,14 +113,8 @@ export class BlackDuckUtils {
           mediumSecurityCheck: mediumSecurityCheck?.result === true,
       };
     } catch (error) {
-      // Log any errors encountered during the fetch process
-      console.error(
-        'Error fetching BlackDuck checks for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
-      // Return default values if an error occurs
-      return { ...DEFAULT_CHECKS };
+        // Return default values if an error occurs
+        return { ...DEFAULT_CHECKS };
     }
   }
 
