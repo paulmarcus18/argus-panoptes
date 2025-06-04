@@ -88,13 +88,6 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
         const displayedRepos = await blackDuckUtils.getTop5CriticalBlackDuckRepos(techInsightsApi, entities);
 
         for (const repo of displayedRepos) {
-          // Fetch entity metadata from catalog
-          const entity = await catalogApi.getEntityByRef({
-            kind: 'Component',
-            namespace: 'default',
-            name: typeof repo.entity.name === 'string' ? repo.entity.name : String(repo.entity.name)
-          });
-
           // Create a description and determine severity based on the repo's issues
           let description = ``;
           let severity = '';
@@ -108,13 +101,15 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
           } else if (repo.security_risks_medium > 0) {
             description = `Repository ${repo.entity.name} has ${repo.security_risks_high} medium security risks.`;
             severity = 'medium';
-          } 
+          } else {
+            description = `Repository ${repo.entity.name} has no security risks.`;
+            severity = 'low';
+          }
 
           // Add the detail to the array
           details.push({
             severity: severity as 'critical' | 'high' | 'medium' | 'low',
-            description: description,
-            url: `https://blackduck.example.com/projects/${entity?.metadata.annotations?.['blackduck.io/project-name']}`, // not sure about this url
+            description:  description,
           });
         }
 
