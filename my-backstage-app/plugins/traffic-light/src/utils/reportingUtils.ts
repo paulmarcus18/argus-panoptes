@@ -77,7 +77,7 @@ export class ReportingUtils {
         'Parsed Reporting pipeline facts:',
         facts.workflowMetrics,
         facts.totalIncludedWorkflows,
-        facts.sucessfulRuns,
+        facts.successfulRuns,
         facts.failedRuns,
         facts.successRate,
       );
@@ -85,7 +85,7 @@ export class ReportingUtils {
       return {
         workflowMetrics: Object(facts.workflowMetrics ?? {}),
         totalIncludedWorkflows: Number(facts.totalIncludedWorkflows ?? 0),
-        successfulRuns: Number(facts.sucessfulRuns ?? 0),
+        successfulRuns: Number(facts.successfulRuns ?? 0),
         failedRuns: Number(facts.failedRuns ?? 0),
         successRate: Number(facts.successRate ?? 0),
       };
