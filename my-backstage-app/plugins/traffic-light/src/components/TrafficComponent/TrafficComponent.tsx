@@ -28,6 +28,7 @@ import {
   PreproductionTrafficLight,
   FoundationTrafficLight,
   AzureDevOpsBugsTrafficLight,
+  BlackDuckTrafficLight,
   BaseTrafficLight,
 } from '../Semaphores';
 import { ReportingTrafficLight } from '../Semaphores/ReportingTrafficLight';
@@ -87,9 +88,9 @@ export const TrafficComponent = () => {
 
   const handleSemaphoreClick = (semaphoreType: string) => {
     switch (semaphoreType) {
-      //  case 'BlackDuck':
-      //  setBlackDuckDialogOpen(true);
-      // break;
+       case 'BlackDuck':
+        setBlackDuckDialogOpen(true);
+        break;
       case 'Github Advanced Security':
         setGithubSecurityDialogOpen(true);
         break;
@@ -353,9 +354,8 @@ export const TrafficComponent = () => {
               />
 
               <Typography variant="subtitle1">BlackDuck</Typography>
-              <BaseTrafficLight
-                color="yellow"
-                tooltip="BlackDuck security scan status"
+              <BlackDuckTrafficLight
+                entities={selectedEntities}
                 onClick={() => handleSemaphoreClick('BlackDuck')}
               />
 
@@ -470,6 +470,13 @@ export const TrafficComponent = () => {
           onClose={handleCloseSonarQubeDialog}
           entities={selectedEntities}
         />
+
+        <BlackDuckSemaphoreDialog
+          open={blackDuckDialogOpen}
+          onClose={handleCloseBlackDuckDialog}
+          entities={selectedEntities}
+        />
+
         <DependabotSemaphoreDialog
           open={DependabotDialogOpen}
           system={selectedSystem}
