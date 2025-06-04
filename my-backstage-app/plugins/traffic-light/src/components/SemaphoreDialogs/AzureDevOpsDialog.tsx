@@ -79,7 +79,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
 
             const thresholdAnnotation =
               systemEntity?.metadata.annotations?.[
-                'foundation-check-threshold-red'
+                'azure-bugs-check-threshold-red'
               ];
             if (thresholdAnnotation) {
               redThreshold = parseFloat(thresholdAnnotation);
