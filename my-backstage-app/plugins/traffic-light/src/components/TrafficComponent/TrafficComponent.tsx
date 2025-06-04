@@ -88,9 +88,9 @@ export const TrafficComponent = () => {
 
   const handleSemaphoreClick = (semaphoreType: string) => {
     switch (semaphoreType) {
-      //  case 'BlackDuck':
-      //  setBlackDuckDialogOpen(true);
-      // break;
+       case 'BlackDuck':
+        setBlackDuckDialogOpen(true);
+        break;
       case 'Github Advanced Security':
         setGithubSecurityDialogOpen(true);
         break;
@@ -470,6 +470,13 @@ export const TrafficComponent = () => {
           onClose={handleCloseSonarQubeDialog}
           entities={selectedEntities}
         />
+
+        <BlackDuckSemaphoreDialog
+          open={blackDuckDialogOpen}
+          onClose={handleCloseBlackDuckDialog}
+          entities={selectedEntities}
+        />
+
         <DependabotSemaphoreDialog
           open={DependabotDialogOpen}
           system={selectedSystem}
