@@ -65,8 +65,6 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const dependabotUtils = React.useMemo(() => new DependabotUtils(), [techInsightsApi]);
-  const catalogApi = useApi(catalogApiRef);
-
   const [data, setData] = React.useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
@@ -75,8 +73,6 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
   });
   const [topRepos, setTopRepos] = React.useState<RepoAlertSummary[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [color, setColor] = React.useState<'green' | 'red' | 'yellow' | 'gray' >('gray');
-
 
   React.useEffect(() => {
     if (!open || entities.length === 0  ) {
@@ -147,7 +143,7 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
             ? `${totalMedium} medium severity issues found`
             : 'No Dependabot security issues found.';
 
-        const trafficLightcolor = await determineDependabotColor(system, entities, catalogApi, techInsightsApi, dependabotUtils);
+        const trafficLightcolor = await determineDependabotColor(system, entities, techInsightsApi, dependabotUtils);
         let color: 'green' | 'red' | 'yellow' | 'gray' = 'gray';
         color = trafficLightcolor.color;
 
@@ -166,7 +162,6 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
 
         setTopRepos(top5Repos);
       } catch (error) {
-        console.error('❌ Dependabot data fetch error:', error);
         setData({
           color: 'gray',
           metrics: {},

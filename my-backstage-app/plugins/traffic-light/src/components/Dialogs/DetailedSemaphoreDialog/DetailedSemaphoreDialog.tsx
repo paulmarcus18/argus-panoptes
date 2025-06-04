@@ -26,9 +26,9 @@ import { SonarCloudUtils } from '../../../utils/sonarCloudUtils';
 import { AzureUtils } from '../../../utils/azureUtils';
 // import { getAzureDevOpsBugs } from '../../utils';
 import { GithubAdvancedSecurityUtils } from '../../../utils/githubAdvancedSecurityUtils';
-import{DependabotUtils} from '../../../utils/dependabotUtils';
-import { TrafficLightDependabot } from '../../Semaphores';
-import { getCompoundEntityRef } from '@backstage/catalog-model';
+// import{DependabotUtils} from '../../../utils/dependabotUtils';
+// import { TrafficLightDependabot } from '../../Semaphores';
+// import { getCompoundEntityRef } from '@backstage/catalog-model';
 
 
 
@@ -331,7 +331,7 @@ const DetailedSemaphoreDialog: React.FC<DetailedSemaphoreDialogProps> = ({
     () => new AzureUtils(), 
     [techInsightsApi],
   );
-  const [realDependabotData, setRealDependabotData] = React.useState<SemaphoreData | null>(null);
+  // const [realDependabotData, setRealDependabotData] = React.useState<SemaphoreData | null>(null);
 
 
   // Get mock data based on semaphore type (or placeholder if not found)

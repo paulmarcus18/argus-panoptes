@@ -9,7 +9,6 @@ import { catalogApiRef } from '@backstage/plugin-catalog-react';
 export const determineDependabotColor = async(
   systemName: string,
   entities: Entity[],
-  catalogApi: any,
   techInsightsApi: any,
   dependabotUtils: DependabotUtils
 ): Promise<{color: 'green' | 'red' | 'yellow' | 'gray' , reason: string}> => {
@@ -114,7 +113,6 @@ export const TrafficLightDependabot = ({
       const dependabotColorAndReason = await determineDependabotColor(
         systemName,
         filteredEntities,
-        catalogApi,
         techInsightsApi,
         dependabotUtils
       );
