@@ -20,9 +20,7 @@ import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/
 import { githubPipelineStatusFactRetriever } from './pipelines/preproductionFactRetriever';
 import { foundationPipelineStatusFactRetriever } from './pipelines/foundationFactRetriever';
 import { reportingPipelineStatusFactRetriever } from './pipelines/reportingFactRetriever';
-
-// import { createGitHubSecretScanningCheck } from './github-advanced-security/githubASFactChecker';
-// Import JsonRulesEngineFactCheckerFactory
+//import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 // Imports retriever that queries Azure DevOps bugs data.
 import { createAzureDevOpsBugsRetriever } from './azure/azureDevOpsFactRetriever';
 // Imports retriever that queries SonarCloud data.
@@ -63,7 +61,6 @@ export default createBackendModule({
         discovery: coreServices.discovery,
         auth: coreServices.auth,
       },
-
       //initialization function that will run during backend's startup
       async init({
         providers,
@@ -76,10 +73,7 @@ export default createBackendModule({
         //logs to the console to confirm module is being registered
         logger.info('Registering dependabot-facts module...');
         const factRetriever = createDependabotFactRetriever(config, logger);
-        const sonarCloudFactRetriever = createSonarCloudFactRetriever(
-          config,
-          logger,
-        );
+        const sonarCloudFactRetriever = createSonarCloudFactRetriever(config);
 
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
