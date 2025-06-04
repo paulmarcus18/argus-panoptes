@@ -1,6 +1,5 @@
 import {
   CompoundEntityRef,
-  stringifyEntityRef,
   Entity, 
   getCompoundEntityRef
 } from '@backstage/catalog-model';

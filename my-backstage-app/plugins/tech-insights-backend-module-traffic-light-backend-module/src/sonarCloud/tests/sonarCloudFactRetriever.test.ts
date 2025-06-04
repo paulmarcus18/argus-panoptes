@@ -91,7 +91,7 @@ describe('SonarCloud Fact Retriever', () => {
 
   // Test: Fact retriever is created with correct configuration
   it('should create a fact retriever with correct id and schema', async () => {
-    const factRetriever = createSonarCloudFactRetriever(mockConfig, mockLogger);
+    const factRetriever = createSonarCloudFactRetriever(mockConfig);
     
     // Verify the fact retriever is set up correctly
     expect(factRetriever).toEqual(expect.objectContaining({
@@ -168,7 +168,7 @@ describe('SonarCloud Fact Retriever', () => {
     });
 
     // Create the fact retriever
-    const factRetriever = createSonarCloudFactRetriever(mockConfig, mockLogger);
+    const factRetriever = createSonarCloudFactRetriever(mockConfig);
     
     // Execute the handler
     const result = await factRetriever.handler({
@@ -275,7 +275,7 @@ describe('SonarCloud Fact Retriever', () => {
     });
     
     // Create the fact retriever
-    const factRetriever = createSonarCloudFactRetriever(mockConfig, mockLogger);
+    const factRetriever = createSonarCloudFactRetriever(mockConfig);
     
     // Execute the handler
     const result = await factRetriever.handler({
@@ -315,7 +315,7 @@ describe('SonarCloud Fact Retriever', () => {
     mockGetEntitiesImpl.mockResolvedValue({ items: [noKeyEntity] });
     
     // Create the fact retriever
-    const factRetriever = createSonarCloudFactRetriever(mockConfig, mockLogger);
+    const factRetriever = createSonarCloudFactRetriever(mockConfig);
     
     // Execute the handler
     const result = await factRetriever.handler({
@@ -353,7 +353,7 @@ describe('SonarCloud Fact Retriever', () => {
     });
     
     // Create the fact retriever
-    const factRetriever = createSonarCloudFactRetriever(mockConfig, mockLogger);
+    const factRetriever = createSonarCloudFactRetriever(mockConfig);
     
     // Execute the handler
     const result = await factRetriever.handler({
@@ -414,7 +414,7 @@ describe('SonarCloud Fact Retriever', () => {
     });
     
     // Create the fact retriever
-    const factRetriever = createSonarCloudFactRetriever(mockConfig, mockLogger);
+    const factRetriever = createSonarCloudFactRetriever(mockConfig);
     
     // Execute the handler
     const result = await factRetriever.handler({
@@ -476,7 +476,7 @@ describe('SonarCloud Fact Retriever', () => {
     });
     
     // Create the fact retriever
-    const factRetriever = createSonarCloudFactRetriever(mockConfig, mockLogger);
+    const factRetriever = createSonarCloudFactRetriever(mockConfig);
     
     // Execute the handler
     const result = await factRetriever.handler({
@@ -590,7 +590,7 @@ describe('SonarCloud Fact Retriever', () => {
     });
       
     // Create the fact retriever
-    const factRetriever = createSonarCloudFactRetriever(mockConfig, mockLogger);
+    const factRetriever = createSonarCloudFactRetriever(mockConfig);
     
     // Execute the handler
     const result = await factRetriever.handler({

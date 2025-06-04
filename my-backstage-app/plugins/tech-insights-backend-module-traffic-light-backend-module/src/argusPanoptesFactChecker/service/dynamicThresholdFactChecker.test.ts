@@ -41,7 +41,7 @@ describe('DynamicThresholdFactChecker', () => {
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
-    child: jest.fn((meta: Record<string, unknown>) => mockLogger),
+    child: jest.fn(),
   } as jest.Mocked<LoggerService>;
   
   // Sample checks for testing
