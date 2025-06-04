@@ -5,6 +5,12 @@ import {
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
 /**
+ * Fetches Pre-production pipeline facts for a given entity using the Tech Insights API.
+ * Returns the following metrics: total workflow runs count, unique workflows, success count, failure count, and success metrics.
+ *
+ * @param api - The TechInsightsApi instance used to fetch facts.
+ * @param entity - The entity reference for which to fetch Preproduction pipeline facts.
+ * @returns An object containing Preproduction pipeline metrics for the entity.
  * Shape of the metrics object returned by the GitHub‑pipeline Tech Insights retriever.
  */
 export interface PreproductionPipelineMetrics {
@@ -56,13 +62,21 @@ export class PreproductionUtils {
    * @param entity - The entity reference for which to fetch Preproduction pipeline facts.
    * @returns An object containing Preproduction pipeline metrics for the entity.
    */
-  async getPreproductionPipelineFacts(api: TechInsightsApi, entity: CompoundEntityRef): Promise<PreproductionPipelineMetrics> {
+  async getPreproductionPipelineFacts(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<PreproductionPipelineMetrics> {
     try {
       // Log which entity is being queried
-      console.log('Fetching Preproduction pipeline facts for entity:', stringifyEntityRef(entity));
+      console.log(
+        'Fetching Preproduction pipeline facts for entity:',
+        stringifyEntityRef(entity),
+      );
 
       // Fetch facts from the Tech Insights API for the given entity and retriever
-      const response = await api.getFacts(entity, ['githubPipelineStatusFactRetriever']);
+      const response = await api.getFacts(entity, [
+        'githubPipelineStatusFactRetriever',
+      ]);
 
       // Log the raw response from the API for debugging
       console.log(
@@ -75,16 +89,18 @@ export class PreproductionUtils {
 
       // If no facts are found, log an error and return default values
       if (!facts) {
-        console.error(
-          'No facts found for entity:',
-          stringifyEntityRef(entity),
-        );
+        console.error('No facts found for entity:', stringifyEntityRef(entity));
         return { ...DEFAULT_METRICS };
       }
 
       // Log the parsed facts for debugging
       console.log(
-        'Parsed Preproduction pipeline facts:', facts.totalWorkflowRunsCount, facts.uniqueWorkflowsCount, facts.successWorkflowRunsCount, facts.failureWorkflowRunsCount, facts.successRate
+        'Parsed Preproduction pipeline facts:',
+        facts.totalWorkflowRunsCount,
+        facts.uniqueWorkflowsCount,
+        facts.successWorkflowRunsCount,
+        facts.failureWorkflowRunsCount,
+        facts.successRate,
       );
 
       // Return the parsed facts, converting to appropriate types and providing defaults
@@ -115,19 +131,31 @@ export class PreproductionUtils {
    * @param entity - The entity reference for which to fetch Preproduction pipeline facts.
    * @returns An object containing Preproduction pipeline metrics for the entity.
    */
-  async getPreproductionPipelineChecks(api: TechInsightsApi, entity: CompoundEntityRef): Promise<PreproductionPipelineChecks> {
+  async getPreproductionPipelineChecks(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<PreproductionPipelineChecks> {
     try {
       // Log which entity is being queried
-      console.log('Running checks on Preproduction pipeline facts for entity:', stringifyEntityRef(entity));
+      console.log(
+        'Running checks on Preproduction pipeline facts for entity:',
+        stringifyEntityRef(entity),
+      );
 
       // Facts checks
       const checkResults = await api.runChecks(entity);
 
       // Extract the results of each checks
-      const successRateCheck = checkResults.find(r => r.check.id === 'preproduction-success-rate');
-      
+      const successRateCheck = checkResults.find(
+        r => r.check.id === 'preproduction-success-rate',
+      );
+
       // Log the results of the checks for debugging
-      console.log("Result from Success rate checks for entity:", stringifyEntityRef(entity), successRateCheck?.result);
+      console.log(
+        'Result from Success rate checks for entity:',
+        stringifyEntityRef(entity),
+        successRateCheck?.result,
+      );
 
       // If no check results are found, log an error and return default values
       if (checkResults.length === 0) {
@@ -140,7 +168,7 @@ export class PreproductionUtils {
 
       // Return the parsed facts, converting to appropriate types and providing defaults
       return {
-          successRateCheck: successRateCheck?.result === true,
+        successRateCheck: successRateCheck?.result === true,
       };
     } catch (error) {
       // Log any errors encountered during the fetch process

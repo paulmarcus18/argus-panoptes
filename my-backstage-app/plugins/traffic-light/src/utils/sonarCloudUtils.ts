@@ -1,8 +1,23 @@
 import {
   CompoundEntityRef,
   stringifyEntityRef,
+  Entity, 
+  getCompoundEntityRef
 } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
+
+
+/**
+ * Summary of SonarCloud facts for a repository.
+ */
+export interface SonarCloudSummary {
+  entity: CompoundEntityRef;
+  quality_gate: number;
+  vulnerabilities: number;
+  code_coverage: number;
+  bugs: number;
+  code_smells: number;
+}
 
 /**
  * Metrics returned by SonarCloud for a Backstage entity.
@@ -16,17 +31,6 @@ export interface SonarQubeMetrics {
 }
 
 /**
- * Results produced by running Tech Insights checks that map to SonarCloud rules.
- */
-export interface SonarQubeChecks {
-  bugsCheck: boolean;
-  vulnerabilitiesCheck: boolean;
-  codeSmellsCheck: boolean;
-  qualityGateCheck: boolean;
-  codeCoverageCheck: boolean;
-}
-
-/**
  * A small utility for providing safe default objects when SonarCloud returns no data or an error is thrown.
  */
 const DEFAULT_METRICS: SonarQubeMetrics = {
@@ -35,14 +39,6 @@ const DEFAULT_METRICS: SonarQubeMetrics = {
   vulnerabilities: 0,
   code_coverage: 0,
   quality_gate: 'NONE',
-};
-
-const DEFAULT_CHECKS: SonarQubeChecks = {
-  bugsCheck: false,
-  vulnerabilitiesCheck: false,
-  codeSmellsCheck: false,
-  qualityGateCheck: false,
-  codeCoverageCheck: false,
 };
 
 /**
@@ -61,38 +57,17 @@ export class SonarCloudUtils {
    */
   async getSonarQubeFacts(techInsightsApi: TechInsightsApi, entity: CompoundEntityRef): Promise<SonarQubeMetrics> {
     try {
-      console.log(
-        'Fetching SonarCloud facts for entity:',
-        stringifyEntityRef(entity),
-      );
-
+      // fetch SonarCloud facts for the given entity
       const response = await techInsightsApi.getFacts(entity, [
         'sonarcloud-fact-retriever',
       ]);
 
-      console.log(
-        'Raw Tech Insights API response:',
-        JSON.stringify(response, null, 2),
-      );
-
       const facts = response?.['sonarcloud-fact-retriever']?.facts;
 
+      // If no facts are found, return default metrics
       if (!facts) {
-        console.error(
-          'No SonarCloud facts found for entity:',
-          stringifyEntityRef(entity),
-        );
-        return { bugs: 0, code_smells: 0, vulnerabilities: 0, code_coverage: 0, quality_gate: 'NONE' };
+        return { ...DEFAULT_METRICS };
       }
-
-      console.log(
-        'Parsed SonarCloud facts:',
-        facts.bugs,
-        facts.code_smells,
-        facts.vulnerabilities,
-        facts.code_coverage,
-        facts.quality_gate,
-      );
 
       return {
         bugs: Number(facts.bugs ?? 0),
@@ -102,70 +77,98 @@ export class SonarCloudUtils {
         quality_gate: String(facts.quality_gate ?? 'NONE'),
       };
     } catch (error) {
-      console.error(
-        'Error while fetching SonarCloud facts for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
-      return { ...DEFAULT_METRICS };
+        return { ...DEFAULT_METRICS };
     }
   }
 
   /**
-   * Executes the SonarCloud‑related Tech Insights checks for the supplied entity.
-   *
-   * @param techInsightsApi – The TechInsightsApi instance for fetching checks.
-   * @param entity – The entity reference for which to run the checks.
-   * @returns A {@link SonarQubeChecks} object containing boolean results for each check.
+   * Retrieves the top 5 critical SonarCloud repositories based on quality gate status,
+   * vulnerabilities, bugs, code smells, and code coverage.
+   * 
+   * @param techInsightsApi - The TechInsightsApi instance used to fetch SonarCloud facts.
+   * @param entities - An array of Backstage Entity objects to check SonarCloud status for.
+   * @returns A promise that resolves to an array of SonarCloudSummary objects,
+   *          containing the top 5 critical repositories based on the defined criteria. 
    */
-  async getSonarQubeChecks(techInsightsApi: TechInsightsApi, entity: CompoundEntityRef): Promise<SonarQubeChecks> {
-    try {
-      console.log(
-        'Running SonarCloud checks for entity:',
-        stringifyEntityRef(entity),
-      );
-      const checkResults = await techInsightsApi.runChecks(entity);
+  async  getTop5CriticalSonarCloudRepos(
+    techInsightsApi: TechInsightsApi,
+    entities: Entity[],
+  ): Promise<SonarCloudSummary[]> {
+    const results: SonarCloudSummary[] = [];
 
-      // Extract the results of each checks
-      const bugsCheck = checkResults.find(r => r.check.id === 'sonarcloud-bugs');
-      const vulnerabilitiesCheck = checkResults.find(r => r.check.id === 'sonarcloud-vulnerabilities');
-      const codeSmellsCheck = checkResults.find(r => r.check.id === 'sonarcloud-code-smells');
-      const qualityGateCheck = checkResults.find(r => r.check.id === 'sonarcloud-quality-gate');
-      const codeCoverageCheck = checkResults.find(r => r.check.id === 'sonarcloud-code-coverage');
-      
-      // Log the results of the checks for debugging
-      console.log("Result from Bugs checks for entity:", stringifyEntityRef(entity), bugsCheck?.result);
-      console.log("Result from Vulnerabilities checks for entity:", stringifyEntityRef(entity), vulnerabilitiesCheck?.result);
-      console.log("Result from Code Smells checks for entity:", stringifyEntityRef(entity), codeSmellsCheck?.result);
-      console.log("Result from Quality Gate checks for entity:", stringifyEntityRef(entity),  qualityGateCheck?.result);
-      console.log("Result from Code Coverage checks for entity:", stringifyEntityRef(entity), codeCoverageCheck?.result);
-
-      // If no check results are found, log an error and return default values
-      if (checkResults.length === 0) {
-        console.error(
-          'No checks found for entity:',
-          stringifyEntityRef(entity),
-        );
-        return { ...DEFAULT_CHECKS };
+    for (const entity of entities) {
+      const entityRef = getCompoundEntityRef(entity);
+      try {
+        // Fetch SonarCloud facts for the entity
+        const facts = await this.getSonarQubeFacts(techInsightsApi, entityRef);
+        results.push({
+          entity: entityRef,
+          quality_gate: facts.quality_gate === 'OK' ? 0 : 1,
+          vulnerabilities: typeof facts.vulnerabilities === 'number' ? facts.vulnerabilities : 0,
+          code_coverage: typeof facts.code_coverage === 'number' ? facts.code_coverage : 0,
+          bugs: typeof facts.bugs === 'number' ? facts.bugs : 0,
+          code_smells: typeof facts.code_smells === 'number' ? facts.code_smells : 0,
+        });
+      } catch (err) {
+        results.push({
+          entity: entityRef,
+          quality_gate: 1, // Assume failed quality gate if we can't fetch facts
+          vulnerabilities: 0,
+          code_coverage: 0,
+          bugs: 0,
+          code_smells: 0,
+        });
       }
+    }
 
-      // Return the parsed facts, converting to appropriate types and providing defaults
-      return {
-          bugsCheck: bugsCheck?.result === true,
-          vulnerabilitiesCheck: vulnerabilitiesCheck?.result === true,
-          codeSmellsCheck: codeSmellsCheck?.result === true,
-          qualityGateCheck: qualityGateCheck?.result === true,
-          codeCoverageCheck: codeCoverageCheck?.result === true,
-      };
-    } catch (error) {
-      // Log any errors encountered during the fetch process
-      console.error(
-        'Error fetching SonarCloud checks for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
-      // Return default values if an error occurs
-      return { ...DEFAULT_CHECKS };
-    }
+    // Sort results by quality gate status, then by vulnerabilities, bugs, code smells, and code coverage
+    const selected: SonarCloudSummary[] = [];
+
+    // First, select repositories that failed the quality gate
+    const failedQualityGate = results
+      .filter(r => r.quality_gate === 1)
+    selected.push(...failedQualityGate.slice(0, 5));
+
+    // If we have less than 5, fill with repositories that have vulnerabilities
+    if (selected.length < 5) {
+      const vulnerableRepos = results
+        .filter(r => !selected.includes(r) && r.vulnerabilities > 0)
+        .sort((a, b) => b.vulnerabilities - a.vulnerabilities);
+      selected.push(...vulnerableRepos.slice(0, 5 - selected.length));
+    }
+
+    // If we still have less than 5, fill with repositories that have bugs
+    if (selected.length < 5) {
+      const highBugsRepos = results
+        .filter(r => !selected.includes(r) && r.bugs > 0)
+        .sort((a, b) => b.bugs - a.bugs);
+      selected.push(...highBugsRepos.slice(0, 5 - selected.length));
+    }
+
+    // If we still have less than 5, fill with repositories that have code smells
+    if (selected.length < 5) {
+      const highCodeSmellsRepos = results
+        .filter(r => !selected.includes(r) && r.code_smells > 0)
+        .sort((a, b) => b.code_smells - a.code_smells);
+      selected.push(...highCodeSmellsRepos.slice(0, 5 - selected.length));
+    }
+
+    // If we still have less than 5, fill with repositories that have low code coverage
+    if (selected.length < 5) {
+      const lowCoverageRepos = results
+        .filter(r => !selected.includes(r) && r.code_coverage < 80)
+        .sort((a, b) => a.code_coverage - b.code_coverage);
+      selected.push(...lowCoverageRepos.slice(0, 5 - selected.length));
+    }
+
+    // If we still have less than 5, fill with any remaining repositories
+    if (selected.length < 5) {
+      const fallback = results
+        .filter(r => !selected.includes(r))
+        .slice(0, 5 - selected.length);
+      selected.push(...fallback);
+    }
+
+    return selected;
   }
 }

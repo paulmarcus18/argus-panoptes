@@ -1,12 +1,16 @@
 import React from 'react';
-import { Grid, Paper, Typography } from '@material-ui/core';
+import {
+  Grid,
+  Paper,
+  Typography,
+  Link,
+} from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
-import { getAzureDevOpsBugs } from '../utils'; //this is the utils.ts file, not the utils folder
-import { SemaphoreData, IssueDetail, SemaphoreDialogProps } from './types';
-import type { GridSize } from '@material-ui/core';
+import { AzureUtils } from '../../utils/azureUtils';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -22,83 +26,146 @@ const useStyles = makeStyles(theme => ({
   metricLabel: {
     color: theme.palette.text.secondary,
   },
+  projectList: {
+    marginTop: theme.spacing(3),
+  },
 }));
 
-export const AzureDevOpsSemaphoreDialog: React.FC<SemaphoreDialogProps> = ({
+interface AzureBugInsightsDialogProps {
+  open: boolean;
+  onClose: () => void;
+  entities?: Entity[];
+}
+
+export const AzureDevOpsSemaphoreDialog: React.FC<AzureBugInsightsDialogProps> = ({
   open,
   onClose,
+  entities = [],
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
+  const azureUtils = React.useMemo(() => new AzureUtils(), []);
 
-  const [data, setData] = React.useState<SemaphoreData>({
-    color: 'gray',
-    metrics: {},
-    summary: 'No data available for this metric.',
-    details: [],
-  });
   const [isLoading, setIsLoading] = React.useState(false);
+  const [projectBugs, setProjectBugs] = React.useState<
+    { project: string; bugCount: number; url: string }[]
+  >([]);
 
   React.useEffect(() => {
-    if (!open) return;
+    if (!open || entities.length === 0) return;
+
     setIsLoading(true);
 
-    const fetchAzureData = async () => {
+    const fetchBugMetrics = async () => {
       try {
-        const bugCount = await getAzureDevOpsBugs();
-        let color: 'green' | 'yellow' | 'red' | 'gray' = 'green';
-        if (bugCount > 5) color = 'red';
-        else if (bugCount > 0) color = 'yellow';
+        const projectBugMap = new Map<
+          string,
+          { bugCount: number; url: string }
+        >();
 
-        const details: IssueDetail[] =
-          bugCount > 0
-            ? [
-                {
-                  severity: bugCount > 5 ? 'high' : 'medium',
-                  description: `${bugCount} active bug(s) found in Azure DevOps.`,
-                },
-              ]
-            : [];
+        for (const entity of entities) {
+          const ref = {
+            kind: entity.kind,
+            namespace: entity.metadata.namespace || 'default',
+            name: entity.metadata.name,
+          };
 
-        setData({
-          color,
-          metrics: { bugCount },
-          summary:
-            bugCount === 0
-              ? 'No active bugs in Azure DevOps.'
-              : `${bugCount} active bug(s) found.`,
-          details,
-        });
-      } catch (err) {
-        console.error('Azure DevOps fetch error:', err);
-        setData({ color: 'gray', metrics: {}, summary: 'Failed to load Azure DevOps data.', details: [] });
+          const projectName =
+            entity.metadata.annotations?.['azure.com/project'] ?? 'unknown';
+
+          if (!projectBugMap.has(projectName) && projectName !== 'unknown') {
+            const metrics = await azureUtils.getAzureDevOpsBugFacts(
+              techInsightsApi,
+              ref,
+            );
+
+            const orgName =
+              entity.metadata.annotations?.['azure.com/organization'] ?? 'unknown-org';
+
+            const projectUrl = `https://dev.azure.com/${orgName}/${projectName}/_workitems/`;
+
+            projectBugMap.set(projectName, {
+              bugCount: metrics.azureBugCount,
+              url: projectUrl,
+            });
+          }
+        }
+
+        const projectList = Array.from(projectBugMap.entries())
+          .map(([project, { bugCount, url }]) => ({
+            project,
+            bugCount,
+            url,
+          }))
+          .sort((a, b) => b.bugCount - a.bugCount);
+
+        setProjectBugs(projectList);
+      } catch (e) {
+        console.error('❌ Failed to fetch Azure DevOps bug data:', e);
+        setProjectBugs([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchAzureData();
-  }, [open]);
+    fetchBugMetrics();
+  }, [open, entities, techInsightsApi, azureUtils]);
+
+  const totalBugCount = projectBugs.reduce((sum, p) => sum + p.bugCount, 0);
+  const top5Projects = projectBugs.slice(0, 5);
 
   const renderMetrics = () => (
-    <Grid container spacing={2}>
-      <Grid item xs={6}>
-        <Paper className={classes.metricBox} elevation={1}>
-          <Typography variant="h4" className={classes.metricValue}>
-            {data.metrics.bugCount || 0}
-          </Typography>
-          <Typography className={classes.metricLabel}>Open Bugs</Typography>
-        </Paper>
+    <>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Paper className={classes.metricBox} elevation={1}>
+            <Typography
+              variant="h4"
+              className={classes.metricValue}
+              style={{ color: '#e53935' }}
+            >
+              {totalBugCount}
+            </Typography>
+            <Typography className={classes.metricLabel}>
+              Total Azure DevOps Bugs
+            </Typography>
+          </Paper>
+        </Grid>
       </Grid>
-    </Grid>
+
+      {top5Projects.length > 0 && (
+        <div className={classes.projectList}>
+          <Typography variant="h6">Projects with Most Bugs</Typography>
+          <Grid container spacing={2} className={classes.projectList}>
+            {top5Projects.map(project => (
+              <Grid item xs={12} key={project.project}>
+                <Paper className={classes.metricBox} elevation={1}>
+                  <Link
+                    href={project.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={classes.metricValue}
+                  >
+                    {project.project}
+                  </Link>
+                  <Typography className={classes.metricLabel}>
+                    Bugs: {project.bugCount}
+                  </Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </div>
+      )}
+    </>
   );
 
   return (
     <BaseSemaphoreDialog
       open={open}
       onClose={onClose}
-      title="Azure DevOps Bugs"
-      data={data}
+      title="Azure Bug Insights"
+      data={{ color: 'gray', summary: '', metrics: {}, details: [] }}
       isLoading={isLoading}
       renderMetrics={renderMetrics}
     />

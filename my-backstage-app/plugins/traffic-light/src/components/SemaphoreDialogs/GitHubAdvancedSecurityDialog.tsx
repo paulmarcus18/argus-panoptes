@@ -3,10 +3,12 @@ import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { GithubAdvancedSecurityUtils } from '../../utils/githubAdvancedSecurityUtils';
 import { SemaphoreData, IssueDetail, Severity } from './types';
+import { calculateGitHubSecurityTrafficLight } from '../Semaphores/GitHubSecurityTrafficLight';
 import type { GridSize } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
@@ -31,6 +33,31 @@ interface GitHubSemaphoreDialogProps {
   entities?: Entity[];
 }
 
+interface SecurityThresholds {
+  critical_red: number;
+  high_red: number;
+  secrets_red: number;
+  medium_red: number;
+  medium_yellow: number;
+  low_yellow: number;
+}
+
+/**
+ * Extract security thresholds from system entity
+ */
+function extractSecurityThresholds(systemEntity: Entity | undefined, entityCount: number): SecurityThresholds {
+  const annotations = systemEntity?.metadata.annotations || {};
+  
+  return {
+    critical_red: parseFloat(annotations['github-advanced-security-system-critical-threshold-red'] || '0'),
+    high_red: parseFloat(annotations['github-advanced-security-system-high-threshold-red'] || '0'),
+    secrets_red: parseFloat(annotations['github-advanced-security-system-secrets-threshold-red'] || '0'),
+    medium_red: parseFloat(annotations['github-advanced-security-system-medium-threshold-red'] || '0.5') * entityCount,
+    medium_yellow: parseFloat(annotations['github-advanced-security-system-medium-threshold-yellow'] || '0.1') * entityCount,
+    low_yellow: parseFloat(annotations['github-advanced-security-system-low-threshold-yellow'] || '0.2') * entityCount,
+  };
+}
+
 export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
   open,
   onClose,
@@ -38,6 +65,8 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
+  
   const githubASUtils = React.useMemo(
     () => new GithubAdvancedSecurityUtils(),
     [],
@@ -51,6 +80,20 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
   });
   const [isLoading, setIsLoading] = React.useState(false);
 
+  // Helper function to extract repository name from GitHub URL
+  const extractRepoName = (url: string): string => {
+    if (!url) return '';
+    
+    const urlParts = url.split('/');
+    const repoIndex = urlParts.indexOf('github.com');
+    
+    if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
+      return `${urlParts[repoIndex + 1]}/${urlParts[repoIndex + 2]}`;
+    }
+    
+    return '';
+  };
+
   React.useEffect(() => {
     if (!open || entities.length === 0) return;
 
@@ -58,7 +101,26 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
 
     const fetchSecurityData = async () => {
       try {
-        const results = await Promise.all(
+        // Get system entity and thresholds (if available)
+        let systemEntity: Entity | undefined;
+        let thresholds: SecurityThresholds | undefined;
+        
+        try {
+          const systemName = entities[0].spec?.system;
+          if (systemName) {
+            systemEntity = await catalogApi.getEntityByRef({
+              kind: 'System',
+              namespace: entities[0].metadata.namespace || 'default',
+              name: typeof systemName === 'string' ? systemName : String(systemName),
+            });
+            thresholds = extractSecurityThresholds(systemEntity, entities.length);
+          }
+        } catch (systemError) {
+          console.warn('Could not fetch system entity for thresholds:', systemError);
+        }
+
+        // Get security check results (for traffic light calculation)
+        const securityCheckResults = await Promise.all(
           entities.map(entity =>
             githubASUtils.getGitHubSecurityFacts(techInsightsApi, {
               kind: entity.kind,
@@ -68,6 +130,9 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
           ),
         );
 
+        // Get detailed security data (for metrics and details)
+        const results = securityCheckResults;
+
         let critical = 0,
           high = 0,
           medium = 0,
@@ -75,45 +140,64 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
         const details: IssueDetail[] = [];
 
         results.forEach(result => {
+          // Process code scanning alerts
           Object.values(result.codeScanningAlerts || {}).forEach(alert => {
             const a = alert as any;
 
+            // Count by severity
             const severity = (a.severity as Severity) || 'medium';
-            if (severity === 'critical') critical++;
-            else if (severity === 'high') high++;
-            else if (severity === 'medium') medium++;
-            else if (severity === 'low') low++;
-            else medium++;
+            switch (severity) {
+              case 'critical':
+                critical++;
+                break;
+              case 'high':
+                high++;
+                break;
+              case 'medium':
+                medium++;
+                break;
+              case 'low':
+                low++;
+                break;
+              default:
+                medium++;
+            }
 
-            const urlParts = (a.html_url || '').split('/');
-            const repo =
-              urlParts.indexOf('github.com') !== -1
-                ? `${urlParts[4]}/${urlParts[5]}`
-                : '';
+            // Extract repository name from direct_link or html_url
+            const repoName = extractRepoName(a.direct_link || a.html_url || '');
+
+            // Add repository name to description if available
+            const description = repoName
+              ? `[${repoName}] ${a.description}`
+              : a.description;
 
             details.push({
               severity,
-              description: repo ? `[${repo}] ${a.description}` : a.description,
+              description,
               component: a.location?.path,
-              url: a.html_url,
+              url: a.html_url || a.direct_link,
               directLink: a.direct_link,
             });
           });
 
+          // Process secret scanning alerts (most are high severity)
           Object.values(result.secretScanningAlerts || {}).forEach(alert => {
             const a = alert as any;
             high++;
 
-            const urlParts = (a.html_url || '').split('/');
-            const repo =
-              urlParts.indexOf('github.com') !== -1
-                ? `${urlParts[4]}/${urlParts[5]}`
-                : '';
+            // Extract repository name from html_url
+            const repoName = extractRepoName(a.html_url || '');
+
+            // Add repository name to description if available
+            const description = repoName
+              ? `[${repoName}] ${a.description}`
+              : a.description;
 
             details.push({
               severity: 'high',
-              description: repo ? `[${repo}] ${a.description}` : a.description,
+              description,
               url: a.html_url,
+              directLink: a.html_url,
             });
           });
         });
@@ -127,19 +211,33 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
           0,
         );
 
-        const color =
-          critical > 0 || high > 0
+        // Determine color using the traffic light function if thresholds are available
+        let color: 'red' | 'yellow' | 'green' | 'gray';
+        let summary: string;
+
+        if (thresholds) {
+          // Use the traffic light calculation function
+          const trafficLightResult = calculateGitHubSecurityTrafficLight(
+            securityCheckResults,
+            entities,
+            thresholds
+          );
+          color = trafficLightResult.color === 'white' ? 'gray' : trafficLightResult.color;
+          summary = trafficLightResult.reason;
+        } else {
+          // Fallback to simple logic if no thresholds available
+          color = critical > 0 || high > 0
             ? 'red'
             : medium > 0 || low > 0
             ? 'yellow'
             : 'green';
-
-        const summary =
-          color === 'red'
+          
+          summary = color === 'red'
             ? 'Critical security issues require immediate attention.'
             : color === 'yellow'
             ? 'Security issues need to be addressed.'
             : 'No security issues found.';
+        }
 
         setData({
           color,
@@ -169,7 +267,7 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
     };
 
     fetchSecurityData();
-  }, [open, entities, githubASUtils, techInsightsApi]);
+  }, [open, entities, githubASUtils, techInsightsApi, catalogApi]);
 
   const renderMetrics = () => (
     <Grid container spacing={2}>

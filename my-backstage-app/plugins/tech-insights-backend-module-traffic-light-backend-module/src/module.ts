@@ -20,17 +20,13 @@ import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/
 import { githubPipelineStatusFactRetriever } from './pipelines/preproductionFactRetriever';
 import { foundationPipelineStatusFactRetriever } from './pipelines/foundationFactRetriever';
 import { reportingPipelineStatusFactRetriever } from './pipelines/reportingFactRetriever';
-
-// import { createGitHubSecretScanningCheck } from './github-advanced-security/githubASFactChecker';
-// Import JsonRulesEngineFactCheckerFactory
+//import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 // Imports retriever that queries Azure DevOps bugs data.
 import { createAzureDevOpsBugsRetriever } from './azure/azureDevOpsFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 // Imports the fact retriever that collects data from Black Duck.
 import {createBlackDuckFactRetriever} from './blackduck/blackduckFactRetriever';
-// Import SonarCloud fact checkers.
-import { sonarCloudChecks } from './sonarCloud/sonarCloudFactCheckers';
 // Imports the fact checker factory that evaluates dynamic thresholds.
 import { DynamicThresholdFactCheckerFactory } from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 // Imports the CatalogClient to interact with the Backstage catalog.
@@ -41,9 +37,12 @@ import { BlackDuckChecks } from './blackduck/blackduckFactChecker';
 import { AuthenticatedCatalogApi } from './authenticatedCatalogApi';
 import { foundationPipelineChecks } from './pipelines/foundationFactChecker';
 import { preproductionPipelineChecks } from './pipelines/preproductionFactChecker';
+import { reportingPipelineChecks } from './pipelines/reportingFactChecker';
 import { githubAdvancedSecuritychecks } from './github-advanced-security/githubASFactChecker';
 
 import { azureBugsChecks } from './azure/azureDevOpsFactChecker';
+import { DependabotChecks } from './dependabot/dependabotFactChecker';
+
 
 // Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({
@@ -65,7 +64,6 @@ export default createBackendModule({
         discovery: coreServices.discovery,
         auth: coreServices.auth,
       },
-
       //initialization function that will run during backend's startup
       async init({
         providers,
@@ -78,10 +76,7 @@ export default createBackendModule({
         //logs to the console to confirm module is being registered
         logger.info('Registering dependabot-facts module...');
         const factRetriever = createDependabotFactRetriever(config, logger);
-        const sonarCloudFactRetriever = createSonarCloudFactRetriever(
-          config,
-          logger,
-        );
+        const sonarCloudFactRetriever = createSonarCloudFactRetriever(config);
 
         const blackDuckFactRetriever = createBlackDuckFactRetriever(
           config,
@@ -120,12 +115,13 @@ export default createBackendModule({
         const sonarCloudFactCheckerFactory =
           new DynamicThresholdFactCheckerFactory({
             checks: [
-              ...sonarCloudChecks,
               ...BlackDuckChecks,
               ...foundationPipelineChecks,
               ...preproductionPipelineChecks,
+              ...reportingPipelineChecks,
               ...githubAdvancedSecuritychecks,
               ...azureBugsChecks,
+              ...DependabotChecks,
             ],
             logger,
             catalogApi: authenticatedCatalogApi,

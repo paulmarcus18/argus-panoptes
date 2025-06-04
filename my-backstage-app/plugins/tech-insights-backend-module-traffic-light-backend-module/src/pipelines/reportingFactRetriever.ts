@@ -1,16 +1,13 @@
-/**
- * This file reads a GitHub token from config, fetches GitHub Actions workflow data for repositories
- * Returns pipeline statuses for reporting workflows in a structured way that Tech Insights can consume
- */
 import { FactRetriever, TechInsightFact } from '@backstage-community/plugin-tech-insights-node';
 import { CatalogClient } from '@backstage/catalog-client';
 import { JsonObject } from '@backstage/types';
 
-// Configuration for which workflows to include for reporting
+// To include the workflows defined in the catalog entity annotations
 type ReportingWorkflowConfig = {
   include: string[]; 
 };
 
+// Represents a single workflow run from Github Actions API
 type WorkflowRun = {
   name: string;
   status: string;
@@ -20,14 +17,14 @@ type WorkflowRun = {
   workflow_id: number; 
 };
 
-// Added type for workflow definition from the GitHub API
+// Represents a workflow definition from GitHub API
 type WorkflowDefinition = {
   id: number;
   name: string;
   path: string;
 };
 
-// Individual workflow success metrics
+// Metrics for each each workflow
 interface WorkflowSuccessMetrics extends JsonObject {
   workflowName: string;
   totalRuns: number;
@@ -35,7 +32,7 @@ interface WorkflowSuccessMetrics extends JsonObject {
   successRate: number;
 }
 
-// Storing the facts as a JSON object for reporting pipelines
+// Defines an interface for reporting pipeline status metrics
 interface ReportingPipelineStatusSummary extends JsonObject {
   workflowMetrics: WorkflowSuccessMetrics[];
   totalIncludedWorkflows: number;
@@ -43,8 +40,11 @@ interface ReportingPipelineStatusSummary extends JsonObject {
 }
 
 /**
- * This FactRetriever queries GitHub Actions workflow data for specified repositories
- * and returns success metrics for reporting workflows only
+ * Creates a fact retriever for Reporting pipeline metrics from Github Actions. 
+ * 
+ * This retriever queries GitHub Actions workflow data for specified entity of type 'component'.
+ * 
+ * @returns A FactRetriever that collects pipeline status metrics
  */
 export const reportingPipelineStatusFactRetriever: FactRetriever = {
   id: 'reportingPipelineStatusFactRetriever',
@@ -65,7 +65,12 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
     }
   },
 
-  // Main logic of the retriever
+  /**
+   * Handler function that retrieves pipeline status metrics for relevant entities.
+   * 
+   * @param ctx - Context object containing configuration, logger, and other services
+   * @returns Array of entity facts with pipeline status metrics
+   */
   async handler({ config, logger, entityFilter, auth, discovery }): Promise<TechInsightFact[]> {
     // Retrieve GitHub token from config
     let token: string | undefined;
@@ -84,10 +89,9 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
       targetPluginId: 'catalog',
     });
 
-    // Instantiate the CatalogClient
     const catalogClient = new CatalogClient({ discoveryApi: discovery });
 
-    // Fetch the list of entities matching the entityFilter
+    // Fetch entities matching the provided filter
     const { items: entities } = await catalogClient.getEntities(
       { filter: entityFilter },
       { token: catalogToken },
@@ -101,10 +105,10 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
 
     logger.info(`Processing ${githubEntities.length} GitHub entities for reporting pipelines`);
 
-    // Process each entity with GitHub integration
+    // Process each Github-enabled component
     const results = await Promise.all(
       githubEntities.map(async entity => {
-        // Extract owner and repo from the 'github.com/project-slug' annotation
+        // Parse the github repo information from entity annotations
         const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] || '';
         const [owner, repoName] = projectSlug.split('/');
 
@@ -113,12 +117,11 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
           return null;
         }
 
-        // Extract reporting workflow configuration from entity annotations
         const reportingWorkflowConfig: ReportingWorkflowConfig = {
           include: [],
         };
         
-        // Check for reporting/workflows annotation
+        // Check annotations for reporting workflows
         const reportingWorkflowsAnnotation = entity.metadata.annotations?.['reporting/workflows'];
         if (reportingWorkflowsAnnotation) {
           try {
@@ -131,8 +134,9 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
           }
         }
 
-        // First, fetch workflow definitions to get workflow IDs and names
+        // Workflow definition to get accurate unique workflow counts
         const workflowsApiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/workflows`;
+        let workflowDefinitions: WorkflowDefinition[] = [];
         
         const headers: Record<string, string> = {
           'Accept': 'application/vnd.github.v3+json',
@@ -142,8 +146,6 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
           headers['Authorization'] = `token ${token}`;
         }
         
-        let workflowDefinitions: WorkflowDefinition[] = [];
-        
         try {
           const workflowsResponse = await fetch(workflowsApiUrl, { headers });
           
@@ -151,21 +153,22 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             const workflowsData = await workflowsResponse.json();
             workflowDefinitions = workflowsData.workflows || [];
           } else {
-            logger.error(`@@@Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`);
+            logger.error(`Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`);
           }
         } catch (error: any) {
           logger.error(`Error fetching workflow definitions for ${repoName}: ${error.message}`);
         }
 
-        // Fetch workflow runs with pagination
+        // Fetch all workflow runs from the main branch using pagination
         const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/runs?branch=main&per_page=100`;
         
         try {
           let page = 1;
           let hasMorePages = true;
           let allRuns: WorkflowRun[] = [];
-          const maxPages = 30;
+          const maxPages = 100; // Limit to 30 pages to avoid excessive API calls
           
+          // Paginate through all workflow runs
           while (hasMorePages && page <= maxPages) {
             const pageUrl = `${apiUrl}&page=${page}`;
             
@@ -184,9 +187,12 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             
             allRuns = [...allRuns, ...pageRuns];
             
+            // To check if we need to fetch more pages
             if (pageRuns.length < 100) {
               hasMorePages = false;
             } else {
+
+              // Check for Link header with 'next' relation to confirm more pages
               const linkHeader = response.headers.get('Link');
               hasMorePages = linkHeader ? linkHeader.includes('rel="next"') : false;
             }
@@ -194,7 +200,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             page++;
           }
           
-          // Filter to main branch runs
+          // Filter runs to only include those on the main branch
           const mainBranchRuns = allRuns.filter(run => run.head_branch === 'main');
           
           // Determine which workflows to include
@@ -202,7 +208,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
           let useAllWorkflows = false;
           
           if (reportingWorkflowConfig.include.length > 0) {
-            // Map workflow names to IDs for included workflows
+            // Map workflow names to workflow IDs using the workflow definitions
             const workflowNameToIdMap = new Map<string, number>();
             workflowDefinitions.forEach(workflow => {
               workflowNameToIdMap.set(workflow.name, workflow.id);
@@ -215,12 +221,11 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
               }
             });
             
-            // If no workflows found to include, use all workflows
+            // If no specific workflows found to include, use all workflows
             if (includedWorkflowIds.length === 0) {
               useAllWorkflows = true;
             }
           } else {
-            // No specific workflows configured, use all workflows
             useAllWorkflows = true;
           }
           
@@ -267,21 +272,18 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
           const totalSuccessfulRuns = workflowMetrics.reduce((sum, metric) => sum + metric.successfulRuns, 0);
           const overallSuccessRate = totalRuns > 0 ? Math.round((totalSuccessfulRuns / totalRuns) * 10000) / 100 : 0;
           
-          // Create summary object
+          // Construct pipelines status summary object
           const reportingSummary: ReportingPipelineStatusSummary = {
             workflowMetrics,
             totalIncludedWorkflows: workflowMetrics.length,
             overallSuccessRate,
           };
 
-          // Console log reporting pipelines summary only
-          console.log(`📊 Reporting Pipelines Summary for ${repoName}:`);
-          workflowMetrics.forEach(metric => {
-            console.log(`- ${metric.workflowName}: ${metric.successfulRuns}/${metric.totalRuns} (${metric.successRate}% success rate)`);
-          });
-          console.log(`- Overall Success Rate: ${overallSuccessRate}%`);
+          // Log pipeline summary
+          logger.info(`Reporting Pipelines Summary for ${owner}/${repoName}:`);
+          logger.info(`Overall Success Rate: ${overallSuccessRate}%`);
           
-          // Return the fact result object for this repository
+          // Return the fact result object for this repo
           return {
             entity: {
               kind: entity.kind,

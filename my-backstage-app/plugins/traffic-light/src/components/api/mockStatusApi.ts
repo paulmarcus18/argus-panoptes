@@ -1,6 +1,7 @@
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef } from '@backstage/catalog-model';
-import { getAzureDevOpsBugs, getGitHubRepoStatus} from '../utils.ts';
+import { getGitHubRepoStatus} from '../utils.ts';
+import { AzureUtils } from '../../utils/azureUtils';
 import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 
 export type TrafficLightColor = 'green' | 'yellow' | 'red';
@@ -81,7 +82,8 @@ export const fetchRepoStatus = async (
   const preProdStatus: TrafficLightColor = validateTrafficLightColor(status);
 
   // Instantiate the utils for SonarCloud 
-  const sonarUtils = new SonarCloudUtils(techInsightsApi);
+  const sonarUtils = new SonarCloudUtils();
+  const azureUtils = new AzureUtils();
 
   // Create entity reference for SonarCloud facts
   // THIS IS HARCODED FOR TABIA - CHANGE LATER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -94,7 +96,7 @@ export const fetchRepoStatus = async (
   // Get SonarCloud facts and evaluate status
   let sonarStatus = { color: 'green' as TrafficLightColor, reason: 'Score 70 ≥ 70 (green)' };
   try {
-    const sonarFacts = await sonarUtils.getSonarQubeFacts(techInsightsApi, entity);
+    const sonarFacts = await getSonarQubeFacts(techInsightsApi, entity);
     console.log("Sonar Qube bugs: ", sonarFacts.bugs);
     console.log("Sonar Qube code smells: ", sonarFacts.code_smells);
     console.log("Sonar Qube vulnerabilities: ", sonarFacts.vulnerabilities);
@@ -115,6 +117,6 @@ export const fetchRepoStatus = async (
       color: preProdStatus,
       reason: `Score 70 ≥ 70 (green)`,
     },
-    'Foundation Pipelines': evaluateColorDevOps(await getAzureDevOpsBugs()),
+    'Foundation Pipelines': evaluateColorDevOps((await azureUtils.getAzureDevOpsBugFacts(techInsightsApi, entity)).azureBugCount),
   };
 };

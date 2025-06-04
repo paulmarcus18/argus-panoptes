@@ -1,7 +1,3 @@
-/**
- * This file reads a GitHub token from config, fetches GitHub Actions workflow data for repositories
- * Returns pipeline statuses in a structured way that Tech Insights can consume
- */
 import {
   FactRetriever,
   TechInsightFact,
@@ -9,6 +5,7 @@ import {
 import { CatalogClient } from '@backstage/catalog-client';
 import { JsonObject } from '@backstage/types';
 
+// Represents a single workflow run from Github Actions API
 type WorkflowRun = {
   name: string;
   status: string;
@@ -18,14 +15,14 @@ type WorkflowRun = {
   workflow_id: number;
 };
 
-// Added type for workflow definition from the GitHub API
+// Represents a workflow definition from GitHub API
 type WorkflowDefinition = {
   id: number;
   name: string;
   path: string;
 };
 
-// Type for per-workflow metrics
+// Metrics for each each workflow
 type WorkflowMetrics = {
   name: string;
   totalRuns: number;
@@ -34,19 +31,22 @@ type WorkflowMetrics = {
   successRate: number;
 };
 
-// Storing the facts as a JSON object
+// Defines an interface for foundation pipeline status metrics
 interface PipelineStatusSummary extends JsonObject {
   totalWorkflowRunsCount: number;
   uniqueWorkflowsCount: number;
   successWorkflowRunsCount: number;
   failureWorkflowRunsCount: number;
   successRate: number;
-  workflowMetrics: Record<string, WorkflowMetrics>; // Added per-workflow metrics
+  workflowMetrics: Record<string, WorkflowMetrics>; 
 }
 
 /**
- * This FactRetriever queries GitHub Actions workflow data for specified repositories
- * and returns detailed pipeline status information for all workflows
+ * Creates a fact retriever for Foundation pipeline metrics from Github Actions. 
+ * 
+ * This retriever queries GitHub Actions workflow data for specified entity of type 'component'.
+ * 
+ * @returns A FactRetriever that collects pipeline status metrics
  */
 export const foundationPipelineStatusFactRetriever: FactRetriever = {
   id: 'foundationPipelineStatusFactRetriever',
@@ -80,7 +80,12 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
     },
   },
 
-  // Main logic of the retriever
+  /**
+   * Handler function that retrieves pipeline status metrics for relevant entities.
+   * 
+   * @param ctx - Context object containing configuration, logger, and other services
+   * @returns Array of entity facts with pipeline status metrics
+   */
   async handler({
     config,
     logger,
@@ -107,10 +112,9 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
       targetPluginId: 'catalog',
     });
 
-    // Instantiate the CatalogClient
     const catalogClient = new CatalogClient({ discoveryApi: discovery });
 
-    // Fetch the list of entities matching the entityFilter
+    // Fetch entities matching the provided filter
     const { items: entities } = await catalogClient.getEntities(
       { filter: entityFilter },
       { token: catalogToken },
@@ -124,10 +128,10 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
 
     logger.info(`Processing ${githubEntities.length} GitHub entities`);
 
-    // Process each entity with GitHub integration
+    // Process each Github-enabled component
     const results = await Promise.all(
       githubEntities.map(async entity => {
-        // Extract owner and repo from the 'github.com/project-slug' annotation
+        // Parse the github repo information from entity annotations
         const projectSlug =
           entity.metadata.annotations?.['github.com/project-slug'] || '';
         const [owner, repoName] = projectSlug.split('/');
@@ -139,7 +143,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
           return null;
         }
 
-        // First, fetch workflow definitions to get an accurate count of unique workflows
+        // API calls to get the workflow definitions first
         const workflowsApiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/workflows`;
 
         const headers: Record<string, string> = {
@@ -150,7 +154,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
           headers['Authorization'] = `token ${token}`;
         }
 
-        // Prepare for tracking actual workflow definitions
+        // Workflow definition to get accurate unique workflow counts
         let workflowDefinitions: WorkflowDefinition[] = [];
 
         try {
@@ -161,7 +165,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
             workflowDefinitions = workflowsData.workflows || [];
           } else {
             logger.error(
-              `&&&Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`,
+              `Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`,
             );
           }
         } catch (error: any) {
@@ -170,21 +174,16 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
           );
         }
 
-        // Prepare API URL with parameters to better match GitHub UI behavior
-        // Set per_page to 100 to get more results (max allowed by GitHub API)
+        // Fetch all workflow runs from the main branch using pagination
         const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/runs?branch=main&per_page=100`;
 
-        try {
-          // Fetch workflow data from GitHub API
-          logger.debug(`Fetching GitHub Actions for: ${apiUrl}`);
-
-          // We'll implement pagination to get all results
+        try {  
           let page = 1;
           let hasMorePages = true;
           let allRuns: WorkflowRun[] = [];
-          const maxPages = 30; // Ensure we get all workflow runs
+          const maxPages = 30; // Limit to 30 pages to avoid excessive API calls
 
-          // Loop through paginated results until we have everything
+          // Paginate through all workflow runs
           while (hasMorePages && page <= maxPages) {
             const pageUrl = `${apiUrl}&page=${page}`;
 
@@ -203,13 +202,13 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
             const data = await response.json();
             const pageRuns = data.workflow_runs as WorkflowRun[];
 
-            // Add this page's runs to our collection
             allRuns = [...allRuns, ...pageRuns];
 
-            // Check if we need to fetch more pages
+            // To check if we need to fetch more pages
             if (pageRuns.length < 100) {
               hasMorePages = false;
             } else {
+
               // Check for Link header with 'next' relation to confirm more pages
               const linkHeader = response.headers.get('Link');
               hasMorePages = linkHeader
@@ -226,7 +225,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
           );
           allRuns = mainBranchRuns;
 
-          // If no runs found, return early with empty data
+          // Handle case where no workflow runs are found and return early with empty data
           if (allRuns.length === 0) {
             return {
               entity: {
@@ -248,7 +247,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
           // Count all workflow runs on main branch
           const totalWorkflowRunsCount = allRuns.length;
 
-          // The GitHub UI counts unique workflows based on the YAML files (workflow definitions)
+          // Unique workflows
           const uniqueWorkflowsCount =
             workflowDefinitions.length > 0
               ? workflowDefinitions.length
@@ -271,10 +270,10 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
               ? Math.round((successWorkflowRunsCount / completedRuns) * 100)
               : 0;
 
-          // Create a dictionary of per-workflow metrics
+          // Detailed metrics for each individual workflow (stored in a dictionary)
           const workflowMetrics: Record<string, WorkflowMetrics> = {};
 
-          // Create a mapping of workflow IDs to names
+          // Map workflow IDs to workflow names using the workflow definitions
           const workflowIdToName = new Map<number, string>();
           workflowDefinitions.forEach(workflow => {
             workflowIdToName.set(workflow.id, workflow.name);
@@ -290,7 +289,6 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
 
           // Calculate metrics for each workflow
           runsByWorkflowId.forEach((runs, workflowId) => {
-            // Get workflow name from ID, or use ID as string if not found
             const workflowName =
               workflowIdToName.get(workflowId) ||
               runs[0]?.name ||
@@ -322,7 +320,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
             };
           });
 
-          // Create summary object
+          // Construct pipelines status summary object
           const pipelineSummary: PipelineStatusSummary = {
             totalWorkflowRunsCount,
             uniqueWorkflowsCount,
@@ -332,25 +330,15 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
             workflowMetrics,
           };
 
-          // Log comprehensive pipeline summary
-          logger.info(`📊 Foundation Pipelines Summary for ${repoName}:
+          // Log pipeline summary
+          logger.info(`Foundation Pipelines Summary for ${owner}/${repoName}:
 - Total workflow runs (main branch): ${totalWorkflowRunsCount}
 - Unique workflows: ${uniqueWorkflowsCount}
 - Success workflow runs: ${successWorkflowRunsCount}
 - Failure workflow runs: ${failureWorkflowRunsCount}
 - Workflow success rate: ${successRate}%`);
 
-          // Log detailed metrics for each workflow
-          logger.info(`📋 Per-Workflow Metrics for ${repoName}:`);
-          Object.values(workflowMetrics).forEach(metrics => {
-            logger.info(`- Workflow: ${metrics.name}
-  • Total runs: ${metrics.totalRuns}
-  • Success runs: ${metrics.successRuns}
-  • Failure runs: ${metrics.failureRuns}
-  • Success rate: ${metrics.successRate}%`);
-          });
-
-          // Return the fact result object for this repository
+          // Return the fact result object for this repo
           return {
             entity: {
               kind: entity.kind,
@@ -368,7 +356,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
       }),
     );
 
-    // Filter null results and ensure they match TechInsightFact type
+    // Filter out null results and return valid pipeline metrics
     const validResults = results.filter(
       (r): r is TechInsightFact => r !== null,
     );

@@ -112,7 +112,7 @@ export class GithubAdvancedSecurityUtils {
 
 
       // Log the results of the checks for debugging
-      console.log("Result from secret checks🐴🦐:", secretCheck?.result);
+      console.log("Result from secret checks:", secretCheck?.result);
       console.log("Result from secret medium:", mediumCheck?.result);
       console.log("Result from secret high:", highCheck?.result);
 
