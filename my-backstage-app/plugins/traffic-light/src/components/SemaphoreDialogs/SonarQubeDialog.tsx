@@ -3,10 +3,12 @@ import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 import { SemaphoreData, IssueDetail } from './types';
 import { Entity } from '@backstage/catalog-model';
+import { determineSonarQubeColor } from '../Semaphores/SonarQubeTrafficLight';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -37,6 +39,7 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
   const sonarUtils = React.useMemo(() => new SonarCloudUtils(), [techInsightsApi]);
 
   const [data, setData] = React.useState<SemaphoreData>({
@@ -70,56 +73,71 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
             acc.bugs += r.bugs || 0;
             acc.code_smells += r.code_smells || 0;
             acc.vulnerabilities += r.vulnerabilities || 0;
-            acc.code_coverage = r.code_coverage || acc.code_coverage;
-            acc.quality_gate = r.quality_gate || acc.quality_gate;
+            acc.code_coverage += r.code_coverage / entities.length
+            acc.quality_gate += r.quality_gate==="OK" ? 0 : 1;
             return acc;
           },
           {
             bugs: 0,
             code_smells: 0,
             vulnerabilities: 0,
-            code_coverage: '0%',
-            quality_gate: '0%',
+            code_coverage: 0,
+            quality_gate: 0,
           } as Record<string, any>,
         );
 
+        // Round code_coverage to 2 decimal places
+        totals.code_coverage = Number(totals.code_coverage.toFixed(2));
+        
         // Create details array from results
         const details: IssueDetail[] = [];
         
-        // Add bug issues
-        if (totals.bugs > 0) {
-          details.push({
-            severity: totals.bugs > 5 ? 'high' : 'medium',
-            description: `${totals.bugs} bugs detected across projects`,
-          });
-        }
+        const displayedRepos = await sonarUtils.getTop5CriticalSonarCloudRepos(techInsightsApi, entities);
 
-        // Add code smell issues
-        if (totals.code_smells > 0) {
-          details.push({
-            severity: totals.code_smells > 50 ? 'medium' : 'low',
-            description: `${totals.code_smells} code smells detected across projects`,
+        for (const repo of displayedRepos) {
+          // Fetch entity metadata from catalog
+          const entity = await catalogApi.getEntityByRef({
+            kind: 'Component',
+            namespace: 'default',
+            name: typeof repo.entity.name === 'string' ? repo.entity.name : String(repo.entity.name)
           });
-        }
 
-        // Add vulnerabilities issues
-        if (totals.vulnerabilities > 0) {
+          // Create a description and determine severity based on the repo's issues
+          let description = ``;
+          let severity = '';
+
+          if (repo.quality_gate === 1) {
+            description = `Repository ${repo.entity.name} has a failed quality gate.`;
+            severity = 'critical';
+          } else if (repo.vulnerabilities > 0) {
+            description = `Repository ${repo.entity.name} has ${repo.vulnerabilities} vulnerabilities.`;
+            severity = 'high';
+          } else if (repo.bugs > 0) {
+            description = `Repository ${repo.entity.name} has ${repo.bugs} bugs.`;
+            severity = 'high';
+          } else if (repo.code_smells > 0) {
+            description = `Repository ${repo.entity.name} has ${repo.code_smells} code smells.`;
+            severity = 'medium';
+          } else if (repo.code_coverage < 80) {
+            description = `Repository ${repo.entity.name} has a code coverage of ${repo.code_coverage}%.`;  
+            severity = 'low';
+          }
+
+          // Add the detail to the array
           details.push({
-            severity: 'high',
-            description: `${totals.vulnerabilities} vulnerabilities need review`,
+            severity: severity as 'critical' | 'high' | 'medium' | 'low',
+            description: description,
+            url: `https://sonarcloud.io/project/overview?id=${entity?.metadata.annotations?.['sonarcloud.io/project-key']}`,
           });
         }
 
         // Determine the overall status color
-        let color: 'red' | 'yellow' | 'green' | 'gray' = 'green';
-        if (totals.bugs > 0 || totals.vulnerabilities > 0) {
-          color = 'red';
-        } else if (totals.code_smells > 10) {
-          color = 'yellow';
-        }
+        const trafficLightcolor = await determineSonarQubeColor(entities, catalogApi, techInsightsApi, sonarUtils);
+        let color: 'green' | 'red' | 'yellow' | 'gray' = 'green';
+        color = trafficLightcolor.color;
 
         // Create the summary
-        let summary = 'Code quality is excellent with no significant issues.';
+        let summary = 'No critical code quality issues were found.';
         if (color === 'red') {
           summary = 'Critical code quality issues require immediate attention.';
         } else if (color === 'yellow') {
@@ -129,7 +147,6 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
         // Set the real data
         setData({ color, metrics: totals, summary, details });
       } catch (err) {
-        console.error('SonarQube fetch error:', err);
         // Set default data in case of error
         setData({ color: 'gray', metrics: {}, summary: 'Failed to load SonarQube data.', details: [] });
       } finally {
@@ -169,17 +186,17 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
       <Grid item xs={6}>
         <Paper className={classes.metricBox} elevation={1}>
           <Typography variant="h4" className={classes.metricValue}>
-            {data.metrics.coverage}
+            {data.metrics.code_coverage}%
           </Typography>
-          <Typography className={classes.metricLabel}>Test Coverage</Typography>
+          <Typography className={classes.metricLabel}>Average Code Coverage</Typography>
         </Paper>
       </Grid>
       <Grid item xs={6}>
         <Paper className={classes.metricBox} elevation={1}>
           <Typography variant="h4" className={classes.metricValue}>
-            {data.metrics.technicalDebt}
+            {data.metrics.quality_gate}
           </Typography>
-          <Typography className={classes.metricLabel}>Technical Debt</Typography>
+          <Typography className={classes.metricLabel}>Failed Quality Gate</Typography>
         </Paper>
       </Grid>
     </Grid>

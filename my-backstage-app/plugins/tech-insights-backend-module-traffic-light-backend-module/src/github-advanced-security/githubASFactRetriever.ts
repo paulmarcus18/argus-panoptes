@@ -69,7 +69,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
   },
 
   // Main logic of the retriever 
-  async handler({ config, logger, entityFilter, auth, discovery }): Promise<TechInsightFact[]> {
+  async handler({ config, entityFilter, auth, discovery }): Promise<TechInsightFact[]> {
     // Retrieve GitHub token from config
     let token: string | undefined;
     try {
@@ -77,9 +77,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
       const githubConfig = githubConfigs?.[0];
       token = githubConfig?.getOptionalString('token'); 
 
-      logger.info(`Retrieved GitHub token: ${token ? 'Present' : 'Missing'}`);
     } catch (e) {
-      logger.error(`Could not retrieve GitHub token: ${e}`);
       return [];
     }
 
@@ -113,16 +111,9 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
     const results = await Promise.all(
       githubEntities.map(async entity => {
         // Extract owner and repo from the 'github.com/project-slug' annotation
-        // This annotation typically has the format 'owner/repo'
         const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] || '';
         const [owner, repo] = projectSlug.split('/');
 
-        if (!owner || !repo) {
-          logger.warn(`Invalid GitHub project slug for entity ${entity.metadata.name}: ${projectSlug}`);
-          return null;
-        }
-
-        logger.info(`Retrieving GitHub security data for ${owner}/${repo}`);
 
         try {
           // Fetch Code Scanning alerts
@@ -210,17 +201,6 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
                 break;
           }});
 
-          // logger for debugging purposes
-          console.log(
-            `GitHub security metrics for ${owner}/${repo}: ` +
-            `Code Scanning: ${Object.keys(codeScanningAlerts).length}, ` +
-            `Secret Scanning: ${Object.keys(secretScanningAlerts).length}` + 
-            `🐹Critical: ${severityCounts.critical}, ` +
-            `High: ${severityCounts.high}, ` +
-            `Medium: ${severityCounts.medium}, ` +
-            `Low: ${severityCounts.low}`,
-          );
-
           // Return the fact result object for this repository as a TechInsightFact
           return {
             entity: {
@@ -242,15 +222,6 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
             },
           } as TechInsightFact;
         } catch (err: any) {
-          if (err.status === 403 || err.status === 404) {
-            logger.warn(
-              `Access denied to security data for ${owner}/${repo} (status ${err.status}) — skipping`,
-            );
-            return null;
-          }
-          logger.error(
-            `Error fetching security data for ${owner}/${repo}: ${err.message} (status ${err.status})`,
-          );
           return null;
         }
       }),

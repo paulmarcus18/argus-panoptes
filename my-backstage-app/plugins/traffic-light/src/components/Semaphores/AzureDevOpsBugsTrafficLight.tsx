@@ -8,6 +8,7 @@ import { Box, Tooltip } from '@material-ui/core';
 import { determineSemaphoreColor } from '../utils';
 
 export const AzureDevOpsBugsTrafficLight = ({
+
   entities,
   onClick,
 }: {

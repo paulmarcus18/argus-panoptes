@@ -1,12 +1,14 @@
 import React from 'react';
-import { Grid, Paper, Typography, Link } from '@material-ui/core';
+import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { GithubAdvancedSecurityUtils } from '../../utils/githubAdvancedSecurityUtils';
 import { SemaphoreData, IssueDetail, Severity } from './types';
+import { calculateGitHubSecurityTrafficLight } from '../Semaphores/GitHubSecurityTrafficLight';
 import type { GridSize } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
@@ -31,6 +33,31 @@ interface GitHubSemaphoreDialogProps {
   entities?: Entity[];
 }
 
+interface SecurityThresholds {
+  critical_red: number;
+  high_red: number;
+  secrets_red: number;
+  medium_red: number;
+  medium_yellow: number;
+  low_yellow: number;
+}
+
+/**
+ * Extract security thresholds from system entity
+ */
+function extractSecurityThresholds(systemEntity: Entity | undefined, entityCount: number): SecurityThresholds {
+  const annotations = systemEntity?.metadata.annotations || {};
+  
+  return {
+    critical_red: parseFloat(annotations['github-advanced-security-system-critical-threshold-red'] || '0'),
+    high_red: parseFloat(annotations['github-advanced-security-system-high-threshold-red'] || '0'),
+    secrets_red: parseFloat(annotations['github-advanced-security-system-secrets-threshold-red'] || '0'),
+    medium_red: parseFloat(annotations['github-advanced-security-system-medium-threshold-red'] || '0.5') * entityCount,
+    medium_yellow: parseFloat(annotations['github-advanced-security-system-medium-threshold-yellow'] || '0.1') * entityCount,
+    low_yellow: parseFloat(annotations['github-advanced-security-system-low-threshold-yellow'] || '0.2') * entityCount,
+  };
+}
+
 export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
   open,
   onClose,
@@ -38,6 +65,8 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
+  
   const githubASUtils = React.useMemo(
     () => new GithubAdvancedSecurityUtils(),
     [],
@@ -72,7 +101,26 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
 
     const fetchSecurityData = async () => {
       try {
-        const results = await Promise.all(
+        // Get system entity and thresholds (if available)
+        let systemEntity: Entity | undefined;
+        let thresholds: SecurityThresholds | undefined;
+        
+        try {
+          const systemName = entities[0].spec?.system;
+          if (systemName) {
+            systemEntity = await catalogApi.getEntityByRef({
+              kind: 'System',
+              namespace: entities[0].metadata.namespace || 'default',
+              name: typeof systemName === 'string' ? systemName : String(systemName),
+            });
+            thresholds = extractSecurityThresholds(systemEntity, entities.length);
+          }
+        } catch (systemError) {
+          console.warn('Could not fetch system entity for thresholds:', systemError);
+        }
+
+        // Get security check results (for traffic light calculation)
+        const securityCheckResults = await Promise.all(
           entities.map(entity =>
             githubASUtils.getGitHubSecurityFacts(techInsightsApi, {
               kind: entity.kind,
@@ -81,6 +129,9 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
             }),
           ),
         );
+
+        // Get detailed security data (for metrics and details)
+        const results = securityCheckResults;
 
         let critical = 0,
           high = 0,
@@ -124,8 +175,8 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
               severity,
               description,
               component: a.location?.path,
-              url: a.html_url || a.direct_link, // Ensure url is always set for clickable links
-              directLink: a.direct_link, // Use direct_link for more specific navigation
+              url: a.html_url || a.direct_link,
+              directLink: a.direct_link,
             });
           });
 
@@ -145,8 +196,8 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
             details.push({
               severity: 'high',
               description,
-              url: a.html_url, // Ensure url is set for clickable links
-              directLink: a.html_url, // For secret scanning, html_url is the direct link
+              url: a.html_url,
+              directLink: a.html_url,
             });
           });
         });
@@ -160,21 +211,33 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
           0,
         );
 
-        // Determine color based on severity
-        const color =
-          critical > 0 || high > 0
+        // Determine color using the traffic light function if thresholds are available
+        let color: 'red' | 'yellow' | 'green' | 'gray';
+        let summary: string;
+
+        if (thresholds) {
+          // Use the traffic light calculation function
+          const trafficLightResult = calculateGitHubSecurityTrafficLight(
+            securityCheckResults,
+            entities,
+            thresholds
+          );
+          color = trafficLightResult.color === 'white' ? 'gray' : trafficLightResult.color;
+          summary = trafficLightResult.reason;
+        } else {
+          // Fallback to simple logic if no thresholds available
+          color = critical > 0 || high > 0
             ? 'red'
             : medium > 0 || low > 0
             ? 'yellow'
             : 'green';
-
-        // Create appropriate summary message
-        const summary =
-          color === 'red'
+          
+          summary = color === 'red'
             ? 'Critical security issues require immediate attention.'
             : color === 'yellow'
             ? 'Security issues need to be addressed.'
             : 'No security issues found.';
+        }
 
         setData({
           color,
@@ -204,7 +267,7 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
     };
 
     fetchSecurityData();
-  }, [open, entities, githubASUtils, techInsightsApi]);
+  }, [open, entities, githubASUtils, techInsightsApi, catalogApi]);
 
   const renderMetrics = () => (
     <Grid container spacing={2}>
@@ -231,24 +294,6 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
       ))}
     </Grid>
   );
-
-  // Custom issue renderer to handle clickable links
-  const renderIssueDescription = (issue: IssueDetail) => {
-    if (issue.directLink) {
-      return (
-        <Link
-          href={issue.directLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          color="primary"
-          underline="hover"
-        >
-          {issue.description}
-        </Link>
-      );
-    }
-    return issue.description;
-  };
 
   return (
     <BaseSemaphoreDialog
