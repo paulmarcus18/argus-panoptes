@@ -141,7 +141,7 @@ export const createBlackDuckFactRetriever = (
                     }
 
                     // Parse the project response
-                    const project = projectRes.json() as Promise<BD_REST_API_RESPONSE>;	
+                    const project = await projectRes.json() as Promise<BD_REST_API_RESPONSE>;	
 
                     // Initialize projectDetail and versionDetail variables
                     let projectDetail: BD_PROJECT_DETAIL | any;
@@ -180,7 +180,7 @@ export const createBlackDuckFactRetriever = (
                     }
 
                     // Parse the version response
-                    const version = versionRes.json() as Promise<BD_REST_API_RESPONSE>;
+                    const version = await versionRes.json() as Promise<BD_REST_API_RESPONSE>;
 
                     // Find the version detail by version name
                     (await version).items.forEach((item: any) => {
@@ -211,7 +211,7 @@ export const createBlackDuckFactRetriever = (
                     }
 
                     // Parse the risk profile response
-                    const riskProfile = riskProfileRes.json();
+                    const riskProfile = await riskProfileRes.json();
 
                     // Extract security risk facts from the risk profile
                     const facts = {
