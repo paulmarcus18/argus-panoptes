@@ -49,6 +49,7 @@ metadata:
     github-advanced-security-system-low-threshold-yellow: '0.2'
     foundation-check-threshold-red: '1'
     preproduction-check-threshold-red: '2'
+    reporting-check-threshold-red: '2'
 
     # Threshold for system with critical tag
     github-advanced-security-system-critical-critical-threshold-red: '0'

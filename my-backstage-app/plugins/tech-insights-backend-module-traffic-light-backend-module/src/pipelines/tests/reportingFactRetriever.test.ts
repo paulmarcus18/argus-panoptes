@@ -531,5 +531,4 @@ describe('reportingPipelineStatusFactRetriever', () => {
     expect((facts[0].facts as any).overallSuccessRate).toBe(66.67);
   });
 
-// ...existing code...
 });

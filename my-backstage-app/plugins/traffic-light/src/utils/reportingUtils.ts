@@ -11,7 +11,9 @@ import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 export interface ReportingPipelineMetrics {
   workflowMetrics: object;
   totalIncludedWorkflows: number;
-  overallSuccessRate: number;
+  successfulRuns: number;
+  failedRuns: number;
+  successRate: number;
 }
 
 /**
@@ -24,7 +26,9 @@ export interface ReportingPipelineChecks {
 const DEFAULT_METRICS: ReportingPipelineMetrics = {
   workflowMetrics: {},
   totalIncludedWorkflows: 0,
-  overallSuccessRate: 0,
+  successfulRuns: 0,
+  failedRuns: 0,
+  successRate: 0,
 };
 
 const DEFAULT_CHECKS: ReportingPipelineChecks = {
@@ -73,13 +77,17 @@ export class ReportingUtils {
         'Parsed Reporting pipeline facts:',
         facts.workflowMetrics,
         facts.totalIncludedWorkflows,
-        facts.overallSuccessRate,
+        facts.sucessfulRuns,
+        facts.failedRuns,
+        facts.successRate,
       );
 
       return {
         workflowMetrics: Object(facts.workflowMetrics ?? {}),
         totalIncludedWorkflows: Number(facts.totalIncludedWorkflows ?? 0),
-        overallSuccessRate: Number(facts.overallSuccessRate ?? 0),
+        successfulRuns: Number(facts.sucessfulRuns ?? 0),
+        failedRuns: Number(facts.failedRuns ?? 0),
+        successRate: Number(facts.successRate ?? 0),
       };
     } catch (error) {
       console.error(
