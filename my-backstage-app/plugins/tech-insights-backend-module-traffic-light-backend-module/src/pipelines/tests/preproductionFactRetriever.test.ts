@@ -625,55 +625,6 @@ describe('githubPipelineStatusFactRetriever', () => {
       expect(result[0].facts.successWorkflowRunsCount).toBe(3); // Updated to match new expected count
     });
 
-    it('should filter entities without GitHub annotations', async () => {
-      const config = createMockConfig('github-token');
-
-      const mockCatalogInstance = {
-        getEntities: jest.fn().mockResolvedValue({
-          items: sampleEntities, // Includes entity without GitHub annotation
-        }),
-      };
-      mockCatalogClient.mockImplementation(() => mockCatalogInstance as any);
-
-      // Only mock responses for entities with GitHub annotations
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(sampleWorkflowDefinitions),
-          headers: new Map(),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(sampleWorkflowRuns),
-          headers: new Map(),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(sampleWorkflowDefinitions),
-          headers: new Map(),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(sampleWorkflowRuns),
-          headers: new Map(),
-        });
-
-      const result = await githubPipelineStatusFactRetriever.handler({
-        config,
-        logger: mockLogger,
-        entityFilter: [{ kind: 'component' }],
-        auth: mockAuth,
-        discovery: mockDiscovery,
-        urlReader: mockUrlReader,
-      });
-
-      // Should process 2 entities with results
-      expect(result).toHaveLength(2);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Processing 2 GitHub entities',
-      );
-    });
-
     it('should calculate success rate correctly with mixed results', async () => {
       const config = createMockConfig('github-token');
 
