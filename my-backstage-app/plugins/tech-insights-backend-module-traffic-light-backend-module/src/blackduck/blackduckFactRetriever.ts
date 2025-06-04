@@ -1,6 +1,5 @@
 import { Config } from '@backstage/config';
 import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
-import { LoggerService } from '@backstage/backend-plugin-api';
 import { CatalogClient } from '@backstage/catalog-client';
 
 type META = {
@@ -57,12 +56,10 @@ type BD_REST_API_RESPONSE = {
  * Creates a fact retriever for Black Duck security risk metrics.
  *
  * @param config - The Backstage application configuration
- * @param logger - Logger service
  * @returns A FactRetriever for Black Duck
  */
 export const createBlackDuckFactRetriever = (
   config: Config,
-  logger: LoggerService,
 ): FactRetriever => {
   return { // define the fact retriever schema
     id: 'blackduck-fact-retriever',
@@ -84,7 +81,6 @@ export const createBlackDuckFactRetriever = (
     },
     handler: async ctx => {
         const { 
-            logger,
             discovery,
             auth, 
             entityFilter } = ctx;
@@ -125,8 +121,6 @@ export const createBlackDuckFactRetriever = (
                 const projectName = entity.metadata.annotations?.['blackduck.io/project-name'];
                 const projectVersion = entity.metadata.annotations?.['blackduck.io/project-version'];
 
-                logger.info(`Retrieving blackduck project ${projectName}`);
-
                 try {
                     // Retrieve the project from Black Duck
                     const projectRes = await fetch(
@@ -143,13 +137,8 @@ export const createBlackDuckFactRetriever = (
 
                     // Show an error if the project is not retrieved successfully
                     if (!projectRes.ok) {
-                        const errorText = await projectRes.text();
-                        logger.error(`Error retrieving project ${projectName}: ${projectRes.status} ${projectRes.statusText} - ${errorText}`);
                         return null;
                     }
-
-                    // Success message if the project is retrieved successfully
-                    logger.info(`Retrieved project ${projectName}!`);
 
                     // Parse the project response
                     const project = projectRes.json() as Promise<BD_REST_API_RESPONSE>;	
@@ -167,7 +156,6 @@ export const createBlackDuckFactRetriever = (
 
                     // If projectDetail is not found, log an error
                     if (projectDetail === undefined) {
-                        logger.error('No project found with the provided name');
                         return null;
                     }
 
@@ -188,13 +176,8 @@ export const createBlackDuckFactRetriever = (
 
                     // Show an error if the project versionis not retrieved successfully
                     if (!versionRes.ok) {
-                        const errorText = await versionRes.text();
-                        logger.error(`Error retrieving version ${projectVersion}: ${versionRes.status} ${versionRes.statusText} - ${errorText}`);
                         return null;
                     }
-
-                    // Success message if the version is retrieved successfully
-                    logger.info(`Retrieved version ${projectVersion}!`);	
 
                     // Parse the version response
                     const version = versionRes.json() as Promise<BD_REST_API_RESPONSE>;
@@ -207,13 +190,9 @@ export const createBlackDuckFactRetriever = (
                     });
 
                     // If versionDetail is not found, log an error
-                    if (versionDetail === undefined) {
-                        logger.error('No version found with the provided name');  
+                    if (versionDetail === undefined) { 
                         return null;
                     }
-
-                    // Log the successful retrieval of project and version details
-                    logger.info(`Fetched Project : ${projectName}, Version: ${projectVersion} details`);
 
                     // Fetch the risk profile for the project version
                     const risk_profile_url = `${versionDetail._meta.href}/risk-profile`;
@@ -228,12 +207,8 @@ export const createBlackDuckFactRetriever = (
 
                     // Show an error if the risk profile is not retrieved successfully
                     if (!riskProfileRes.ok) {
-                        const errorText = await riskProfileRes.text();
-                        logger.error(`Error retrieving risk profile: ${riskProfileRes.status} ${riskProfileRes.statusText} - ${errorText}`);
                         return null;
                     }
-
-                    logger.info(`Fetched Project : ${projectName}, Version: ${projectVersion} risk profile`);
 
                     // Parse the risk profile response
                     const riskProfile = riskProfileRes.json();
@@ -245,11 +220,6 @@ export const createBlackDuckFactRetriever = (
                         security_risks_medium: riskProfile?.categories.SECURITY.MEDIUM || 0,
                     };
 
-                    // Log the facts for debugging
-                    logger.info(`Black Duck facts for ${projectName}: ${JSON.stringify(facts)}`, {
-                        factRetrieverId: 'blackduck-fact-retriever',
-                    });
-
                     // Return the facts associated with this entity
                     return {
                         entity: {
@@ -260,7 +230,6 @@ export const createBlackDuckFactRetriever = (
                         facts,
                     };
                 } catch (error) {
-                    logger.error(`Error retrieving Black Duck data for ${projectName}: ${error}`);
                     return null;
                 }
             }),

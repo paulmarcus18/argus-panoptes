@@ -78,10 +78,7 @@ export default createBackendModule({
         const factRetriever = createDependabotFactRetriever(config, logger);
         const sonarCloudFactRetriever = createSonarCloudFactRetriever(config);
 
-        const blackDuckFactRetriever = createBlackDuckFactRetriever(
-          config,
-          logger,
-        );
+        const blackDuckFactRetriever = createBlackDuckFactRetriever(config);
 
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
