@@ -6,6 +6,9 @@ import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { AzureUtils } from '../../utils/azureUtils';
+import { determineSemaphoreColor } from '../utils';
+import { SemaphoreData } from './types';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -38,11 +41,18 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const azureUtils = React.useMemo(() => new AzureUtils(), []);
+  const catalogApi = useApi(catalogApiRef);
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [projectBugs, setProjectBugs] = React.useState<
     { project: string; bugCount: number; url: string }[]
   >([]);
+  const [data, setData] = React.useState<SemaphoreData>({
+    color: 'gray',
+    metrics: {},
+    summary: 'No data available for this metric.',
+    details: [],
+  });
 
   React.useEffect(() => {
     if (!open || entities.length === 0) return;
@@ -51,6 +61,36 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
 
     const fetchBugMetrics = async () => {
       try {
+        // 1. Fetch system threshold
+        let redThreshold = 0.33;
+        try {
+          const systemName = entities[0].spec?.system;
+          const namespace = entities[0].metadata.namespace || 'default';
+
+          if (systemName) {
+            const systemEntity = await catalogApi.getEntityByRef({
+              kind: 'System',
+              namespace,
+              name:
+                typeof systemName === 'string'
+                  ? systemName
+                  : String(systemName),
+            });
+
+            const thresholdAnnotation =
+              systemEntity?.metadata.annotations?.[
+                'foundation-check-threshold-red'
+              ];
+            if (thresholdAnnotation) {
+              redThreshold = parseFloat(thresholdAnnotation);
+            }
+          }
+        } catch (err) {
+          console.warn(
+            'Could not fetch system threshold annotation; using default 0.33',
+          );
+        }
+
         const projectBugMap = new Map<
           string,
           { bugCount: number; url: string }
@@ -94,9 +134,41 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
           .sort((a, b) => b.bugCount - a.bugCount);
 
         setProjectBugs(projectList);
+
+        const totalBugCount = projectList.reduce(
+          (sum, p) => sum + p.bugCount,
+          0,
+        );
+
+        // Determine color
+        const { color } = determineSemaphoreColor(
+          totalBugCount,
+          projectList.length,
+          redThreshold,
+        );
+
+        let summary = 'No bugs detected.';
+        if (color === 'yellow') {
+          summary = 'Moderate bug levels found. Review advised.';
+        } else if (color === 'red') {
+          summary = 'High bug count detected. Immediate action recommended.';
+        }
+
+        setData({
+          color,
+          summary,
+          metrics: { totalBugCount },
+          details: [],
+        });
       } catch (e) {
         console.error('❌ Failed to fetch Azure DevOps bug data:', e);
         setProjectBugs([]);
+        setData({
+          color: 'gray',
+          summary: 'Failed to load metrics.',
+          metrics: {},
+          details: [],
+        });
       } finally {
         setIsLoading(false);
       }
@@ -121,7 +193,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
               {totalBugCount}
             </Typography>
             <Typography className={classes.metricLabel}>
-              Total Azure DevOps Bugs (Unique Projects Only)
+              Total Azure DevOps Bugs
             </Typography>
           </Paper>
         </Grid>
@@ -129,7 +201,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
 
       {top5Projects.length > 0 && (
         <div className={classes.projectList}>
-          <Typography variant="h6">Top 5 Projects with Most Bugs</Typography>
+          <Typography variant="h6">Projects with Most Bugs</Typography>
           <Grid container spacing={2} className={classes.projectList}>
             {top5Projects.map(project => (
               <Grid item xs={12} key={project.project}>
@@ -159,7 +231,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
       open={open}
       onClose={onClose}
       title="Azure Bug Insights"
-      data={{ color: 'gray', summary: '', metrics: {}, details: [] }}
+      data={data}
       isLoading={isLoading}
       renderMetrics={renderMetrics}
     />
