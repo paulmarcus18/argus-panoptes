@@ -3,7 +3,6 @@ import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { BlackDuckUtils } from '../../utils/blackDuckUtils';
 import { SemaphoreData, IssueDetail } from './types';
@@ -39,7 +38,6 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
-  const catalogApi = useApi(catalogApiRef);
   const blackDuckUtils = React.useMemo(() => new BlackDuckUtils(), [techInsightsApi]);
 
   const [data, setData] = React.useState<SemaphoreData>({
