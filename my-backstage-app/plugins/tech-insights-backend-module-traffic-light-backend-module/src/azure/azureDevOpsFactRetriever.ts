@@ -33,6 +33,15 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
       return [];
     }
 
+    const azureConfigs = ctx.config.getOptionalConfigArray('integrations.azure');
+    const azureConfig = azureConfigs?.[0];
+    const pat = azureConfig?.getOptionalString('token');
+
+    if (!pat) {
+      console.error('❌ Azure DevOps token is not defined.');
+      const pat = undefined;
+    }
+
     const results = [];
 
     for (const entity of entities) {
@@ -41,7 +50,6 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
       const organization = annotations['azure.com/organization'];
       const project = annotations['azure.com/project'];
       const bugsQueryId = annotations['azure.com/bugs-query-id'];
-      const pat = annotations['azure.com/pat'];
 
       if (!organization || !project || !bugsQueryId || !pat) {
         console.warn(`⚠️ Missing Azure DevOps annotations for ${entity.metadata.name}`);

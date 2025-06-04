@@ -1,6 +1,5 @@
 import { Config } from '@backstage/config/index';
 import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
-import { LoggerService } from '@backstage/backend-plugin-api';
 import { CatalogClient } from '@backstage/catalog-client';
 
 // Define an interface for the SonarCloud measure
@@ -35,10 +34,9 @@ interface SonarQualityGateResponse {
  * that have SonarCloud integration enabled via annotations.
  * 
  * @param config - The application configuration object
- * @param logger - Logger service for reporting info and errors
  * @returns A configured FactRetriever that will collect SonarCloud metrics
  */
-export const createSonarCloudFactRetriever = (config: Config, logger: LoggerService): FactRetriever => {
+export const createSonarCloudFactRetriever = (config: Config): FactRetriever => {
   return {
     id: 'sonarcloud-fact-retriever',
     version: '1.0',
@@ -65,19 +63,16 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
         type: 'string',
         description: 'Quality gate status from SonarCloud',
       },
-      // Quality gate conditions go here (if needed)
-      // ...
     },
     /**
      * Handler function that retrieves SonarCloud metrics for relevant entities.
      * 
-     * @param ctx - Context object containing configuration, logger, and other services
+     * @param ctx - Context object containing configuration, and other services
      * @returns Array of entity facts with SonarCloud metrics
      */
     handler: async ctx => {
       const { 
         //config: appConfig,
-        logger,
         discovery,
         auth,
         entityFilter, } = ctx;
@@ -114,7 +109,6 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
       const results = await Promise.all(
         sonarcloudEntities.map(async entity => {
           const projectKey = entity.metadata.annotations?.['sonarcloud.io/project-key'];
-          logger.info(`Retrieving SonarCloud metrics for ${projectKey}`);
           
           // Call SonarCloud API to get metrics for the project
           const response = await fetch(
@@ -138,18 +132,14 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
           
           // Handle API error responses
           if (!response.ok || !responseQG.ok) {
-            const errorText = await response.text();
-            logger.error(`SonarCloud API error for ${projectKey}: ${response.status} ${response.statusText} - ${errorText}`);
             return null;
           }
             
           // Parse response data
           const data = await response.json();
-          logger.info(`SonarCloud API returned data for ${projectKey}: ${JSON.stringify(data)}`, { factRetrieverId: 'sonarcloud-fact-retriever' });
-          
+
           // Parse response data for Quality Gate
           const dataQG = await responseQG.json();
-          logger.info(`SonarCloud API returned quality gate data for ${projectKey}: ${JSON.stringify(dataQG)}`, { factRetrieverId: 'sonarcloud-fact-retriever' });
 
           // Extract specific metrics from the response
           const measures = data.component.measures as SonarCloudMeasure[];
@@ -164,12 +154,8 @@ export const createSonarCloudFactRetriever = (config: Config, logger: LoggerServ
             vulnerabilities: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'vulnerabilities')?.value || '0', 10),
             code_coverage: parseFloat(measures.find((m: SonarCloudMeasure) => m.metric === 'coverage')?.value || '0'),
             quality_gate: qgStatus,
-            // Quality gate conditions can be added here (if needed)
-            // ...
           };
-          
-          logger.info(`Extracted facts for ${projectKey}: ${JSON.stringify(facts)}`, { factRetrieverId: 'sonarcloud-fact-retriever' });
-          
+                    
           // Return facts associated with this entity
           return {
             entity: {

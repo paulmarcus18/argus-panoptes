@@ -17,15 +17,10 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { Header, Page, Content, InfoCard } from '@backstage/core-components';
-import { DialogComponent } from '../SemaphoreDialogs/DialogComponent';
-//import DetailedSemaphoreDialog from '../Dialogs/DetailedSemaphoreDialog/DetailedSemaphoreDialog';
-//import { BlackDuckSemaphoreDialog } from '../SemaphoreDialogs/BlackDuckSemaphoreDialog';
-import { GitHubSemaphoreDialog } from '../SemaphoreDialogs/GitHubAdvancedSecurityDialog';
-import { AzureDevOpsSemaphoreDialog } from '../SemaphoreDialogs/AzureDevOpsDialog';
-import { SonarQubeSemaphoreDialog } from '../SemaphoreDialogs/SonarQubeDialog';
+
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import { Entity } from '@backstage/catalog-model';
+import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
 import {
   TrafficLightDependabot,
   GitHubSecurityTrafficLight,
@@ -36,9 +31,16 @@ import {
   BaseTrafficLight,
 } from '../Semaphores';
 import { ReportingTrafficLight } from '../Semaphores/ReportingTrafficLight';
+import { DialogComponent } from '../SemaphoreDialogs/DialogComponent';
+import DetailedSemaphoreDialog from '../Dialogs/DetailedSemaphoreDialog/DetailedSemaphoreDialog';
+import { BlackDuckSemaphoreDialog } from '../SemaphoreDialogs/BlackDuckSemaphoreDialog';
+import { GitHubSemaphoreDialog } from '../SemaphoreDialogs/GitHubAdvancedSecurityDialog';
+import { AzureDevOpsSemaphoreDialog } from '../SemaphoreDialogs/AzureDevOpsDialog';
+import { SonarQubeSemaphoreDialog } from '../SemaphoreDialogs/SonarQubeDialog';
 import { PreproductionSemaphoreDialog } from '../SemaphoreDialogs/PreProductionDialog';
 import { FoundationSemaphoreDialog } from '../SemaphoreDialogs/FoundationDialog';
 import { ReportingSemaphoreDialog } from '../SemaphoreDialogs/ReportingDialog';
+import {DependabotSemaphoreDialog}  from '../SemaphoreDialogs/DependabotSemaphoreDialog'
 
 export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
@@ -60,15 +62,18 @@ export const TrafficComponent = () => {
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
 
   // New state for specific semaphore dialogs
-  const [blackDuckDialogOpen, setBlackDuckDialogOpen] = useState(false);
-  const [githubSecurityDialogOpen, setGithubSecurityDialogOpen] =
-    useState(false);
   const [preproductionDialogOpen, setPreproductionDialogOpen] = useState(false);
   const [foundationDialogOpen, setFoundationDialogOpen] = useState(false);
   const [reportingDialogOpen, setReportingDialogOpen] = useState(false);
 
   const [azureDevOpsDialogOpen, setAzureDevOpsDialogOpen] = useState(false);
   const [sonarQubeDialogOpen, setSonarQubeDialogOpen] = useState(false);
+
+  // New state for specific semaphore dialogs
+  const [blackDuckDialogOpen, setBlackDuckDialogOpen] = useState(false);
+  const [githubSecurityDialogOpen, setGithubSecurityDialogOpen] =
+    useState(false);
+  const [DependabotDialogOpen, setDependabotDialogOpen] = useState(false);
 
   const handleClick = (title: string, items: any[]) => {
     setDialogTitle(title);
@@ -96,6 +101,8 @@ export const TrafficComponent = () => {
         setSonarQubeDialogOpen(true);
         break;
       case 'Dependabot':
+        setDependabotDialogOpen(true);
+        break;
       case 'Pre-Production pipelines':
         setPreproductionDialogOpen(true);
         break;
@@ -146,6 +153,10 @@ export const TrafficComponent = () => {
   const handleCloseSonarQubeDialog = () => {
     setSonarQubeDialogOpen(false);
   };
+  
+  const handleCloseDependabotDialog = () => {
+    setDependabotDialogOpen(false);
+  }
 
   const cardAction = (title: string, items: any[]) => (
     <IconButton onClick={() => handleClick(title, items)}>
@@ -182,13 +193,10 @@ export const TrafficComponent = () => {
         ).sort();
         setAvailableSystems(systems);
         if (systems.length > 0) {
-          const randomSystem =
+          const initialSystem =
             systems[0];
-          setSelectedSystem(randomSystem);
+          setSelectedSystem(initialSystem);
         }
-
-        //setSelectedRepos(simplified.map(r => r.name));
-        //setSelectedEntities(simplified.map(r => r.entity));
       } catch (err) {
         console.error('Failed to load catalog entities', err);
       }
@@ -216,7 +224,6 @@ export const TrafficComponent = () => {
 
   return (
     <Page themeId="tool">
-      <Header title="Traffic light plugin" subtitle="" />
       <Content>
         <Box display="flex" mb={3} alignItems="center" flexWrap="wrap">
           <FormControlLabel
@@ -341,6 +348,7 @@ export const TrafficComponent = () => {
               <Typography variant="subtitle1">Dependabot</Typography>
               <TrafficLightDependabot
                 entities={selectedEntities}
+                systemName={selectedSystem}
                 onClick={() => handleSemaphoreClick('Dependabot')}
               />
 
@@ -460,6 +468,12 @@ export const TrafficComponent = () => {
         <SonarQubeSemaphoreDialog
           open={sonarQubeDialogOpen}
           onClose={handleCloseSonarQubeDialog}
+          entities={selectedEntities}
+        />
+        <DependabotSemaphoreDialog
+          open={DependabotDialogOpen}
+          system={selectedSystem}
+          onClose={handleCloseDependabotDialog}
           entities={selectedEntities}
         />
       </Content>

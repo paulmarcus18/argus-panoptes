@@ -1,30 +1,31 @@
-// import { TechInsightsApi } from '@backstage/plugin-tech-insights';
-// import { CompoundEntityRef } from '@backstage/catalog-model';
+import { DynamicThresholdCheck } from '../argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 
-// export type TrafficLightColor = 'green' | 'yellow' | 'red' | 'gray' | 'white';
-
-// export const getDependabotStatus = async (
-//   techInsightsApi: TechInsightsApi,
-//   entityRefs: CompoundEntityRef[],
-// ): Promise<TrafficLightColor> => {
-//   try {
-    
-//     const results = await Promise.all(
-//       entityRefs.map(async ref => {
-//         const factResponse = await techInsightsApi.getFacts(ref, ['dependabot:status']);
-//         const factMap = factResponse.facts as Record<string, { color?: TrafficLightColor }>;
-//         const value = factMap['dependabot:status'];
-//         return value?.color ?? 'white';
-//       }),
-//     );
-
-//     if (results.includes('red')) return 'red';
-//     if (results.includes('yellow') || results.includes('gray')) return 'yellow';
-//     if (results.length > 0 && results.every(c => c === 'green')) return 'green';
-
-//     return 'white';
-//   } catch (error) {
-//     console.error('Failed to fetch dependabot facts:', error);
-//     return 'gray';
-//   }
-// };
+export const DependabotChecks: DynamicThresholdCheck[] = [
+  {
+    id: 'dependabot-critical-alerts',
+    name: 'Dependabot Critical Alerts Count',
+    type: 'number',
+    factIds: ['dependabotFactRetriever', 'critical'],
+    annotationKeyThreshold: 'tech-insights.io/dependabot-critical-alert-threshold',
+    annotationKeyOperator: 'tech-insights.io/dependabot-operator',
+    description: 'Maximum number of critical Dependabot alerts allowed',
+  },
+  {
+    id: 'dependabot-high-alerts',
+    name: 'Dependabot High Alerts Count',
+    type: 'number',
+    factIds: ['dependabotFactRetriever', 'high'],
+    annotationKeyThreshold: 'tech-insights.io/dependabot-high-alert-threshold',
+    annotationKeyOperator: 'tech-insights.io/dependabot-operator',
+    description: 'Maximum number of high Dependabot alerts allowed',
+  },
+  {
+    id: 'dependabot-medium-alerts',
+    name: 'Dependabot Medium Alerts Count',
+    type: 'number',
+    factIds: ['dependabotFactRetriever', 'medium'],
+    annotationKeyThreshold: 'tech-insights.io/dependabot-medium-alert-threshold',
+    annotationKeyOperator: 'tech-insights.io/dependabot-operator',
+    description: 'Maximum number of medium Dependabot alerts allowed',
+  },
+];
