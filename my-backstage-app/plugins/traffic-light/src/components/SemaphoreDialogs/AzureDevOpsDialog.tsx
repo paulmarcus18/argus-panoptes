@@ -81,8 +81,11 @@ export const AzureDevOpsSemaphoreDialog: React.FC<AzureBugInsightsDialogProps> =
 
             const orgName =
               entity.metadata.annotations?.['azure.com/organization'] ?? 'unknown-org';
+            const queryId =
+              entity.metadata.annotations?.['azure.com/bugs-query-id'] ?? 'unknown-query-id';
 
-            const projectUrl = `https://dev.azure.com/${orgName}/${projectName}/_workitems/`;
+            const projectUrl = `https://dev.azure.com/${orgName}/${projectName}/_queries/query/${queryId}/`;
+            
 
             projectBugMap.set(projectName, {
               bugCount: metrics.azureBugCount,
