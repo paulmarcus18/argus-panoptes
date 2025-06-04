@@ -60,6 +60,7 @@ metadata:
     foundation-check-threshold-red: '2'
     preproduction-check-threshold-red: '1'
     reporting-check-threshold-red: '2'
+    azure-bugs-check-threshold-red: '3'
 
     # Azure DevOps Annotations
     tech-insights.io/azure-bugs-threshold: '5'

@@ -50,6 +50,7 @@ metadata:
     foundation-check-threshold-red: '1'
     preproduction-check-threshold-red: '2'
     reporting-check-threshold-red: '2'
+    azure-bugs-check-threshold-red: '1'
 
     # Threshold for system with critical tag
     github-advanced-security-system-critical-critical-threshold-red: '0'

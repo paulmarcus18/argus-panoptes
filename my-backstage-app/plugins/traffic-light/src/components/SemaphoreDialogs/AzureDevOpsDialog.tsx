@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Grid,
-  Paper,
-  Typography,
-  Link,
-} from '@material-ui/core';
+import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -37,11 +32,9 @@ interface AzureBugInsightsDialogProps {
   entities?: Entity[];
 }
 
-export const AzureDevOpsSemaphoreDialog: React.FC<AzureBugInsightsDialogProps> = ({
-  open,
-  onClose,
-  entities = [],
-}) => {
+export const AzureDevOpsSemaphoreDialog: React.FC<
+  AzureBugInsightsDialogProps
+> = ({ open, onClose, entities = [] }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const azureUtils = React.useMemo(() => new AzureUtils(), []);
@@ -80,7 +73,8 @@ export const AzureDevOpsSemaphoreDialog: React.FC<AzureBugInsightsDialogProps> =
             );
 
             const orgName =
-              entity.metadata.annotations?.['azure.com/organization'] ?? 'unknown-org';
+              entity.metadata.annotations?.['azure.com/organization'] ??
+              'unknown-org';
 
             const projectUrl = `https://dev.azure.com/${orgName}/${projectName}/_workitems/`;
 
