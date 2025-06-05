@@ -32,7 +32,7 @@ export interface SonarQubeMetrics {
 /**
  * A small utility for providing safe default objects when SonarCloud returns no data or an error is thrown.
  */
-const DEFAULT_METRICS: SonarQubeMetrics = {
+export const DEFAULT_METRICS: SonarQubeMetrics = {
   bugs: 0,
   code_smells: 0,
   vulnerabilities: 0,
@@ -69,10 +69,10 @@ export class SonarCloudUtils {
       }
 
       return {
-        bugs: Number(facts.bugs ?? 0),
-        code_smells: Number(facts.code_smells ?? 0),
-        vulnerabilities: Number(facts.vulnerabilities ?? 0),
-        code_coverage: Number(facts.code_coverage ?? 0),
+        bugs: Number(facts.bugs ?? 0) || 0,
+        code_smells: Number(facts.code_smells ?? 0) || 0,
+        vulnerabilities: Number(facts.vulnerabilities ?? 0) || 0,
+        code_coverage: Number(facts.code_coverage ?? 0) || 0,
         quality_gate: String(facts.quality_gate ?? 'NONE'),
       };
     } catch (error) {
