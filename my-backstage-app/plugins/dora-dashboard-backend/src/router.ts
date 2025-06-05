@@ -1,11 +1,8 @@
-import { DatabaseService, HttpAuthService } from '@backstage/backend-plugin-api';
+import { HttpAuthService } from '@backstage/backend-plugin-api';
 import express from 'express';
 import Router from 'express-promise-router';
-// import { TodoListService } from './services/TodoListService/types';
-import { MetricType } from "./services/DoraService/types"
 
-import { DoraService } from './services/DoraService/types';
-import { Aggregation } from './services/DoraService/types';
+import { DoraService, MetricType, Aggregation } from './services/DoraService/types';
 
 export async function createRouter({
   doraService,
@@ -16,21 +13,29 @@ export async function createRouter({
   const router = Router();
   router.use(express.json());
 
-  router.get('/metrics/:type/:aggregation/:project/:from/:to', async (req, res) => {
-    const { type, aggregation, project, from, to } = req.params;
-
-    // example: params = ['', '', 1672531200, 1704067199];
+  // Updated route: no more :project
+  router.get('/metrics/:type/:aggregation/:from/:to', async (req, res) => {
+    const { type, aggregation, from, to } = req.params;
 
     const trueFrom = Number(from);
     const trueTo = Number(to);
 
-    const trueProject = project === '_' ? '' : project;
+    // Read projects from query string: ?projects=projA,projB
+    const projectsParam = req.query.projects;
+    const projects = typeof projectsParam === 'string'
+      ? projectsParam.split(',').map(p => p.trim())
+      : [];
 
-    // TODO: validate the metric type and aggregation
 
-    res.json(await doraService.getMetric(type as MetricType, aggregation as Aggregation, trueProject, trueFrom, trueTo));
+    const data = await doraService.getMetric(
+      type as MetricType,
+      aggregation as Aggregation,
+      projects,
+      trueFrom,
+      trueTo
+    );
 
-
+    res.json(data);
   });
 
   return router;
