@@ -19,18 +19,6 @@ const mockEntityRef: CompoundEntityRef = {
   name: 'test-service',
 };
 
-const mockEntity: Entity = {
-  apiVersion: 'backstage.io/v1alpha1',
-  kind: 'Component',
-  metadata: {
-    name: 'test-service',
-    namespace: 'default',
-  },
-  spec: {
-    type: 'service',
-  },
-};
-
 describe('SonarCloudUtils', () => {
   let sonarCloudUtils: SonarCloudUtils;
 
