@@ -46,8 +46,14 @@ export async function get_monthly_df(
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
+  // Convert the Unix timestamp to YYYY-MM-DD format
+  const dateFrom = new Date(from).toISOString().split('T')[0];
+  const dateTo = new Date(to).toISOString().split('T')[0];
+
   // Static date range for now (same as what you used in Grafana)
+  // const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
   const params = [...projects, '2025-01-01', '2025-06-30', '2025-01-01', '2025-06-30'];
+
 
   try {
     const [rows] = await pool.execute(sqlQuery, params);
