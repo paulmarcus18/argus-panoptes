@@ -47,7 +47,7 @@ export interface DoraService {
   getMetric(
     type: MetricType,
     aggregation: Aggregation,
-    project: string,
+    project: string[],
     from: number,
     to: number
   ): Promise<MetricItem[]>;

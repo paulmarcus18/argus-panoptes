@@ -7,11 +7,7 @@ WITH _deployments AS (
         -- Assuming a join with repos if needed for project filtering
         -- JOIN repos ON cdc.repo_id = repos.id
     WHERE
-        (
-            ? = ""
-            OR LOWER(cdc.repo_id) LIKE CONCAT('%/', LOWER(?))
-        )
-        AND cdc.result = 'SUCCESS'
+        cdc.result = 'SUCCESS'
         AND cdc.environment = 'PRODUCTION'
     GROUP BY
         cdc.cicd_deployment_id

@@ -13,6 +13,7 @@ import { createDoraService } from './services/DoraService'; // change this to Do
  */
 export const doraDashboardPlugin = createBackendPlugin({
   pluginId: 'dora-dashboard',
+
   register(env) {
     env.registerInit({
       deps: {

@@ -20,13 +20,9 @@ _deployments AS (
                 MAX(cdc.finished_date) AS deployment_finished_date
             FROM
                 cicd_deployment_commits cdc
-                JOIN repos ON cdc.repo_id = repos.id
+                
             WHERE
-                (
-                    ? = ''
-                    OR LOWER(repos.name) LIKE CONCAT('%/', LOWER(?))
-                )
-                AND cdc.result = 'SUCCESS'
+                cdc.result = 'SUCCESS'
                 AND cdc.environment = 'PRODUCTION'
             GROUP BY
                 cdc.cicd_deployment_id

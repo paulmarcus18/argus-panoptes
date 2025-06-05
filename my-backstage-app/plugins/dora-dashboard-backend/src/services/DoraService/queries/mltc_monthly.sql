@@ -10,11 +10,7 @@ WITH _pr_stats AS (
         JOIN cicd_deployment_commits cdc ON ppm.deployment_commit_id = cdc.id
         JOIN repos ON cdc.repo_id = repos.id
     WHERE
-        (
-            ? = ""
-            OR LOWER(repos.name) LIKE CONCAT('%/', LOWER(?))
-        )
-        AND pr.merged_date IS NOT NULL
+        pr.merged_date IS NOT NULL
         AND ppm.pr_cycle_time IS NOT NULL
         AND cdc.finished_date BETWEEN FROM_UNIXTIME(?)
         AND FROM_UNIXTIME(?)

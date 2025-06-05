@@ -11,11 +11,7 @@ WITH _incidents AS (
       JOIN board_repos br ON b.id = br.board_id
 	  JOIN repos r ON br.repo_id = r.id
     WHERE
-        (
-            ? = ""
-            OR LOWER(r.name) LIKE CONCAT('%/', LOWER(?))
-        )
-        AND i.type = 'INCIDENT'
+        i.type = 'INCIDENT'
         AND i.lead_time_minutes IS NOT NULL
 ),
 
