@@ -36,13 +36,13 @@ export interface BlackDuckChecks {
 /**
  * A small utility for providing safe default objects when BlackDuck returns no data or an error is thrown.
  */
-const DEFAULT_METRICS: BlackDuckMetrics = {
+export const DEFAULT_METRICS: BlackDuckMetrics = {
   security_risks_critical: 0,
   security_risks_high: 0,
   security_risks_medium: 0,
 };
 
-const DEFAULT_CHECKS: BlackDuckChecks = {
+export const DEFAULT_CHECKS: BlackDuckChecks = {
   criticalSecurityCheck: false,
   highSecurityCheck: false,
   mediumSecurityCheck: false,
@@ -75,9 +75,9 @@ export class BlackDuckUtils {
       }
 
       return {
-        security_risks_critical: Number(facts.security_risks_critical ?? 0),
-        security_risks_high: Number(facts.security_risks_high ?? 0),
-        security_risks_medium: Number(facts.security_risks_medium ?? 0),
+        security_risks_critical: Number(facts.security_risks_critical ?? 0) || 0,
+        security_risks_high: Number(facts.security_risks_high ?? 0) || 0,
+        security_risks_medium: Number(facts.security_risks_medium ?? 0) || 0,
       };
     } catch (error) {
         return { ...DEFAULT_METRICS };

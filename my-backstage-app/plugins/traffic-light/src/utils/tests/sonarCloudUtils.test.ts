@@ -96,13 +96,7 @@ describe('SonarCloudUtils', () => {
 
       const result = await sonarCloudUtils.getSonarQubeFacts(mockTechInsightsApi, mockEntityRef);
 
-      expect(result).toEqual({
-        bugs: 0,
-        code_smells: 0,
-        vulnerabilities: 0,
-        code_coverage: 0,
-        quality_gate: 'NONE',
-      });
+      expect(result).toEqual(DEFAULT_METRICS);
     });
 
     it('should return default metrics when response is undefined', async () => {
