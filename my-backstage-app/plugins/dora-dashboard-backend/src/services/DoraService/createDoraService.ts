@@ -6,16 +6,23 @@ import mysql from 'mysql2/promise'; // Needed to type the pool
 import { MetricItem, DoraService, MetricType, Aggregation } from './types';
 
 import fs from 'fs';
-import path, { format } from 'path';
-import { PanoramaSharp } from '@mui/icons-material';
+import path from 'path';
 
-export async function get_monthly_cfr(pool: mysql.Pool, from: number, to: number): Promise<MetricItem[]> {
+
+export async function get_monthly_cfr(
+  pool: mysql.Pool,
+  projects: string[],
+  from: number,
+  to: number
+): Promise<MetricItem[]> {
   const sqlFilePath = path.join(__dirname, 'queries/cfr_monthly.sql');
-  const sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
+  let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
-  const params = [ from, to];
-  
-  
+  const placeholders = projects.map(() => '?').join(', ');
+  sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
+
+  // TODO: adauga projects dupa ce schimbi slq queryul
+  const params = ['2025-01-01', '2025-06-30', '2025-01-01', '2025-06-30'];
 
   try {
     const [rows] = await pool.execute(sqlQuery, params);
@@ -24,7 +31,7 @@ export async function get_monthly_cfr(pool: mysql.Pool, from: number, to: number
     console.error('Database query failed:', error);
     throw error;
   }
-  }
+}
 
 export async function get_monthly_df(
   pool: mysql.Pool,
@@ -52,27 +59,20 @@ export async function get_monthly_df(
 }
 
 
-export async function get_monthly_mltc(pool: mysql.Pool, from: number, to: number): Promise<MetricItem[]> {
+export async function get_monthly_mltc(
+  pool: mysql.Pool,
+  projects: string[],
+  from: number,
+  to: number
+): Promise<MetricItem[]> {
   const sqlFilePath = path.join(__dirname, 'queries/mltc_monthly.sql');
-  const sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
+  let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
-  const params = [from, to, from, to];
+  // Dynamically inject (?, ?, ...) based on the number of projects
+  const placeholders = projects.map(() => '?').join(', ');
+  sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
-  try {
-    const [rows] = await pool.execute(sqlQuery, params);
-    return rows as MetricItem[];
-  } catch (error) {
-    console.error('Database query failed:', error);
-    throw error;
-  }
-}
-
-
-export async function get_weekly_mltc(pool: mysql.Pool, project: string, from: number, to: number): Promise<MetricItem[]> {
-  const sqlFilePath = path.join(__dirname, 'queries/mltc_weekly.sql');
-  const sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
-
-  const params = [from, to, project, project, from, to];
+  const params = [...projects, '2025-01-01', '2025-06-30', '2025-01-01', '2025-06-30'];
 
   try {
     const [rows] = await pool.execute(sqlQuery, params);
@@ -84,11 +84,17 @@ export async function get_weekly_mltc(pool: mysql.Pool, project: string, from: n
 }
 
 
-export async function get_monthly_mttr(pool: mysql.Pool, from: number, to: number): Promise<MetricItem[]> {
+export async function get_monthly_mttr(
+  pool: mysql.Pool,
+  projects: string[],
+  from: number,
+  to: number
+): Promise<MetricItem[]> {
   const sqlFilePath = path.join(__dirname, 'queries/mttr_monthly.sql');
   const sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
-  const params = [from, to];
+  // TODO: adauga projects dupa ce schimbi slq queryul
+  const params = ['2025-01-01', '2025-06-30', '2025-01-01', '2025-06-30'];
 
   try {
     const [rows] = await pool.execute(sqlQuery, params);
@@ -98,23 +104,6 @@ export async function get_monthly_mttr(pool: mysql.Pool, from: number, to: numbe
     throw error;
   }
 }
-
-
-export async function get_weekly_mttr(pool: mysql.Pool, project: string, from: number, to: number): Promise<MetricItem[]> {
-  const sqlFilePath = path.join(__dirname, 'queries/mttr_weekly.sql');
-  const sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
-
-  const params = [from, to, project, project];
-
-  try {
-    const [rows] = await pool.execute(sqlQuery, params);
-    return rows as MetricItem[];
-  } catch (error) {
-    console.error('Database query failed:', error);
-    throw error;
-  }
-}
-
 
 export async function createDoraService({
   logger,
@@ -146,31 +135,31 @@ export async function createDoraService({
     ) {
         switch (type) {
             case 'df':
-              if (aggregation === 'weekly') {
-                //return get_weekly_df(pool, from, to)
+              if (aggregation === 'daily') {
+                //return get_daily_df(pool, from, to)
               } else if (aggregation === 'monthly') {
-                return get_monthly_df(pool, ["project1","Demo","dora_metrics"], from, to)
+                return get_monthly_df(pool, projects, from, to)
               }
               break;
             case 'mltc':
-              if (aggregation === 'weekly') {
-                //return get_weekly_mltc(pool, project, from, to)
+              if (aggregation === 'daily') {
+                //return get_daily_mltc(pool, project, from, to)
               } else if (aggregation === 'monthly') {
-                return get_monthly_mltc(pool, from, to)
+                return get_monthly_mltc(pool, projects, from, to)
               }
               break;
             case 'cfr':
-              if (aggregation === 'weekly') {
-                //return get_weekly_cfr(pool, project, from, to)
+              if (aggregation === 'daily') {
+                //return get_daily_cfr(pool, project, from, to)
               } else if (aggregation === 'monthly') {
-                return get_monthly_cfr(pool, from, to)
+                return get_monthly_cfr(pool, projects, from, to)
               }
               break;
             case 'mttr':
-              if (aggregation === 'weekly') {
-                //return get_weekly_mttr(pool, project, from, to)
+              if (aggregation === 'daily') {
+                //return get_daily_mttr(pool, project, from, to)
               } else if (aggregation === 'monthly') {
-                return get_monthly_mttr(pool, from, to)
+                return get_monthly_mttr(pool, projects, from, to)
               }
               break;
           }
