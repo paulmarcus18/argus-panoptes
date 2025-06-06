@@ -51,4 +51,5 @@ export interface DoraService {
     from: number,
     to: number
   ): Promise<MetricItem[]>;
+  getProjectNames(): Promise<string[]>;
 }

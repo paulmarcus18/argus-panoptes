@@ -38,5 +38,14 @@ export async function createRouter({
     res.json(data);
   });
 
+  router.get('/projects', async (req, res) => {
+    try {
+      const projects = await doraService.getProjectNames();
+      res.json(projects);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch project names' });
+    }
+  });
+  
   return router;
 }

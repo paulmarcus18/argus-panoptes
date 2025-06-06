@@ -35,6 +35,33 @@ export async function get_monthly_cfr(
   }
 }
 
+export async function get_daily_df(
+  pool: mysql.Pool,
+  projects: string[],
+  from: number,
+  to: number
+): Promise<MetricItem[]> {
+  const sqlFilePath = path.join(__dirname, 'queries/df_daily.sql');
+  let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
+
+  // Dynamically inject (?, ?, ?) based on number of projects
+  const placeholders = projects.map(() => '?').join(', ');
+  sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
+
+  // Convert from and to timestamps to ISO date strings
+  const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
+  const dateTo = new Date(to * 1000).toISOString().split('T')[0];
+  const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
+
+  try {
+    const [rows] = await pool.execute(sqlQuery, params);
+    return rows as MetricItem[];
+  } catch (error) {
+    console.error('Database query failed:', error);
+    throw error;
+  }
+}
+
 
 export async function get_monthly_df(
   pool: mysql.Pool,
@@ -150,7 +177,7 @@ export async function createDoraService({
         switch (type) {
             case 'df':
               if (aggregation === 'daily') {
-                // return get_daily_df(pool, from, to)
+                return get_daily_df(pool, projects, from, to)
               } else if (aggregation === 'monthly') {
                 return get_monthly_df(pool, projects, from, to)
               }
@@ -179,7 +206,18 @@ export async function createDoraService({
           }
         
           throw new Error(`Unsupported aggregation: ${aggregation}`);
-        }
+        },
+
+    async getProjectNames(): Promise<string[]> {
+      const sqlQuery = "SELECT DISTINCT name FROM projects";
+      try {
+        const [rows] = await pool.execute(sqlQuery);
+        return (rows as Array<{ name: string }>).map(row => row.name);
+      } catch (error) {
+        logger.error("Error fetching project names", error instanceof Error ? error : new Error(String(error)));
+        throw error;
+      }
+    },
 
   };
 }
