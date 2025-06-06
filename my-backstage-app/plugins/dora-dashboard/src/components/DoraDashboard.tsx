@@ -99,7 +99,15 @@ export const DoraDashboard = () => {
 
   const handleProjectChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
-    setSelectedProjects(typeof value === 'string' ? value.split(',') : value);
+    const newValue = typeof value === 'string' ? value.split(',') : value;
+
+    if (newValue.includes('all')) {
+      const allSelected = selectedProjects.length === AVAILABLE_PROJECTS.length;
+      // Toggle behavior:
+      setSelectedProjects(allSelected ? [] : AVAILABLE_PROJECTS);
+    } else {
+      setSelectedProjects(newValue);
+    }
   };
 
   const handleApplyDateFilter = () => {
@@ -144,14 +152,23 @@ export const DoraDashboard = () => {
                 value={selectedProjects}
                 onChange={handleProjectChange}
                 input={<OutlinedInput label="Projects" />}
-                renderValue={selected => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map(value => (
-                      <Chip key={value} label={value} />
-                    ))}
-                  </Box>
-                )}
+                renderValue={selected => {
+                  if (selected.length === 0) return 'No projects selected';
+                  if (selected.length === AVAILABLE_PROJECTS.length)
+                    return 'All Projects';
+                  if (selected.length === 1) return selected[0];
+                  return `${selected.length} projects selected`;
+                }}
               >
+                <MenuItem value="all">
+                  <Checkbox
+                    checked={
+                      selectedProjects.length === AVAILABLE_PROJECTS.length
+                    }
+                  />
+
+                  <ListItemText primary="All Projects" />
+                </MenuItem>
                 {AVAILABLE_PROJECTS.map(project => (
                   <MenuItem key={project} value={project}>
                     <Checkbox checked={selectedProjects.includes(project)} />
