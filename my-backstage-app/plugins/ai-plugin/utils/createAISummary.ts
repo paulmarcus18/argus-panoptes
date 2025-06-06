@@ -39,13 +39,13 @@ export async function generateSummaries(
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
-            "Authorization": "Bearer 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",
+            "Authorization": "Bearer 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",
             "Content-Type": "application/json",
             "HTTP-Referer": "<YOUR_SITE_URL>", // Optional
             "X-Title": "<YOUR_SITE_NAME>"     // Optional
           },
           body: JSON.stringify({
-            model: "google/gemini-2.0-flash-001",
+            model: "google/gemini-2.0-flash-exp:free",
             messages: [
               {
                 role: "user",
