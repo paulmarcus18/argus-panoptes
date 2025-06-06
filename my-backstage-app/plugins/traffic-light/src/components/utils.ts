@@ -140,11 +140,18 @@ export function determineSemaphoreColor(
   if (failures === 0) {
     return { color: 'green', reason: 'All checks passed.' };
   } else if (failures > redLimit) {
-    return { color: 'red', reason: `${failures} failures.` };
+    return {
+      color: 'red',
+      reason: `${failures} ${failures === 1 ? 'failure' : 'failures'}.`,
+    };
   } else {
-    return { color: 'yellow', reason: `${failures} minor issues.` };
+    return {
+      color: 'yellow',
+      reason: `${failures} minor ${failures === 1 ? 'issue' : 'issues'}.`,
+    };
   }
 }
+
 /**
  * Interface defining the shape of GitHub security facts
  */
