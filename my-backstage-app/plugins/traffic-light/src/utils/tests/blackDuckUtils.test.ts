@@ -1,6 +1,7 @@
 import { BlackDuckUtils, DEFAULT_METRICS, DEFAULT_CHECKS } from '../blackDuckUtils';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef, Entity } from '@backstage/catalog-model';
+import { DynamicThresholdResult, DynamicThresholdCheck } from '../../../../tech-insights-backend-module-traffic-light-backend-module/src/argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 
 // Mock the TechInsightsApi
 const mockTechInsightsApi = {
@@ -11,6 +12,28 @@ const mockTechInsightsApi = {
   runBulkChecks: jest.fn(),
   getFactSchemas: jest.fn(),
 } as jest.Mocked<TechInsightsApi>;
+
+// Helper function to create mock check results that match the DynamicThresholdResult format
+const createMockCheckResult = (id: string, result: boolean): DynamicThresholdResult => ({
+  check: {
+    id,
+    name: `${id} Check`,
+    type: 'dynamic-threshold',
+    factIds: ['blackduck-fact-retriever', 'security_risks_critical'],
+    annotationKeyThreshold: 'blackduck.threshold',
+    annotationKeyOperator: 'blackduck.operator',
+    description: `Check for ${id}`,
+  } as DynamicThresholdCheck,
+  facts: {
+    'blackduck-fact-retriever': {
+      id: 'blackduck-fact-retriever',
+      type: 'integer',
+      description: 'BlackDuck security facts',
+      value: result ? 1 : 0,
+    },
+  },
+  result,
+});
 
 // Mock entity references
 const mockEntityRef: CompoundEntityRef = {
@@ -131,6 +154,45 @@ describe('BlackDuckUtils', () => {
       });
     });
   });
+
+  describe('getBlackDuckChecks', () => {
+    it('should return correct check results when all checks are present and true', async () => {
+      const mockCheckResults = [
+        createMockCheckResult('blackduck-critical-security-risk', true),
+        createMockCheckResult('blackduck-high-security-risk', true),
+        createMockCheckResult('blackduck-medium-security-risk', true),
+      ];
+
+      mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
+
+      const result = await blackDuckUtils.getBlackDuckChecks(mockTechInsightsApi, mockEntityRef);
+
+      expect(result).toEqual({
+        criticalSecurityCheck: true,
+        highSecurityCheck: true,
+        mediumSecurityCheck: true,
+      });
+      expect(mockTechInsightsApi.runChecks).toHaveBeenCalledWith(mockEntityRef);
+    });
+
+    it('should return default checks when no check results are found', async () => {
+      mockTechInsightsApi.runChecks.mockResolvedValue([]);
+
+      const result = await blackDuckUtils.getBlackDuckChecks(mockTechInsightsApi, mockEntityRef);
+
+      expect(result).toEqual(DEFAULT_CHECKS);
+      expect(mockTechInsightsApi.runChecks).toHaveBeenCalledWith(mockEntityRef);
+    });
+
+    it('should return default metrics when API throws an error', async () => {
+      mockTechInsightsApi.getFacts.mockRejectedValue(new Error('API Error'));
+
+      const result = await blackDuckUtils.getBlackDuckChecks(mockTechInsightsApi, mockEntityRef);
+
+      expect(result).toEqual(DEFAULT_CHECKS);
+    });
+  });
+
 
   describe('getTop5CriticalBlackDuckRepos', () => {
     const createMockEntity = (name: string): Entity => ({
