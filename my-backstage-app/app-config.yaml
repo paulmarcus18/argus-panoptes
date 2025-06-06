@@ -70,7 +70,8 @@ techdocs:
 
 auth:
   providers:
-    guest: {}
+    guest:
+      {}
       # userEntityRef: user:vpetkova
       # userEntityRef: user:default/ghristov
 
@@ -133,7 +134,7 @@ catalog:
     - type: file
       target: ../../catalogs/spiffe-vault-catalog-info.yaml
 
-    # Users 
+    # Users
     - type: file
       target: ../../catalogs/users/vesela-catalog-info.yaml
 
@@ -161,20 +162,20 @@ permission:
   # setting this to `false` will disable permissions
   enabled: true
 
-sonarcloud: 
+sonarcloud:
   token: ${SONARCLOUD_TOKEN}
   organization: sep-arguspanoptes
 
 techInsights:
   factRetrievers:
-    sonarcloud-fact-retriever:  # Change from array to object
+    sonarcloud-fact-retriever: # Change from array to object
       enabled: true
-      cadence: "*/1 * * * *" # Every hour
+      cadence: '*/1 * * * *' # Every hour
     dependabotFactRetriever:
-      cadence: "*/2 * * * *" # every minute
+      cadence: '*/2 * * * *' # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
     githubAdvancedSecurityFactRetriever:
-      cadence: "*/2 * * * *" # every minute
+      cadence: '*/2 * * * *' # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
   factChecker:
     checks:
@@ -274,12 +275,11 @@ techInsights:
               - fact: secretScanningAlerts
                 operator: equal
                 value: {}
-      
+
 dora:
   db:
-    host: localhost
-    port: 3306
+    host: 127.0.0.1
+    port: 3307
     user: merico
     password: merico
     database: lake
-

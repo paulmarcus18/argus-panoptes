@@ -11,6 +11,10 @@ import {
   FormControlLabel,
   Switch,
   Button,
+  Chip,
+  OutlinedInput,
+  Checkbox,
+  ListItemText,
 } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -54,42 +58,49 @@ const METRIC_TYPES: MetricType[] = [
   },
 ];
 
+const AVAILABLE_PROJECTS = ['project1', 'project2', 'project3'];
+
 export const DoraDashboard = () => {
-  const [timeUnit, setTimeUnit] = useState<'weekly' | 'monthly'>('weekly');
   const [useCustomDateRange, setUseCustomDateRange] = useState(false);
-  const [startDate, setStartDate] = useState<Date | null>(
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-  );
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  const [startDate, setStartDate] = useState<Date | null>(sixMonthsAgo);
   const [endDate, setEndDate] = useState<Date | null>(new Date());
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([
+    'project1',
+  ]);
 
   const [filterDates, setFilterDates] = useState<{ start?: Date; end?: Date }>(
     {},
   );
 
-  // Fetching metrics
   const {
     value: metricsData,
     loading,
     error,
-  } = useMetricsData(timeUnit, filterDates.start, filterDates.end);
+  } = useMetricsData(
+    'monthly',
+    filterDates.start,
+    filterDates.end,
+    selectedProjects,
+  );
 
-  // Clear date filters when toggling off
   useEffect(() => {
     if (!useCustomDateRange) {
       setFilterDates({});
     }
   }, [useCustomDateRange]);
 
-  const handleTimeUnitChange = (
-    event: SelectChangeEvent<'weekly' | 'monthly'>,
-  ) => {
-    setTimeUnit(event.target.value as 'weekly' | 'monthly');
-  };
-
   const handleDateRangeToggle = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setUseCustomDateRange(event.target.checked);
+  };
+
+  const handleProjectChange = (event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
+    setSelectedProjects(typeof value === 'string' ? value.split(',') : value);
   };
 
   const handleApplyDateFilter = () => {
@@ -98,7 +109,6 @@ export const DoraDashboard = () => {
         alert('Start date must be before end date');
         return;
       }
-
       setFilterDates({ start: startDate, end: endDate });
     } else {
       alert('Please select both start and end dates');
@@ -116,33 +126,55 @@ export const DoraDashboard = () => {
             Data Filtering Options
           </Typography>
 
-          <FormControlLabel
-            control={
-              <Switch
-                checked={useCustomDateRange}
-                onChange={handleDateRangeToggle}
-                color="primary"
-              />
-            }
-            label="Use Custom Date Range"
-            sx={{ mb: 2 }}
-          />
-
-          {!useCustomDateRange ? (
-            <FormControl fullWidth sx={{ maxWidth: 250 }}>
-              <InputLabel id="time-unit-label">Time Period</InputLabel>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              flexWrap: 'wrap',
+              gap: 2,
+              alignItems: 'center',
+              mb: 2,
+            }}
+          >
+            <FormControl sx={{ minWidth: 220 }} size="small">
+              <InputLabel id="project-select-label">Projects</InputLabel>
               <Select
-                labelId="time-unit-label"
-                id="time-unit-select"
-                value={timeUnit}
-                onChange={handleTimeUnitChange}
-                label="Time Period"
+                labelId="project-select-label"
+                id="project-select"
+                multiple
+                value={selectedProjects}
+                onChange={handleProjectChange}
+                input={<OutlinedInput label="Projects" />}
+                renderValue={selected => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map(value => (
+                      <Chip key={value} label={value} />
+                    ))}
+                  </Box>
+                )}
               >
-                <MenuItem value="weekly">Weekly</MenuItem>
-                <MenuItem value="monthly">Monthly</MenuItem>
+                {AVAILABLE_PROJECTS.map(project => (
+                  <MenuItem key={project} value={project}>
+                    <Checkbox checked={selectedProjects.includes(project)} />
+                    <ListItemText primary={project} />
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
-          ) : (
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={useCustomDateRange}
+                  onChange={handleDateRangeToggle}
+                  color="primary"
+                />
+              }
+              label="Use Custom Date Range"
+            />
+          </Box>
+
+          {useCustomDateRange && (
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <Box
                 sx={{
@@ -188,18 +220,13 @@ export const DoraDashboard = () => {
                   Apply Date Filter
                 </Button>
               </Box>
-
-              {filterDates.start && filterDates.end && (
-                <Typography
-                  variant="body2"
-                  sx={{ mt: 1, color: 'success.main' }}
-                >
-                  Showing data from {filterDates.start.toLocaleDateString()} to{' '}
-                  {filterDates.end.toLocaleDateString()}
-                </Typography>
-              )}
             </LocalizationProvider>
           )}
+
+          <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+            Data aggregation: Monthly | Selected projects:{' '}
+            {selectedProjects.join(', ')}
+          </Typography>
         </Paper>
       </Box>
 
