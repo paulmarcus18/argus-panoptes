@@ -48,8 +48,8 @@ export async function get_monthly_df(
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
   // Convert from and to timestamps to ISO date strings
-  const dateFrom = new Date(from).toISOString().split('T')[0];
-  const dateTo = new Date(to).toISOString().split('T')[0];
+  const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
+  const dateTo = new Date(to * 1000).toISOString().split('T')[0];
   const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
 
   try {
@@ -75,7 +75,9 @@ export async function get_monthly_mltc(
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
-  const params = [...projects, '2025-01-01', '2025-06-30', '2025-01-01', '2025-06-30'];
+  const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
+  const dateTo = new Date(to * 1000).toISOString().split('T')[0];
+  const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
 
   try {
     const [rows] = await pool.execute(sqlQuery, params);
