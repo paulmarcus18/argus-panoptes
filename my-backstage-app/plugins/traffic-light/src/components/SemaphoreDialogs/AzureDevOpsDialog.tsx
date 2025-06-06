@@ -93,7 +93,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
 
         const projectBugMap = new Map<
           string,
-          { bugCount: number; url: string }
+          { bugCount: number; url: string; failedCheck: boolean }
         >();
 
         for (const entity of entities) {
@@ -107,22 +107,24 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
             entity.metadata.annotations?.['azure.com/project'] ?? 'unknown';
 
           if (!projectBugMap.has(projectName) && projectName !== 'unknown') {
-            const metrics = await azureUtils.getAzureDevOpsBugFacts(
-              techInsightsApi,
-              ref,
-            );
+            const [metrics, checks] = await Promise.all([
+              azureUtils.getAzureDevOpsBugFacts(techInsightsApi, ref),
+              azureUtils.getAzureDevOpsBugChecks(techInsightsApi, ref),
+            ]);
 
             const orgName =
-              entity.metadata.annotations?.['azure.com/organization'] ?? 'unknown-org';
+              entity.metadata.annotations?.['azure.com/organization'] ??
+              'unknown-org';
             const queryId =
-              entity.metadata.annotations?.['azure.com/bugs-query-id'] ?? 'unknown-query-id';
+              entity.metadata.annotations?.['azure.com/bugs-query-id'] ??
+              'unknown-query-id';
 
             const projectUrl = `https://dev.azure.com/${orgName}/${projectName}/_queries/query/${queryId}/`;
-            
 
             projectBugMap.set(projectName, {
               bugCount: metrics.azureBugCount,
               url: projectUrl,
+              failedCheck: checks.bugCountCheck === false,
             });
           }
         }
@@ -143,8 +145,11 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
         );
 
         // Determine color
+        const failures = Array.from(projectBugMap.values()).filter(
+          r => r.failedCheck,
+        ).length;
         const { color } = determineSemaphoreColor(
-          totalBugCount,
+          failures,
           projectList.length,
           redThreshold,
         );
