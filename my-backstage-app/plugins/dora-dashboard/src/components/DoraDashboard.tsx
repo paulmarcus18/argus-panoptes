@@ -67,9 +67,8 @@ export const DoraDashboard = () => {
 
   const [startDate, setStartDate] = useState<Date | null>(sixMonthsAgo);
   const [endDate, setEndDate] = useState<Date | null>(new Date());
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([
-    'project1',
-  ]);
+  const [selectedProjects, setSelectedProjects] =
+    useState<string[]>(AVAILABLE_PROJECTS);
 
   const [filterDates, setFilterDates] = useState<{ start?: Date; end?: Date }>(
     {},

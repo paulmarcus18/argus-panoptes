@@ -18,6 +18,54 @@ export const MetricChart = ({
   const chartData = data.map(item => item.value);
   const xLabels = data.map(item => item.label);
 
+  // Determine Y-axis configuration based on chart type
+  const getYAxisConfig = () => {
+    switch (title) {
+      case 'Deployment Frequency':
+        return {
+          label: '',
+          tickLabelStyle: { fontSize: 10 },
+          valueFormatter: (value: number) => value.toString(),
+        };
+      case 'Lead Time for Changes':
+      case 'Time to Restore Service':
+        return {
+          label: 'Hours',
+          tickLabelStyle: { fontSize: 10 },
+          valueFormatter: (value: number) => value.toString(),
+        };
+      case 'Change Failure Rate':
+        return {
+          label: '',
+          tickLabelStyle: { fontSize: 10 },
+          valueFormatter: (value: number) => `${(value * 100).toFixed(0)}%`,
+        };
+      default:
+        return {
+          label: 'Value',
+          tickLabelStyle: { fontSize: 10 },
+          valueFormatter: (value: number) => value.toString(),
+        };
+    }
+  };
+
+  // Format data labels on bars
+  const formatDataLabel = (value: number) => {
+    switch (title) {
+      case 'Deployment Frequency':
+        return value.toString();
+      case 'Lead Time for Changes':
+      case 'Time to Restore Service':
+        return value.toFixed(1);
+      case 'Change Failure Rate':
+        return `${(value * 100).toFixed(1)}%`;
+      default:
+        return value.toFixed(1);
+    }
+  };
+
+  const yAxisConfig = getYAxisConfig();
+
   return (
     <Paper
       elevation={3}
@@ -53,11 +101,12 @@ export const MetricChart = ({
           ]}
           yAxis={[
             {
-              label: 'Value',
-              tickLabelStyle: { fontSize: 10 },
+              label: yAxisConfig.label,
+              tickLabelStyle: yAxisConfig.tickLabelStyle,
+              valueFormatter: yAxisConfig.valueFormatter,
             },
           ]}
-          margin={{ top: 16, left: 35, bottom: 26, right: 4 }}
+          margin={{ top: 30, left: 50, bottom: 26, right: 4 }}
           grid={{ horizontal: true }}
           series={[
             {
@@ -66,10 +115,7 @@ export const MetricChart = ({
               valueFormatter: (value: number | null) => {
                 const numericValue = Number(value);
                 if (isNaN(numericValue)) return 'N/A';
-              
-                return title === 'Change Failure Rate'
-                  ? `${(numericValue * 100).toFixed(1)}%`
-                  : numericValue.toFixed(1);
+                return formatDataLabel(numericValue);
               },
             },
           ]}
