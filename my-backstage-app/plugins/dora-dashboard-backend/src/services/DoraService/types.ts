@@ -36,7 +36,7 @@ export type MetricType =
   | 'cfr'
   | 'mttr';
 
-export type Aggregation = 'weekly' | 'monthly';
+export type Aggregation = 'daily' | 'monthly';
 
 export interface MetricItem {
   data_key: string;

@@ -33,6 +33,7 @@ export async function get_monthly_cfr(
   }
 }
 
+
 export async function get_monthly_df(
   pool: mysql.Pool,
   projects: string[],
@@ -46,14 +47,10 @@ export async function get_monthly_df(
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
-  // Convert the Unix timestamp to YYYY-MM-DD format
+  // Convert from and to timestamps to ISO date strings
   const dateFrom = new Date(from).toISOString().split('T')[0];
   const dateTo = new Date(to).toISOString().split('T')[0];
-
-  // Static date range for now (same as what you used in Grafana)
-  // const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
-  const params = [...projects, '2025-01-01', '2025-06-30', '2025-01-01', '2025-06-30'];
-
+  const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
 
   try {
     const [rows] = await pool.execute(sqlQuery, params);
@@ -111,6 +108,7 @@ export async function get_monthly_mttr(
   }
 }
 
+
 export async function createDoraService({
   logger,
   config,
@@ -142,28 +140,28 @@ export async function createDoraService({
         switch (type) {
             case 'df':
               if (aggregation === 'daily') {
-                //return get_daily_df(pool, from, to)
+                // return get_daily_df(pool, from, to)
               } else if (aggregation === 'monthly') {
                 return get_monthly_df(pool, projects, from, to)
               }
               break;
             case 'mltc':
               if (aggregation === 'daily') {
-                //return get_daily_mltc(pool, project, from, to)
+                // return get_daily_mltc(pool, project, from, to)
               } else if (aggregation === 'monthly') {
                 return get_monthly_mltc(pool, projects, from, to)
               }
               break;
             case 'cfr':
               if (aggregation === 'daily') {
-                //return get_daily_cfr(pool, project, from, to)
+                // return get_daily_cfr(pool, project, from, to)
               } else if (aggregation === 'monthly') {
                 return get_monthly_cfr(pool, projects, from, to)
               }
               break;
             case 'mttr':
               if (aggregation === 'daily') {
-                //return get_daily_mttr(pool, project, from, to)
+                // return get_daily_mttr(pool, project, from, to)
               } else if (aggregation === 'monthly') {
                 return get_monthly_mttr(pool, projects, from, to)
               }
