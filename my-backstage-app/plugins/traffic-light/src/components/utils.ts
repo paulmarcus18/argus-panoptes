@@ -138,11 +138,11 @@ export function determineSemaphoreColor(
   const redLimit = Math.ceil(redThreshold * totalEntities);
 
   if (failures === 0) {
-    return { color: 'green', reason: 'All preproduction checks passed' };
+    return { color: 'green', reason: 'All checks passed.' };
   } else if (failures > redLimit) {
-    return { color: 'red', reason: `${failures} preproduction failures` };
+    return { color: 'red', reason: `${failures} failures.` };
   } else {
-    return { color: 'yellow', reason: `${failures} minor issues in pipelines` };
+    return { color: 'yellow', reason: `${failures} minor issues.` };
   }
 }
 /**
