@@ -55,10 +55,10 @@ metadata:
     foundation-check-threshold-red: '2'
     preproduction-check-threshold-red: '1'
     reporting-check-threshold-red: '2'
-    azure-bugs-check-threshold-red: '3'
+    azure-bugs-check-threshold-red: '0.33'
 
     # Azure DevOps Annotations
-    tech-insights.io/azure-bugs-threshold: '5'
+    tech-insights.io/azure-bugs-threshold: '0'
     tech-insights.io/azure-bugs-operator: 'lessThanInclusive'
 spec:
   owner: identity-team

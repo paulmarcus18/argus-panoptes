@@ -45,7 +45,7 @@ metadata:
     foundation-check-threshold-red: '1'
     preproduction-check-threshold-red: '2'
     reporting-check-threshold-red: '2'
-    azure-bugs-check-threshold-red: '1'
+    azure-bugs-check-threshold-red: '0.33'
 
     # Threshold for system with critical tag
     github-advanced-security-system-critical-critical-threshold-red: '0'
@@ -55,8 +55,9 @@ metadata:
     github-advanced-security-system-critical-med-threshold-yellow: '0.2'
     github-advanced-security-system-critical-low-threshold-yellow: '0.1'
 
-    tech-insights.io/azure-bugs-threshold: '0'
+    tech-insights.io/azure-bugs-threshold: '1'
     tech-insights.io/azure-bugs-operator: 'lessThanInclusive'
+
     tech-insights.io/reporting-success-rate-threshold: '80'
     tech-insights.io/reporting-success-rate-operator: 'greaterThanInclusive'
 spec:
