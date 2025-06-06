@@ -1,59 +1,58 @@
-WITH _deployments AS (
-    SELECT
-        cdc.cicd_deployment_id AS deployment_id,
-        MAX(cdc.finished_date) AS deployment_finished_date
-    FROM
-        cicd_deployment_commits cdc
-        -- Assuming a join with repos if needed for project filtering
-        -- JOIN repos ON cdc.repo_id = repos.id
-    WHERE
-        cdc.result = 'SUCCESS'
-        AND cdc.environment = 'PRODUCTION'
-    GROUP BY
-        cdc.cicd_deployment_id
+-- Metric 3: change failure rate per month
+with _deployments as (
+  -- When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last one's finished_date as the finished date.
+  SELECT
+    cdc.cicd_deployment_id as deployment_id,
+    max(cdc.finished_date) as deployment_finished_date
+  FROM
+    cicd_deployment_commits cdc
+    JOIN project_mapping pm on cdc.cicd_scope_id = pm.row_id
+    and pm.`table` = 'cicd_scopes'
+  WHERE
+    pm.project_name IN (?)
+    and cdc.result = 'SUCCESS'
+    and cdc.environment = 'PRODUCTION'
+  GROUP BY
+    1
+  HAVING
+    max(cdc.finished_date) BETWEEN (?) AND (?)
 ),
-
-_incidents AS (
-    SELECT
-        i.id AS incident_id,
-        i.created_date AS incident_created_date
-    FROM
-        issues i
-    WHERE
-        i.type = 'INCIDENT'
+_failure_caused_by_deployments as (
+  -- calculate the number of incidents caused by each deployment
+  SELECT
+    d.deployment_id,
+    d.deployment_finished_date,
+    count(
+      distinct case
+        when i.id is not null then d.deployment_id
+        else null
+      end
+    ) as has_incident
+  FROM
+    _deployments d
+    left join project_incident_deployment_relationships pim on d.deployment_id = pim.deployment_id
+    left join incidents i on pim.id = i.id
+  GROUP BY
+    1,
+    2
 ),
-
-_deployments_with_incidents AS (
-    SELECT
-        d.deployment_id,
-        d.deployment_finished_date,
-        COUNT(i.incident_id) AS incident_count
-    FROM
-        _deployments d
-        LEFT JOIN _incidents i
-            ON UNIX_TIMESTAMP(i.incident_created_date) BETWEEN UNIX_TIMESTAMP(d.deployment_finished_date)
-            AND UNIX_TIMESTAMP(d.deployment_finished_date) + 24 * 60 * 60 -- 24 hours in seconds
-    GROUP BY
-        d.deployment_id, d.deployment_finished_date
-),
-
-_change_failure_rate_per_month AS (
-    SELECT
-        DATE_FORMAT(dwi.deployment_finished_date, '%y/%m') AS month,
-        SUM(CASE WHEN dwi.incident_count > 0 THEN 1 ELSE 0 END) / COUNT(*) AS change_failure_rate
-    FROM
-        _deployments_with_incidents dwi
-    GROUP BY
-        DATE_FORMAT(dwi.deployment_finished_date, '%y/%m')
+_change_failure_rate_for_each_month as (
+  SELECT
+    date_format(deployment_finished_date, '%y/%m') as month,
+    case
+      when count(deployment_id) is null then null
+      else sum(has_incident) / count(deployment_id)
+    end as change_failure_rate
+  FROM
+    _failure_caused_by_deployments
+  GROUP BY
+    1
 )
-
 SELECT
-    cm.month,
-    COALESCE(cfr.change_failure_rate, 0) AS change_failure_rate
+  cm.month as data_key,
+  cfr.change_failure_rate as data_value
 FROM
-    calendar_months cm
-    LEFT JOIN _change_failure_rate_per_month cfr ON cm.month = cfr.month
+  calendar_months cm
+  LEFT JOIN _change_failure_rate_for_each_month cfr on cm.month = cfr.month
 WHERE
-    cm.month_timestamp BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?)
-ORDER BY
-    cm.month;
+  cm.month_timestamp BETWEEN (?) AND (?)

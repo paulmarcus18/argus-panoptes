@@ -1,40 +1,43 @@
+-- Metric 4: Median time to restore service (MTTR)
 WITH _incidents AS (
-    SELECT
-      DISTINCT i.id,
-        DATE_FORMAT(i.created_date,'%y/%m') AS month,
-        cast(lead_time_minutes AS signed) AS lead_time_minutes
-    FROM
-        issues i
-      JOIN board_issues bi ON i.id = bi.issue_id
-      JOIN boards b ON bi.board_id = b.id
-      JOIN project_mapping pm ON b.id = pm.row_id AND pm.`table` = 'boards'
-      JOIN board_repos br ON b.id = br.board_id
-	  JOIN repos r ON br.repo_id = r.id
-    WHERE
-        i.type = 'INCIDENT'
-        AND i.lead_time_minutes IS NOT NULL
+  SELECT
+    DISTINCT i.id,
+    DATE_FORMAT(i.resolution_date, '%y/%m') AS month,
+    CAST(lead_time_minutes AS SIGNED) AS lead_time_minutes
+  FROM incidents i
+  JOIN project_mapping pm 
+    ON i.scope_id = pm.row_id 
+    AND pm.`table` = i.`table`
+  WHERE
+    pm.project_name IN (?)  -- Dynamically replaced
+    AND i.lead_time_minutes IS NOT NULL
+    AND i.resolution_date BETWEEN (?) AND (?)
 ),
 
-_find_median_mttr_each_month_ranks as(
-    SELECT *, percent_rank() OVER(PARTITION BY month ORDER BY lead_time_minutes) AS ranks
-    FROM _incidents
+_find_median_mttr_each_month_ranks AS (
+  SELECT *,
+    PERCENT_RANK() OVER (
+      PARTITION BY month
+      ORDER BY lead_time_minutes
+    ) AS ranks
+  FROM _incidents
 ),
 
-_mttr as(
-    SELECT month, max(lead_time_minutes) AS median_time_to_resolve
-    FROM _find_median_mttr_each_month_ranks
-    WHERE ranks <= 0.5
-    GROUP BY month
+_mttr AS (
+  SELECT
+    month,
+    MAX(lead_time_minutes) AS median_time_to_resolve
+  FROM _find_median_mttr_each_month_ranks
+  WHERE ranks <= 0.5
+  GROUP BY month
 )
 
-SELECT 
-    cm.month AS data_key,
-    CASE 
-        WHEN m.median_time_to_resolve IS NULL THEN 0 
-        ELSE m.median_time_to_resolve/60 
-    END AS data_value
-FROM 
-    calendar_months cm
-    LEFT JOIN _mttr m ON cm.month = m.month
-  WHERE cm.month_timestamp BETWEEN FROM_UNIXTIME(?)
-        AND FROM_UNIXTIME(?)
+SELECT
+  cm.month AS data_key,
+  CASE 
+    WHEN m.median_time_to_resolve IS NULL THEN 0
+    ELSE m.median_time_to_resolve / 60
+  END AS data_value
+FROM calendar_months cm
+LEFT JOIN _mttr m ON cm.month = m.month
+WHERE cm.month_timestamp BETWEEN (?) AND (?);

@@ -22,7 +22,9 @@ export async function get_monthly_cfr(
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
   // TODO: adauga projects dupa ce schimbi slq queryul
-  const params = ['2025-01-01', '2025-06-30', '2025-01-01', '2025-06-30'];
+  const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
+  const dateTo = new Date(to * 1000).toISOString().split('T')[0];
+  const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
 
   try {
     const [rows] = await pool.execute(sqlQuery, params);
@@ -96,10 +98,16 @@ export async function get_monthly_mttr(
   to: number
 ): Promise<MetricItem[]> {
   const sqlFilePath = path.join(__dirname, 'queries/mttr_monthly.sql');
-  const sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
+  let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
+  
+  // Dynamically inject (?, ?, ...) based on the number of projects
+  const placeholders = projects.map(() => '?').join(', ');
+  sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
   // TODO: adauga projects dupa ce schimbi slq queryul
-  const params = ['2025-01-01', '2025-06-30', '2025-01-01', '2025-06-30'];
+  const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
+  const dateTo = new Date(to * 1000).toISOString().split('T')[0];
+  const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
 
   try {
     const [rows] = await pool.execute(sqlQuery, params);
