@@ -34,14 +34,32 @@ const METRIC_TYPES = [
   { id: 'mttr', label: 'Time to Restore' },
 ];
 
-// Available projects - make this configurable
-const AVAILABLE_PROJECTS = [
-  'project1',
-  'project2',
-  'project3',
-  'project4',
-  // Add more projects as they become available
-];
+// ------------------ Projects Hook ------------------
+
+export function useProjects() {
+  return useAsync(async (): Promise<string[]> => {
+    const url = 'http://localhost:7007/api/dora-dashboard/projects';
+
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        console.warn(
+          `❌ Failed to fetch projects: ${response.status} ${response.statusText}`,
+        );
+        return [];
+      }
+
+      const projects = await response.json();
+      console.log('✅ Fetched projects:', projects);
+
+      return Array.isArray(projects) ? projects : [];
+    } catch (error) {
+      console.error('💥 Error fetching projects:', error);
+      return [];
+    }
+  }, []);
+}
 
 // ------------------ Hook ------------------
 
@@ -122,10 +140,26 @@ export function useMetricsData(
 // ------------------ Debug Component ------------------
 
 export const ExampleFetchComponent = () => {
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([
-    'project1',
-  ]);
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [shouldFetch, setShouldFetch] = useState(false);
+
+  // Fetch available projects
+  const {
+    value: availableProjects,
+    loading: projectsLoading,
+    error: projectsError,
+  } = useProjects();
+
+  // Set default project selection when projects are loaded
+  React.useEffect(() => {
+    if (
+      availableProjects &&
+      availableProjects.length > 0 &&
+      selectedProjects.length === 0
+    ) {
+      setSelectedProjects([availableProjects[0]]);
+    }
+  }, [availableProjects, selectedProjects.length]);
 
   const handleProjectChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
@@ -199,6 +233,24 @@ export const ExampleFetchComponent = () => {
     );
   };
 
+  if (projectsLoading) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography variant="body1">Loading available projects...</Typography>
+      </Box>
+    );
+  }
+
+  if (projectsError) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography variant="body1" color="error">
+          Error loading projects: {projectsError.message}
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 3 }}>
@@ -229,7 +281,7 @@ export const ExampleFetchComponent = () => {
               </Box>
             )}
           >
-            {AVAILABLE_PROJECTS.map(project => (
+            {(availableProjects || []).map(project => (
               <MenuItem key={project} value={project}>
                 {project}
               </MenuItem>

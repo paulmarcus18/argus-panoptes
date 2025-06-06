@@ -19,7 +19,10 @@ import {
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { Progress, ResponseErrorPanel } from '@backstage/core-components';
-import { useMetricsData } from './ExampleFetchComponent/ExampleFetchComponent';
+import {
+  useMetricsData,
+  useProjects,
+} from './ExampleFetchComponent/ExampleFetchComponent';
 import { MetricChart } from './MetricChart';
 import { SelectChangeEvent } from '@mui/material';
 
@@ -58,8 +61,6 @@ const METRIC_TYPES: MetricType[] = [
   },
 ];
 
-const AVAILABLE_PROJECTS = ['project1', 'project2', 'project3'];
-
 export const DoraDashboard = () => {
   const [useCustomDateRange, setUseCustomDateRange] = useState(false);
   const sixMonthsAgo = new Date();
@@ -67,12 +68,29 @@ export const DoraDashboard = () => {
 
   const [startDate, setStartDate] = useState<Date | null>(sixMonthsAgo);
   const [endDate, setEndDate] = useState<Date | null>(new Date());
-  const [selectedProjects, setSelectedProjects] =
-    useState<string[]>(AVAILABLE_PROJECTS);
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
 
   const [filterDates, setFilterDates] = useState<{ start?: Date; end?: Date }>(
     {},
   );
+
+  // Fetch available projects
+  const {
+    value: availableProjects,
+    loading: projectsLoading,
+    error: projectsError,
+  } = useProjects();
+
+  // Set default project selection when projects are loaded
+  useEffect(() => {
+    if (
+      availableProjects &&
+      availableProjects.length > 0 &&
+      selectedProjects.length === 0
+    ) {
+      setSelectedProjects(availableProjects);
+    }
+  }, [availableProjects, selectedProjects.length]);
 
   const {
     value: metricsData,
@@ -102,9 +120,10 @@ export const DoraDashboard = () => {
     const newValue = typeof value === 'string' ? value.split(',') : value;
 
     if (newValue.includes('all')) {
-      const allSelected = selectedProjects.length === AVAILABLE_PROJECTS.length;
+      const allSelected =
+        selectedProjects.length === (availableProjects?.length || 0);
       // Toggle behavior:
-      setSelectedProjects(allSelected ? [] : AVAILABLE_PROJECTS);
+      setSelectedProjects(allSelected ? [] : availableProjects || []);
     } else {
       setSelectedProjects(newValue);
     }
@@ -122,6 +141,8 @@ export const DoraDashboard = () => {
     }
   };
 
+  if (projectsLoading) return <Progress />;
+  if (projectsError) return <ResponseErrorPanel error={projectsError} />;
   if (loading) return <Progress />;
   if (error) return <ResponseErrorPanel error={error} />;
 
@@ -154,7 +175,7 @@ export const DoraDashboard = () => {
                 input={<OutlinedInput label="Projects" />}
                 renderValue={selected => {
                   if (selected.length === 0) return 'No projects selected';
-                  if (selected.length === AVAILABLE_PROJECTS.length)
+                  if (selected.length === (availableProjects?.length || 0))
                     return 'All Projects';
                   if (selected.length === 1) return selected[0];
                   return `${selected.length} projects selected`;
@@ -163,13 +184,14 @@ export const DoraDashboard = () => {
                 <MenuItem value="all">
                   <Checkbox
                     checked={
-                      selectedProjects.length === AVAILABLE_PROJECTS.length
+                      selectedProjects.length ===
+                      (availableProjects?.length || 0)
                     }
                   />
 
                   <ListItemText primary="All Projects" />
                 </MenuItem>
-                {AVAILABLE_PROJECTS.map(project => (
+                {(availableProjects || []).map(project => (
                   <MenuItem key={project} value={project}>
                     <Checkbox checked={selectedProjects.includes(project)} />
                     <ListItemText primary={project} />
