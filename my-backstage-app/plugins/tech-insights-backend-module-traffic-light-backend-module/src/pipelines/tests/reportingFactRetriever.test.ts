@@ -1,3 +1,310 @@
+// import { reportingPipelineStatusFactRetriever } from '../reportingFactRetriever';
+// import { CatalogClient } from '@backstage/catalog-client';
+// import { Logger } from 'winston';
+// import { Config } from '@backstage/config';
+// import {
+//   AuthService,
+//   DiscoveryService,
+//   UrlReaderService,
+// } from '@backstage/backend-plugin-api';
+
+// jest.mock('@backstage/catalog-client');
+
+// const mockFetch = jest.fn();
+// global.fetch = mockFetch;
+
+// const mockLogger: Logger = {
+//   info: jest.fn(),
+//   error: jest.fn(),
+//   warn: jest.fn(),
+//   debug: jest.fn(),
+// } as any;
+
+// const createMockConfig = (token?: string): Config =>
+//   ({
+//     getOptionalConfigArray: jest.fn((path: string) => {
+//       if (path === 'integrations.github' && token) {
+//         return [
+//           {
+//             getOptionalString: jest.fn((key: string) => {
+//               if (key === 'token') return token;
+//               return undefined;
+//             }),
+//           },
+//         ];
+//       }
+//       return undefined;
+//     }),
+//   } as any);
+
+// const mockAuth: AuthService = {
+//   getPluginRequestToken: jest.fn().mockResolvedValue({ token: 'catalog-token' }),
+//   getOwnServiceCredentials: jest.fn().mockResolvedValue({}),
+//   authenticate: jest.fn().mockResolvedValue({ principal: { type: 'service' } }),
+//   getNoneCredentials: jest.fn().mockReturnValue({ principal: { type: 'none' } }),
+//   getLimitedUserToken: jest.fn().mockResolvedValue({ token: 'limited-user-token' }),
+//   listPublicServiceKeys: jest.fn().mockResolvedValue({ keys: [] }),
+//   isPrincipal: jest.fn().mockReturnValue(true) as any,
+// };
+
+// const mockDiscovery: DiscoveryService = {
+//   getBaseUrl: jest.fn().mockResolvedValue('http://localhost:7007'),
+//   getExternalBaseUrl: jest.fn().mockResolvedValue('http://localhost:7007'),
+// };
+
+// const mockUrlReader: UrlReaderService = {
+//   readUrl: jest.fn().mockResolvedValue({
+//     buffer: jest.fn().mockResolvedValue(Buffer.from('mock content')),
+//     stream: jest.fn().mockReturnValue({} as any),
+//     etag: 'mock-etag',
+//   }),
+//   readTree: jest.fn().mockResolvedValue({
+//     files: jest.fn().mockResolvedValue([]),
+//     archive: jest.fn().mockResolvedValue(Buffer.from('mock archive')),
+//     dir: jest.fn().mockResolvedValue('/mock/dir'),
+//     etag: 'mock-etag',
+//   }),
+//   search: jest.fn().mockResolvedValue({
+//     files: [],
+//     etag: 'mock-etag',
+//   }),
+// };
+
+// const sampleEntities = [
+//   {
+//     apiVersion: 'backstage.io/v1alpha1',
+//     kind: 'Component',
+//     metadata: {
+//       name: 'test-service',
+//       namespace: 'default',
+//       annotations: {
+//         'github.com/project-slug': 'owner/repo1',
+//         'reporting/workflows': '["CI", "Deploy"]',
+//         'reporting/target-branch': 'develop',
+//       },
+//     },
+//     spec: {},
+//   },
+// ];
+
+// const sampleWorkflowDefinitions = {
+//   workflows: [
+//     { id: 1, name: 'CI', path: '.github/workflows/ci.yml' },
+//     { id: 2, name: 'Deploy', path: '.github/workflows/deploy.yml' },
+//   ],
+// };
+
+// const sampleWorkflowRuns = {
+//   workflow_runs: [
+//     {
+//       name: 'CI',
+//       status: 'completed',
+//       conclusion: 'success',
+//       created_at: '2023-01-01T00:00:00Z',
+//       head_branch: 'develop',
+//       workflow_id: 1,
+//     },
+//     {
+//       name: 'Deploy',
+//       status: 'completed',
+//       conclusion: 'failure',
+//       created_at: '2023-01-01T01:00:00Z',
+//       head_branch: 'develop',
+//       workflow_id: 2,
+//     },
+//   ],
+// };
+
+// describe('reportingPipelineStatusFactRetriever', () => {
+//   beforeEach(() => {
+//     jest.clearAllMocks();
+//     (CatalogClient as jest.Mock).mockImplementation(() => ({
+//       getEntities: jest.fn().mockResolvedValue({ items: sampleEntities }),
+//     }));
+//   });
+
+//   it('returns empty array if no GitHub token is configured', async () => {
+//     const config = createMockConfig();
+//     const facts = await reportingPipelineStatusFactRetriever.handler({
+//       config,
+//       logger: mockLogger,
+//       entityFilter: [{ kind: 'component' }],
+//       auth: mockAuth,
+//       discovery: mockDiscovery,
+//       urlReader: mockUrlReader,
+//     });
+
+//     expect(facts).toEqual([]);
+//     expect(mockLogger.error).toHaveBeenCalled();
+//   });
+
+//   it('uses target branch from annotation and returns correct metrics', async () => {
+//   const config = createMockConfig('test-token');
+
+//   // Mock workflow definitions
+//   mockFetch.mockResolvedValueOnce({
+//     ok: true,
+//     json: async () => sampleWorkflowDefinitions,
+//   });
+
+//   // CI workflow run (develop)
+//   mockFetch.mockResolvedValueOnce({
+//     ok: true,
+//     json: async () => ({
+//       workflow_runs: [sampleWorkflowRuns.workflow_runs[0]], // CI - success
+//     }),
+//   });
+
+//   // Deploy workflow run (develop)
+//   mockFetch.mockResolvedValueOnce({
+//     ok: true,
+//     json: async () => ({
+//       workflow_runs: [sampleWorkflowRuns.workflow_runs[1]], // Deploy - failure
+//     }),
+//   });
+
+//   const facts = await reportingPipelineStatusFactRetriever.handler({
+//     config,
+//     logger: mockLogger,
+//     entityFilter: [{ kind: 'component' }],
+//     auth: mockAuth,
+//     discovery: mockDiscovery,
+//     urlReader: mockUrlReader,
+//   });
+
+//   expect(facts.length).toBe(1);
+//   const metrics = facts[0].facts.workflowMetrics as Array<{
+//     workflowName: string;
+//     lastRunStatus: string;
+//     lastRunDate: string;
+//   }>;
+
+//   const ciMetric = metrics.find(m => m.workflowName === 'CI');
+//   const deployMetric = metrics.find(m => m.workflowName === 'Deploy');
+
+//   expect(ciMetric?.lastRunStatus).toBe('success');
+//   expect(deployMetric?.lastRunStatus).toBe('failure');
+//   expect(facts[0].facts.totalIncludedWorkflows).toBe(2);
+//   expect(facts[0].facts.successRate).toBe(50);
+// });
+
+
+// it('returns 0% success rate if no runs found', async () => {
+//   const config = createMockConfig('test-token');
+
+//   mockFetch
+//     .mockResolvedValueOnce({ ok: true, json: async () => sampleWorkflowDefinitions })
+//     .mockResolvedValueOnce({ ok: true, json: async () => ({ workflow_runs: [] }) })
+//     .mockResolvedValueOnce({ ok: true, json: async () => ({ workflow_runs: [] }) });
+
+//   const facts = await reportingPipelineStatusFactRetriever.handler({
+//     config,
+//     logger: mockLogger,
+//     entityFilter: [{ kind: 'component' }],
+//     auth: mockAuth,
+//     discovery: mockDiscovery,
+//     urlReader: mockUrlReader,
+//   });
+
+//   const workflowMetrics = facts[0].facts.workflowMetrics;
+//   expect(workflowMetrics).toEqual([]);
+//   expect(facts[0].facts.successRate).toBe(0);
+// });
+
+
+//   it('skips malformed workflow annotation', async () => {
+//     const badEntities = [{
+//       ...sampleEntities[0],
+//       metadata: {
+//         ...sampleEntities[0].metadata,
+//         annotations: { ...sampleEntities[0].metadata.annotations, 'reporting/workflows': '[not json]' },
+//       },
+//     }];
+
+//     (CatalogClient as jest.Mock).mockImplementation(() => ({
+//       getEntities: jest.fn().mockResolvedValue({ items: badEntities }),
+//     }));
+
+//     const config = createMockConfig('test-token');
+//     const facts = await reportingPipelineStatusFactRetriever.handler({
+//       config,
+//       logger: mockLogger,
+//       entityFilter: [{ kind: 'component' }],
+//       auth: mockAuth,
+//       discovery: mockDiscovery,
+//       urlReader: mockUrlReader,
+//     });
+
+//     expect(facts).toEqual([]);
+//     expect(mockLogger.warn).toHaveBeenCalled();
+//   });
+
+//   it('handles missing workflows gracefully', async () => {
+//     const noMatchEntities = [{
+//       ...sampleEntities[0],
+//       metadata: {
+//         ...sampleEntities[0].metadata,
+//         annotations: { ...sampleEntities[0].metadata.annotations, 'reporting/workflows': '["Unknown"]' },
+//       },
+//     }];
+
+//     (CatalogClient as jest.Mock).mockImplementation(() => ({
+//       getEntities: jest.fn().mockResolvedValue({ items: noMatchEntities }),
+//     }));
+
+//     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => sampleWorkflowDefinitions });
+
+//     const config = createMockConfig('test-token');
+//     const facts = await reportingPipelineStatusFactRetriever.handler({
+//       config,
+//       logger: mockLogger,
+//       entityFilter: [{ kind: 'component' }],
+//       auth: mockAuth,
+//       discovery: mockDiscovery,
+//       urlReader: mockUrlReader,
+//     });
+
+//     expect(facts).toEqual([]);
+//     expect(mockLogger.warn).toHaveBeenCalled();
+//   });
+
+//   it('defaults to "main" branch when no annotation is provided', async () => {
+//     const defaultBranchEntity = {
+//       ...sampleEntities[0],
+//       metadata: {
+//         ...sampleEntities[0].metadata,
+//         annotations: {
+//           'github.com/project-slug': 'owner/repo1',
+//           'reporting/workflows': '["CI"]',
+//         },
+//       },
+//     };
+
+//     (CatalogClient as jest.Mock).mockImplementation(() => ({
+//       getEntities: jest.fn().mockResolvedValue({ items: [defaultBranchEntity] }),
+//     }));
+
+//     mockFetch
+//       .mockResolvedValueOnce({ ok: true, json: async () => sampleWorkflowDefinitions })
+//       .mockResolvedValueOnce({ ok: true, json: async () => ({ workflow_runs: [sampleWorkflowRuns.workflow_runs[0]] }) });
+
+//     const config = createMockConfig('test-token');
+//     await reportingPipelineStatusFactRetriever.handler({
+//       config,
+//       logger: mockLogger,
+//       entityFilter: [{ kind: 'component' }],
+//       auth: mockAuth,
+//       discovery: mockDiscovery,
+//       urlReader: mockUrlReader,
+//     });
+
+//     expect(mockFetch).toHaveBeenCalledWith(
+//       expect.stringContaining('branch=main'),
+//       expect.anything(),
+//     );
+//   });
+// });
+
 import { reportingPipelineStatusFactRetriever } from '../reportingFactRetriever';
 import { CatalogClient } from '@backstage/catalog-client';
 import { Logger } from 'winston';
@@ -37,19 +344,12 @@ const createMockConfig = (token?: string): Config =>
     }),
   } as any);
 
-// Complete mock auth service
 const mockAuth: AuthService = {
-  getPluginRequestToken: jest
-    .fn()
-    .mockResolvedValue({ token: 'catalog-token' }),
+  getPluginRequestToken: jest.fn().mockResolvedValue({ token: 'catalog-token' }),
   getOwnServiceCredentials: jest.fn().mockResolvedValue({}),
   authenticate: jest.fn().mockResolvedValue({ principal: { type: 'service' } }),
-  getNoneCredentials: jest
-    .fn()
-    .mockReturnValue({ principal: { type: 'none' } }),
-  getLimitedUserToken: jest
-    .fn()
-    .mockResolvedValue({ token: 'limited-user-token' }),
+  getNoneCredentials: jest.fn().mockReturnValue({ principal: { type: 'none' } }),
+  getLimitedUserToken: jest.fn().mockResolvedValue({ token: 'limited-user-token' }),
   listPublicServiceKeys: jest.fn().mockResolvedValue({ keys: [] }),
   isPrincipal: jest.fn().mockReturnValue(true) as any,
 };
@@ -59,7 +359,6 @@ const mockDiscovery: DiscoveryService = {
   getExternalBaseUrl: jest.fn().mockResolvedValue('http://localhost:7007'),
 };
 
-// Mock URL reader service
 const mockUrlReader: UrlReaderService = {
   readUrl: jest.fn().mockResolvedValue({
     buffer: jest.fn().mockResolvedValue(Buffer.from('mock content')),
@@ -88,16 +387,8 @@ const sampleEntities = [
       annotations: {
         'github.com/project-slug': 'owner/repo1',
         'reporting/workflows': '["CI", "Deploy"]',
+        'reporting/target-branch': 'develop',
       },
-    },
-    spec: {},
-  },
-  {
-    apiVersion: 'backstage.io/v1alpha1',
-    kind: 'Component',
-    metadata: {
-      name: 'service-without-github',
-      namespace: 'default',
     },
     spec: {},
   },
@@ -107,7 +398,6 @@ const sampleWorkflowDefinitions = {
   workflows: [
     { id: 1, name: 'CI', path: '.github/workflows/ci.yml' },
     { id: 2, name: 'Deploy', path: '.github/workflows/deploy.yml' },
-    { id: 3, name: 'Other', path: '.github/workflows/other.yml' },
   ],
 };
 
@@ -118,41 +408,16 @@ const sampleWorkflowRuns = {
       status: 'completed',
       conclusion: 'success',
       created_at: '2023-01-01T00:00:00Z',
-      head_branch: 'main',
-      workflow_id: 1,
-    },
-    {
-      name: 'CI',
-      status: 'completed',
-      conclusion: 'failure',
-      created_at: '2023-01-01T01:00:00Z',
-      head_branch: 'main',
+      head_branch: 'develop',
       workflow_id: 1,
     },
     {
       name: 'Deploy',
       status: 'completed',
-      conclusion: 'success',
-      created_at: '2023-01-01T02:00:00Z',
-      head_branch: 'main',
+      conclusion: 'failure',
+      created_at: '2023-01-01T01:00:00Z',
+      head_branch: 'develop',
       workflow_id: 2,
-    },
-    {
-      name: 'Other',
-      status: 'completed',
-      conclusion: 'success',
-      created_at: '2023-01-01T03:00:00Z',
-      head_branch: 'main',
-      workflow_id: 3,
-    },
-    // Not main branch, should be ignored
-    {
-      name: 'CI',
-      status: 'completed',
-      conclusion: 'success',
-      created_at: '2023-01-01T04:00:00Z',
-      head_branch: 'feature-branch',
-      workflow_id: 1,
     },
   ],
 };
@@ -165,8 +430,15 @@ describe('reportingPipelineStatusFactRetriever', () => {
     }));
   });
 
-  it('returns empty array if no GitHub token is configured', async () => {
+  it('returns empty array when no GitHub token is configured', async () => {
     const config = createMockConfig();
+    
+    // Mock the workflow definitions call that will happen even without token
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+    });
+
     const facts = await reportingPipelineStatusFactRetriever.handler({
       config,
       logger: mockLogger,
@@ -175,77 +447,40 @@ describe('reportingPipelineStatusFactRetriever', () => {
       discovery: mockDiscovery,
       urlReader: mockUrlReader,
     });
+
     expect(facts).toEqual([]);
-    expect(mockLogger.error).toHaveBeenCalled();
-  });
-
-  it('returns correct metrics for included reporting workflows', async () => {
-    const config = createMockConfig('test-token');
-
-    // Mock fetch for workflow definitions and runs
-    mockFetch
-      // First call: workflow definitions
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowDefinitions,
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://api.github.com/repos/owner/repo1/actions/workflows',
+      expect.objectContaining({
+        headers: { 'Accept': 'application/vnd.github.v3+json' }
       })
-      // Second call: workflow runs
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowRuns,
-        headers: { get: () => null },
-      });
-
-    const facts = await reportingPipelineStatusFactRetriever.handler({
-      config,
-      logger: mockLogger,
-      entityFilter: [{ kind: 'component' }],
-      auth: mockAuth,
-      discovery: mockDiscovery,
-      urlReader: mockUrlReader,
-    });
-
-    expect(facts.length).toBe(1);
-    const fact = facts[0];
-    expect(fact.entity.name).toBe('test-service');
-    expect(fact.facts.workflowMetrics).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ workflowName: 'CI', totalRuns: 2, successfulRuns: 1 }),
-        expect.objectContaining({ workflowName: 'Deploy', totalRuns: 1, successfulRuns: 1 }),
-      ])
     );
-    expect(fact.facts.totalIncludedWorkflows).toBe(2);
-    expect(typeof fact.facts.overallSuccessRate).toBe('number');
   });
 
-  it('handles invalid reporting/workflows annotation gracefully', async () => {
+  it('uses target branch from annotation and returns correct workflow metrics', async () => {
     const config = createMockConfig('test-token');
-    const invalidEntities = [
-      {
-        ...sampleEntities[0],
-        metadata: {
-          ...sampleEntities[0].metadata,
-          annotations: {
-            ...sampleEntities[0].metadata.annotations,
-            'reporting/workflows': 'not-a-json',
-          },
-        },
-      },
-    ];
-    (CatalogClient as jest.Mock).mockImplementation(() => ({
-      getEntities: jest.fn().mockResolvedValue({ items: invalidEntities }),
-    }));
 
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowDefinitions,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowRuns,
-        headers: { get: () => null },
-      });
+    // Mock workflow definitions
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => sampleWorkflowDefinitions,
+    });
+
+    // CI workflow run (develop)
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        workflow_runs: [sampleWorkflowRuns.workflow_runs[0]], // CI - success
+      }),
+    });
+
+    // Deploy workflow run (develop)
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        workflow_runs: [sampleWorkflowRuns.workflow_runs[1]], // Deploy - failure
+      }),
+    });
 
     const facts = await reportingPipelineStatusFactRetriever.handler({
       config,
@@ -256,13 +491,39 @@ describe('reportingPipelineStatusFactRetriever', () => {
       urlReader: mockUrlReader,
     });
 
-    expect(facts.length).toBe(1);
-    expect(mockLogger.warn).toHaveBeenCalled();
+    expect(facts).toHaveLength(1);
+    
+    const fact = facts[0];
+    expect(fact.entity).toEqual({
+      kind: 'Component',
+      namespace: 'default',
+      name: 'test-service'
+    });
+    
+    const metrics = fact.facts.workflowMetrics as Array<{
+      workflowName: string;
+      lastRunStatus: string;
+      lastRunDate: string;
+    }>;
+
+    expect(metrics).toHaveLength(2);
+    
+    const ciMetric = metrics.find(m => m.workflowName === 'CI');
+    const deployMetric = metrics.find(m => m.workflowName === 'Deploy');
+
+    expect(ciMetric?.lastRunStatus).toBe('success');
+    expect(deployMetric?.lastRunStatus).toBe('failure');
+    expect(fact.facts.totalIncludedWorkflows).toBe(2);
+    expect(fact.facts.successRate).toBe(50);
   });
 
-  it('returns empty array if fetch fails', async () => {
+  it('calculates 0% success rate when no workflow runs are found', async () => {
     const config = createMockConfig('test-token');
-    mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => sampleWorkflowDefinitions })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ workflow_runs: [] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ workflow_runs: [] }) });
 
     const facts = await reportingPipelineStatusFactRetriever.handler({
       config,
@@ -270,18 +531,31 @@ describe('reportingPipelineStatusFactRetriever', () => {
       entityFilter: [{ kind: 'component' }],
       auth: mockAuth,
       discovery: mockDiscovery,
-      urlReader: mockUrlReader
+      urlReader: mockUrlReader,
     });
 
-    expect(facts.length).toBe(0);
-    expect(mockLogger.error).toHaveBeenCalled();
+    expect(facts).toHaveLength(1);
+    
+    const fact = facts[0];
+    expect(fact.facts.workflowMetrics).toEqual([]);
+    expect(fact.facts.successRate).toBe(0);
+    expect(fact.facts.totalIncludedWorkflows).toBe(0);
   });
 
-  // ...existing code...
+  it('returns empty array when workflow annotation is malformed', async () => {
+    const badEntities = [{
+      ...sampleEntities[0],
+      metadata: {
+        ...sampleEntities[0].metadata,
+        annotations: { 
+          ...sampleEntities[0].metadata.annotations, 
+          'reporting/workflows': '[not json]' 
+        },
+      },
+    }];
 
-  it('returns empty array if no entities have github.com/project-slug annotation', async () => {
     (CatalogClient as jest.Mock).mockImplementation(() => ({
-      getEntities: jest.fn().mockResolvedValue({ items: [sampleEntities[1]] }),
+      getEntities: jest.fn().mockResolvedValue({ items: badEntities }),
     }));
 
     const config = createMockConfig('test-token');
@@ -295,16 +569,29 @@ describe('reportingPipelineStatusFactRetriever', () => {
     });
 
     expect(facts).toEqual([]);
-    expect(mockLogger.info).toHaveBeenCalledWith('Processing 0 GitHub entities for reporting pipelines');
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it('returns empty array if workflow definitions fetch fails', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: false,
-        statusText: 'Not Found',
-        json: async () => ({}),
-      });
+  it('returns empty array when specified workflows do not exist in repository', async () => {
+    const noMatchEntities = [{
+      ...sampleEntities[0],
+      metadata: {
+        ...sampleEntities[0].metadata,
+        annotations: { 
+          ...sampleEntities[0].metadata.annotations, 
+          'reporting/workflows': '["Unknown", "NonExistent"]' 
+        },
+      },
+    }];
+
+    (CatalogClient as jest.Mock).mockImplementation(() => ({
+      getEntities: jest.fn().mockResolvedValue({ items: noMatchEntities }),
+    }));
+
+    mockFetch.mockResolvedValueOnce({ 
+      ok: true, 
+      json: async () => sampleWorkflowDefinitions 
+    });
 
     const config = createMockConfig('test-token');
     const facts = await reportingPipelineStatusFactRetriever.handler({
@@ -316,64 +603,34 @@ describe('reportingPipelineStatusFactRetriever', () => {
       urlReader: mockUrlReader,
     });
 
-    expect(facts.length).toBe(0);
-    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch workflow definitions'));
+    expect(facts).toEqual([]);
+    expect(mockFetch).toHaveBeenCalledTimes(1); // Only workflow definitions call
   });
 
-  it('returns empty array if workflow runs fetch fails', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowDefinitions,
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-        statusText: 'Forbidden',
-        json: async () => ({}),
-        headers: { get: () => null },
-      });
-
-    const config = createMockConfig('test-token');
-    const facts = await reportingPipelineStatusFactRetriever.handler({
-      config,
-      logger: mockLogger,
-      entityFilter: [{ kind: 'component' }],
-      auth: mockAuth,
-      discovery: mockDiscovery,
-      urlReader: mockUrlReader,
-    });
-
-    expect(facts.length).toBe(1);
-    const metrics = Array.isArray(facts[0].facts.workflowMetrics) ? facts[0].facts.workflowMetrics : [];
-    expect(metrics.length).toBe(0);
-    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch data for repo1'));
-    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch data for repo1'));
-  });
-
-  it('uses all workflows if reporting/workflows annotation is empty', async () => {
-    const entityWithEmptyAnnotation = {
+  it('defaults to "main" branch when no target branch annotation is provided', async () => {
+    const defaultBranchEntity = {
       ...sampleEntities[0],
       metadata: {
         ...sampleEntities[0].metadata,
         annotations: {
-          ...sampleEntities[0].metadata.annotations,
-          'reporting/workflows': '[]',
+          'github.com/project-slug': 'owner/repo1',
+          'reporting/workflows': '["CI"]',
+          // No 'reporting/target-branch' annotation
         },
       },
     };
+
     (CatalogClient as jest.Mock).mockImplementation(() => ({
-      getEntities: jest.fn().mockResolvedValue({ items: [entityWithEmptyAnnotation] }),
+      getEntities: jest.fn().mockResolvedValue({ items: [defaultBranchEntity] }),
     }));
 
     mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowDefinitions,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowRuns,
-        headers: { get: () => null },
+      .mockResolvedValueOnce({ ok: true, json: async () => sampleWorkflowDefinitions })
+      .mockResolvedValueOnce({ 
+        ok: true, 
+        json: async () => ({ 
+          workflow_runs: [sampleWorkflowRuns.workflow_runs[0]] 
+        }) 
       });
 
     const config = createMockConfig('test-token');
@@ -386,37 +643,61 @@ describe('reportingPipelineStatusFactRetriever', () => {
       urlReader: mockUrlReader,
     });
 
-    // Should include all workflows in metrics
-    expect(facts.length).toBe(1);
-    expect(facts[0].facts.totalIncludedWorkflows).toBe(sampleWorkflowDefinitions.workflows.length);
+    // Verify that the API was called with main branch
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('branch=main'),
+      expect.anything(),
+    );
+
+    expect(facts).toHaveLength(1);
+    expect(facts[0].facts.successRate).toBe(100);
   });
 
-  it('uses all workflows if reporting/workflows annotation names do not match any workflow', async () => {
-    const entityWithNonMatchingAnnotation = {
+  it('handles GitHub API errors gracefully', async () => {
+    const config = createMockConfig('test-token');
+
+    // Mock workflow definitions API to fail
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+    });
+
+    const facts = await reportingPipelineStatusFactRetriever.handler({
+      config,
+      logger: mockLogger,
+      entityFilter: [{ kind: 'component' }],
+      auth: mockAuth,
+      discovery: mockDiscovery,
+      urlReader: mockUrlReader,
+    });
+
+    expect(facts).toEqual([]);
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://api.github.com/repos/owner/repo1/actions/workflows',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Authorization': 'token test-token'
+        })
+      })
+    );
+  });
+
+  it('handles entities without GitHub project slug', async () => {
+    const entityWithoutSlug = {
       ...sampleEntities[0],
       metadata: {
         ...sampleEntities[0].metadata,
         annotations: {
-          ...sampleEntities[0].metadata.annotations,
-          'reporting/workflows': '["NonExistentWorkflow"]',
+          'reporting/workflows': '["CI"]',
+          // No 'github.com/project-slug' annotation
         },
       },
     };
+
     (CatalogClient as jest.Mock).mockImplementation(() => ({
-      getEntities: jest.fn().mockResolvedValue({ items: [entityWithNonMatchingAnnotation] }),
+      getEntities: jest.fn().mockResolvedValue({ items: [entityWithoutSlug] }),
     }));
 
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowDefinitions,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowRuns,
-        headers: { get: () => null },
-      });
-
     const config = createMockConfig('test-token');
     const facts = await reportingPipelineStatusFactRetriever.handler({
       config,
@@ -427,109 +708,7 @@ describe('reportingPipelineStatusFactRetriever', () => {
       urlReader: mockUrlReader,
     });
 
-    // Should fallback to all workflows
-    expect(facts.length).toBe(1);
-    expect(facts[0].facts.totalIncludedWorkflows).toBe(sampleWorkflowDefinitions.workflows.length);
+    expect(facts).toEqual([]);
+    expect(mockFetch).not.toHaveBeenCalled();
   });
-
-  it('calculates 0% success rate if there are no successful runs', async () => {
-    const failedRuns = {
-      workflow_runs: [
-        {
-          name: 'CI',
-          status: 'completed',
-          conclusion: 'failure',
-          created_at: '2023-01-01T00:00:00Z',
-          head_branch: 'main',
-          workflow_id: 1,
-        },
-      ],
-    };
-
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowDefinitions,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => failedRuns,
-        headers: { get: () => null },
-      });
-
-    const config = createMockConfig('test-token');
-    const facts = await reportingPipelineStatusFactRetriever.handler({
-      config,
-      logger: mockLogger,
-      entityFilter: [{ kind: 'component' }],
-      auth: mockAuth,
-      discovery: mockDiscovery,
-      urlReader: mockUrlReader,
-    });
-
-    expect(facts.length).toBe(1);
-    const metrics = (facts[0].facts as any).workflowMetrics;
-    expect(metrics && metrics[0] && metrics[0].successRate).toBe(0);
-    expect((facts[0].facts as any).overallSuccessRate).toBe(0);
-  });
-
-  it('rounds success rates to two decimal places', async () => {
-    const runs = {
-      workflow_runs: [
-        {
-          name: 'CI',
-          status: 'completed',
-          conclusion: 'success',
-          created_at: '2023-01-01T00:00:00Z',
-          head_branch: 'main',
-          workflow_id: 1,
-        },
-        {
-          name: 'CI',
-          status: 'completed',
-          conclusion: 'failure',
-          created_at: '2023-01-01T01:00:00Z',
-          head_branch: 'main',
-          workflow_id: 1,
-        },
-        {
-          name: 'CI',
-          status: 'completed',
-          conclusion: 'success',
-          created_at: '2023-01-01T02:00:00Z',
-          head_branch: 'main',
-          workflow_id: 1,
-        },
-      ],
-    };
-
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => sampleWorkflowDefinitions,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => runs,
-        headers: { get: () => null },
-      });
-
-    const config = createMockConfig('test-token');
-    const facts = await reportingPipelineStatusFactRetriever.handler({
-      config,
-      logger: mockLogger,
-      entityFilter: [{ kind: 'component' }],
-      auth: mockAuth,
-      discovery: mockDiscovery,
-      urlReader: mockUrlReader,
-    });
-
-    expect(facts.length).toBe(1);
-    // 2/3 = 66.666... should round to 66.67
-    const metrics = (facts[0].facts as any).workflowMetrics;
-    expect(metrics && metrics[0] && metrics[0].successRate).toBe(66.67);
-    expect((facts[0].facts as any).overallSuccessRate).toBe(66.67);
-  });
-
-// ...existing code...
 });

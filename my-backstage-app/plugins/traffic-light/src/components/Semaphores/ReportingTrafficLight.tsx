@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { ReportingUtils } from '../../utils/reportingUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
+import { determineSemaphoreColor } from '../utils';
 
 interface ReportingTrafficLightProps {
   entities: Entity[];
@@ -27,14 +29,12 @@ export const ReportingTrafficLight = ({
   >('white');
   const [reason, setReason] = useState('Loading Reporting pipeline data...');
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
 
-  const reportingUtils = React.useMemo(
-    () => new ReportingUtils(),
-    [techInsightsApi],
-  );
+  const reportingUtils = React.useMemo(() => new ReportingUtils(), []);
 
   useEffect(() => {
-    const fetchReportingData = async () => {
+    const fetchData = async () => {
       if (!entities.length) {
         setColor('gray');
         setReason('No entities selected');
@@ -42,7 +42,34 @@ export const ReportingTrafficLight = ({
       }
 
       try {
-        const reportingCheckResults = await Promise.all(
+        // 1. Fetch red threshold from system annotation
+        let redThreshold = 0.33;
+        try {
+          const systemName = entities[0].spec?.system;
+          const namespace = entities[0].metadata.namespace || 'default';
+
+          if (systemName) {
+            const systemEntity = await catalogApi.getEntityByRef({
+              kind: 'System',
+              namespace,
+              name:
+                typeof systemName === 'string'
+                  ? systemName
+                  : String(systemName),
+            });
+
+            const thresholdAnnotation =
+              systemEntity?.metadata.annotations?.[
+                'reporting-check-threshold-red'
+              ];
+            if (thresholdAnnotation) {
+              redThreshold = parseFloat(thresholdAnnotation);
+            }
+          }
+        } catch (err) {}
+
+        // 2. Run reporting pipeline checks
+        const results = await Promise.all(
           entities.map(entity =>
             reportingUtils.getReportingPipelineChecks(techInsightsApi, {
               kind: entity.kind,
@@ -52,29 +79,24 @@ export const ReportingTrafficLight = ({
           ),
         );
 
-        const failures = reportingCheckResults.filter(
+        const failures = results.filter(
           r => r.successRateCheck === false,
         ).length;
 
-        if (failures === 0) {
-          setColor('green');
-          setReason('All Reporting pipeline checks passed for all entities');
-        } else if (failures > entities.length / 3) {
-          setColor('red');
-          setReason(`${failures} entities failed the success rate check`);
-        } else {
-          setColor('yellow');
-          setReason(`${failures} entities failed the success rate check`);
-        }
+        // 3. Determine color and reason
+        const { color: computedColor, reason: computedReason } =
+          determineSemaphoreColor(failures, entities.length, redThreshold);
+
+        setColor(computedColor);
+        setReason(computedReason);
       } catch (err) {
-        console.error('Error fetching Reporting pipeline data:', err);
         setColor('gray');
-        setReason('Failed to retrieve Reporting pipeline data');
+        setReason('Error fetching reporting pipeline data');
       }
     };
 
-    fetchReportingData();
-  }, [entities, techInsightsApi]);
+    fetchData();
+  }, [entities, techInsightsApi, catalogApi, reportingUtils]);
 
   return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
 };

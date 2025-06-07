@@ -96,7 +96,7 @@ export const fetchRepoStatus = async (
   // Get SonarCloud facts and evaluate status
   let sonarStatus = { color: 'green' as TrafficLightColor, reason: 'Score 70 ≥ 70 (green)' };
   try {
-    const sonarFacts = await sonarUtils.getSonarQubeFacts(techInsightsApi, entity);
+    const sonarFacts = await getSonarQubeFacts(techInsightsApi, entity);
     console.log("Sonar Qube bugs: ", sonarFacts.bugs);
     console.log("Sonar Qube code smells: ", sonarFacts.code_smells);
     console.log("Sonar Qube vulnerabilities: ", sonarFacts.vulnerabilities);

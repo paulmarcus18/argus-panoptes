@@ -45,6 +45,9 @@ integrations:
   github:
     - host: github.com
       token: ${GITHUB_TOKEN}
+  azure:
+    - host: dev.azure.com
+      token: ${AZURE_DEVOPS_TOKEN}
 proxy:
   ### Example for how to add a proxy endpoint for the frontend.
   ### A typical reason to do this is to handle HTTPS and CORS for internal services.
@@ -175,6 +178,10 @@ sonarcloud:
   token: ${SONARCLOUD_TOKEN}
   organization: sep-arguspanoptes
 
+blackduck:
+  token: ${BLACKDUCK_TOKEN}
+  host: ${BLACKDUCK_BASE_URL}
+
 techInsights:
   factRetrievers:
     sonarcloud-fact-retriever: # Change from array to object
@@ -187,7 +194,7 @@ techInsights:
         kind: Component
     azure-devops-bugs-retriever:
       enabled: true
-      cadence: '*/2 * * * *' 
+      cadence: '* * * * *' # Every 4 hours
       filter:
         kind: Component
     dependabotFactRetriever:
@@ -202,6 +209,9 @@ techInsights:
     reportingPipelineStatusFactRetriever:
       cadence: '*/2 * * * *' # every minute
       lifecycle: { timeToLive: { weeks: 2 } }
+    blackduck-fact-retriever:
+      enabled: true
+      cadence: '0 */4 * * *' # Every 4 hours
     githubAdvancedSecurityFactRetriever:
       cadence: "0 * * * *" # every hour
   factChecker:
@@ -302,6 +312,18 @@ techInsights:
               - fact: openAlertCount
                 operator: lessThan
                 value: 5
+      githubCodeScanningCheck:
+        type: json-rules-engine
+        name: Code Scanning Alerts Below Threshold
+        description: Checks if Code Scanning alerts are below acceptable threshold
+        factIds:
+          - githubAdvancedSecurityFactRetriever
+        rule:
+          conditions:
+            all:
+              - fact: openCodeScanningAlertCount
+                operator: lessThan
+                value: 5
       githubSecretScanningCheck:
         type: json-rules-engine
         name: No Secret Scanning Alerts
@@ -350,5 +372,3 @@ techInsights:
               - fact: successWorkflowRunsCount
                 operator: moreThan
                 value: 80
-     
-      

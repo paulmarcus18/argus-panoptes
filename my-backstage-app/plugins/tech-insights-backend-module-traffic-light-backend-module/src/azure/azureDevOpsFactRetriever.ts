@@ -27,10 +27,18 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
         { token }
       );
       entities = response.items ?? [];
-      console.info(`📦 Fetched ${entities.length} component entities`);
     } catch (e) {
-      console.error(`❌ Failed to fetch entities: ${e}`);
+      console.error(`Failed to fetch entities: ${e}`);
       return [];
+    }
+
+    const azureConfigs = ctx.config.getOptionalConfigArray('integrations.azure');
+    const azureConfig = azureConfigs?.[0];
+    const pat = azureConfig?.getOptionalString('token');
+
+    if (!pat) {
+      console.error('Azure DevOps token is not defined.');
+      const pat = undefined;
     }
 
     const results = [];
@@ -41,10 +49,8 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
       const organization = annotations['azure.com/organization'];
       const project = annotations['azure.com/project'];
       const bugsQueryId = annotations['azure.com/bugs-query-id'];
-      const pat = annotations['azure.com/pat'];
 
       if (!organization || !project || !bugsQueryId || !pat) {
-        console.warn(`⚠️ Missing Azure DevOps annotations for ${entity.metadata.name}`);
         results.push({
           entity: {
             name: entity.metadata.name,
@@ -74,7 +80,7 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
 
         if (!response.ok) {
           console.error(
-            `❌ Failed to fetch WIQL results for ${entity.metadata.name}: ${response.statusText}`,
+            `Failed to fetch WIQL results for ${entity.metadata.name}: ${response.statusText}`,
           );
           continue;
         }
@@ -82,8 +88,6 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
         const data = await response.json();
         const bugs = data.workItems ?? [];
         const bugCount = bugs.length;
-
-        console.info(`🐞 ${entity.metadata.name} has ${bugCount} Azure DevOps bugs`);
 
         results.push({
           entity: {
@@ -96,7 +100,7 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
           },
         });
       } catch (err) {
-        console.error(`❌ Error retrieving bugs for ${entity.metadata.name}: ${err}`);
+        console.error(`Error retrieving bugs for ${entity.metadata.name}: ${err}`);
       }
     }
 

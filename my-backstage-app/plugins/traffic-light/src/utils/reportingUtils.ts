@@ -1,17 +1,17 @@
 import {
   CompoundEntityRef,
-  stringifyEntityRef,
 } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
 /**
- * Strongly‑typed shape of the metrics produced by the
- * `reportingFactRetriever` retriever.
+ * Metrics returned by Reporting pipeline (Github Actions) for a Backstage entity.
  */
 export interface ReportingPipelineMetrics {
   workflowMetrics: object;
   totalIncludedWorkflows: number;
-  overallSuccessRate: number;
+  successfulRuns: number;
+  failedRuns: number;
+  successRate: number;
 }
 
 /**
@@ -21,12 +21,20 @@ export interface ReportingPipelineChecks {
   successRateCheck: boolean;
 }
 
+/**
+ * A small utility for providing safe default objects when Reporting pipeline returns no data or an error is thrown.
+ */
 const DEFAULT_METRICS: ReportingPipelineMetrics = {
   workflowMetrics: {},
   totalIncludedWorkflows: 0,
-  overallSuccessRate: 0,
+  successfulRuns: 0,
+  failedRuns: 0,
+  successRate: 0,
 };
 
+/**
+ * A small utility for providing safe default objects when Reporting pipeline checks return no data or an error is thrown.
+ */
 const DEFAULT_CHECKS: ReportingPipelineChecks = {
   successRateCheck: false,
 };
@@ -48,45 +56,25 @@ export class ReportingUtils {
    */
   async getReportingPipelineFacts(api: TechInsightsApi, entity: CompoundEntityRef): Promise<ReportingPipelineMetrics> {
     try {
-      console.log(
-        'Fetching Reporting pipeline facts for entity:',
-        stringifyEntityRef(entity),
-      );
-
+      // Fetch Reporting pipeline facts for the given entity
       const response = await api.getFacts(entity, [
         'reportingPipelineStatusFactRetriever',
       ]);
 
-      console.log(
-        'Raw Tech Insights API response:',
-        JSON.stringify(response, null, 2),
-      );
-
       const facts = response?.['reportingPipelineStatusFactRetriever']?.facts;
 
       if (!facts) {
-        console.error('No facts found for entity:', stringifyEntityRef(entity));
         return { ...DEFAULT_METRICS };
       }
-
-      console.log(
-        'Parsed Reporting pipeline facts:',
-        facts.workflowMetrics,
-        facts.totalIncludedWorkflows,
-        facts.overallSuccessRate,
-      );
 
       return {
         workflowMetrics: Object(facts.workflowMetrics ?? {}),
         totalIncludedWorkflows: Number(facts.totalIncludedWorkflows ?? 0),
-        overallSuccessRate: Number(facts.overallSuccessRate ?? 0),
+        successfulRuns: Number(facts.successfulRuns ?? 0),
+        failedRuns: Number(facts.failedRuns ?? 0),
+        successRate: Number(facts.successRate ?? 0),
       };
     } catch (error) {
-      console.error(
-        'Error fetching Reporting pipeline facts for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
       return { ...DEFAULT_METRICS };
     }
   }
@@ -101,28 +89,14 @@ export class ReportingUtils {
    */
   async getReportingPipelineChecks(api: TechInsightsApi, entity: CompoundEntityRef): Promise<ReportingPipelineChecks> {
     try {
-      console.log(
-        'Running checks on Reporting pipeline facts for entity:',
-        stringifyEntityRef(entity),
-      );
-
+      // Fetch Reporting pipeline checks for the given entity
       const checkResults = await api.runChecks(entity);
 
       const successRateCheck = checkResults.find(
         r => r.check.id === 'reporting-success-rate',
       );
 
-      console.log(
-        'Result from Reporting success rate check:',
-        stringifyEntityRef(entity),
-        successRateCheck?.result,
-      );
-
       if (checkResults.length === 0) {
-        console.error(
-          'No check results found for entity:',
-          stringifyEntityRef(entity),
-        );
         return { ...DEFAULT_CHECKS };
       }
 
@@ -130,11 +104,6 @@ export class ReportingUtils {
         successRateCheck: successRateCheck?.result === true,
       };
     } catch (error) {
-      console.error(
-        'Error running Reporting pipeline checks for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
       return { ...DEFAULT_CHECKS };
     }
   }

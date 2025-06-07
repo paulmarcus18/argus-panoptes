@@ -20,6 +20,8 @@ metadata:
     tech-insights.io/preproduction-max-failures-operator: 'lessThanInclusive'
     tech-insights.io/reporting-success-rate-threshold: '80'
     tech-insights.io/reporting-success-rate-operator: 'greaterThanInclusive'
+    preproduction-configured-repositories: 'fatt,terraform-registry,argus-panoptes'
+    foundation-configured-repositories: 'fatt,terraform-registry,argus-panoptes'
 
     # Github Advanced Security - fact checker thresholds
     tech-insights.io/github-advanced-security-secrets-threshold: '0'
@@ -44,9 +46,13 @@ metadata:
     github-advanced-security-system-medium-threshold-red: '0.5'
     github-advanced-security-system-medium-threshold-yellow: '0.1'
     github-advanced-security-system-low-threshold-yellow: '0.2'
+    foundation-check-threshold-red: '2'
+    preproduction-check-threshold-red: '1'
+    reporting-check-threshold-red: '2'
+    azure-bugs-check-threshold-red: '0.33'
 
     # Azure DevOps Annotations
-    tech-insights.io/azure-bugs-threshold: '5'
+    tech-insights.io/azure-bugs-threshold: '0'
     tech-insights.io/azure-bugs-operator: 'lessThanInclusive'
 spec:
   owner: identity-team

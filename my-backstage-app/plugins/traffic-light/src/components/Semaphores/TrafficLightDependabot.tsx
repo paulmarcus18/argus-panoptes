@@ -9,25 +9,16 @@ import { catalogApiRef } from '@backstage/plugin-catalog-react';
 export const determineDependabotColor = async(
   systemName: string,
   entities: Entity[],
-  catalogApi: any,
   techInsightsApi: any,
   dependabotUtils: DependabotUtils
 ): Promise<{color: 'green' | 'red' | 'yellow' | 'gray' , reason: string}> => {
-//   if (!Array.isArray(entities) || entities.length === 0) {
-//     console.log('📦 determineDependabotColor called with entities:', entities);
-//     return { color: 'gray', reason: 'No entities provided' };
-// }
       const filteredEntities = entities.filter(
         e => e.spec?.system === systemName
       );
 
       if (!systemName || !Array.isArray(entities) || filteredEntities.length === 0) {
-        console.log('📦 determineDependabotColor called with entities:', entities);
         return { color: 'gray', reason: `No entities found for system: ${systemName}` };
       }
-  // if (!entities.length) {
-  //     return { color: 'gray', reason: 'No entities available' };
-  //   }
       const fallbackEntity = entities.find(e => typeof e.spec?.system === 'string');
       const fallbackSystem = fallbackEntity?.spec?.system;
       const finalSystemName = systemName ?? fallbackSystem;
@@ -65,24 +56,17 @@ export const determineDependabotColor = async(
           }, 
           
           );
-        //issue is if facts and threshold not found, check returns false, and then code thinks the repo(s) failed checks but theres no facts actually
         //no high repo and no critical repo -> green
         if (totalChecks.high === 0 && totalChecks.critical === 0) {
           return { color: 'green', reason: 'All dependabot checks passed' };
-          console.log(`${totalChecks.critical} alerts found`)
         } else if (totalChecks.critical > 0 ) {
-
           //if atleast 1 critical repo -> red
-            console.log(`${totalChecks.critical} alerts found`)
-            return { color: 'red', reason: `Critical alerts exceed threshold (${totalChecks.critical} > ${entities.length * 0.5})` };
+            return { color: 'red', reason: `Critical alerts exceed threshold (${totalChecks.critical} >  0)` };
         } else {
           return { color: 'yellow', reason: `${totalChecks.critical} minor critical issues in dependabot alerts` };
-          console.log(`${totalChecks.critical} alerts found`)
         }
-
       } catch (err) {
         return { color: 'gray', reason: 'Error fetching dependabot data' };
-        console.error('Dependabot error:', err);
       }
     };
 
@@ -117,12 +101,6 @@ export const TrafficLightDependabot = ({
 
     console.log('🚦 Rendering with entities:', entities);
       const fetchData = async () => {
-      //   if (!Array.isArray(entities) || entities.length === 0) {
-      //   setColor('gray');
-      //   setReason('No entities selected');
-      //   return;
-      // }
-
       const filteredEntities = entities.filter(
         e => e.spec?.system === systemName
       );
@@ -135,7 +113,6 @@ export const TrafficLightDependabot = ({
       const dependabotColorAndReason = await determineDependabotColor(
         systemName,
         filteredEntities,
-        catalogApi,
         techInsightsApi,
         dependabotUtils
       );

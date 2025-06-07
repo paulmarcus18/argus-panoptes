@@ -11,11 +11,11 @@ metadata:
     pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
     foundation/thresholds: '{"minSuccessRate": 95}'
     reporting/workflows: '["CodeQL", "Continuous Integration"]'
-    preproduction/exclude: '["Dependabot Updates"]'
+    reporting/target-branch: main
+    preproduction/exclude: '["Dependabot.*"]'
     azure.com/organization: argus-panoptes-dev
     azure.com/project: project_2
     azure.com/bugs-query-id: b2fdb928-a73e-4cba-82c9-e605a194666d
-    azure.com/pat: 9APDLq54nbzmerzTCuD50qLNWFHSprSivK7Q6zTuvqqP3PNMFPW0JQQJ99BDACAAAAAAAAAAAAASAZDOrt3M
   tags:
     - non-critical
 spec:

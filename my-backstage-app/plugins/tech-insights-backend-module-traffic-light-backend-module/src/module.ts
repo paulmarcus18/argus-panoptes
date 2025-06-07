@@ -20,18 +20,19 @@ import { githubAdvancedSecurityFactRetriever } from './github-advanced-security/
 import { githubPipelineStatusFactRetriever } from './pipelines/preproductionFactRetriever';
 import { foundationPipelineStatusFactRetriever } from './pipelines/foundationFactRetriever';
 import { reportingPipelineStatusFactRetriever } from './pipelines/reportingFactRetriever';
-
-// import { createGitHubSecretScanningCheck } from './github-advanced-security/githubASFactChecker';
-// Import JsonRulesEngineFactCheckerFactory
+//import {createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 // Imports retriever that queries Azure DevOps bugs data.
 import { createAzureDevOpsBugsRetriever } from './azure/azureDevOpsFactRetriever';
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
+// Imports the fact retriever that collects data from Black Duck.
+import {createBlackDuckFactRetriever} from './blackduck/blackduckFactRetriever';
 // Imports the fact checker factory that evaluates dynamic thresholds.
 import { DynamicThresholdFactCheckerFactory } from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 // Imports the CatalogClient to interact with the Backstage catalog.
 import { CatalogClient } from '@backstage/catalog-client';
-
+// Imports the Black Duck checks for security risk evaluation.
+import { BlackDuckChecks } from './blackduck/blackduckFactChecker';
 // Import the missing AuthenticatedCatalogApi class or function
 import { AuthenticatedCatalogApi } from './authenticatedCatalogApi';
 import { foundationPipelineChecks } from './pipelines/foundationFactChecker';
@@ -63,7 +64,6 @@ export default createBackendModule({
         discovery: coreServices.discovery,
         auth: coreServices.auth,
       },
-
       //initialization function that will run during backend's startup
       async init({
         providers,
@@ -76,10 +76,9 @@ export default createBackendModule({
         //logs to the console to confirm module is being registered
         logger.info('Registering dependabot-facts module...');
         const factRetriever = createDependabotFactRetriever(config, logger);
-        const sonarCloudFactRetriever = createSonarCloudFactRetriever(
-          config,
-          logger,
-        );
+        const sonarCloudFactRetriever = createSonarCloudFactRetriever(config);
+
+        const blackDuckFactRetriever = createBlackDuckFactRetriever(config);
 
         providers.addFactRetrievers({
           githubAdvancedSecurityFactRetriever,
@@ -89,6 +88,7 @@ export default createBackendModule({
           reportingPipelineStatusFactRetriever,
           dependabotFactRetriever: factRetriever, // Adds the dependabotFactRetriever to the system.
           [sonarCloudFactRetriever.id]: sonarCloudFactRetriever, // Adds the sonarCloudFactRetriever to the system.
+          [blackDuckFactRetriever.id]: blackDuckFactRetriever, // Adds the blackDuckFactRetriever to the system.
         });
 
         // Register fact checkers
@@ -112,6 +112,7 @@ export default createBackendModule({
         const sonarCloudFactCheckerFactory =
           new DynamicThresholdFactCheckerFactory({
             checks: [
+              ...BlackDuckChecks,
               ...foundationPipelineChecks,
               ...preproductionPipelineChecks,
               ...reportingPipelineChecks,
