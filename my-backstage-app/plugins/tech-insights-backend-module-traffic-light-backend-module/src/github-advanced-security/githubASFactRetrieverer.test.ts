@@ -1,5 +1,5 @@
 /**
- * Basic tests for GitHub Advanced Security Fact Retriever
+ * Tests for GitHub Advanced Security Fact Retriever
  */
 import { githubAdvancedSecurityFactRetriever } from './githubASFactRetriever';
 
@@ -63,6 +63,7 @@ describe('githubAdvancedSecurityFactRetriever', () => {
     expect(githubAdvancedSecurityFactRetriever.entityFilter).toEqual([{ kind: 'component' }]);
   });
 
+  // Should return empty array when there is no GitHub token
   it('should return empty array when no GitHub token', async () => {
     mockConfig.getOptionalConfigArray.mockReturnValue([{
       getOptionalString: jest.fn().mockReturnValue(undefined),
@@ -77,7 +78,7 @@ describe('githubAdvancedSecurityFactRetriever', () => {
     expect(result).toEqual([]);
   });
 
-  // Test for config errors
+  // Returns empty array when config throws error
   it('should return empty array when config throws error', async () => {
     mockConfig.getOptionalConfigArray.mockImplementation(() => {
       throw new Error('Config error');
@@ -218,6 +219,7 @@ describe('githubAdvancedSecurityFactRetriever', () => {
     expect(result).toEqual([]);
   });
 
+  // counting the secuirty alerts by severity levels
   it('should count different severity levels correctly', async () => {
     mockConfig.getOptionalConfigArray.mockReturnValue([{
       getOptionalString: jest.fn().mockReturnValue('mock-token'),
@@ -274,6 +276,7 @@ describe('githubAdvancedSecurityFactRetriever', () => {
     expect(result[0]?.facts.lowCount).toBe(0);
   });
 
+  // Handling empty alerts responses
   it('should handle empty alerts responses', async () => {
     mockConfig.getOptionalConfigArray.mockReturnValue([{
       getOptionalString: jest.fn().mockReturnValue('mock-token'),

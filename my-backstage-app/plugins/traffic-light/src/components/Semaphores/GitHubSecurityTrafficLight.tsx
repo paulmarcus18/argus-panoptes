@@ -131,12 +131,12 @@ export function calculateGitHubSecurityTrafficLight(
   if (isRedCondition) {
     return {
       color: 'red',
-      reason: formatRedReason(totalChecks)
+      reason: formatRedReason(totalChecks, thresholds)
     };
   } else if (isYellowCondition) {
     return {
       color: 'yellow',
-      reason: formatYellowReason(totalChecks)
+      reason: formatYellowReason(totalChecks, thresholds)
     };
   } else {
     return {
@@ -149,47 +149,49 @@ export function calculateGitHubSecurityTrafficLight(
 /**
  * Format reason message for red traffic light
  */
-function formatRedReason(totalChecks: SecurityCheckTotals): string {
+function formatRedReason(totalChecks: SecurityCheckTotals, thresholds?: SecurityThresholds): string {
   const parts: string[] = [];
-  
-  if (totalChecks.criticalEntities.length > 0) {
-    parts.push(`Critical issues in: ${totalChecks.criticalEntities.join(', ')}`);
-  }
-  
-  if (totalChecks.secretEntities.length > 0) {
-    parts.push(`Secret scanning issues in: ${totalChecks.secretEntities.join(', ')}`);
-  }
-  
-  if (totalChecks.highEntities.length > 0) {
-    parts.push(`High severity issues in: ${totalChecks.highEntities.join(', ')}`);
-  }
-  
-  if (totalChecks.mediumEntities.length > 0) {
-    parts.push(`Medium severity issues in: ${totalChecks.mediumEntities.join(', ')}`);
-  }
 
-  return parts.join('\n') || 'Security threshold exceeded';
+  if (totalChecks.criticalCheckTrue > (thresholds?.critical_red ?? 0)) {
+    if (thresholds?.critical_red !== undefined) {
+      parts.push(`Critical severity issues are exceeded by ${totalChecks.criticalCheckTrue} repos, the threshold for this system is: ${thresholds.critical_red}`);
+    }
+  }
+  if (totalChecks.secretCheckTrue > (thresholds?.secrets_red ?? 0)) {
+    if (thresholds?.secrets_red !== undefined) {
+      parts.push(`Secret scanning issues are exceeded by ${totalChecks.secretCheckTrue} repos, the threshold for this system is: ${thresholds.secrets_red}`);
+    }
+  }
+  if (totalChecks.highCheckTrue > (thresholds?.high_red ?? 0)) {
+    if (thresholds?.high_red !== undefined) {
+      parts.push(`High severity issues are exceeded by ${totalChecks.highCheckTrue} repos, the threshold for this system is: ${thresholds.high_red}`);
+    }
+  }
+  if (totalChecks.mediumCheckTrue > (thresholds?.medium_red ?? 0)) {
+    if (thresholds?.medium_red !== undefined) {
+      parts.push(`Medium severity issues are exceeded by ${totalChecks.mediumCheckTrue} repos, the threshold for this system is: ${thresholds.medium_red}`);
+    }
+  } 
+  return parts.join('\n') || 'Threshold for red traffic light exceeded.';
 }
 
 /**
  * Format reason message for yellow traffic light
  */
-function formatYellowReason(totalChecks: SecurityCheckTotals): string {
+function formatYellowReason(totalChecks: SecurityCheckTotals, thresholds?: SecurityThresholds): string {
   const parts: string[] = [];
   
-  if (totalChecks.mediumEntities.length > 0) {
-    const entities = totalChecks.mediumEntities.slice(0, 5).join(', ');
-    const extra = totalChecks.mediumEntities.length > 5 ? '...' : '';
-    parts.push(`Medium severity issues in: ${entities}${extra}`);
-  }
-  
-  if (totalChecks.lowEntities.length > 0) {
-    const entities = totalChecks.lowEntities.slice(0, 5).join(', ');
-    const extra = totalChecks.lowEntities.length > 5 ? '...' : '';
-    parts.push(`Low severity issues in: ${entities}${extra}`);
-  }
-
-  return parts.join('\n') || 'Minor security issues detected';
+  if (totalChecks.mediumCheckTrue > (thresholds?.medium_yellow ?? 0)) {
+    if (thresholds?.medium_yellow !== undefined) {
+      parts.push(`Medium severity issues are exceeded by ${totalChecks.mediumCheckTrue} repos, the threshold for this system is: ${thresholds.medium_yellow}`);
+    }
+  } 
+  if (totalChecks.lowCheckTrue > (thresholds?.low_yellow ?? 0)) {
+    if (thresholds?.low_yellow !== undefined) {
+      parts.push(`Low severity issues are exceeded by ${totalChecks.lowCheckTrue} repos, the threshold for this system is: ${thresholds.low_yellow}`);
+    }
+  } 
+  return parts.join('\n') || 'Threshold for yellow traffic light exceeded.';
 }
 
 /**
@@ -266,16 +268,6 @@ export const GitHubSecurityTrafficLight = ({
         const result = calculateGitHubSecurityTrafficLight(securityData, entities, thresholds);
         setColor(result.color);
         setReason(result.reason);
-
-        // Debug logging
-        console.log('Security data by entity:', securityData.map((result, i) => ({
-          name: entities[i].metadata.name,
-          criticalCheck: result.criticalCheck,
-          highCheck: result.highCheck,
-          mediumCheck: result.mediumCheck,
-          lowCheck: result.lowCheck,
-          secretCheck: result.secretCheck
-        })));
 
       } catch (err) {
         console.error('Error fetching GitHub Security data:', err);

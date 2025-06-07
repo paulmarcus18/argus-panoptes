@@ -58,6 +58,24 @@ function extractSecurityThresholds(systemEntity: Entity | undefined, entityCount
   };
 }
 
+/**
+ * Sort issues by severity (critical first, then high, medium, low)
+ */
+function sortIssuesBySeverity(details: IssueDetail[]): IssueDetail[] {
+  const severityOrder: Record<Severity, number> = {
+    critical: 0,
+    high: 1,
+    medium: 2,
+    low: 3,
+  };
+
+  return details.sort((a, b) => {
+    const aOrder = severityOrder[a.severity] ?? 999;
+    const bOrder = severityOrder[b.severity] ?? 999;
+    return aOrder - bOrder;
+  });
+}
+
 export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
   open,
   onClose,
@@ -239,6 +257,9 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
             : 'No security issues found.';
         }
 
+        // Sort details by severity before setting the data
+        const sortedDetails = sortIssuesBySeverity(details);
+
         setData({
           color,
           metrics: {
@@ -251,7 +272,7 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
             totalSecretScanningAlerts: totalSecret,
           },
           summary,
-          details,
+          details: sortedDetails, // Use sorted details
         });
       } catch (err) {
         console.error('GitHub Security fetch error:', err);

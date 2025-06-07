@@ -28,7 +28,6 @@ interface codeScanningFindingsDict extends JsonObject {
 export const githubAdvancedSecurityFactRetriever: FactRetriever = {
   // Identifier for this fact retriever
   id: 'githubAdvancedSecurityFactRetriever',
-  // Versioning information for this retriever
   version: '0.2.0',
   // Entity filter to specify which entities this retriever applies to
   entityFilter: [{ kind: 'component' }],
