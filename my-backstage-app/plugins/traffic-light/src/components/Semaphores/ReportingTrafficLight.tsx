@@ -66,11 +66,7 @@ export const ReportingTrafficLight = ({
               redThreshold = parseFloat(thresholdAnnotation);
             }
           }
-        } catch (err) {
-          console.warn(
-            'Failed to read reporting red threshold; using default 0.33',
-          );
-        }
+        } catch (err) {}
 
         // 2. Run reporting pipeline checks
         const results = await Promise.all(
@@ -94,7 +90,6 @@ export const ReportingTrafficLight = ({
         setColor(computedColor);
         setReason(computedReason);
       } catch (err) {
-        console.error('Reporting error:', err);
         setColor('gray');
         setReason('Error fetching reporting pipeline data');
       }

@@ -73,8 +73,10 @@ export const PreproductionSemaphoreDialog: React.FC<
 
     const fetchPipelineMetrics = async () => {
       try {
-        // 1. Get threshold from system annotations
+        // 1. Get threshold and configured repositories from system annotations
         let redThreshold = 0.33;
+        let configuredRepoNames: string[] = [];
+        
         try {
           const systemName = entities[0].spec?.system;
           const namespace = entities[0].metadata.namespace || 'default';
@@ -96,16 +98,52 @@ export const PreproductionSemaphoreDialog: React.FC<
             if (thresholdAnnotation) {
               redThreshold = parseFloat(thresholdAnnotation);
             }
+
+            // Get configured repositories for preproduction checks
+            const configuredReposAnnotation =
+              systemEntity?.metadata.annotations?.[
+                'preproduction-configured-repositories'
+              ];
+            if (configuredReposAnnotation) {
+              configuredRepoNames = configuredReposAnnotation
+                .split(',')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+            }
           }
         } catch (err) {
           console.warn(
-            'Failed to get threshold annotation, using default 0.33',
+            'Failed to get system configuration, using defaults',
           );
         }
 
-        // 2. Gather facts + checks in parallel
+        // 2. Filter entities to only include configured repositories
+        const filteredEntities = configuredRepoNames.length > 0 
+          ? entities.filter(entity => 
+              configuredRepoNames.includes(entity.metadata.name)
+            )
+          : entities; // Fallback to all entities if no configuration found
+
+        if (filteredEntities.length === 0) {
+          setMetrics({
+            totalSuccess: 0,
+            totalFailure: 0,
+            totalRuns: 0,
+            successRate: 0,
+          });
+          setLowestSuccessRepos([]);
+          setData({
+            color: 'gray',
+            metrics: {},
+            summary: 'No configured repositories found for preproduction checks.',
+            details: [],
+          });
+          return;
+        }
+
+        // 3. Gather facts + checks in parallel for filtered entities
         const results = await Promise.all(
-          entities.map(async entity => {
+          filteredEntities.map(async entity => {
             const ref = {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
@@ -143,7 +181,7 @@ export const PreproductionSemaphoreDialog: React.FC<
           }),
         );
 
-        // 3. Metrics aggregation
+        // 4. Metrics aggregation
         const totalSuccess = results.reduce(
           (sum, r) => sum + r.successWorkflowRunsCount,
           0,
@@ -158,10 +196,10 @@ export const PreproductionSemaphoreDialog: React.FC<
 
         const failures = results.filter(r => r.failedCheck).length;
 
-        // 4. Determine traffic light color
+        // 5. Determine traffic light color based on filtered entities
         const { color } = determineSemaphoreColor(
           failures,
-          entities.length,
+          filteredEntities.length,
           redThreshold,
         );
 
@@ -172,7 +210,12 @@ export const PreproductionSemaphoreDialog: React.FC<
           summary = 'Code quality issues need to be addressed before release.';
         }
 
-        // 5. Bottom 5 repos by success rate
+        // Add info about configured repositories
+        if (configuredRepoNames.length > 0) {
+          summary += ` (Based on ${filteredEntities.length} configured repositories)`;
+        }
+
+        // 6. Bottom 5 repos by success rate
         const lowest = [...results]
           .sort((a, b) => a.successRate - b.successRate)
           .slice(0, 5)

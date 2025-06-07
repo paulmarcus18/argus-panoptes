@@ -88,7 +88,6 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
    */
   async handler({
     config,
-    logger,
     entityFilter,
     auth,
     discovery,
@@ -102,7 +101,6 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
       const githubConfig = githubConfigs?.[0];
       token = githubConfig?.getOptionalString('token');
     } catch (e) {
-      logger.error(`Could not retrieve GitHub token: ${e}`);
       return [];
     }
 
@@ -126,8 +124,6 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
       return !!slug;
     });
 
-    logger.info(`Processing ${githubEntities.length} GitHub entities`);
-
     // Process each Github-enabled component
     const results = await Promise.all(
       githubEntities.map(async entity => {
@@ -137,9 +133,6 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
         const [owner, repoName] = projectSlug.split('/');
 
         if (!owner || !repoName) {
-          logger.warn(
-            `Invalid GitHub project slug for entity ${entity.metadata.name}: ${projectSlug}`,
-          );
           return null;
         }
 
@@ -163,16 +156,8 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
           if (workflowsResponse.ok) {
             const workflowsData = await workflowsResponse.json();
             workflowDefinitions = workflowsData.workflows || [];
-          } else {
-            logger.error(
-              `Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`,
-            );
-          }
-        } catch (error: any) {
-          logger.error(
-            `Error fetching workflow definitions for ${repoName}: ${error.message}`,
-          );
-        }
+          } 
+        } catch (error: any) {}
 
         // Fetch all workflow runs from the main branch using pagination
         const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/runs?branch=main&per_page=100`;
@@ -193,9 +178,6 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
             });
 
             if (!response.ok) {
-              logger.error(
-                `Failed to fetch data for ${repoName}: ${response.statusText}`,
-              );
               break;
             }
 
@@ -330,14 +312,6 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
             workflowMetrics,
           };
 
-          // Log pipeline summary
-          logger.info(`Foundation Pipelines Summary for ${owner}/${repoName}:
-- Total workflow runs (main branch): ${totalWorkflowRunsCount}
-- Unique workflows: ${uniqueWorkflowsCount}
-- Success workflow runs: ${successWorkflowRunsCount}
-- Failure workflow runs: ${failureWorkflowRunsCount}
-- Workflow success rate: ${successRate}%`);
-
           // Return the fact result object for this repo
           return {
             entity: {
@@ -348,9 +322,6 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
             facts: pipelineSummary,
           } as TechInsightFact;
         } catch (error: any) {
-          logger.error(
-            `Error fetching pipeline data for ${owner}/${repoName}: ${error.message}`,
-          );
           return null;
         }
       }),

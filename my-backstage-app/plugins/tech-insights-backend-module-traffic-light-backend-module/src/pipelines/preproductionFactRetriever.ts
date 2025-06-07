@@ -4,7 +4,7 @@ import { JsonObject } from '@backstage/types';
 
 // To exclude workflows using regex patterns defined in the catalog entity annotations
 type WorkflowConfig = {
-  excludePatterns: string[]; // Changed from 'exclude' to 'excludePatterns' for clarity
+  excludePatterns: string[]; 
 };
 
 // Represents a single workflow run from GitHub Actions API
@@ -42,11 +42,9 @@ interface PipelineStatusSummary extends JsonObject {
 function shouldExcludeWorkflow(workflowName: string, excludePatterns: string[]): boolean {
   return excludePatterns.some(pattern => {
     try {
-      const regex = new RegExp(pattern, 'i'); // Case-insensitive matching
+      const regex = new RegExp(pattern, 'i'); // case-insensitive matching
       return regex.test(workflowName);
     } catch (error) {
-      console.warn(`Invalid regex pattern: ${pattern}. Treating as literal string.`);
-      // Fallback to exact string matching if regex is invalid
       return workflowName.toLowerCase().includes(pattern.toLowerCase());
     }
   });
@@ -93,7 +91,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
    * @param ctx - Context object containing configuration, logger, and other services
    * @returns Array of entity facts with pipeline status metrics
    */
-  async handler({ config, logger, entityFilter, auth, discovery }): Promise<TechInsightFact[]> {
+  async handler({ config, entityFilter, auth, discovery }): Promise<TechInsightFact[]> {
     // Retrieve GitHub token from config
     let token: string | undefined;
     try {
@@ -101,7 +99,6 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
       const githubConfig = githubConfigs?.[0];
       token = githubConfig?.getOptionalString('token');
     } catch (e) {
-      logger.error(`Could not retrieve GitHub token: ${e}`);
       return [];
     }
 
@@ -125,8 +122,6 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
       return !!slug;
     });
 
-    logger.info(`Processing ${githubEntities.length} GitHub entities`);
-
     // Process each Github-enabled component 
     const results = await Promise.all(
       githubEntities.map(async entity => {
@@ -135,7 +130,6 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
         const [owner, repoName] = projectSlug.split('/');
 
         if (!owner || !repoName) {
-          logger.warn(`Invalid GitHub project slug for entity ${entity.metadata.name}: ${projectSlug}`);
           return null;
         }
         
@@ -150,15 +144,8 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             const excludeList = JSON.parse(excludeAnnotation);
             if (Array.isArray(excludeList)) {
               workflowConfig.excludePatterns = excludeList as string[];
-              logger.info(`Loaded exclude patterns for ${entity.metadata.name}: ${workflowConfig.excludePatterns.join(', ')}`);
-            } else {
-              logger.warn(`preproduction/exclude annotation for ${entity.metadata.name} is not an array: ${excludeAnnotation}`);
             }
-          } catch (error) {
-            logger.error(`Failed to parse preproduction/exclude annotation for ${entity.metadata.name}: ${error}`);
-          }
-        } else {
-          logger.info(`No preproduction/exclude annotation found for ${entity.metadata.name} - processing all workflows`);
+          } catch (error) {}
         }
         
         const headers: Record<string, string> = {
@@ -179,12 +166,8 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
           if (workflowsResponse.ok) {
             const workflowsData = await workflowsResponse.json();
             workflowDefinitions = workflowsData.workflows || [];
-          } else {
-            logger.error(`Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`);
           }
-        } catch (error: any) {
-          logger.error(`Error fetching workflow definitions for ${repoName}: ${error.message}`);
-        }
+        } catch (error: any) {}
 
         // Fetch all workflow runs from the main branch using pagination
         const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/runs?branch=main&per_page=100`;
@@ -205,7 +188,6 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             });
 
             if (!response.ok) {
-              logger.error(`Failed to fetch data for ${repoName}: ${response.statusText}`);
               break;
             }
 
@@ -228,7 +210,6 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
           
           // Handle case where no workflow runs are found and return early with empty data
           if (allRuns.length === 0) {
-            logger.info(`No workflow runs found for ${repoName}`);
             return {
               entity: {
                 kind: entity.kind,
@@ -256,9 +237,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
           const uniqueWorkflowsCount = workflowDefinitions.length > 0 
             ? workflowDefinitions.length 
             : new Set(allRuns.map(run => run.workflow_id)).size;
-          
-          logger.info(`Number of unique workflows: ${uniqueWorkflowsCount}`);
-          
+                    
           // Map workflow names to workflow IDs and identify excluded workflows using regex patterns
           const workflowNameToIdMap = new Map<string, number>();
           const excludedWorkflowIds: number[] = [];
@@ -272,7 +251,6 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
                 // Check if this workflow name matches any exclude pattern
                 if (shouldExcludeWorkflow(workflow.name, workflowConfig.excludePatterns)) {
                   excludedWorkflowIds.push(workflow.id);
-                  logger.info(`Excluding workflow: "${workflow.name}" (ID: ${workflow.id}) based on patterns`);
                 }
               });
             } else {
@@ -283,12 +261,9 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
                     shouldExcludeWorkflow(run.name, workflowConfig.excludePatterns)) {
                   excludedWorkflowIds.push(run.workflow_id);
                   processedWorkflowIds.add(run.workflow_id);
-                  logger.info(`Excluding workflow: "${run.name}" (ID: ${run.workflow_id}) based on patterns`);
                 }
               });
             }           
-          } else {
-            logger.info(`No workflow patterns to exclude - processing all workflow runs`);
           }
           
           // Filter out excluded workflow runs for success/failure calculations
@@ -322,14 +297,6 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             failureWorkflowRunsCount,
             successRate,
           };
-
-          // Log pipeline summary
-          logger.info(`Pipeline status summary for ${owner}/${repoName}: ` + 
-          `Total runs: ${totalWorkflowRunsCount}, ` +
-          `Unique workflows: ${uniqueWorkflowsCount}, ` +
-          `Success runs: ${successWorkflowRunsCount}, ` +
-          `Failure runs: ${failureWorkflowRunsCount}, ` +
-          `Success rate: ${successRate}%`);
           
           // Return the fact result object for this repo
           return {
@@ -341,7 +308,6 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             facts: pipelineSummary,
           } as TechInsightFact;
         } catch (error: any) {
-          logger.error(`Error fetching pipeline data for ${owner}/${repoName}: ${error.message}`);
           return null;
         }
       }),

@@ -20,6 +20,8 @@ metadata:
     tech-insights.io/preproduction-max-failures-operator: 'lessThanInclusive'
     tech-insights.io/reporting-success-rate-threshold: '80'
     tech-insights.io/reporting-success-rate-operator: 'greaterThanInclusive'
+    preproduction-configured-repositories: 'fatt,terraform-registry,argus-panoptes'
+    foundation-configured-repositories: 'fatt,terraform-registry,argus-panoptes'
 
     # Github Advanced Security Annotations
     tech-insights.io/github-advanced-security-secrets-threshold: '0'

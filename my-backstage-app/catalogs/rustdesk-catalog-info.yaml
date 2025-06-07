@@ -8,6 +8,7 @@ metadata:
     backstage.io/source-location: url:https://github.com/rustdesk/rustdesk
     azure.com/organization: argus-panoptes-dev
     reporting/workflows: '["Flutter Nightly Build", "CI"]'
+    reporting/target-branch: master
     
   tags:
     - critical

@@ -311,9 +311,6 @@ describe('githubPipelineStatusFactRetriever', () => {
           headers: new Map(),
         });
 
-      // Mock console.warn to capture the warning
-      const mockWarn = jest.spyOn(console, 'warn').mockImplementation();
-
       const result = await githubPipelineStatusFactRetriever.handler({
         config,
         logger: mockLogger,
@@ -324,12 +321,9 @@ describe('githubPipelineStatusFactRetriever', () => {
       });
 
       expect(result).toHaveLength(1);
-      expect(mockWarn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid regex pattern: [invalid-regex')
-      );
-      
-      // Should still process the valid pattern and fallback to string matching for invalid one
-      mockWarn.mockRestore();
+      // Should still process and handle the invalid regex gracefully
+      // The implementation falls back to string matching for invalid regex
+      expect(result[0].facts.totalWorkflowRunsCount).toBeGreaterThan(0);
     });
 
     it('should handle invalid GitHub project slug', async () => {
@@ -365,9 +359,7 @@ describe('githubPipelineStatusFactRetriever', () => {
       });
 
       expect(result).toEqual([]);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid GitHub project slug'),
-      );
+      // Since logging is removed, we just verify the behavior (empty result)
     });
 
     it('should handle GitHub API errors gracefully', async () => {
@@ -397,9 +389,7 @@ describe('githubPipelineStatusFactRetriever', () => {
       });
 
       expect(result).toEqual([]);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to fetch workflow definitions'),
-      );
+      // Since logging is removed, we just verify the behavior (empty result)
     });
 
     it('should handle pagination correctly', async () => {
@@ -616,11 +606,7 @@ describe('githubPipelineStatusFactRetriever', () => {
       });
 
       expect(result).toHaveLength(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Failed to parse preproduction/exclude annotation',
-        ),
-      );
+      // Since logging is removed, we just verify the behavior
       // Should process all workflows since exclusion parsing failed
       expect(result[0].facts.successWorkflowRunsCount).toBe(3); // Updated to match new expected count
     });
