@@ -9,6 +9,7 @@ metadata:
     sonarcloud.io/project-key: SEP-ArgusPanoptes_fatt
     sonarcloud.io/enabled: 'true'
     reporting/workflows: '["CodeQL", "Continuous Integration"]'
+    reporting/target-branch: main
     preproduction/exclude: '["Dependabot.*"]'
     azure.com/organization: argus-panoptes-dev
     azure.com/project: project_2

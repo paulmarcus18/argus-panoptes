@@ -81,7 +81,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
    * @param ctx - Context object containing configuration, logger, and other services
    * @returns Array of entity facts with pipeline status metrics
    */
-  async handler({ config, logger, entityFilter, auth, discovery }): Promise<TechInsightFact[]> {
+  async handler({ config, entityFilter, auth, discovery }): Promise<TechInsightFact[]> {
     // Retrieve GitHub token from config
     let token: string | undefined;
     try {
@@ -89,7 +89,6 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
       const githubConfig = githubConfigs?.[0];
       token = githubConfig?.getOptionalString('token');
     } catch (e) {
-      logger.error(`Could not retrieve GitHub token: ${e}`);
       return [];
     }
 
@@ -113,8 +112,6 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
       return !!slug;
     });
 
-    logger.info(`Processing ${githubEntities.length} GitHub entities for reporting pipelines`);
-
     // Process each Github-enabled component
     const results = await Promise.all(
       githubEntities.map(async entity => {
@@ -123,7 +120,6 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
         const [owner, repoName] = projectSlug.split('/');
 
         if (!owner || !repoName) {
-          logger.warn(`Invalid GitHub project slug for entity ${entity.metadata.name}: ${projectSlug}`);
           return null;
         }
 
@@ -134,7 +130,6 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
         // Check annotations for reporting workflows
         const reportingWorkflowsAnnotation = entity.metadata.annotations?.['reporting/workflows'];
         if (!reportingWorkflowsAnnotation) {
-          logger.info(`No reporting/workflows annotation found for entity ${entity.metadata.name}`);
           return null;
         }
 
@@ -144,12 +139,10 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             reportingWorkflowConfig.include = parsedWorkflows as string[];
           }
         } catch (error) {
-          logger.warn(`Failed to parse reporting/workflows annotation for ${entity.metadata.name}: ${error}`);
           return null;
         }
 
         if (reportingWorkflowConfig.include.length === 0) {
-          logger.info(`No workflows specified in reporting/workflows annotation for entity ${entity.metadata.name}`);
           return null;
         }
 
@@ -172,11 +165,9 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             const workflowsData = await workflowsResponse.json();
             workflowDefinitions = workflowsData.workflows || [];
           } else {
-            logger.error(`Failed to fetch workflow definitions for ${repoName}: ${workflowsResponse.statusText}`);
             return null;
           }
         } catch (error: any) {
-          logger.error(`Error fetching workflow definitions for ${repoName}: ${error.message}`);
           return null;
         }
 
@@ -192,13 +183,10 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
           const workflowId = workflowNameToIdMap.get(workflowName);
           if (workflowId) {
             includedWorkflowIds.push(workflowId);
-          } else {
-            logger.warn(`Workflow '${workflowName}' not found in repository ${owner}/${repoName}`);
           }
         });
 
         if (includedWorkflowIds.length === 0) {
-          logger.warn(`No valid workflows found for entity ${entity.metadata.name}`);
           return null;
         }
 
@@ -207,8 +195,10 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
         
         try {
           for (const workflowId of includedWorkflowIds) {
+            // Fetch the target branch from the entity annotations file 
+            const targetBranch = entity.metadata.annotations?.['reporting/target-branch'] || 'main';
             // Fetch the most recent run for this specific workflow on main branch
-            const workflowRunsUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/workflows/${workflowId}/runs?branch=main&per_page=1`;
+            const workflowRunsUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/workflows/${workflowId}/runs?branch=${targetBranch}&per_page=1`;
             
             const response = await fetch(workflowRunsUrl, {
               method: 'GET',
@@ -216,7 +206,6 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             });
 
             if (!response.ok) {
-              logger.error(`Failed to fetch runs for workflow ${workflowId} in ${repoName}: ${response.statusText}`);
               continue;
             }
 
@@ -224,7 +213,6 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             const runs = data.workflow_runs as WorkflowRun[];
             
             if (runs.length === 0) {
-              logger.warn(`No runs found for workflow ${workflowId} in ${owner}/${repoName}`);
               continue;
             }
 
@@ -262,10 +250,6 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             successRate,
           };
 
-          // Log pipeline summary
-          logger.info(`Reporting Pipelines Summary for ${owner}/${repoName}:`);
-          logger.info(`Total Workflows: ${totalWorkflows}, Successful: ${successfulRuns}, Failed: ${failedRuns}, Success Rate: ${successRate}%`);
-          
           // Return the fact result object for this repo
           return {
             entity: {
@@ -276,7 +260,6 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             facts: reportingSummary,
           } as TechInsightFact;
         } catch (error: any) {
-          logger.error(`Error fetching pipeline data for ${owner}/${repoName}: ${error.message}`);
           return null;
         }
       }),

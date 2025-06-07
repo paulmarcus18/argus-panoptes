@@ -35,7 +35,7 @@ export const FoundationTrafficLight = ({
       }
 
       try {
-        // Step 1: Determine system entity (assumes all entities belong to the same system)
+        // Step 1: Determine system entity and get configuration
         const systemName = entities[0].spec?.system;
         const namespace = entities[0].metadata.namespace || 'default';
 
@@ -57,9 +57,35 @@ export const FoundationTrafficLight = ({
           ] || '0.33';
         const redThreshold = parseFloat(redThresholdRaw);
 
-        // Step 3: Get foundation results
+        // Step 3: Get configured repositories for foundation checks
+        let configuredRepoNames: string[] = [];
+        const configuredReposAnnotation =
+          systemEntity?.metadata.annotations?.[
+            'foundation-configured-repositories'
+          ];
+        if (configuredReposAnnotation) {
+          configuredRepoNames = configuredReposAnnotation
+            .split(',')
+            .map(name => name.trim())
+            .filter(name => name.length > 0);
+        }
+
+        // Step 4: Filter entities to only include configured repositories
+        const filteredEntities = configuredRepoNames.length > 0 
+          ? entities.filter(entity => 
+              configuredRepoNames.includes(entity.metadata.name)
+            )
+          : entities; // Fallback to all entities if no configuration found
+
+        if (filteredEntities.length === 0) {
+          setColor('gray');
+          setReason('No configured repositories found for foundation checks');
+          return;
+        }
+
+        // Step 5: Get foundation results for filtered entities
         const results = await Promise.all(
-          entities.map(entity =>
+          filteredEntities.map(entity =>
             foundationUtils.getFoundationPipelineChecks(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
@@ -72,24 +98,23 @@ export const FoundationTrafficLight = ({
           r => r.successRateCheck === false,
         ).length;
 
-        // Step 4: Apply modular logic
+        // Step 6: Apply modular logic based on filtered entities
         const { color: newColor, reason: newReason } = determineSemaphoreColor(
           failures,
-          entities.length,
+          filteredEntities.length,
           redThreshold,
         );
 
         setColor(newColor);
         setReason(newReason);
       } catch (err) {
-        console.error('Foundation error:', err);
         setColor('gray');
         setReason('Error fetching foundation pipeline data');
       }
     };
 
     fetchData();
-  }, [entities, techInsightsApi, catalogApi]);
+  }, [entities, techInsightsApi, catalogApi, foundationUtils]);
 
   return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
 };

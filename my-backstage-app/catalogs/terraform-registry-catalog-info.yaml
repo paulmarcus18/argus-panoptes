@@ -11,6 +11,7 @@ metadata:
     pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
     foundation/thresholds: '{"minSuccessRate": 95}'
     reporting/workflows: '["CodeQL", "Continuous Integration"]'
+    reporting/target-branch: main
     preproduction/exclude: '["Dependabot.*"]'
   tags:
     - critical

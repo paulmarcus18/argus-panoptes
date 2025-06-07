@@ -70,8 +70,10 @@ export const FoundationSemaphoreDialog: React.FC<
 
     const fetchMetrics = async () => {
       try {
-        // 1. Fetch system threshold
+        // 1. Fetch system threshold and configured repositories
         let redThreshold = 0.33;
+        let configuredRepoNames: string[] = [];
+        
         try {
           const systemName = entities[0].spec?.system;
           const namespace = entities[0].metadata.namespace || 'default';
@@ -93,16 +95,52 @@ export const FoundationSemaphoreDialog: React.FC<
             if (thresholdAnnotation) {
               redThreshold = parseFloat(thresholdAnnotation);
             }
+
+            // Get configured repositories for foundation checks
+            const configuredReposAnnotation =
+              systemEntity?.metadata.annotations?.[
+                'foundation-configured-repositories'
+              ];
+            if (configuredReposAnnotation) {
+              configuredRepoNames = configuredReposAnnotation
+                .split(',')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+            }
           }
         } catch (err) {
           console.warn(
-            'Could not fetch system threshold annotation; using default 0.33',
+            'Could not fetch system configuration; using defaults',
           );
         }
 
-        // 2. Gather metrics
+        // 2. Filter entities to only include configured repositories
+        const filteredEntities = configuredRepoNames.length > 0 
+          ? entities.filter(entity => 
+              configuredRepoNames.includes(entity.metadata.name)
+            )
+          : entities; // Fallback to all entities if no configuration found
+
+        if (filteredEntities.length === 0) {
+          setMetrics({
+            totalSuccess: 0,
+            totalFailure: 0,
+            totalRuns: 0,
+            successRate: 0,
+          });
+          setLowestSuccessRepos([]);
+          setData({
+            color: 'gray',
+            metrics: {},
+            summary: 'No configured repositories found for foundation checks.',
+            details: [],
+          });
+          return;
+        }
+
+        // 3. Gather metrics for filtered entities
         const results = await Promise.all(
-          entities.map(async entity => {
+          filteredEntities.map(async entity => {
             const ref = {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
@@ -152,20 +190,25 @@ export const FoundationSemaphoreDialog: React.FC<
         const successRate =
           totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
 
-        // 3. Determine color using imported utility
+        // 4. Determine color using imported utility based on filtered entities
         const failures = results.filter(r => r.failedCheck).length;
         const { color } = determineSemaphoreColor(
           failures,
-          totalRuns,
+          filteredEntities.length,
           redThreshold,
         );
 
-        // 4. Compose summary
+        // 5. Compose summary
         let summary = 'Code quality is excellent with no significant issues.';
         if (color === 'red') {
           summary = 'Critical code quality issues require immediate attention.';
         } else if (color === 'yellow') {
           summary = 'Code quality issues need to be addressed before release.';
+        }
+
+        // Add info about configured repositories
+        if (configuredRepoNames.length > 0) {
+          summary += ` (Based on ${filteredEntities.length} configured repositories)`;
         }
 
         const lowest = [...results]
