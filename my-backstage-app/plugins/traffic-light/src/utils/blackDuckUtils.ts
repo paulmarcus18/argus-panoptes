@@ -113,8 +113,8 @@ export class BlackDuckUtils {
       };
     } catch (error) {
         // Return default values if an error occurs
-        return { ...DEFAULT_CHECKS };
-    }
+        return { ...DEFAULT_CHECKS};
+    }
   }
 
   /**

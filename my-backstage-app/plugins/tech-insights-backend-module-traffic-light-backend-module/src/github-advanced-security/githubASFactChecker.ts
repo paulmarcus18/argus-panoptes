@@ -2,7 +2,7 @@ import { DynamicThresholdCheck } from '../argusPanoptesFactChecker/service/dynam
 
 export const githubAdvancedSecuritychecks: DynamicThresholdCheck[] = [
   { // Critical scans count check 
-    id: 'critial-count',
+    id: 'critical-count',
     name: 'Critical Scans Count',
     type: 'number',
     factIds: ['githubAdvancedSecurityFactRetriever', 'criticalCount'],

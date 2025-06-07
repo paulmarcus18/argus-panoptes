@@ -140,7 +140,7 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
         // Get security check results (for traffic light calculation)
         const securityCheckResults = await Promise.all(
           entities.map(entity =>
-            githubASUtils.getGitHubSecurityFacts(techInsightsApi, {
+            githubASUtils.getGitHubSecurityData(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
               name: entity.metadata.name,

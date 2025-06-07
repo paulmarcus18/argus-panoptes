@@ -31,7 +31,7 @@ metadata:
     tech-insights.io/github-advanced-security-high-count-threshold: '0'
     tech-insights.io/github-advanced-security-high-count-operator: 'greaterThan'
 
-    tech-insights.io/github-advanced-security-medium-count-threshold: '5'
+    tech-insights.io/github-advanced-security-medium-count-threshold: '2'
     tech-insights.io/github-advanced-security-medium-count-operator: 'greaterThan'
 
     tech-insights.io/github-advanced-security-low-count-threshold: '10'
@@ -44,6 +44,7 @@ metadata:
     github-advanced-security-system-medium-threshold-red: '0.5'
     github-advanced-security-system-medium-threshold-yellow: '0.1'
     github-advanced-security-system-low-threshold-yellow: '0.2'
+    
     foundation-check-threshold-red: '1'
     preproduction-check-threshold-red: '2'
     reporting-check-threshold-red: '2'

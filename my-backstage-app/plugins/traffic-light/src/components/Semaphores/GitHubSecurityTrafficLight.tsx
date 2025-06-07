@@ -256,7 +256,7 @@ export const GitHubSecurityTrafficLight = ({
         // Get security data for all entities
         const securityData = await Promise.all(
           entities.map(entity =>
-            githubASUtils.getGitHubSecurityFacts(techInsightsApi, {
+            githubASUtils.getGitHubSecurityData(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
               name: entity.metadata.name,
