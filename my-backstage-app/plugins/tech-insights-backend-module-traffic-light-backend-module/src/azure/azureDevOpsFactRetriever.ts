@@ -38,7 +38,6 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
 
     if (!pat) {
       console.error('Azure DevOps token is not defined.');
-      const pat = undefined;
     }
 
     const results = [];

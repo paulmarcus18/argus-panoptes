@@ -86,7 +86,6 @@ export const TrafficLightDependabot = ({
   const [reason, setReason] = useState('Fetching Dependabot status...')
 
   const techInsightsApi = useApi(techInsightsApiRef);
-  const catalogApi = useApi(catalogApiRef);
   const dependabotUtils = React.useMemo(
       () => new DependabotUtils(),
       [techInsightsApi],

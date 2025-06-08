@@ -9,8 +9,6 @@ import { DependabotUtils, RepoAlertSummary } from '../../utils/dependabotUtils';
 import { SemaphoreData } from './types';
 import type { GridSize } from '@material-ui/core';
 import { determineDependabotColor } from '../Semaphores/TrafficLightDependabot';
-import { catalogApiRef } from '@backstage/plugin-catalog-react';
-
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
