@@ -4,7 +4,6 @@ import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { DependabotUtils } from '../../utils/dependabotUtils';
-import { catalogApiRef } from '@backstage/plugin-catalog-react';
 
 export const determineDependabotColor = async(
   systemName: string,
