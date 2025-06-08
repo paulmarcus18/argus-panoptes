@@ -17,4 +17,4 @@ spec:
   type: service
   lifecycle: experimental
   owner: philips-labs
-  system: payments-system
+  system: ai-system

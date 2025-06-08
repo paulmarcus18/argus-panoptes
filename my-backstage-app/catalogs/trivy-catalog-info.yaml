@@ -17,4 +17,4 @@ spec:
   type: service
   lifecycle: experimental
   owner: aquasecurity
-  system: user-management-system
+  system: ai-system

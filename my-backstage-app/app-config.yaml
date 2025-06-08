@@ -107,6 +107,9 @@ catalog:
     - type: file
       target: ../../catalogs/systems/user-management-system.yaml
 
+    - type: file
+      target: ../../catalogs/systems/ai-system.yaml
+
     # Philips Labs repos
     - type: file
       target: ../../catalogs/argus-panoptes-catalog-info.yaml
@@ -213,7 +216,7 @@ techInsights:
       enabled: true
       cadence: '0 */4 * * *' # Every 4 hours
     githubAdvancedSecurityFactRetriever:
-      cadence: "0 * * * *" # every hour
+      cadence: '0 * * * *' # every hour
   factChecker:
     checks:
       noHighBugsCheck:

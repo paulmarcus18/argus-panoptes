@@ -9,11 +9,11 @@ metadata:
     azure.com/organization: argus-panoptes-dev
     reporting/workflows: '["Flutter Nightly Build", "CI"]'
     reporting/target-branch: master
-    
+
   tags:
     - critical
 spec:
   type: service
   lifecycle: experimental
   owner: rustdesk
-  system: payments-system
+  system: ai-system
