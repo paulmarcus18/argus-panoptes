@@ -1,59 +1,46 @@
-WITH RECURSIVE calendar_weeks AS (
-    SELECT
-        STR_TO_DATE(
-            CONCAT(YEARWEEK(FROM_UNIXTIME(?)), ' Sunday'),
-            '%X%V %W'
-        ) AS week_date
-    UNION
-    ALL
-    SELECT
-        DATE_ADD(week_date, INTERVAL 1 WEEK)
-    FROM
-        calendar_weeks
-    WHERE
-        week_date < FROM_UNIXTIME(?)
-), _pr_stats as (
-    SELECT
-        DISTINCT pr.id,
-        YEARWEEK(cdc.finished_date) AS week,
-        ppm.pr_cycle_time
-    FROM
-        pull_requests pr
-        JOIN project_pr_metrics ppm ON ppm.id = pr.id
-        JOIN project_mapping pm ON pr.base_repo_id = pm.row_id AND pm.`table` = 'repos'
-        JOIN cicd_deployment_commits cdc ON ppm.deployment_commit_id = cdc.id
-        JOIN repos ON cdc.repo_id = repos.id
-    WHERE
-        (
-            ? = ""
-            OR LOWER(repos.name) LIKE CONCAT('%/', LOWER(?))
-        )
-        AND pr.merged_date IS NOT NULL
-        AND ppm.pr_cycle_time IS NOT NULL
-        AND cdc.finished_date BETWEEN FROM_UNIXTIME(?)
-        AND FROM_UNIXTIME(?)
+WITH RECURSIVE calendar_days AS (
+  SELECT DATE(?) AS day
+  UNION ALL
+  SELECT day + INTERVAL 1 DAY
+  FROM calendar_days
+  WHERE day + INTERVAL 1 DAY <= DATE(?)
 ),
-
-
-_find_median_clt_each_week_ranks AS(
-    SELECT *, percent_rank() over(PARTITION BY week ORDER BY pr_cycle_time) AS ranks
-    FROM _pr_stats
+_pr_stats AS (
+  SELECT DISTINCT
+    pr.id,
+    DATE_FORMAT(cdc.finished_date, '%Y-%m-%d') AS day,
+    ppm.pr_cycle_time
+  FROM pull_requests pr
+  JOIN project_pr_metrics ppm ON ppm.id = pr.id
+  JOIN project_mapping pm ON pr.base_repo_id = pm.row_id AND pm.`table` = 'repos'
+  JOIN cicd_deployment_commits cdc ON ppm.deployment_commit_id = cdc.id
+  WHERE
+    pm.project_name IN (?) 
+    AND pr.merged_date IS NOT NULL
+    AND ppm.pr_cycle_time IS NOT NULL
+    AND cdc.finished_date BETWEEN (?) AND (?)
 ),
-
-_clt as(
-    SELECT week, max(pr_cycle_time) AS median_change_lead_time
-    FROM _find_median_clt_each_week_ranks
-    WHERE ranks <= 0.5
-    GROUP BY week
+_find_median_clt_each_day_ranks AS (
+  SELECT *,
+         PERCENT_RANK() OVER (PARTITION BY day ORDER BY pr_cycle_time) AS ranks
+  FROM _pr_stats
+),
+_clt AS (
+  SELECT 
+    day,
+    MAX(pr_cycle_time) AS median_change_lead_time
+  FROM _find_median_clt_each_day_ranks
+  WHERE ranks <= 0.5
+  GROUP BY day
 )
-    SELECT
-        YEARWEEK(cw.week_date) AS data_key,
-        CASE
-            WHEN _clt.median_change_lead_time IS NULL THEN 0
-            ELSE _clt.median_change_lead_time
-        END AS data_value
-    FROM
-        calendar_weeks cw
-        LEFT JOIN _clt ON YEARWEEK(cw.week_date) = _clt.week
-    ORDER BY
-        cw.week_date DESC
+
+SELECT 
+  DATE_FORMAT(cd.day, '%Y-%m-%d') AS data_key,
+  CASE 
+    WHEN _clt.median_change_lead_time IS NULL THEN 0
+    ELSE _clt.median_change_lead_time / 60
+  END AS data_value
+FROM 
+  calendar_days cd
+LEFT JOIN _clt ON cd.day = _clt.day
+ORDER BY cd.day;

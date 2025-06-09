@@ -8,6 +8,31 @@ import { MetricItem, DoraService, MetricType, Aggregation } from './types';
 import fs from 'fs';
 import path from 'path';
 
+export async function get_daily_cfr(
+  pool: mysql.Pool,
+  projects: string[],
+  from: number,
+  to: number
+): Promise<MetricItem[]> {
+  const sqlFilePath = path.join(__dirname, 'queries/cfr_daily.sql');
+  let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
+
+  const placeholders = projects.map(() => '?').join(', ');
+  sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
+
+  // TODO: adauga projects dupa ce schimbi slq queryul
+  const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
+  const dateTo = new Date(to * 1000).toISOString().split('T')[0];
+  const params = [dateFrom, dateTo, ...projects, dateFrom, dateTo];
+
+  try {
+    const [rows] = await pool.execute(sqlQuery, params);
+    return rows as MetricItem[];
+  } catch (error) {
+    console.error('Database query failed:', error);
+    throw error;
+  }
+}
 
 export async function get_monthly_cfr(
   pool: mysql.Pool,
@@ -90,6 +115,32 @@ export async function get_monthly_df(
   }
 }
 
+export async function get_daily_mltc(
+  pool: mysql.Pool,
+  projects: string[],
+  from: number,
+  to: number
+): Promise<MetricItem[]> {
+  const sqlFilePath = path.join(__dirname, 'queries/mltc_daily.sql');
+  let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
+
+  // Dynamically inject (?, ?, ...) based on the number of projects
+  const placeholders = projects.map(() => '?').join(', ');
+  sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
+
+  const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
+  const dateTo = new Date(to * 1000).toISOString().split('T')[0];
+  const params = [dateFrom, dateTo, ...projects, dateFrom, dateTo];
+
+  try {
+    const [rows] = await pool.execute(sqlQuery, params);
+    return rows as MetricItem[];
+  } catch (error) {
+    console.error('Database query failed:', error);
+    throw error;
+  }
+}
+
 
 export async function get_monthly_mltc(
   pool: mysql.Pool,
@@ -117,6 +168,32 @@ export async function get_monthly_mltc(
   }
 }
 
+export async function get_daily_mttr(
+  pool: mysql.Pool,
+  projects: string[],
+  from: number,
+  to: number
+): Promise<MetricItem[]> {
+  const sqlFilePath = path.join(__dirname, 'queries/mttr_daily.sql');
+  let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
+  
+  // Dynamically inject (?, ?, ...) based on the number of projects
+  const placeholders = projects.map(() => '?').join(', ');
+  sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
+
+  // TODO: adauga projects dupa ce schimbi slq queryul
+  const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
+  const dateTo = new Date(to * 1000).toISOString().split('T')[0];
+  const params = [dateFrom, dateTo, ...projects, dateFrom, dateTo];
+
+  try {
+    const [rows] = await pool.execute(sqlQuery, params);
+    return rows as MetricItem[];
+  } catch (error) {
+    console.error('Database query failed:', error);
+    throw error;
+  }
+}
 
 export async function get_monthly_mttr(
   pool: mysql.Pool,
@@ -184,21 +261,21 @@ export async function createDoraService({
               break;
             case 'mltc':
               if (aggregation === 'daily') {
-                // return get_daily_mltc(pool, project, from, to)
+                return get_daily_mltc(pool, projects, from, to)
               } else if (aggregation === 'monthly') {
                 return get_monthly_mltc(pool, projects, from, to)
               }
               break;
             case 'cfr':
               if (aggregation === 'daily') {
-                // return get_daily_cfr(pool, project, from, to)
+                return get_daily_cfr(pool, projects, from, to)
               } else if (aggregation === 'monthly') {
                 return get_monthly_cfr(pool, projects, from, to)
               }
               break;
             case 'mttr':
               if (aggregation === 'daily') {
-                // return get_daily_mttr(pool, project, from, to)
+                return get_daily_mttr(pool, projects, from, to)
               } else if (aggregation === 'monthly') {
                 return get_monthly_mttr(pool, projects, from, to)
               }

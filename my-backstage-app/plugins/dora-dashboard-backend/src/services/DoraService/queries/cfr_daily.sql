@@ -1,70 +1,45 @@
-WITH RECURSIVE calendar_weeks AS (
-    SELECT
-        STR_TO_DATE(CONCAT(YEARWEEK(FROM_UNIXTIME(?)), ' Sunday'), '%X%V %W') AS week_date
-    UNION ALL
-    SELECT
-        DATE_ADD(week_date, INTERVAL 1 WEEK)
-    FROM
-        calendar_weeks
-    WHERE
-        week_date < FROM_UNIXTIME(?)
+-- Metric 3: Change failure rate per day
+WITH RECURSIVE calendar_days AS (
+  SELECT DATE(?) AS day
+  UNION ALL
+  SELECT day + INTERVAL 1 DAY
+  FROM calendar_days
+  WHERE day + INTERVAL 1 DAY <= DATE(?)
 ),
-
 _deployments AS (
-    SELECT
-        cdc.cicd_deployment_id AS deployment_id,
-        MAX(cdc.finished_date) AS deployment_finished_date
-    FROM
-        cicd_deployment_commits cdc
-    WHERE
-        (? = '' OR LOWER(cdc.repo_id) LIKE CONCAT('%/', LOWER(?)))
-        AND cdc.result = 'SUCCESS'
-        AND cdc.environment = 'PRODUCTION'
-    GROUP BY
-        cdc.cicd_deployment_id
+  SELECT
+    cdc.cicd_deployment_id AS deployment_id,
+    MAX(cdc.finished_date) AS deployment_finished_date
+  FROM cicd_deployment_commits cdc
+  JOIN project_mapping pm ON cdc.cicd_scope_id = pm.row_id
+    AND pm.`table` = 'cicd_scopes'
+  WHERE
+    pm.project_name IN (?)
+    AND cdc.result = 'SUCCESS'
+    AND cdc.environment = 'PRODUCTION'
+  GROUP BY cdc.cicd_deployment_id
+  HAVING MAX(cdc.finished_date) BETWEEN ? AND ?
 ),
-
-_incidents AS (
-    SELECT
-        i.id AS incident_id,
-        i.created_date AS incident_created_date
-    FROM
-        issues i
-    WHERE
-        i.type = 'INCIDENT'
+_failure_caused_by_deployments AS (
+  SELECT
+    d.deployment_id,
+    d.deployment_finished_date,
+    COUNT(DISTINCT CASE WHEN i.id IS NOT NULL THEN d.deployment_id ELSE NULL END) AS has_incident
+  FROM _deployments d
+  LEFT JOIN project_incident_deployment_relationships pim ON d.deployment_id = pim.deployment_id
+  LEFT JOIN incidents i ON pim.id = i.id
+  GROUP BY d.deployment_id, d.deployment_finished_date
 ),
-
-_deployments_with_incidents AS (
-    SELECT
-        d.deployment_id,
-        d.deployment_finished_date,
-        COUNT(i.incident_id) AS incident_count
-    FROM
-        _deployments d
-        LEFT JOIN _incidents i
-            ON UNIX_TIMESTAMP(i.incident_created_date) BETWEEN UNIX_TIMESTAMP(d.deployment_finished_date)
-            AND UNIX_TIMESTAMP(d.deployment_finished_date) + 24 * 60 * 60 -- 24 hours in seconds
-    GROUP BY
-        d.deployment_id, d.deployment_finished_date
-),
-
-_change_failure_rate_for_each_week AS (
-    SELECT
-        YEARWEEK(deployment_finished_date) AS week,
-        SUM(CASE WHEN incident_count > 0 THEN 1 ELSE 0 END) / COUNT(*) AS change_failure_rate
-    FROM
-        _deployments_with_incidents
-    GROUP BY
-        YEARWEEK(deployment_finished_date)
+_change_failure_rate_per_day AS (
+  SELECT
+    DATE(deployment_finished_date) AS day,
+    SUM(has_incident) / COUNT(deployment_id) AS change_failure_rate
+  FROM _failure_caused_by_deployments
+  GROUP BY DATE(deployment_finished_date)
 )
-
 SELECT
-    YEARWEEK(cw.week_date) AS data_key,
-    COALESCE(cfr.change_failure_rate, 0) AS data_value
-FROM
-    calendar_weeks cw
-    LEFT JOIN _change_failure_rate_for_each_week cfr ON YEARWEEK(cw.week_date) = cfr.week
-WHERE
-    cw.week_date BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?)
-ORDER BY
-    cw.week_date DESC;
+  DATE_FORMAT(cd.day, '%Y-%m-%d') AS data_key,
+  COALESCE(cfr.change_failure_rate, 0) AS data_value
+FROM calendar_days cd
+LEFT JOIN _change_failure_rate_per_day cfr ON cd.day = cfr.day
+ORDER BY cd.day;
