@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Grid,
   MenuItem,
@@ -17,7 +17,13 @@ import {
   ListItemText,
   RadioGroup,
   Radio,
+  IconButton,
+  Tooltip,
+  Menu,
+  Divider,
+  CircularProgress,
 } from '@mui/material';
+import { FileDownload, PictureAsPdf, ImageOutlined } from '@mui/icons-material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { Progress, ResponseErrorPanel } from '@backstage/core-components';
@@ -67,20 +73,28 @@ const METRIC_TYPES: MetricType[] = [
 ];
 
 const AGGREGATION_OPTIONS = [
-  { value: 'daily', label: 'Daily', defaultDays: 14 },
+  { value: 'daily', label: 'Daily', defaultDays: 30 },
   { value: 'monthly', label: 'Monthly', defaultDays: 180 }, // ~6 months
 ];
 
 export const DoraDashboard = () => {
   const [aggregation, setAggregation] = useState<AggregationType>('monthly');
   const [useCustomDateRange, setUseCustomDateRange] = useState(false);
+  const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(
+    null,
+  );
+  const [isExporting, setIsExporting] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+
+  // Add state to control dropdown open/close
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
 
   // Set default date ranges based on aggregation type
   const getDefaultDateRange = (aggType: AggregationType) => {
     const endDate = new Date();
     const startDate = new Date();
     const defaultDays =
-      AGGREGATION_OPTIONS.find(opt => opt.value === aggType)?.defaultDays || 14;
+      AGGREGATION_OPTIONS.find(opt => opt.value === aggType)?.defaultDays || 30;
     startDate.setDate(startDate.getDate() - defaultDays);
     return { startDate, endDate };
   };
@@ -172,6 +186,18 @@ export const DoraDashboard = () => {
     } else {
       setSelectedProjects(newValue);
     }
+
+    // Keep dropdown open after selection
+    // Note: The dropdown will remain open due to the open prop being controlled
+  };
+
+  // Handle dropdown open/close
+  const handleProjectDropdownOpen = () => {
+    setProjectDropdownOpen(true);
+  };
+
+  const handleProjectDropdownClose = () => {
+    setProjectDropdownOpen(false);
   };
 
   const handleApplyDateFilter = () => {
@@ -185,19 +211,6 @@ export const DoraDashboard = () => {
       const daysDiff = Math.ceil(
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
       );
-
-      if (aggregation === 'daily' && daysDiff > 90) {
-        alert(
-          'Daily aggregation is limited to 90 days maximum for performance reasons',
-        );
-        return;
-      }
-
-      if (aggregation === 'monthly' && daysDiff > 730) {
-        // ~2 years
-        alert('Monthly aggregation is limited to 2 years maximum');
-        return;
-      }
 
       setFilterDates({ start: startDate, end: endDate });
     } else {
@@ -223,13 +236,212 @@ export const DoraDashboard = () => {
     )} - ${end.toLocaleDateString('en-US', options)}`;
   };
 
+  // Export functions
+  const handleExportClick = (event: React.MouseEvent<HTMLElement>) => {
+    setExportMenuAnchor(event.currentTarget);
+  };
+
+  const handleExportClose = () => {
+    setExportMenuAnchor(null);
+  };
+
+  const downloadFile = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportAsSVG = async () => {
+    if (!dashboardRef.current) return;
+
+    setIsExporting(true);
+    handleExportClose();
+
+    try {
+      // Import html2canvas and jsPDF dynamically
+      const html2canvas = (await import('html2canvas')).default;
+
+      // Create canvas from the dashboard
+      const canvas = await html2canvas(dashboardRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2, // Higher quality
+        useCORS: true,
+        allowTaint: true,
+      });
+
+      // Convert canvas to SVG
+      const svgString = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${
+          canvas.width
+        }" height="${canvas.height}">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+              <img src="${canvas.toDataURL()}" width="${
+        canvas.width
+      }" height="${canvas.height}" />
+            </div>
+          </foreignObject>
+        </svg>
+      `;
+
+      const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      const timestamp = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace(/[:.]/g, '-');
+      downloadFile(blob, `dora-dashboard-${timestamp}.svg`);
+    } catch (error) {
+      console.error('Error exporting as SVG:', error);
+      alert('Failed to export as SVG. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const exportAsPDF = async () => {
+    if (!dashboardRef.current) return;
+
+    setIsExporting(true);
+    handleExportClose();
+
+    try {
+      // Import libraries dynamically
+      const html2canvas = (await import('html2canvas')).default;
+      const jsPDF = (await import('jspdf')).jsPDF;
+
+      // Create canvas from the dashboard
+      const canvas = await html2canvas(dashboardRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2, // Higher quality
+        useCORS: true,
+        allowTaint: true,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height],
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+
+      const timestamp = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace(/[:.]/g, '-');
+      pdf.save(`dora-dashboard-${timestamp}.pdf`);
+    } catch (error) {
+      console.error('Error exporting as PDF:', error);
+      alert('Failed to export as PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const exportAsImage = async () => {
+    if (!dashboardRef.current) return;
+
+    setIsExporting(true);
+    handleExportClose();
+
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+
+      const canvas = await html2canvas(dashboardRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2, // Higher quality
+        useCORS: true,
+        allowTaint: true,
+      });
+
+      canvas.toBlob(blob => {
+        if (blob) {
+          const timestamp = new Date()
+            .toISOString()
+            .slice(0, 19)
+            .replace(/[:.]/g, '-');
+          downloadFile(blob, `dora-dashboard-${timestamp}.png`);
+        }
+      }, 'image/png');
+    } catch (error) {
+      console.error('Error exporting as image:', error);
+      alert('Failed to export as image. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (projectsLoading) return <Progress />;
   if (projectsError) return <ResponseErrorPanel error={projectsError} />;
   if (loading) return <Progress />;
   if (error) return <ResponseErrorPanel error={error} />;
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }} ref={dashboardRef}>
+      {/* Header with Export Options */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Typography variant="h4" component="h1">
+          DORA Metrics Dashboard
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {isExporting && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
+              <CircularProgress size={20} />
+              <Typography variant="body2" color="text.secondary">
+                Exporting...
+              </Typography>
+            </Box>
+          )}
+          <Tooltip title="Export Dashboard">
+            <IconButton
+              onClick={handleExportClick}
+              color="primary"
+              disabled={isExporting}
+              sx={{
+                border: 1,
+                borderColor: 'primary.main',
+                '&:hover': { backgroundColor: 'primary.main', color: 'white' },
+              }}
+            >
+              <FileDownload />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={exportMenuAnchor}
+            open={Boolean(exportMenuAnchor)}
+            onClose={handleExportClose}
+            PaperProps={{
+              sx: { mt: 1 },
+            }}
+          >
+            <MenuItem onClick={exportAsPDF} disabled={isExporting}>
+              <PictureAsPdf sx={{ mr: 2, color: 'error.main' }} />
+              Export as PDF
+            </MenuItem>
+            <MenuItem onClick={exportAsSVG} disabled={isExporting}>
+              <ImageOutlined sx={{ mr: 2, color: 'success.main' }} />
+              Export as SVG
+            </MenuItem>
+            <MenuItem onClick={exportAsImage} disabled={isExporting}>
+              <ImageOutlined sx={{ mr: 2, color: 'info.main' }} />
+              Export as PNG
+            </MenuItem>
+          </Menu>
+        </Box>
+      </Box>
       <Box sx={{ display: 'flex', flexDirection: 'column', mb: 3 }}>
         <Paper sx={{ p: 2, mb: 3 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
@@ -256,11 +468,6 @@ export const DoraDashboard = () => {
                 />
               ))}
             </RadioGroup>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {aggregation === 'daily'
-                ? 'Daily view shows data points for each day (recommended for up to 90 days)'
-                : 'Monthly view shows aggregated data by month (recommended for longer time periods)'}
-            </Typography>
           </Box>
 
           <Box
@@ -279,6 +486,9 @@ export const DoraDashboard = () => {
                 labelId="project-select-label"
                 id="project-select"
                 multiple
+                open={projectDropdownOpen}
+                onOpen={handleProjectDropdownOpen}
+                onClose={handleProjectDropdownClose}
                 value={selectedProjects}
                 onChange={handleProjectChange}
                 input={<OutlinedInput label="Projects" />}
@@ -368,20 +578,6 @@ export const DoraDashboard = () => {
               </Box>
             </LocalizationProvider>
           )}
-
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              <strong>Aggregation:</strong>{' '}
-              {aggregation === 'daily' ? 'Daily' : 'Monthly'}
-              <br />
-              <strong>Date Range:</strong> {formatDateRange()}
-              <br />
-              <strong>Selected Projects:</strong>{' '}
-              {selectedProjects.length > 0
-                ? selectedProjects.join(', ')
-                : 'None'}
-            </Typography>
-          </Box>
         </Paper>
       </Box>
 
