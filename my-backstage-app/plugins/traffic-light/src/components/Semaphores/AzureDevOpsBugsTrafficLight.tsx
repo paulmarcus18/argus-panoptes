@@ -87,7 +87,7 @@ useEffect(() => {
 
       const { color: computedColor, reason: computedReason } = determineSemaphoreColor(
         failures,
-        filteredResults.length,
+        entities.length,
         redThreshold,
       );
 

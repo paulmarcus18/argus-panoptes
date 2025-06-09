@@ -45,7 +45,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [projectBugs, setProjectBugs] = React.useState<
-    { project: string; bugCount: number; url: string }[]
+    { project: string; bugCount: number; url: string; entities: { entityName: string; }[];}[]
   >([]);
   const [data, setData] = React.useState<SemaphoreData>({
     color: 'gray',
@@ -96,6 +96,11 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
           { bugCount: number; url: string; failedCheck: boolean }
         >();
 
+        const projectToEntitiesMap = new Map<
+          string,
+          { entityName: string}[]
+        >();
+
         for (const entity of entities) {
           const ref = {
             kind: entity.kind,
@@ -129,6 +134,15 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
               failedCheck: checks.bugCountCheck === false,
             });
           }
+
+          const entityDisplayName = entity.metadata.name;
+
+          if (!projectToEntitiesMap.has(projectName)) {
+            projectToEntitiesMap.set(projectName, []);
+          }
+          projectToEntitiesMap.get(projectName)!.push({
+            entityName: entityDisplayName,
+          });
         }
 
         const projectList = Array.from(projectBugMap.entries())
@@ -136,6 +150,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
             project,
             bugCount,
             url,
+            entities: projectToEntitiesMap.get(project) ?? [],
           }))
           .sort((a, b) => b.bugCount - a.bugCount);
 
@@ -152,7 +167,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
         ).length;
         const { color } = determineSemaphoreColor(
           failures,
-          projectList.length,
+          entities.length,
           redThreshold,
         );
 
@@ -226,6 +241,12 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
                   <Typography className={classes.metricLabel}>
                     Bugs: {project.bugCount}
                   </Typography>
+
+                  {project.entities.length > 0 && (
+                  <Typography className={classes.metricLabel}>
+                    Entities: {project.entities.map(e => `${e.entityName}`).join(', ')}
+                  </Typography>
+                )}
                 </Paper>
               </Grid>
             ))}
