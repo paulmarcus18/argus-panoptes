@@ -33,6 +33,15 @@ export const determineBlackDuckColor = async (
     return { color: 'gray', reason: 'No entities selected' };
   }
 
+  // Filter entities to only those with BlackDuck enabled
+  const enabledEntities = entities.filter(
+    e => e.metadata.annotations?.['tech-insights.io/blackduck-enabled'] === 'true'
+  );
+
+  if (!enabledEntities.length) {
+    return { color: 'gray', reason: 'No entities have BlackDuck enabled' };
+  }
+
   // Get the system name from the first entity
   const systemName = entities[0].spec?.system;
   if (!systemName) {
@@ -54,7 +63,7 @@ export const determineBlackDuckColor = async (
   try {
     // Get the check results for each entity
     const results = await Promise.all(
-        entities.map(entity =>
+        enabledEntities.map(entity =>
             blackDuckUtils.getBlackDuckChecks(techInsightsApi, {
                 kind: entity.kind,
                 namespace: entity.metadata.namespace || 'default',
@@ -76,7 +85,7 @@ export const determineBlackDuckColor = async (
 
     // Count the number of checks that failed for more than 1/3 of the entities
     const redCount = Object.values(counts).filter(
-    v => v > entities.length * 100 / proportion,
+    v => v > enabledEntities.length * 100 / proportion,
     ).length;
 
     if (Object.values(counts).every(v => v === 0)) {
