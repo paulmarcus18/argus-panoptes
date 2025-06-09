@@ -187,7 +187,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
   }, [open, entities, techInsightsApi, azureUtils]);
 
   const totalBugCount = projectBugs.reduce((sum, p) => sum + p.bugCount, 0);
-  const top5Projects = projectBugs.slice(0, 5);
+  const top5Projects = projectBugs.filter(p => p.bugCount > 0).slice(0, 5);
 
   const renderMetrics = () => (
     <>
@@ -197,7 +197,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
             <Typography
               variant="h4"
               className={classes.metricValue}
-              style={{ color: '#e53935' }}
+              style={{ color: data.color }}
             >
               {totalBugCount}
             </Typography>
