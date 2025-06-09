@@ -57,7 +57,7 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
             kind: entity.kind,
           },
           facts: {
-            azure_bug_count: -1,
+            azure_bug_count: null,
           },
         });
         continue;

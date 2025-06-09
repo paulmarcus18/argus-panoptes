@@ -48,6 +48,9 @@ integrations:
   azure:
     - host: dev.azure.com
       token: ${AZURE_DEVOPS_TOKEN}
+  openrouter:
+    - host: openrouter.ai
+      token: ${OPENROUTER_AI_TOKEN}
 proxy:
   ### Example for how to add a proxy endpoint for the frontend.
   ### A typical reason to do this is to handle HTTPS and CORS for internal services.
@@ -192,7 +195,7 @@ techInsights:
       cadence: '1 * * * *' # Every 4 hours
     github-commit-message-retriever:
       enabled: true
-      cadence: '0 6 * * *' # Every day at 06:00
+      cadence: '* * * * *' # Every day at 06:00
       filter:
         kind: Component
     azure-devops-bugs-retriever:

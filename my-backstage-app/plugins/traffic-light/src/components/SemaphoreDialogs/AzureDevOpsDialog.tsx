@@ -112,6 +112,8 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
               azureUtils.getAzureDevOpsBugChecks(techInsightsApi, ref),
             ]);
 
+            if (!entity.metadata.annotations?.['azure.com/bugs-query-id']) continue;
+
             const orgName =
               entity.metadata.annotations?.['azure.com/organization'] ??
               'unknown-org';
