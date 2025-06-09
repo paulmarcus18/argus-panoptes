@@ -15,6 +15,8 @@ import {
   OutlinedInput,
   Checkbox,
   ListItemText,
+  RadioGroup,
+  Radio,
 } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -33,6 +35,9 @@ type MetricType = {
   description: string;
   color: string;
 };
+
+// Aggregation options
+type AggregationType = 'daily' | 'monthly';
 
 const METRIC_TYPES: MetricType[] = [
   {
@@ -61,18 +66,46 @@ const METRIC_TYPES: MetricType[] = [
   },
 ];
 
-export const DoraDashboard = () => {
-  const [useCustomDateRange, setUseCustomDateRange] = useState(false);
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+const AGGREGATION_OPTIONS = [
+  { value: 'daily', label: 'Daily', defaultDays: 14 },
+  { value: 'monthly', label: 'Monthly', defaultDays: 180 }, // ~6 months
+];
 
-  const [startDate, setStartDate] = useState<Date | null>(sixMonthsAgo);
-  const [endDate, setEndDate] = useState<Date | null>(new Date());
+export const DoraDashboard = () => {
+  const [aggregation, setAggregation] = useState<AggregationType>('monthly');
+  const [useCustomDateRange, setUseCustomDateRange] = useState(false);
+
+  // Set default date ranges based on aggregation type
+  const getDefaultDateRange = (aggType: AggregationType) => {
+    const endDate = new Date();
+    const startDate = new Date();
+    const defaultDays =
+      AGGREGATION_OPTIONS.find(opt => opt.value === aggType)?.defaultDays || 14;
+    startDate.setDate(startDate.getDate() - defaultDays);
+    return { startDate, endDate };
+  };
+
+  const [startDate, setStartDate] = useState<Date | null>(
+    () => getDefaultDateRange('monthly').startDate,
+  );
+  const [endDate, setEndDate] = useState<Date | null>(
+    () => getDefaultDateRange('monthly').endDate,
+  );
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
 
   const [filterDates, setFilterDates] = useState<{ start?: Date; end?: Date }>(
     {},
   );
+
+  // Update date range when aggregation changes
+  useEffect(() => {
+    if (!useCustomDateRange) {
+      const { startDate: newStart, endDate: newEnd } =
+        getDefaultDateRange(aggregation);
+      setStartDate(newStart);
+      setEndDate(newEnd);
+    }
+  }, [aggregation, useCustomDateRange]);
 
   // Fetch available projects
   const {
@@ -97,7 +130,7 @@ export const DoraDashboard = () => {
     loading,
     error,
   } = useMetricsData(
-    'monthly',
+    aggregation,
     filterDates.start,
     filterDates.end,
     selectedProjects,
@@ -108,6 +141,18 @@ export const DoraDashboard = () => {
       setFilterDates({});
     }
   }, [useCustomDateRange]);
+
+  const handleAggregationChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const newAggregation = event.target.value as AggregationType;
+    setAggregation(newAggregation);
+
+    // Reset custom date range when changing aggregation
+    if (!useCustomDateRange) {
+      setFilterDates({});
+    }
+  };
 
   const handleDateRangeToggle = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -135,10 +180,47 @@ export const DoraDashboard = () => {
         alert('Start date must be before end date');
         return;
       }
+
+      // Validate date range based on aggregation type
+      const daysDiff = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      if (aggregation === 'daily' && daysDiff > 90) {
+        alert(
+          'Daily aggregation is limited to 90 days maximum for performance reasons',
+        );
+        return;
+      }
+
+      if (aggregation === 'monthly' && daysDiff > 730) {
+        // ~2 years
+        alert('Monthly aggregation is limited to 2 years maximum');
+        return;
+      }
+
       setFilterDates({ start: startDate, end: endDate });
     } else {
       alert('Please select both start and end dates');
     }
+  };
+
+  const formatDateRange = () => {
+    const start = filterDates.start || startDate;
+    const end = filterDates.end || endDate;
+
+    if (!start || !end) return 'No date range selected';
+
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    };
+
+    return `${start.toLocaleDateString(
+      'en-US',
+      options,
+    )} - ${end.toLocaleDateString('en-US', options)}`;
   };
 
   if (projectsLoading) return <Progress />;
@@ -153,6 +235,33 @@ export const DoraDashboard = () => {
           <Typography variant="h6" sx={{ mb: 2 }}>
             Data Filtering Options
           </Typography>
+
+          {/* Aggregation Selection */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Data Aggregation
+            </Typography>
+            <RadioGroup
+              row
+              value={aggregation}
+              onChange={handleAggregationChange}
+              sx={{ mb: 2 }}
+            >
+              {AGGREGATION_OPTIONS.map(option => (
+                <FormControlLabel
+                  key={option.value}
+                  value={option.value}
+                  control={<Radio />}
+                  label={option.label}
+                />
+              ))}
+            </RadioGroup>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {aggregation === 'daily'
+                ? 'Daily view shows data points for each day (recommended for up to 90 days)'
+                : 'Monthly view shows aggregated data by month (recommended for longer time periods)'}
+            </Typography>
+          </Box>
 
           <Box
             sx={{
@@ -188,7 +297,6 @@ export const DoraDashboard = () => {
                       (availableProjects?.length || 0)
                     }
                   />
-
                   <ListItemText primary="All Projects" />
                 </MenuItem>
                 {(availableProjects || []).map(project => (
@@ -261,10 +369,19 @@ export const DoraDashboard = () => {
             </LocalizationProvider>
           )}
 
-          <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
-            Data aggregation: Monthly | Selected projects:{' '}
-            {selectedProjects.join(', ')}
-          </Typography>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              <strong>Aggregation:</strong>{' '}
+              {aggregation === 'daily' ? 'Daily' : 'Monthly'}
+              <br />
+              <strong>Date Range:</strong> {formatDateRange()}
+              <br />
+              <strong>Selected Projects:</strong>{' '}
+              {selectedProjects.length > 0
+                ? selectedProjects.join(', ')
+                : 'None'}
+            </Typography>
+          </Box>
         </Paper>
       </Box>
 
