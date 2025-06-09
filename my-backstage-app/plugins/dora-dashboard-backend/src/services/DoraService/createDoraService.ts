@@ -51,7 +51,7 @@ export async function get_daily_df(
   // Convert from and to timestamps to ISO date strings
   const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
   const dateTo = new Date(to * 1000).toISOString().split('T')[0];
-  const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
+  const params = [dateFrom, dateTo, ...projects, dateFrom, dateTo];
 
   try {
     const [rows] = await pool.execute(sqlQuery, params);
