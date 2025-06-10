@@ -80,7 +80,6 @@ export const createSonarCloudFactRetriever = (config: Config): FactRetriever => 
       // Get SonarCloud-specific configuration
       const sonarcloudConfig = config.getConfig('sonarcloud');
       const token = sonarcloudConfig.getString('token');
-      //const organization = sonarcloudConfig.getString('organization');
 
       // Get authentication token for catalog access
       const { token: catalogToken } = await auth.getPluginRequestToken({
@@ -105,6 +104,12 @@ export const createSonarCloudFactRetriever = (config: Config): FactRetriever => 
         entity.metadata.annotations?.['sonarcloud.io/project-key']
       );
       
+      // Prepare the basic authentication token for SonarCloud API requests
+      const basicAuthToken = Buffer.from(`${token}:`).toString('base64');
+      const requestHeaders = {
+        'Authorization': `Basic ${basicAuthToken}`,
+      };
+
       // Process each entity with SonarCloud enabled
       const results = await Promise.all(
         sonarcloudEntities.map(async entity => {
@@ -114,9 +119,7 @@ export const createSonarCloudFactRetriever = (config: Config): FactRetriever => 
           const response = await fetch(
             `https://sonarcloud.io/api/measures/component?component=${projectKey}&metricKeys=bugs,code_smells,vulnerabilities,coverage`,
             {
-              headers: {
-                'Authorization': `Basic ${Buffer.from(`${token}:`).toString('base64')}`,
-              },
+              headers: requestHeaders
             }
           );
 
@@ -124,9 +127,7 @@ export const createSonarCloudFactRetriever = (config: Config): FactRetriever => 
           const responseQG = await fetch(
             `https://sonarcloud.io/api/qualitygates/project_status?projectKey=${projectKey}`,
             {
-              headers: {
-                'Authorization': `Basic ${Buffer.from(`${token}:`).toString('base64')}`,
-              },
+              headers: requestHeaders
             }
           );
           
@@ -149,10 +150,10 @@ export const createSonarCloudFactRetriever = (config: Config): FactRetriever => 
 
           // Facts object to be returned
           const facts = {
-            bugs: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'bugs')?.value || '0', 10),
-            code_smells: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'code_smells')?.value || '0', 10),
-            vulnerabilities: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'vulnerabilities')?.value || '0', 10),
-            code_coverage: parseFloat(measures.find((m: SonarCloudMeasure) => m.metric === 'coverage')?.value || '0'),
+            bugs: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'bugs')?.value ?? '0', 10),
+            code_smells: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'code_smells')?.value ?? '0', 10),
+            vulnerabilities: parseInt(measures.find((m: SonarCloudMeasure) => m.metric === 'vulnerabilities')?.value ?? '0', 10),
+            code_coverage: parseFloat(measures.find((m: SonarCloudMeasure) => m.metric === 'coverage')?.value ?? '0'),
             quality_gate: qgStatus,
           };
                     

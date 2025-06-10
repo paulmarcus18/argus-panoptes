@@ -10,7 +10,7 @@ import { TechInsightsApi } from '@backstage/plugin-tech-insights';
  * @param api - The TechInsightsApi instance used to fetch facts.
  * @param entity - The entity reference for which to fetch Preproduction pipeline facts.
  * @returns An object containing Preproduction pipeline metrics for the entity.
- * Shape of the metrics object returned by the GitHub‑pipeline Tech Insights retriever.
+ * Shape of the metrics object returned by the GitHub‑pipeline TechInsights retriever.
  */
 export interface PreproductionPipelineMetrics {
   totalWorkflowRunsCount: number;
