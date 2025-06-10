@@ -56,9 +56,24 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
 
     const fetchSonarData = async () => {
       try {
+        // Filter entities to only those with SonarQube enabled
+        const enabledEntities = entities.filter(
+          e => e.metadata.annotations?.['sonarcloud.io/enabled'] === 'true'
+        );
+
+        if (enabledEntities.length === 0) {
+          setData({
+            color: 'gray',
+            metrics: {},
+            summary: 'No repositories found with SonarQube enabled.',
+            details: [],
+          });
+          return;
+        }
+
         // Get SonarQube facts for all entities
         const results = await Promise.all(
-          entities.map(entity =>
+          enabledEntities.map(entity =>
             sonarUtils.getSonarQubeFacts(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
@@ -92,7 +107,7 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
         // Create details array from results
         const details: IssueDetail[] = [];
         
-        const displayedRepos = await sonarUtils.getTop5CriticalSonarCloudRepos(techInsightsApi, entities);
+        const displayedRepos = await sonarUtils.getTop5CriticalSonarCloudRepos(techInsightsApi, enabledEntities);
 
         for (const repo of displayedRepos) {
           // Fetch entity metadata from catalog

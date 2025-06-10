@@ -135,7 +135,7 @@ export function determineSemaphoreColor(
   totalEntities: number,
   redThreshold: number,
 ): { color: 'green' | 'yellow' | 'red'; reason: string } {
-  const redLimit = Math.ceil(redThreshold * totalEntities);
+  const redLimit = redThreshold * totalEntities;
 
   if (failures === 0) {
     return { color: 'green', reason: 'All checks passed.' };

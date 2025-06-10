@@ -34,6 +34,15 @@ export const determineSonarQubeColor = async (
     return { color: 'gray', reason: 'No entities selected' };
   }
 
+  // Filter entities to only those with SonarQube enabled
+  const enabledEntities = entities.filter(
+    e => e.metadata.annotations?.['sonarcloud.io/enabled'] === 'true'
+  );
+
+  if (!enabledEntities.length) {
+    return { color: 'gray', reason: 'No entities have SonarQube enabled' };
+  }
+
   // Get the system name from the first entity
   const systemName = entities[0].spec?.system;
   if (!systemName) {
@@ -57,7 +66,7 @@ export const determineSonarQubeColor = async (
 
   try {
     const results = await Promise.all(
-      entities.map(entity =>
+      enabledEntities.map(entity =>
         sonarUtils.getSonarQubeFacts(techInsightsApi, {
           kind: entity.kind,
           namespace: entity.metadata.namespace || 'default',

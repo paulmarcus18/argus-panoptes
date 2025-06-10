@@ -45,7 +45,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [projectBugs, setProjectBugs] = React.useState<
-    { project: string; bugCount: number; url: string }[]
+    { project: string; bugCount: number; url: string; entities: { entityName: string; }[];}[]
   >([]);
   const [data, setData] = React.useState<SemaphoreData>({
     color: 'gray',
@@ -96,6 +96,11 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
           { bugCount: number; url: string; failedCheck: boolean }
         >();
 
+        const projectToEntitiesMap = new Map<
+          string,
+          { entityName: string}[]
+        >();
+
         for (const entity of entities) {
           const ref = {
             kind: entity.kind,
@@ -112,6 +117,8 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
               azureUtils.getAzureDevOpsBugChecks(techInsightsApi, ref),
             ]);
 
+            if (!entity.metadata.annotations?.['azure.com/bugs-query-id']) continue;
+
             const orgName =
               entity.metadata.annotations?.['azure.com/organization'] ??
               'unknown-org';
@@ -127,6 +134,15 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
               failedCheck: checks.bugCountCheck === false,
             });
           }
+
+          const entityDisplayName = entity.metadata.name;
+
+          if (!projectToEntitiesMap.has(projectName)) {
+            projectToEntitiesMap.set(projectName, []);
+          }
+          projectToEntitiesMap.get(projectName)!.push({
+            entityName: entityDisplayName,
+          });
         }
 
         const projectList = Array.from(projectBugMap.entries())
@@ -134,6 +150,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
             project,
             bugCount,
             url,
+            entities: projectToEntitiesMap.get(project) ?? [],
           }))
           .sort((a, b) => b.bugCount - a.bugCount);
 
@@ -150,7 +167,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
         ).length;
         const { color } = determineSemaphoreColor(
           failures,
-          projectList.length,
+          entities.length,
           redThreshold,
         );
 
@@ -185,7 +202,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
   }, [open, entities, techInsightsApi, azureUtils]);
 
   const totalBugCount = projectBugs.reduce((sum, p) => sum + p.bugCount, 0);
-  const top5Projects = projectBugs.slice(0, 5);
+  const top5Projects = projectBugs.filter(p => p.bugCount > 0).slice(0, 5);
 
   const renderMetrics = () => (
     <>
@@ -195,7 +212,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
             <Typography
               variant="h4"
               className={classes.metricValue}
-              style={{ color: '#e53935' }}
+              style={{ color: data.color }}
             >
               {totalBugCount}
             </Typography>
@@ -224,6 +241,12 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
                   <Typography className={classes.metricLabel}>
                     Bugs: {project.bugCount}
                   </Typography>
+
+                  {project.entities.length > 0 && (
+                  <Typography className={classes.metricLabel}>
+                    Entities: {project.entities.map(e => `${e.entityName}`).join(', ')}
+                  </Typography>
+                )}
                 </Paper>
               </Grid>
             ))}

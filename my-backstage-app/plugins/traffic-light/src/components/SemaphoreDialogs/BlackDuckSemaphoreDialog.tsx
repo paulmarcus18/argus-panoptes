@@ -3,6 +3,7 @@ import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { BlackDuckUtils } from '../../utils/blackDuckUtils';
 import { SemaphoreData, IssueDetail } from './types';
@@ -38,6 +39,7 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
+  const catalogApi = useApi(catalogApiRef);
   const blackDuckUtils = React.useMemo(() => new BlackDuckUtils(), [techInsightsApi]);
 
   const [data, setData] = React.useState<SemaphoreData>({
@@ -54,9 +56,24 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
 
     const fetchBlackDuckData = async () => {
       try {
-        // Get BlackDuck facts for all entities
+        // Filter entities to only those with BlackDuck enabled
+        const enabledEntities = entities.filter(
+          e => e.metadata.annotations?.['tech-insights.io/blackduck-enabled'] === 'true'
+        );
+
+        if (enabledEntities.length === 0) {
+          setData({
+            color: 'gray',
+            metrics: {},
+            summary: 'No repositories found with BlackDuck enabled.',
+            details: [],
+          });
+          return;
+        }
+
+        // Get BlackDuck facts for entities with BlackDuck enabled
         const results = await Promise.all(
-          entities.map(entity =>
+          enabledEntities.map(entity =>
             blackDuckUtils.getBlackDuckFacts(techInsightsApi, {
               kind: entity.kind,
               namespace: entity.metadata.namespace || 'default',
@@ -83,7 +100,7 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
         // Create details array from results
         const details: IssueDetail[] = [];
         
-        const displayedRepos = await blackDuckUtils.getTop5CriticalBlackDuckRepos(techInsightsApi, entities);
+        const displayedRepos = await blackDuckUtils.getTop5CriticalBlackDuckRepos(techInsightsApi, enabledEntities);
 
         for (const repo of displayedRepos) {
           // Create a description and determine severity based on the repo's issues
@@ -112,7 +129,7 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
         }
 
         // Determine the overall status color
-        const trafficLightcolor = await determineBlackDuckColor(entities, techInsightsApi, blackDuckUtils);
+        const trafficLightcolor = await determineBlackDuckColor(entities, catalogApi, techInsightsApi, blackDuckUtils);
         let color: 'green' | 'red' | 'yellow' | 'gray' = 'green';
         color = trafficLightcolor.color;
 

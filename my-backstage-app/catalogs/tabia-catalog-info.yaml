@@ -14,8 +14,8 @@ metadata:
     reporting/target-branch: develop
     preproduction/exclude: '["Dependabot.*"]'
     azure.com/organization: argus-panoptes-dev
-    azure.com/project: project_2
-    azure.com/bugs-query-id: b2fdb928-a73e-4cba-82c9-e605a194666d
+    azure.com/project: project_3
+    azure.com/bugs-query-id: 80418d71-f25d-4316-9bca-427795de35e8
   tags:
     - non-critical
 spec:
