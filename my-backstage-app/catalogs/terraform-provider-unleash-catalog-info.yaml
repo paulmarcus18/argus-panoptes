@@ -8,10 +8,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/terraform-provider-unleash
     sonarcloud.io/project-key: SEP-ArgusPanoptes_terraform-provider-unleash
     sonarcloud.io/enabled: 'true'
-    pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
-    foundation/thresholds: '{"minSuccessRate": 95}'
-    reporting/workflows: '["CodeQL", "Continuous Integration"]'
-    reporting/target-branch: main
+    reporting/workflows: '["CodeQL"]'
+    reporting/target-branch: dependabot/go_modules/github.com/hashicorp/terraform-plugin-docs-0.21.0
     preproduction/exclude: '["Dependabot.*"]'
   tags:
     - non-critical

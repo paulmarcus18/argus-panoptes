@@ -5,7 +5,7 @@ export const reportingPipelineChecks: DynamicThresholdCheck[] = [
     id: 'reporting-success-rate',
     name: 'Reporting Pipeline Success Rate',
     type: 'percentage',
-    factIds: ['reportingPipelineStatusFactRetriever', 'overallSuccessRate'],
+    factIds: ['reportingPipelineStatusFactRetriever', 'successRate'],
     annotationKeyThreshold:
       'tech-insights.io/reporting-success-rate-threshold',
     annotationKeyOperator:

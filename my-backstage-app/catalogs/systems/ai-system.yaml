@@ -47,7 +47,7 @@ metadata:
 
     foundation-check-threshold-red: '1'
     preproduction-check-threshold-red: '2'
-    reporting-check-threshold-red: '2'
+    reporting-check-threshold-red: '0.3'
     azure-bugs-check-threshold-red: '0.33'
 
     tech-insights.io/azure-bugs-threshold: '1'
