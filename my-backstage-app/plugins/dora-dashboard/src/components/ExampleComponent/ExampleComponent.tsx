@@ -1,12 +1,9 @@
-import { Typography, Grid } from '@material-ui/core';
+import { Grid } from '@material-ui/core';
 import {
-  InfoCard,
   Header,
   Page,
   Content,
-  ContentHeader,
   HeaderLabel,
-  SupportButton,
 } from '@backstage/core-components';
 import { DoraDashboard } from '../DoraDashboard';
 

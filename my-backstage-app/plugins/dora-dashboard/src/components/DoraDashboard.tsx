@@ -11,7 +11,6 @@ import {
   FormControlLabel,
   Switch,
   Button,
-  Chip,
   OutlinedInput,
   Checkbox,
   ListItemText,
@@ -20,7 +19,6 @@ import {
   IconButton,
   Tooltip,
   Menu,
-  Divider,
   CircularProgress,
 } from '@mui/material';
 import { FileDownload, PictureAsPdf, ImageOutlined } from '@mui/icons-material';

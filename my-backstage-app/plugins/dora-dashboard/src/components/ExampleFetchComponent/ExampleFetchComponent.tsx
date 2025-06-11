@@ -17,7 +17,6 @@ import {
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material';
 
-// ------------------ Types ------------------
 
 export type DataPoint = {
   key: string;
@@ -37,7 +36,6 @@ const METRIC_TYPES = [
   { id: 'mttr', label: 'Time to Restore' },
 ];
 
-// ------------------ Projects Hook ------------------
 
 export function useProjects() {
   return useAsync(async (): Promise<string[]> => {
@@ -48,23 +46,23 @@ export function useProjects() {
 
       if (!response.ok) {
         console.warn(
-          `❌ Failed to fetch projects: ${response.status} ${response.statusText}`,
+          `Failed to fetch projects: ${response.status} ${response.statusText}`,
         );
         return [];
       }
 
       const projects = await response.json();
-      console.log('✅ Fetched projects:', projects);
+      console.log('Fetched projects:', projects);
 
       return Array.isArray(projects) ? projects : [];
     } catch (error) {
-      console.error('💥 Error fetching projects:', error);
+      console.error('Error fetching projects:', error);
       return [];
     }
   }, []);
 }
 
-// ------------------ Enhanced Hook with Daily Support ------------------
+
 
 export function useMetricsData(
   aggregation: 'daily' | 'monthly' = 'monthly',
@@ -112,7 +110,7 @@ export function useMetricsData(
         const adjustedEnd = new Date(start);
         adjustedEnd.setDate(adjustedEnd.getDate() + 90);
         console.log(
-          `📅 Adjusted end date from ${end.toISOString()} to ${adjustedEnd.toISOString()}`,
+          `Adjusted end date from ${end.toISOString()} to ${adjustedEnd.toISOString()}`,
         );
       }
     }
@@ -121,14 +119,14 @@ export function useMetricsData(
       METRIC_TYPES.map(async metric => {
         const url = `${baseUrl}/${metric.id}/${aggregation}/${startTimestamp}/${endTimestamp}?projects=${projectParam}`;
 
-        console.log(`📡 Fetching ${aggregation} data: ${url}`);
+        console.log(`Fetching ${aggregation} data: ${url}`);
 
         try {
           const response = await fetch(url);
 
           if (!response.ok) {
             console.warn(
-              `❌ Failed to fetch ${metric.label} (${aggregation}): ${response.status} ${response.statusText}`,
+              `Failed to fetch ${metric.label} (${aggregation}): ${response.status} ${response.statusText}`,
             );
             return {
               id: metric.id,
@@ -138,7 +136,7 @@ export function useMetricsData(
 
           const json = await response.json();
           console.log(
-            `✅ Response JSON for ${metric.id} (${aggregation}):`,
+            `Response JSON for ${metric.id} (${aggregation}):`,
             json,
           );
 
@@ -181,7 +179,7 @@ export function useMetricsData(
           };
         } catch (error) {
           console.error(
-            `💥 Error fetching ${metric.label} (${aggregation}):`,
+            `Error fetching ${metric.label} (${aggregation}):`,
             error,
           );
           return {
@@ -200,8 +198,6 @@ export function useMetricsData(
     JSON.stringify(projects),
   ]);
 }
-
-// ------------------ Enhanced Debug Component ------------------
 
 export const ExampleFetchComponent = () => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
