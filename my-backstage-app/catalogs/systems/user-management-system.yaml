@@ -14,14 +14,14 @@ metadata:
     tech-insights.io/foundation-success-rate-operator: 'greaterThanInclusive'
     tech-insights.io/foundation-max-failures-threshold: '2'
     tech-insights.io/foundation-max-failures-operator: 'lessThanInclusive'
-    tech-insights.io/preproduction-success-rate-threshold: '70'
+    tech-insights.io/preproduction-success-rate-threshold: '95'
     tech-insights.io/preproduction-success-rate-operator: 'greaterThanInclusive'
     tech-insights.io/preproduction-max-failures-threshold: '35'
     tech-insights.io/preproduction-max-failures-operator: 'lessThanInclusive'
     tech-insights.io/reporting-success-rate-threshold: '80'
     tech-insights.io/reporting-success-rate-operator: 'greaterThanInclusive'
-    preproduction-configured-repositories: 'fatt,terraform-registry,argus-panoptes'
-    foundation-configured-repositories: 'fatt,terraform-registry,argus-panoptes,tabia'
+    preproduction-configured-repositories: 'terraform-registry,tabia,s3dl'
+    foundation-configured-repositories: 'workflow-capability,terraform-registry,tabia'
 
     # Github Advanced Security - fact checker thresholds
     tech-insights.io/github-advanced-security-secrets-threshold: '0'
@@ -48,7 +48,7 @@ metadata:
     github-advanced-security-system-low-threshold-yellow: '0.7'
 
     foundation-check-threshold-red: '0.6'
-    preproduction-check-threshold-red: '1'
+    preproduction-check-threshold-red: '0.6'
     reporting-check-threshold-red: '2'
     azure-bugs-check-threshold-red: '0.4'
 
