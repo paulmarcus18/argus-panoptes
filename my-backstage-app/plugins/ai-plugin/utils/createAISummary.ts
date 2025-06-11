@@ -39,7 +39,7 @@ export async function generateSummaries(
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
-            "Authorization": "Bearer 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",
+            "Authorization": "Bearer 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",
             "Content-Type": "application/json",
             "HTTP-Referer": "<YOUR_SITE_URL>", // Optional
             "X-Title": "<YOUR_SITE_NAME>"     // Optional
@@ -56,6 +56,7 @@ export async function generateSummaries(
         });
 
         const data = await response.json();
+        console.info(`Received response from OpenRouter for system ${system} and repo ${repoName}:`, data);
         const summary = data?.choices?.[0]?.message?.content ?? 'No summary returned.';
         summarizedRepos.push({ repoName, summary });
 
