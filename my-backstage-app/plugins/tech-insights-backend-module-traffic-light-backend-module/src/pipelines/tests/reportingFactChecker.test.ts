@@ -57,7 +57,7 @@ describe('Reporting Pipeline Checks Configuration', () => {
     
     expect(successRateCheck).toBeDefined();
     expect(successRateCheck?.type).toBe('percentage');
-    expect(successRateCheck?.factIds).toEqual(['reportingPipelineStatusFactRetriever', 'overallSuccessRate']);
+    expect(successRateCheck?.factIds).toEqual(['reportingPipelineStatusFactRetriever', 'successRate']);
     expect(successRateCheck?.name).toBe('Reporting Pipeline Success Rate');
     expect(successRateCheck?.description).toContain('pipeline success rate');
   });

@@ -11,8 +11,6 @@ metadata:
     # 'blackduck.io/enabled': 'true'
     # 'blackduck.io/project-name': 'dct-notary-admin'
     # 'blackduck.io/project-version': '1.0.0'
-    pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
-    foundation/thresholds: '{"minSuccessRate": 95}'
     reporting/workflows: '["CodeQL", "Continuous Integration"]'
     reporting/target-branch: main
     preproduction/exclude: '["Dependabot.*"]'
