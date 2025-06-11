@@ -44,6 +44,8 @@ export const AISummaries = () => {
   const { fetch } = useApi(fetchApiRef);
   const discoveryApi = useApi(discoveryApiRef);
   const today = new Date().toISOString().split('T')[0];
+  const fetchApi = useApi(fetchApiRef); // ✅ call this at top level
+  const fetchFn = fetchApi.fetch;
 
   const callAI = async () => {
       setLoading(true); // ✅ Add this line
@@ -54,7 +56,7 @@ export const AISummaries = () => {
         const commitMessagesBySystem = await getCommitMessagesBySystem(techInsightsApi, systemToEntityRefs);
 
         
-        const result = await generateSummaries(commitMessagesBySystem);
+        const result = await generateSummaries(commitMessagesBySystem, apiBaseUrl, fetchFn);
         await postSummaries(result, today, apiBaseUrl, fetch);
         setMessagesBySystem(result);
       } catch (err) {
