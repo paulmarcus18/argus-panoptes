@@ -14,11 +14,11 @@ metadata:
     tech-insights.io/foundation-success-rate-operator: 'greaterThanInclusive'
     tech-insights.io/foundation-max-failures-threshold: '2'
     tech-insights.io/foundation-max-failures-operator: 'lessThanInclusive'
-    tech-insights.io/preproduction-success-rate-threshold: '75'
+    tech-insights.io/preproduction-success-rate-threshold: '95'
     tech-insights.io/preproduction-success-rate-operator: 'greaterThanInclusive'
     tech-insights.io/preproduction-max-failures-threshold: '35'
     tech-insights.io/preproduction-max-failures-operator: 'lessThanInclusive'
-    preproduction-configured-repositories: 'fatt,terraform-registry,argus-panoptes'
+    preproduction-configured-repositories: 'fatt,dct-notary-admin,slsa-provenance-action'
     foundation-configured-repositories: 'fatt,terraform-registry,argus-panoptes,tabia'
 
     # Github Advanced Security - fact checker thresholds
@@ -46,7 +46,7 @@ metadata:
     github-advanced-security-system-low-threshold-yellow: '0.7'
 
     foundation-check-threshold-red: '0.4'
-    preproduction-check-threshold-red: '2'
+    preproduction-check-threshold-red: '0.4'
     reporting-check-threshold-red: '2'
     azure-bugs-check-threshold-red: '0.33'
 
