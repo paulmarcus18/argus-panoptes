@@ -50,11 +50,13 @@
     "@backstage/plugin-techdocs-backend": "^2.0.1",
     "@internal/plugin-ai-plugin-backend": "workspace:^",
     "@internal/plugin-ai-plugin-backend-module-tech-insights-backend-module": "workspace:^",
+    "@internal/plugin-dora-dashboard-backend": "workspace:^",
     "@internal/plugin-tech-insights-backend-module-traffic-light-backend-module": "workspace:^",
     "@octokit/rest": "^21.1.1",
     "app": "link:../app",
     "better-sqlite3": "^9.0.0",
     "dotenv": "^16.5.0",
+    "mysql2": "^3.14.1",
     "node-fetch": "^3.3.2",
     "node-gyp": "^10.0.0",
     "pg": "^8.11.3"
