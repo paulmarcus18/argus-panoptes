@@ -180,7 +180,6 @@ permission:
   enabled: true
 
 sonarcloud:
-sonarcloud:
   token: ${SONARCLOUD_TOKEN}
   organization: sep-arguspanoptes
 
