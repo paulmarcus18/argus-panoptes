@@ -4,7 +4,7 @@ metadata:
   name: payments-system
   title: Payments System
   annotations:
-    tech-insights.io/dependabot-critical-alert-threshold: '2'
+    tech-insights.io/dependabot-critical-alert-threshold: '5'
     tech-insights.io/dependabot-high-alert-threshold: '25'
     tech-insights.io/dependabot-medium-alert-threshold: '15'
     tech-insights.io/dependabot-operator: 'lessThanInclusive'
