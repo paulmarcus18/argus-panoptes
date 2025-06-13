@@ -21,7 +21,7 @@ metadata:
     tech-insights.io/reporting-success-rate-threshold: '80'
     tech-insights.io/reporting-success-rate-operator: 'greaterThanInclusive'
     preproduction-configured-repositories: 'terraform-registry,tabia,s3dl'
-    foundation-configured-repositories: 'workflow-capability,terraform-registry,tabia'
+    foundation-configured-repositories: 'fatt,terraform-registry,argus-panoptes,tabia'
 
     # Github Advanced Security - fact checker thresholds
     tech-insights.io/github-advanced-security-secrets-threshold: '0'
