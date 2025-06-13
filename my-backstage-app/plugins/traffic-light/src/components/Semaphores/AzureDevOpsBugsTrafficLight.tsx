@@ -105,18 +105,16 @@ useEffect(() => {
 
 
   return (
-    <Tooltip title={reason}>
-      <div>
-        <Box
-          my={1}
-          width={50}
-          height={50}
-          borderRadius="50%"
-          bgcolor={color}
-          onClick={onClick}
-          style={onClick ? { cursor: 'pointer' } : {}}
-        />
-      </div>
+    <Tooltip title={reason} placement='right'>
+      <Box
+        my={1}
+        width={50}
+        height={50}
+        borderRadius="50%"
+        bgcolor={color}
+        onClick={onClick}
+        style={onClick ? { cursor: 'pointer' } : {}}
+      />
     </Tooltip>
   );
 };

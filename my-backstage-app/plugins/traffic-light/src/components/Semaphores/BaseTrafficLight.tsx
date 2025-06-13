@@ -15,17 +15,15 @@ export const BaseTrafficLight: React.FC<BaseTrafficLightProps> = ({
   tooltip,
   onClick,
 }) => (
-  <Tooltip title={tooltip}>
-    <div>
-      <Box
-        my={1}
-        width={50}
-        height={50}
-        borderRadius="50%"
-        bgcolor={color}
-        onClick={onClick}
-        style={onClick ? { cursor: 'pointer' } : {}}
-      />
-    </div>
+  <Tooltip title={tooltip} placement='right'>
+    <Box
+      my={1}
+      width={50}
+      height={50}
+      borderRadius="50%"
+      bgcolor={color}
+      onClick={onClick}
+      style={onClick ? { cursor: 'pointer' } : {}}
+    />
   </Tooltip>
 );
