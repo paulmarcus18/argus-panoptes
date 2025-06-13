@@ -197,7 +197,7 @@ function formatYellowReason(totalChecks: SecurityCheckTotals, thresholds?: Secur
 /**
  * Extract security thresholds from system entity
  */
-function extractSecurityThresholds(systemEntity: Entity | undefined, entityCount: number): SecurityThresholds {
+export function extractSecurityThresholds(systemEntity: Entity | undefined, entityCount: number): SecurityThresholds {
   const annotations = systemEntity?.metadata.annotations || {};
   
   return {
