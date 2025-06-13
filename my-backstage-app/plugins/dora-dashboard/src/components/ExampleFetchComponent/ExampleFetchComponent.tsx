@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import useAsync from 'react-use/lib/useAsync';
 import {
+  useApi,
+  discoveryApiRef,
+  fetchApiRef,
+} from '@backstage/core-plugin-api';
+import {
   Box,
   Button,
   FormControl,
@@ -17,7 +22,7 @@ import {
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material';
 
-
+// Type definitions for DORA metrics data
 export type DataPoint = {
   key: string;
   value: number;
@@ -29,6 +34,7 @@ export type MetricData = {
   dataPoints: DataPoint[];
 };
 
+// DORA metrics configuration
 const METRIC_TYPES = [
   { id: 'df', label: 'Deploy Freq Avg' },
   { id: 'mltc', label: 'Lead Time Median' },
@@ -36,24 +42,31 @@ const METRIC_TYPES = [
   { id: 'mttr', label: 'Time to Restore' },
 ];
 
-
+/**
+ * Custom hook to fetch available projects from the DORA dashboard API
+ * Uses Backstage's discovery API to get the correct base URL !!!!
+ */
 export function useProjects() {
-  return useAsync(async (): Promise<string[]> => {
-    const url = 'http://localhost:7007/api/dora-dashboard/projects';
+  const discoveryApi = useApi(discoveryApiRef);
+  const { fetch } = useApi(fetchApiRef);
 
+  return useAsync(async (): Promise<string[]> => {
     try {
+      // Get the base URL for the dora-dashboard plugin
+      const apiBaseUrl = await discoveryApi.getBaseUrl('dora-dashboard');
+      const url = `${apiBaseUrl}/projects`;
+
+      // Use Backstage's authenticated fetch ! - inspect go to network and see the headers
       const response = await fetch(url);
 
       if (!response.ok) {
-        console.warn(
+        console.error(
           `Failed to fetch projects: ${response.status} ${response.statusText}`,
         );
         return [];
       }
 
       const projects = await response.json();
-      console.log('Fetched projects:', projects);
-
       return Array.isArray(projects) ? projects : [];
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -62,135 +75,127 @@ export function useProjects() {
   }, []);
 }
 
-
-
+/**
+ * Custom hook to fetch DORA metrics data with configurable aggregation and date ranges
+ * @param aggregation - 'daily' or 'monthly' data aggregation
+ * @param startDate - Optional start date (defaults based on aggregation)
+ * @param endDate - Optional end date (defaults to current date)
+ * @param projects - Array of project names to fetch metrics for
+ */
 export function useMetricsData(
   aggregation: 'daily' | 'monthly' = 'monthly',
   startDate?: Date,
   endDate?: Date,
   projects: string[] = ['project1'],
 ) {
+  const discoveryApi = useApi(discoveryApiRef);
+  const { fetch } = useApi(fetchApiRef);
+
   return useAsync(async (): Promise<MetricData[]> => {
-    const baseUrl = 'http://localhost:7007/api/dora-dashboard/metrics';
-
-    // Set default date ranges based on aggregation type
-    const getDefaultDates = () => {
-      const end = new Date();
-      const start = new Date();
-
-      if (aggregation === 'daily') {
-        // Default to last 14 days for daily view
-        start.setDate(start.getDate() - 14);
-      } else {
-        // Default to last 6 months for monthly view
-        start.setMonth(start.getMonth() - 6);
-      }
-
-      return { start, end };
-    };
-
-    const { start: defaultStart, end: defaultEnd } = getDefaultDates();
-    const start = startDate ?? defaultStart;
-    const end = endDate ?? defaultEnd;
-
-    const startTimestamp = Math.floor(start.getTime() / 1000);
-    const endTimestamp = Math.floor(end.getTime() / 1000);
-
-    // Use query parameters for projects
-    const projectParam = projects.join(',');
-
-    // Validate date range for daily aggregation
-    if (aggregation === 'daily') {
-      const daysDiff = Math.ceil(
-        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      if (daysDiff > 90) {
-        console.warn('⚠️ Daily aggregation limited to 90 days for performance');
-        // Adjust end date to 90 days from start
-        const adjustedEnd = new Date(start);
-        adjustedEnd.setDate(adjustedEnd.getDate() + 90);
-        console.log(
-          `Adjusted end date from ${end.toISOString()} to ${adjustedEnd.toISOString()}`,
-        );
-      }
+    // Skip API calls if no projects are selected
+    if (projects.length === 0) {
+      return [];
     }
 
-    const results = await Promise.all(
-      METRIC_TYPES.map(async metric => {
-        const url = `${baseUrl}/${metric.id}/${aggregation}/${startTimestamp}/${endTimestamp}?projects=${projectParam}`;
+    try {
+      // Set default date ranges based on aggregation type
+      const getDefaultDates = () => {
+        const end = new Date();
+        const start = new Date();
 
-        console.log(`Fetching ${aggregation} data: ${url}`);
+        if (aggregation === 'daily') {
+          // Daily: last 14 days
+          start.setDate(start.getDate() - 14);
+        } else {
+          // Monthly: last 6 months
+          start.setMonth(start.getMonth() - 6);
+        }
 
-        try {
-          const response = await fetch(url);
+        return { start, end };
+      };
 
-          if (!response.ok) {
-            console.warn(
-              `Failed to fetch ${metric.label} (${aggregation}): ${response.status} ${response.statusText}`,
-            );
+      const { start: defaultStart, end: defaultEnd } = getDefaultDates();
+      const start = startDate ?? defaultStart;
+      const end = endDate ?? defaultEnd;
+
+      // Convert dates to Unix timestamps for API
+      const startTimestamp = Math.floor(start.getTime() / 1000);
+      const endTimestamp = Math.floor(end.getTime() / 1000);
+      const projectParam = projects.join(',');
+
+      const apiBaseUrl = await discoveryApi.getBaseUrl('dora-dashboard');
+
+      // Fetch all metrics in parallel
+      const results = await Promise.all(
+        METRIC_TYPES.map(async metric => {
+          const url = `${apiBaseUrl}/metrics/${metric.id}/${aggregation}/${startTimestamp}/${endTimestamp}?projects=${projectParam}`;
+
+          try {
+            const response = await fetch(url);
+
+            if (!response.ok) {
+              console.error(
+                `Failed to fetch ${metric.label}: ${response.status} ${response.statusText}`,
+              );
+              return {
+                id: metric.id,
+                dataPoints: [],
+              };
+            }
+
+            const json = await response.json();
+
+            // Transform API response to DataPoint format
+            const dataPoints: DataPoint[] = (json || []).map((dp: any) => {
+              let date: Date | undefined;
+              try {
+                if (dp.data_key) {
+                  if (aggregation === 'daily') {
+                    // Daily format: YYYY-MM-DD
+                    date = new Date(dp.data_key + 'T00:00:00');
+                  } else {
+                    // Monthly format: YYYY-MM
+                    date = new Date(dp.data_key + '-01T00:00:00');
+                  }
+                }
+              } catch (e) {
+                console.warn(
+                  `Failed to parse date from data_key: ${dp.data_key}`,
+                );
+              }
+
+              return {
+                key: dp.data_key,
+                value: dp.data_value,
+                date: date,
+              };
+            });
+
+            // Sort data points by date for consistent ordering
+            dataPoints.sort((a, b) => {
+              if (!a.date || !b.date) return 0;
+              return a.date.getTime() - b.date.getTime();
+            });
+
+            return {
+              id: metric.id,
+              dataPoints,
+            };
+          } catch (error) {
+            console.error(`Error fetching ${metric.label}:`, error);
             return {
               id: metric.id,
               dataPoints: [],
             };
           }
+        }),
+      );
 
-          const json = await response.json();
-          console.log(
-            `Response JSON for ${metric.id} (${aggregation}):`,
-            json,
-          );
-
-          const dataPoints: DataPoint[] = (json || []).map((dp: any) => {
-            // Parse the date from data_key for better date handling
-            let date: Date | undefined;
-            try {
-              if (dp.data_key) {
-                if (aggregation === 'daily') {
-                  // For daily data, data_key should be in format 'YYYY-MM-DD'
-                  date = new Date(dp.data_key + 'T00:00:00');
-                } else {
-                  // For monthly data, you might need to adjust this based on your format
-                  // Assuming format like '2024-01' or similar
-                  date = new Date(dp.data_key + '-01T00:00:00');
-                }
-              }
-            } catch (e) {
-              console.warn(
-                `Failed to parse date from data_key: ${dp.data_key}`,
-              );
-            }
-
-            return {
-              key: dp.data_key,
-              value: dp.data_value,
-              date: date,
-            };
-          });
-
-          // Sort data points by date for better chart display
-          dataPoints.sort((a, b) => {
-            if (!a.date || !b.date) return 0;
-            return a.date.getTime() - b.date.getTime();
-          });
-
-          return {
-            id: metric.id,
-            dataPoints,
-          };
-        } catch (error) {
-          console.error(
-            `Error fetching ${metric.label} (${aggregation}):`,
-            error,
-          );
-          return {
-            id: metric.id,
-            dataPoints: [],
-          };
-        }
-      }),
-    );
-
-    return results;
+      return results;
+    } catch (error) {
+      console.error('Error in useMetricsData:', error);
+      return [];
+    }
   }, [
     aggregation,
     startDate?.getTime(),
@@ -199,6 +204,10 @@ export function useMetricsData(
   ]);
 }
 
+/**
+ * Example component demonstrating how to fetch and display DORA metrics data
+ * This component provides a UI for selecting projects, aggregation type, and viewing the raw data
+ */
 export const ExampleFetchComponent = () => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [aggregation, setAggregation] = useState<'daily' | 'monthly'>(
@@ -206,14 +215,14 @@ export const ExampleFetchComponent = () => {
   );
   const [shouldFetch, setShouldFetch] = useState(false);
 
-  // Fetch available projects
+  // Fetch available projects on component mount
   const {
     value: availableProjects,
     loading: projectsLoading,
     error: projectsError,
   } = useProjects();
 
-  // Set default project selection when projects are loaded
+  // Auto-select first project when projects are loaded
   React.useEffect(() => {
     if (
       availableProjects &&
@@ -224,28 +233,31 @@ export const ExampleFetchComponent = () => {
     }
   }, [availableProjects, selectedProjects.length]);
 
+  // Handle project selection changes
   const handleProjectChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
     setSelectedProjects(typeof value === 'string' ? value.split(',') : value);
   };
 
+  // Handle aggregation type changes
   const handleAggregationChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setAggregation(event.target.value as 'daily' | 'monthly');
-    // Reset fetch state when changing aggregation
-    setShouldFetch(false);
+    setShouldFetch(false); // Reset fetch state when changing aggregation
   };
 
+  // Trigger data fetch
   const handleFetch = () => {
     setShouldFetch(true);
   };
 
+  // Reset fetch state
   const handleReset = () => {
     setShouldFetch(false);
   };
 
-  // Only fetch when shouldFetch is true
+  // Only fetch metrics when user explicitly requests it
   const { value, loading, error } = useMetricsData(
     aggregation,
     undefined,
@@ -253,6 +265,7 @@ export const ExampleFetchComponent = () => {
     shouldFetch ? selectedProjects : [],
   );
 
+  // Render the data display content
   const renderContent = () => {
     if (!shouldFetch) {
       return (
@@ -270,6 +283,7 @@ export const ExampleFetchComponent = () => {
       return <div>No data available</div>;
     }
 
+    // Transform data for display - combine all metrics by time period
     const allKeys = new Set<string>();
     const metricMaps = value.map(metric => {
       const map: Record<string, number> = {};
@@ -280,6 +294,7 @@ export const ExampleFetchComponent = () => {
       return map;
     });
 
+    // Create rows with all metrics for each time period
     const rows = Array.from(allKeys).map(key => {
       const row: { key: string; [metric: string]: number | string } = { key };
       METRIC_TYPES.forEach((metric, i) => {
@@ -306,6 +321,7 @@ export const ExampleFetchComponent = () => {
     );
   };
 
+  // Handle loading and error states for projects
   if (projectsLoading) {
     return (
       <Box sx={{ p: 3 }}>
@@ -327,12 +343,12 @@ export const ExampleFetchComponent = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 3 }}>
-        DORA Metrics Debug Component
+        DORA Metrics Example Fetch Component
       </Typography>
 
       <Typography variant="body1" sx={{ mb: 2 }}>
-        This component is for debug/testing. For visual charts, use{' '}
-        <strong>DoraDashboard</strong>.
+        This component demonstrates how to fetch DORA metrics data. For visual
+        charts, use <strong>DoraDashboard</strong>.
       </Typography>
 
       <Box sx={{ mb: 3 }}>
@@ -360,12 +376,11 @@ export const ExampleFetchComponent = () => {
           </Typography>
         </Box>
 
+        {/* Project Selection */}
         <FormControl fullWidth sx={{ mb: 2, maxWidth: 400 }}>
-          <InputLabel id="debug-project-select-label">
-            Select Projects
-          </InputLabel>
+          <InputLabel id="project-select-label">Select Projects</InputLabel>
           <Select
-            labelId="debug-project-select-label"
+            labelId="project-select-label"
             multiple
             value={selectedProjects}
             onChange={handleProjectChange}
@@ -386,6 +401,7 @@ export const ExampleFetchComponent = () => {
           </Select>
         </FormControl>
 
+        {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             variant="contained"
@@ -404,6 +420,7 @@ export const ExampleFetchComponent = () => {
         </Box>
       </Box>
 
+      {/* Data Display */}
       {renderContent()}
     </Box>
   );
