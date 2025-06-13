@@ -3,7 +3,6 @@ import {
   Typography,
   Grid,
   Box,
-  IconButton,
   TextField,
   MenuItem,
   InputAdornment,
@@ -12,7 +11,6 @@ import {
   Popover,
   Button,
 } from '@material-ui/core';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { Page, Content, InfoCard } from '@backstage/core-components';
@@ -31,7 +29,7 @@ import {
   BaseTrafficLight,
 } from '../Semaphores';
 import { ReportingTrafficLight } from '../Semaphores/ReportingTrafficLight';
-import { DialogComponent } from '../SemaphoreDialogs/DialogComponent';
+// import { DialogComponent } from '../SemaphoreDialogs/DialogComponent';
 import { BlackDuckSemaphoreDialog } from '../SemaphoreDialogs/BlackDuckSemaphoreDialog';
 import { GitHubSemaphoreDialog } from '../SemaphoreDialogs/GitHubAdvancedSecurityDialog';
 import { AzureDevOpsSemaphoreDialog } from '../SemaphoreDialogs/AzureDevOpsDialog';
@@ -78,10 +76,6 @@ export const TrafficComponent = () => {
     setDialogTitle(title);
     setDialogItems(items);
     setDialogOpen(true);
-  };
-
-  const handleClose = () => {
-    setDialogOpen(false);
   };
 
   const handleSemaphoreClick = (semaphoreType: string) => {
@@ -157,12 +151,6 @@ export const TrafficComponent = () => {
   const handleCloseDependabotDialog = () => {
     setDependabotDialogOpen(false);
   }
-
-  const cardAction = (title: string, items: any[]) => (
-    <IconButton onClick={() => handleClick(title, items)}>
-      <MoreVertIcon />
-    </IconButton>
-  );
 
   useEffect(() => {
     const fetchCatalogRepos = async () => {
@@ -343,7 +331,6 @@ export const TrafficComponent = () => {
           <Grid item xs={12} md={6}>
             <InfoCard
               title="Security Checks"
-              action={cardAction('Security Checks', [])}
             >
               <Typography variant="subtitle1">Dependabot</Typography>
               <TrafficLightDependabot
@@ -369,7 +356,7 @@ export const TrafficComponent = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <InfoCard title="Pipelines" action={cardAction('Pipelines', [])}>
+            <InfoCard title="Pipelines">
               <Typography variant="subtitle1">Reporting Pipelines</Typography>
               <ReportingTrafficLight
                 entities={selectedEntities}
@@ -395,7 +382,6 @@ export const TrafficComponent = () => {
           <Grid item xs={12} md={6}>
             <InfoCard
               title="Software Quality"
-              action={cardAction('Software Quality', [])}
             >
               <Typography variant="subtitle1">SonarQube</Typography>
               <SonarQubeTrafficLight
@@ -415,7 +401,6 @@ export const TrafficComponent = () => {
           <Grid item xs={12} md={6}>
             <InfoCard
               title="Azure DevOps"
-              action={cardAction('Azure DevOps', [])}
             >
               <Typography variant="subtitle1">Bugs</Typography>
               <AzureDevOpsBugsTrafficLight
@@ -425,14 +410,6 @@ export const TrafficComponent = () => {
             </InfoCard>
           </Grid>
         </Grid>
-
-        {/* Existing generic dialogs */}
-        <DialogComponent
-          open={dialogOpen}
-          onClose={handleClose}
-          title={dialogTitle}
-          items={dialogItems}
-        />
 
         <GitHubSemaphoreDialog
           open={githubSecurityDialogOpen}
