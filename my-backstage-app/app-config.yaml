@@ -219,7 +219,7 @@ techInsights:
       enabled: true
       cadence: '0 */4 * * *' # Every 4 hours
     githubAdvancedSecurityFactRetriever:
-      cadence: '0 * * * *' # every hour
+      cadence: '*/2 * * * *' # every minute
   factChecker:
     checks:
       noHighBugsCheck:

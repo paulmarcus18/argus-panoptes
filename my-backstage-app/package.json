@@ -20,7 +20,8 @@
     "lint": "backstage-cli repo lint --since origin/master",
     "lint:all": "backstage-cli repo lint",
     "prettier:check": "prettier --check .",
-    "new": "backstage-cli new"
+    "new": "backstage-cli new",
+    "prettier:write": "prettier --write ."
   },
   "workspaces": {
     "packages": [
