@@ -9,6 +9,7 @@ import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { GithubAdvancedSecurityUtils } from '../../utils/githubAdvancedSecurityUtils';
 import { SemaphoreData, IssueDetail, Severity } from './types';
 import { calculateGitHubSecurityTrafficLight } from '../Semaphores/GitHubSecurityTrafficLight';
+import {extractSecurityThresholds} from '../Semaphores/GitHubSecurityTrafficLight'
 import type { GridSize } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
@@ -40,22 +41,6 @@ interface SecurityThresholds {
   medium_red: number;
   medium_yellow: number;
   low_yellow: number;
-}
-
-/**
- * Extract security thresholds from system entity
- */
-function extractSecurityThresholds(systemEntity: Entity | undefined, entityCount: number): SecurityThresholds {
-  const annotations = systemEntity?.metadata.annotations || {};
-  
-  return {
-    critical_red: parseFloat(annotations['github-advanced-security-system-critical-threshold-red'] || '0'),
-    high_red: parseFloat(annotations['github-advanced-security-system-high-threshold-red'] || '0'),
-    secrets_red: parseFloat(annotations['github-advanced-security-system-secrets-threshold-red'] || '0'),
-    medium_red: parseFloat(annotations['github-advanced-security-system-medium-threshold-red'] || '0.5') * entityCount,
-    medium_yellow: parseFloat(annotations['github-advanced-security-system-medium-threshold-yellow'] || '0.1') * entityCount,
-    low_yellow: parseFloat(annotations['github-advanced-security-system-low-threshold-yellow'] || '0.2') * entityCount,
-  };
 }
 
 /**

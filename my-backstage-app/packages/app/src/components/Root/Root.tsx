@@ -79,6 +79,7 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
         <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
         <SidebarItem icon={TrafficIcon} to="traffic-light" text="Traffic-Light Plugin" />
         <SidebarItem icon={AutoAwesomeIcon} to="ai-plugin" text="AI-Summary Plugin" />
+        <SidebarItem icon={ExtensionIcon} to="dora-dashboard" text="DORA Plugin" />
         {/* End global nav */}
         <SidebarDivider />
         <SidebarScrollWrapper>

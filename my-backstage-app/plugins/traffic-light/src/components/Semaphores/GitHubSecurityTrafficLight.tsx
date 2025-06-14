@@ -197,7 +197,7 @@ function formatYellowReason(totalChecks: SecurityCheckTotals, thresholds?: Secur
 /**
  * Extract security thresholds from system entity
  */
-function extractSecurityThresholds(systemEntity: Entity | undefined, entityCount: number): SecurityThresholds {
+export function extractSecurityThresholds(systemEntity: Entity | undefined, entityCount: number): SecurityThresholds {
   const annotations = systemEntity?.metadata.annotations || {};
   
   return {
@@ -280,18 +280,16 @@ export const GitHubSecurityTrafficLight = ({
   }, [entities, techInsightsApi, catalogApi, githubASUtils]);
 
   return (
-    <Tooltip title={reason}>
-      <div>
-        <Box
-          my={1}
-          width={50}
-          height={50}
-          borderRadius="50%"
-          bgcolor={color}
-          onClick={onClick}
-          style={onClick ? { cursor: 'pointer' } : {}}
-        />
-      </div>
+    <Tooltip title={reason} placement='right'>
+      <Box
+        my={1}
+        width={50}
+        height={50}
+        borderRadius="50%"
+        bgcolor={color}
+        onClick={onClick}
+        style={onClick ? { cursor: 'pointer' } : {}}
+      />
     </Tooltip>
   );
 };

@@ -3,15 +3,18 @@ import { LoggerService } from '@backstage/backend-plugin-api';
 import { PluginDatabaseManager } from '@backstage/backend-common';
 import { AISummaryStore } from './utils/aiSummaryStore';
 import { SummaryPerRepo } from 'plugins/ai-plugin/utils/types';
+import { Config } from '@backstage/config';
 
 interface RouterOptions {
   logger: LoggerService;
   database: PluginDatabaseManager;
+  config: Config;
 }
 
 export async function createRouter({
   logger,
   database,
+  config,
 }: RouterOptions): Promise<express.Router> {
   const router = express.Router();
   router.use(express.json());
@@ -63,6 +66,49 @@ export async function createRouter({
     } catch (error) {
       logger.error('Error saving summaries:');
       res.status(500).json({ error: 'Could not save summaries' });
+    }
+  });
+
+  router.post('/generate', async (req, res) => {
+    const prompt = req.body.prompt;
+    if (!prompt) {
+      return res.status(400).json({ error: 'Missing prompt' });
+    }
+
+    const geminiToken = config.getOptionalConfigArray('integrations.gemini')?.[0]?.getOptionalString('token');
+    if (!geminiToken) {
+      return res.status(500).json({ error: 'Gemini token not configured' });
+    }
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiToken}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: prompt }],
+              },
+            ],
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Gemini error:', error);
+        return res.status(500).json({ error: error.message });
+      }
+
+      const result = await response.json();
+      res.json(result);
+    } catch (err) {
+      console.error('Error contacting OpenRouter:', err);
+      res.status(500).json({ error: 'Failed to generate summary' });
     }
   });
 

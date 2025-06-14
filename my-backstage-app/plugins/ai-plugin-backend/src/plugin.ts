@@ -13,8 +13,9 @@ export const aiPlugin = createBackendPlugin({
         database: coreServices.database,
         discovery: coreServices.discovery,
         httpRouter: coreServices.httpRouter,
+        config: coreServices.rootConfig, // ✅ add this line
       },
-      async init({ logger, database, httpRouter }) {
+      async init({ logger, database, httpRouter, config }) { // ✅ include config here
         const db = await database.getClient();
         console.log('The backend is getting the db correctly', db.schema);
         const hasTable = await db.schema.hasTable('ai_summaries');
@@ -30,8 +31,8 @@ export const aiPlugin = createBackendPlugin({
           logger.info('✅ Created ai_summaries table');
         }
 
-        // ✅ Return the router here
-        const router = await createRouter({ logger, database });
+        // ✅ Pass config to the router
+        const router = await createRouter({ logger, database, config });
         httpRouter.use(router);
       },
     });

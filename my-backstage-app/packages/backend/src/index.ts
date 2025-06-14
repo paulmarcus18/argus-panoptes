@@ -58,5 +58,6 @@ backend.add(
   ),
 );
 backend.add(import('@internal/plugin-ai-plugin-backend'));
+backend.add(import('@internal/plugin-dora-dashboard-backend'));
 
 backend.start();

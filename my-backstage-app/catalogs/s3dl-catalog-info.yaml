@@ -8,9 +8,7 @@ metadata:
     backstage.io/source-location: url:https://github.com/SEP-ArgusPanoptes/s3dl
     sonarcloud.io/project-key: SEP-ArgusPanoptes_s3dl
     sonarcloud.io/enabled: 'true'
-    pipeline/thresholds: '{"maxFailures": 2, "minSuccessRate": 95}'
-    foundation/thresholds: '{"minSuccessRate": 95}'
-    reporting/workflows: '["CodeQL", "Continuous Integration"]'
+    reporting/workflows: '["CodeQL"]'
     reporting/target-branch: main
     preproduction/exclude: '["Dependabot.*"]'
     azure.com/organization: argus-panoptes-dev

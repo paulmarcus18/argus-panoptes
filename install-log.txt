@@ -1,0 +1,7 @@
+[31m[1mUsage Error[22m[39m: The nearest package directory (/Users/mateivolanschi/backstage) doesn't seem to be part of the project declared in /Users/mateivolanschi.
+
+- If /Users/mateivolanschi isn't intended to be a project, remove any yarn.lock and/or package.json file there.
+- If /Users/mateivolanschi is intended to be a project, it might be that you forgot to list backstage in its workspace configuration.
+- Finally, if /Users/mateivolanschi is fine and you intend backstage to be treated as a completely separate project (not even a workspace), create an empty yarn.lock file in it.
+
+[1m$ [22myarn install [--json] [--immutable] [--immutable-cache] [--refresh-lockfile] [--check-cache] [--check-resolutions] [--inline-builds] [--mode #0]

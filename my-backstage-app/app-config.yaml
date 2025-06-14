@@ -48,9 +48,8 @@ integrations:
   azure:
     - host: dev.azure.com
       token: ${AZURE_DEVOPS_TOKEN}
-  openrouter:
-    - host: openrouter.ai
-      token: ${OPENROUTER_AI_TOKEN}
+  gemini:
+    - token: ${GEMINI_TOKEN}
 proxy:
   ### Example for how to add a proxy endpoint for the frontend.
   ### A typical reason to do this is to handle HTTPS and CORS for internal services.
@@ -378,3 +377,11 @@ techInsights:
               - fact: successWorkflowRunsCount
                 operator: moreThan
                 value: 80
+
+dora:
+  db:
+    host: 127.0.0.1
+    port: 3306
+    user: merico
+    password: merico
+    database: lake
