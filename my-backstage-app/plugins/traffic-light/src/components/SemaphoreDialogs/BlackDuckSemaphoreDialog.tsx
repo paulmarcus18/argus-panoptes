@@ -40,7 +40,7 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const blackDuckUtils = React.useMemo(() => new BlackDuckUtils(), [techInsightsApi]);
+  const blackDuckUtils = React.useMemo(() => new BlackDuckUtils(), []);
 
   const [data, setData] = React.useState<SemaphoreData>({
     color: 'gray',

@@ -25,7 +25,7 @@ export interface BlackDuckMetrics {
 }
 
 /**
- * Results produced by running Tech Insights checks that map to BlackDuck rules.
+ * Results produced by running TechInsights checks that map to BlackDuck rules.
  */
 export interface BlackDuckChecks {
   criticalSecurityCheck: boolean;
@@ -53,7 +53,7 @@ export const DEFAULT_CHECKS: BlackDuckChecks = {
  * methods for dealing with BlackDuck facts and checks.
  */
 export class BlackDuckUtils {
-  constructor() {}
+
 
   /**
    * Fetches BlackDuck facts for the provided entity.
@@ -85,7 +85,7 @@ export class BlackDuckUtils {
   }
 
   /**
-   * Executes the BlackDuck‑related Tech Insights checks for the supplied entity.
+   * Executes the BlackDuck‑related TechInsights checks for the supplied entity.
    *
    * @param techInsightsApi – The TechInsightsApi instance for fetching checks.
    * @param entity – The entity reference for which to run the checks.

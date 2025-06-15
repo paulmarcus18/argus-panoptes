@@ -44,7 +44,7 @@ const DEFAULT_CHECKS: ReportingPipelineChecks = {
  * evaluating Reporting‑pipeline data.
  */
 export class ReportingUtils {
-  constructor() {}
+
 
   /**
    * Fetches Reporting pipeline facts for a given entity using the Tech Insights API.
@@ -61,7 +61,7 @@ export class ReportingUtils {
         'reportingPipelineStatusFactRetriever',
       ]);
 
-      const facts = response?.['reportingPipelineStatusFactRetriever']?.facts;
+      const facts = response?.reportingPipelineStatusFactRetriever?.facts;
 
       if (!facts) {
         return { ...DEFAULT_METRICS };

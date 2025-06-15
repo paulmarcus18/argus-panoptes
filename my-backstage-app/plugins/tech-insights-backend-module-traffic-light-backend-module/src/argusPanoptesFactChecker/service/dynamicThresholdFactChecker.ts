@@ -138,21 +138,24 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
             // Log the result of the check
             this.logger.info(`The result from the check is ${result} for ${check.id} on entity ${entityRef} part of system ${systemName}, threshold is ${operator} ${threshold} with type ${typeof threshold}, rawValue is ${rawValue}`);
 
-            // Format fact correctly
-            const fact: FactResponse[string] = {
-            id: factId,
-            type: isNumber ? 'integer' : 'string',
-            description: `Fact for ${factId}`,
-            value: isNumber
-                ? rawValue
-                : typeof rawValue === 'string'
-                ? rawValue
-                : Array.isArray(rawValue)
-                ? rawValue.length === 0
-                ? []
-                : String(rawValue) // fallback for non-empty arrays
-                : String(rawValue), // fallback
-            };
+        // Format fact correctly
+        let formattedValue: number | string | [];
+        if (isNumber) {
+          formattedValue = rawValue;
+        } else if (isString) {
+          formattedValue = rawValue;
+        } else if (Array.isArray(rawValue)) {
+          formattedValue = rawValue.length === 0 ? [] : String(rawValue);
+        } else {
+          formattedValue = String(rawValue); // fallback
+        }
+
+        const fact: FactResponse[string] = {
+          id: factId,
+          type: isNumber ? 'integer' : 'string',
+          description: `Fact for ${factId}`,
+          value: formattedValue,
+        };
 
             return {
             check,

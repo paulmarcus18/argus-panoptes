@@ -145,7 +145,9 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             if (Array.isArray(excludeList)) {
               workflowConfig.excludePatterns = excludeList as string[];
             }
-          } catch (error) {}
+          } catch (error) {
+            // Malformed JSON is ignored, proceed with no exclusions.
+          }
         }
         
         const headers: Record<string, string> = {
@@ -153,7 +155,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
         };
         
         if (token) {
-          headers['Authorization'] = `token ${token}`;
+          headers.Authorization = `token ${token}`;
         }
 
         // Workflow definition to get accurate unique workflow counts
@@ -167,7 +169,9 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             const workflowsData = await workflowsResponse.json();
             workflowDefinitions = workflowsData.workflows || [];
           }
-        } catch (error: any) {}
+        } catch (error: any) {
+          // If fetching workflow definitions fails, proceed without them.
+        }
 
         // Fetch all workflow runs from the main branch using pagination
         const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/runs?branch=main&per_page=100`;

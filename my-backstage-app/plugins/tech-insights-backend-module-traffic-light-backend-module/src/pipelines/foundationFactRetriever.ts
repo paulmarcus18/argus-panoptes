@@ -144,7 +144,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
         };
 
         if (token) {
-          headers['Authorization'] = `token ${token}`;
+          headers.Authorization = `token ${token}`;
         }
 
         // Workflow definition to get accurate unique workflow counts
@@ -157,7 +157,9 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
             const workflowsData = await workflowsResponse.json();
             workflowDefinitions = workflowsData.workflows || [];
           } 
-        } catch (error: any) {}
+        } catch (error: any) {
+          // If fetching definitions fails, proceed without them. The process can continue.
+        }
 
         // Fetch all workflow runs from the main branch using pagination
         const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/runs?branch=main&per_page=100`;

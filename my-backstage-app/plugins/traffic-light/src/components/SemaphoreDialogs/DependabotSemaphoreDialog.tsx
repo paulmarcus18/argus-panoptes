@@ -62,7 +62,7 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
-  const dependabotUtils = React.useMemo(() => new DependabotUtils(), [techInsightsApi]);
+  const dependabotUtils = React.useMemo(() => new DependabotUtils(), []);
   const [data, setData] = React.useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
@@ -132,14 +132,16 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
 
         const totalIssues = totalCritical + totalHigh + totalMedium;
 
-        const summary =
-          totalCritical > 0
-            ? `${totalCritical} critical issues found`
-            : totalHigh > 0
-            ? `${totalHigh} high severity issues found`
-            : totalMedium > 0
-            ? `${totalMedium} medium severity issues found`
-            : 'No Dependabot security issues found.';
+        let summary;
+        if (totalCritical > 0) {
+          summary = `${totalCritical} critical issues found`;
+        } else if (totalHigh > 0) {
+          summary = `${totalHigh} high severity issues found`;
+        } else if (totalMedium > 0) {
+          summary = `${totalMedium} medium severity issues found`;
+        } else {
+          summary = 'No Dependabot security issues found.';
+        }
 
         const trafficLightcolor = await determineDependabotColor(system, entities, techInsightsApi, dependabotUtils);
         let color: 'green' | 'red' | 'yellow' | 'gray' = 'gray';

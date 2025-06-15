@@ -20,17 +20,15 @@ export async function postSummaries(
         }),
       });
 
-      if (response.ok) {
-        console.log(`✅ POST success for system '${system}'`);
-      } else {
+      if (!response.ok) {
         const errorText = await response.text();
         console.error(
-          `❌ POST failed for '${system}': ${response.status}`,
+          `POST Summaries failed for '${system}': ${response.status}`,
           errorText,
         );
       }
     } catch (err) {
-      console.error(`❌ POST threw error for '${system}':`, err);
+      console.error(`POST Summaries threw error for '${system}':`, err);
     }
   }
 }

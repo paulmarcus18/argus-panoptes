@@ -185,7 +185,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
           details: [],
         });
       } catch (e) {
-        console.error('❌ Failed to fetch Azure DevOps bug data:', e);
+        console.error('Failed to fetch Azure DevOps bug data:', e);
         setProjectBugs([]);
         setData({
           color: 'gray',

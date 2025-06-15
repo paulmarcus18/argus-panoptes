@@ -13,14 +13,12 @@ export const getGitHubTokenFromConfig = (
     const token = githubConfig?.getOptionalString('token');
 
     if (!token) {
-      console.error('❌ GitHub token is not defined.');
+      console.error('GitHub token is not defined.');
       return undefined;
     }
-
-    console.info(`🔍 Retrieved GitHub token: ${token ? '✔️ Present' : '❌ Missing'}`);
     return token;
   } catch (e) {
-    console.error(`❌ Could not retrieve GitHub token: ${e}`);
+    console.error(`Could not retrieve GitHub token: ${e}`);
     return undefined;
   }
 };
@@ -58,9 +56,6 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
         { token },
       );
       entities = response.items ?? [];
-      console.info(
-        `Fetched ${entities.length} component entities from catalog`,
-      );
     } catch (e) {
       console.error(`Failed to fetch entities from catalog: ${e}`);
       return [];
@@ -104,23 +99,19 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
         }
 
         const prs: GitHubPR[] = await prResponse.json();
-        console.info(
-          `Fetched ${prs.length} PRs for ${entity.metadata.name}`,);
         if (!prs.length) continue;
 
-        //const now = new Date();
-        //const oneDayAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        // const oneDayAgo = new Date(0);
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
         const recentPRs = prs.filter(pr => {
           if (!pr.merged_at) return false;
-          //const mergedAt = new Date(pr.merged_at);
-          return true;
+          const mergedAt = new Date(pr.merged_at);
+          const isRecent = mergedAt >= oneDayAgo;
+          const isNotBump = !pr.title.toLowerCase().startsWith('bump');
+          return isRecent && isNotBump;
         });
 
-        console.info(
-          `Found ${recentPRs.length} recent PRs for ${entity.metadata.name}`,
-        );
         if (recentPRs.length) {
           const lastPr = recentPRs[0];
           const prTitle = lastPr.title;
@@ -131,7 +122,6 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
           oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
           for (const pr of recentPRs) {
-            console.info(`Fetching commits for PR: ${pr.number}`);
             const commitsResponse = await fetch(pr.commits_url, {
               headers: {
                 Authorization: `Bearer ${gitHubtoken}`,
@@ -144,7 +134,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
             const commits: GitHubCommit[] = await commitsResponse.json();
 
             const recentCommits = commits.filter(() => {
-              //const commitDate = new Date(commit.commit.author.date);
+              // const commitDate = new Date(commit.commit.author.date);
               return true;
             });
 

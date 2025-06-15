@@ -48,7 +48,7 @@ export const AISummaries = () => {
   const fetchFn = fetchApi.fetch;
 
   const callAI = async () => {
-      setLoading(true); // ✅ Add this line
+      setLoading(true);
       try {
         const apiBaseUrl = await discoveryApi.getBaseUrl('ai-plugin');
         const { items: entities } = await catalogApi.getEntities({ filter: { kind: 'Component' } });
@@ -79,21 +79,25 @@ export const AISummaries = () => {
         for (const entity of systems) {
           const systemName = entity.metadata.name;
           if (!(systemName in data)) {
-            data[systemName] = []; 
+            data[systemName] = [];
           }
         }
 
-        if (Object.keys(data).length > 0) {
-          setMessagesBySystem(data);
-          setLoading(false);
-          return;
+        // Always set data even if empty
+        setMessagesBySystem(data);
+
+        const hasAnyData = Object.values(data).some(repos => repos.length > 0);
+        if (!hasAnyData) {
+          await callAI(); // generate AI if summaries are empty
         }
+
+        setLoading(false);
+        return;
       }
     } catch (err) {
       console.error('Error fetching summaries:', err);
+      await callAI(); // fallback in case of failure
     }
-
-    callAI();
   };
 
   useEffect(() => {

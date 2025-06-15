@@ -1,5 +1,5 @@
 import { getVoidLogger } from '@backstage/backend-common';
-import { createSonarCloudFactRetriever } from '@internal/plugin-tech-insights-backend-module-traffic-light-backend-module/src/sonarCloud/sonarCloudFactRetriever';
+import { createSonarCloudFactRetriever } from '../sonarCloudFactRetriever';
 import { ConfigReader } from '@backstage/config';
 import { Entity } from '@backstage/catalog-model';
 import { UrlReaderService } from '@backstage/backend-plugin-api';

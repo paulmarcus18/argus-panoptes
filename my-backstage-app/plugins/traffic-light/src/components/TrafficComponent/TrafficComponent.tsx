@@ -47,8 +47,8 @@ export const TrafficComponent = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState('');
   const [dialogItems, setDialogItems] = useState<any[]>([]);
-  //const [setDetailedDialogOpen] = useState(false);
-  //const [currentSemaphoreType, setCurrentSemaphoreType] = useState('');
+  // const [setDetailedDialogOpen] = useState(false);
+  // const [currentSemaphoreType, setCurrentSemaphoreType] = useState('');
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
   const [onlyCritical, setOnlyCritical] = useState(true);
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
@@ -107,9 +107,9 @@ export const TrafficComponent = () => {
         break;
       case 'CodeScene':
         // For these, use the existing detailed dialog
-        //setCurrentSemaphoreType(semaphoreType);
+        // setCurrentSemaphoreType(semaphoreType);
         handleClick('CodeScene Details', []);
-        //setDetailedDialogOpen(true);
+        // setDetailedDialogOpen(true);
         break;
       default:
         console.warn(`No dialog handler for semaphore type: ${semaphoreType}`);
