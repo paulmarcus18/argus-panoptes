@@ -5,6 +5,7 @@ import {
   IconButton,
   Typography,
   Box,
+  useTheme,
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { SummaryPerRepo } from '../../utils/types';
@@ -22,6 +23,8 @@ export const SummaryCard = ({
   repoSearch,
   handleDownload,
 }: SummaryCardProps) => {
+  const theme = useTheme();
+
   const filteredRepos = repos.filter(repo =>
     repo.repoName.toLowerCase().includes(repoSearch.toLowerCase())
   );
@@ -33,6 +36,7 @@ export const SummaryCard = ({
         width: '100%',
         height: '180mm',
         position: 'relative',
+        backgroundColor: theme.palette.background.paper, // Backstage card bg
       }}
     >
       <IconButton
@@ -44,7 +48,7 @@ export const SummaryCard = ({
           right: 10,
           backgroundColor: 'transparent',
           '&:hover': {
-            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            backgroundColor: theme.palette.action.hover,
           },
           width: 40,
           height: 40,
@@ -62,7 +66,7 @@ export const SummaryCard = ({
           overflow: 'hidden',
         }}
       >
-        <Typography variant="h4" color="#83a2f2" gutterBottom>
+        <Typography variant="h4" color="primary" gutterBottom>
           {system}
         </Typography>
 
@@ -82,16 +86,15 @@ export const SummaryCard = ({
           ) : (
             <Box
               sx={{
-                backgroundColor: '#fff',
+                backgroundColor: theme.palette.background.default, // Matches Backstage page background
                 borderRadius: 2,
                 padding: 2,
-                boxShadow: 1,
-                border: '1px solid #e0e0e0',
+                border: `1px solid ${theme.palette.divider}`,
               }}
             >
               {filteredRepos.map(({ repoName, summary }) => (
                 <Box key={repoName} sx={{ marginBottom: 2 }}>
-                  <Typography variant="h5" color="black" gutterBottom>
+                  <Typography variant="h5" color="text.primary" gutterBottom>
                     {repoName}
                   </Typography>
                   <Typography
@@ -100,7 +103,7 @@ export const SummaryCard = ({
                       whiteSpace: 'pre-wrap',
                       fontSize: '1.2rem',
                       lineHeight: '1.5',
-                      color: 'black',
+                      color: theme.palette.text.primary,
                     }}
                   >
                     {summary}

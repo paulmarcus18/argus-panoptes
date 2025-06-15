@@ -114,7 +114,9 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
         const recentPRs = prs.filter(pr => {
           if (!pr.merged_at) return false;
           const mergedAt = new Date(pr.merged_at);
-          return mergedAt >= oneDayAgo;
+          const isRecent = mergedAt >= oneDayAgo;
+          const isNotBump = !pr.title.toLowerCase().startsWith('bump');
+          return isRecent && isNotBump;
         });
 
         console.info(
