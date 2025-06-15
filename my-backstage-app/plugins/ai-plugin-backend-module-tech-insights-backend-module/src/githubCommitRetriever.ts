@@ -108,14 +108,13 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
           `Fetched ${prs.length} PRs for ${entity.metadata.name}`,);
         if (!prs.length) continue;
 
-        //const now = new Date();
-        //const oneDayAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        // const oneDayAgo = new Date(0);
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
         const recentPRs = prs.filter(pr => {
           if (!pr.merged_at) return false;
-          //const mergedAt = new Date(pr.merged_at);
-          return true;
+          const mergedAt = new Date(pr.merged_at);
+          return mergedAt >= oneDayAgo;
         });
 
         console.info(
