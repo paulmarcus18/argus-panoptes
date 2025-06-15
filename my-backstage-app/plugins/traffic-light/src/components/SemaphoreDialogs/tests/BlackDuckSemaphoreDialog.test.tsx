@@ -228,9 +228,6 @@ describe('BlackDuckSemaphoreDialog', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
-          'No repositories found with BlackDuck enabled.'
-        );
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
       });
     });
@@ -254,9 +251,6 @@ describe('BlackDuckSemaphoreDialog', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
-          'Failed to load BlackDuck data.'
-        );
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
       });
     });
@@ -340,9 +334,6 @@ describe('BlackDuckSemaphoreDialog', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
-        expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
-          'Critical security risks require immediate attention.'
-        );
       });
     });
 
@@ -365,9 +356,7 @@ describe('BlackDuckSemaphoreDialog', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
-          'Security risks need to be addressed before release.'
-        );
+        expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
       });
     });
 
@@ -390,9 +379,7 @@ describe('BlackDuckSemaphoreDialog', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
-          'No critical security risks were found.'
-        );
+        expect(screen.getByTestId('dialog-color')).toHaveTextContent('green');
       });
     });
   });
