@@ -192,18 +192,20 @@ export const FoundationSemaphoreDialog: React.FC<
 
         // 4. Determine color using imported utility based on filtered entities
         const failures = results.filter(r => r.failedCheck).length;
-        const { color } = determineSemaphoreColor(
+        const { color, reason } = determineSemaphoreColor(
           failures,
           filteredEntities.length,
           redThreshold,
         );
 
-        // 5. Compose summary
-        let summary = 'Code quality is excellent with no significant issues.';
+        // 5. Prepare summary and metrics
+        let summary = reason;
         if (color === 'red') {
-          summary = 'Critical code quality issues require immediate attention.';
+          summary += ' Critical attention required.';
         } else if (color === 'yellow') {
-          summary = 'Code quality issues need to be addressed before release.';
+          summary += ' Issues should be addressed before release.';
+        } else {
+          summary += ' Code quality is good.';
         }
 
         // Add info about configured repositories

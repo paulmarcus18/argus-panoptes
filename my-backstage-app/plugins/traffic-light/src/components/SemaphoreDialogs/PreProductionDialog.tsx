@@ -197,17 +197,20 @@ export const PreproductionSemaphoreDialog: React.FC<
         const failures = results.filter(r => r.failedCheck).length;
 
         // 5. Determine traffic light color based on filtered entities
-        const { color } = determineSemaphoreColor(
+        const { color, reason } = determineSemaphoreColor(
           failures,
           filteredEntities.length,
           redThreshold,
         );
 
-        let summary = 'Code quality is excellent with no significant issues.';
+        // 5. Prepare summary message
+        let summary = reason;
         if (color === 'red') {
-          summary = 'Critical code quality issues require immediate attention.';
+          summary += ' Critical attention required.';
         } else if (color === 'yellow') {
-          summary = 'Code quality issues need to be addressed before release.';
+          summary += ' Issues should be addressed before release.';
+        } else {
+          summary += ' Code quality is good.';
         }
 
         // Add info about configured repositories
