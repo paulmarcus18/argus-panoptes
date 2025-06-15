@@ -69,7 +69,7 @@ const DEFAULT_CHECKS: GitHubSecurityChecks = {
  * methods for GitHub Advanced Security facts & checks.
  */
 export class GithubAdvancedSecurityUtils {
-  constructor() {}
+
 
   /**
    * Function to fetch GitHub security facts for a given entity
@@ -91,7 +91,7 @@ export class GithubAdvancedSecurityUtils {
         JSON.stringify(response, null, 2),
       );
 
-      const facts = response?.['githubAdvancedSecurityFactRetriever']?.facts;
+      const facts = response?.githubAdvancedSecurityFactRetriever?.facts;
 
       // Check if the facts are present and log an error if not
       if (!facts) {

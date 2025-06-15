@@ -94,10 +94,10 @@ export const determineBlackDuckColor = async (
     } else if (counts.criticalSecurityCheckFails > 0 || redCount >= 1) {
         // Critical security issues or at least one check failed for more than 1/3 of the entities
         return { color: 'red', reason: `Critical security checks found or other severe security issues detected` };
-    } else {
-      // Some security issues, but no critical issues and no checks failed for more than 1/3 of the entities
-      return { color: 'yellow', reason: `Some security issues detected` };
-    }
+    } 
+    // Some security issues, but no critical issues and no checks failed for more than 1/3 of the entities
+    return { color: 'yellow', reason: `Some security issues detected` };
+   
   } catch (err) {
     return { color: 'gray', reason: 'Error fetching BlackDuck data' };
   }
@@ -128,7 +128,7 @@ export const BlackDuckTrafficLight = ({
 
   const blackDuckUtils = React.useMemo(
     () => new BlackDuckUtils(),
-    [techInsightsApi],
+    [],
   );
 
   useEffect(() => {

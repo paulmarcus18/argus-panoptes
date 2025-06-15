@@ -125,9 +125,9 @@ export async function getGitHubRepoStatus(
       color: 'yellow',
       reason: `Critical workflows in progress: ${inProgress.join(', ')}`,
     };
-  } else {
-    return { color: 'green', reason: 'All critical workflows succeeded.' };
-  }
+  } 
+  return { color: 'green', reason: 'All critical workflows succeeded.' };
+  
 }
 
 export function determineSemaphoreColor(
@@ -148,12 +148,12 @@ export function determineSemaphoreColor(
       color: 'red',
       reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'} failed the check with a threshold of ${thresholdPercentage}%.`,
     };
-  } else {
-    return {
-      color: 'yellow',
-      reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'} failed the check with a threshold of ${thresholdPercentage}%.`,
-    };
   }
+  return {
+    color: 'yellow',
+    reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'} failed the check with a threshold of ${thresholdPercentage}%.`,
+  };
+
 }
 
 /**
@@ -215,7 +215,7 @@ export const getGitHubSecurityFacts = async (
       JSON.stringify(response, null, 2),
     );
 
-    const facts = response?.['githubAdvancedSecurityFactRetriever']?.facts;
+    const facts = response?.githubAdvancedSecurityFactRetriever?.facts;
 
     if (!facts) {
       console.error(

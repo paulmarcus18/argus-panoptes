@@ -76,10 +76,7 @@ export const determineSonarQubeColor = async (
     );
 
     const totalFailedQualityGate = results.reduce(
-      (acc, res) => {
-        acc += res.quality_gate !== 'OK' ? 1 : 0;
-        return acc;
-      },
+      (acc, res) => acc + (res.quality_gate !== 'OK' ? 1 : 0),
       0,
     );
 
@@ -91,11 +88,11 @@ export const determineSonarQubeColor = async (
       // If the number of entities that failed the quality gate check is between the red and the yellow threshold
       // Set the colour to yellow
       return { color: 'yellow', reason: `${totalFailedQualityGate} entities failed the quality gate check` };
-    }	 else {
-      // If the number of entities that failed the quality gate check is below the yellow threshold
-      // Set the colour to green 
-      return { color: 'green', reason: `${totalFailedQualityGate} entities failed the quality gate check` };
-    }
+    }	 
+    // If the number of entities that failed the quality gate check is below the yellow threshold
+    // Set the colour to green 
+    return { color: 'green', reason: `${totalFailedQualityGate} entities failed the quality gate check` };
+    
   } catch (err) {
     return { color: 'gray', reason: 'Error fetching SonarQube data' };
   }
@@ -127,7 +124,7 @@ export const SonarQubeTrafficLight = ({
   const catalogApi = useApi(catalogApiRef);
   const sonarUtils = React.useMemo(
       () => new SonarCloudUtils(),
-      [techInsightsApi],
+      [],
     );
 
   useEffect(() => {

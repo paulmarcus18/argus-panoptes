@@ -66,7 +66,9 @@ export const ReportingTrafficLight = ({
               redThreshold = parseFloat(thresholdAnnotation);
             }
           }
-        } catch (err) {}
+        } catch (err) {
+          // If system entity can't be fetched, proceed with default values.
+        }
 
         // 2. Run reporting pipeline checks
         const results = await Promise.all(

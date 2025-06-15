@@ -27,14 +27,14 @@ const DEFAULT_CHECKS: AzureDevOpsBugChecks = {
 };
 
 /**
- * Convenience wrapper around {@link TechInsightsApi} for Azure DevOps bug
+ * Convenience wrapper around {@link TechInsightsApi} for Azure DevOps bug
  * facts and checks.
  */
 export class AzureUtils {
-  constructor() {}
+
 
   /**
-   * Fetches the Azure DevOps bug facts for the given entity.
+   * Fetches the Azure DevOps bug facts for the given entity.
    */
   async getAzureDevOpsBugFacts(api: TechInsightsApi, entity: CompoundEntityRef): Promise<AzureDevOpsBugMetrics> {
     try {
@@ -60,7 +60,7 @@ export class AzureUtils {
   }
 
   /**
-   * Runs the Azure DevOps bug‑count Tech‑Insights check.
+   * Runs the Azure DevOps bug‑count Tech‑Insights check.
    */
   async getAzureDevOpsBugChecks(api: TechInsightsApi, entity: CompoundEntityRef): Promise<AzureDevOpsBugChecks> {
     try {

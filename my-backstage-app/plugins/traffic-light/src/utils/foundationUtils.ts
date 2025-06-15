@@ -44,7 +44,7 @@ const DEFAULT_CHECKS: FoundationPipelineChecks = {
  * evaluating Foundation‑pipeline data.
  */
 export class FoundationUtils {
-  constructor() {}
+
 
   /**
    * Fetches Foundation pipeline facts for a given entity using the Tech Insights API.
@@ -61,7 +61,7 @@ export class FoundationUtils {
         'foundationPipelineStatusFactRetriever',
       ]);
 
-      const facts = response?.['foundationPipelineStatusFactRetriever']?.facts;
+      const facts = response?.foundationPipelineStatusFactRetriever?.facts;
 
       if (!facts) {
         return { ...DEFAULT_METRICS };

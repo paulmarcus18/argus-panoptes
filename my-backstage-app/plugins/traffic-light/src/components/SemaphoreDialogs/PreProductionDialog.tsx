@@ -222,10 +222,10 @@ export const PreproductionSemaphoreDialog: React.FC<
         const lowest = [...results]
           .sort((a, b) => a.successRate - b.successRate)
           .slice(0, 5)
-          .map(({ name, url, successRate }) => ({
+          .map(({ name, url, successRate: itemSuccessRate }) => ({
             name,
             url,
-            successRate,
+            successRate: itemSuccessRate,
           }));
 
         setMetrics({

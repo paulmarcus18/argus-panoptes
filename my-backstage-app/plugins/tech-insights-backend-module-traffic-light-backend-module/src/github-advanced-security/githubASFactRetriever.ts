@@ -198,6 +198,8 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
               case 'low':
                 severityCounts.low++;
                 break;
+              default:
+                break;
           }});
 
           // Return the fact result object for this repository as a TechInsightFact

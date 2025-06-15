@@ -180,10 +180,10 @@ export const ReportingSemaphoreDialog: React.FC<
         const lowest = [...results]
           .sort((a, b) => a.successRate - b.successRate)
           .slice(0, 5)
-          .map(({ name, url, successRate }) => ({
+          .map(({ name, url, successRate: repoSuccessRate }) => ({
             name,
             url,
-            successRate,
+            successRate: repoSuccessRate,
           }));
 
         setMetrics({

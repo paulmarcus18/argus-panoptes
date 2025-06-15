@@ -63,7 +63,7 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
         continue;
       }
 
-      const encodedPat = Buffer.from(':' + pat).toString('base64');
+      const encodedPat = Buffer.from(`:${pat}`).toString('base64');
 
       try {
         const response = await fetch(

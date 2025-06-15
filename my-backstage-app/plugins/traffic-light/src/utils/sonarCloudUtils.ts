@@ -45,7 +45,7 @@ export const DEFAULT_METRICS: SonarQubeMetrics = {
  * methods for dealing with SonarCloud facts and checks.
  */
 export class SonarCloudUtils {
-  constructor() {}
+
 
   /**
    * Fetches SonarCloud facts for the provided entity.
