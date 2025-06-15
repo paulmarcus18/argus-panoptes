@@ -81,8 +81,6 @@ export async function getCommitMessagesBySystem(
             repoName: entityRef.name,
             commitMessages: recentCommitMessages,
           });
-        } else {
-          console.debug(`No commit messages found for ${entityRef.name}`);
         }
       } catch (error) {
         console.error(`Failed to retrieve facts for ${entityRef.name}:`, error);

@@ -54,7 +54,6 @@ export async function createRouter({
    */
   router.post('/summaries', async (req, res) => {
     try {
-      console.log('Received POST body:', req.body);
       const { system, date, summaries } = req.body;
 
       if (!system || !date || !Array.isArray(summaries)) {

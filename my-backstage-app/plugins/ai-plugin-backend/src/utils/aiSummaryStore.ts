@@ -51,7 +51,6 @@ export class AISummaryStore {
       }));
 
     if (rows.length === 0) {
-      console.info(`No non-empty summaries to insert for ${system} on ${date}`);
       return;
     }
 
