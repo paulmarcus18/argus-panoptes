@@ -13,14 +13,12 @@ export const getGitHubTokenFromConfig = (
     const token = githubConfig?.getOptionalString('token');
 
     if (!token) {
-      console.error('❌ GitHub token is not defined.');
+      console.error('GitHub token is not defined.');
       return undefined;
     }
-
-    console.info(`🔍 Retrieved GitHub token: ${token ? '✔️ Present' : '❌ Missing'}`);
     return token;
   } catch (e) {
-    console.error(`❌ Could not retrieve GitHub token: ${e}`);
+    console.error(`Could not retrieve GitHub token: ${e}`);
     return undefined;
   }
 };
@@ -58,9 +56,6 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
         { token },
       );
       entities = response.items ?? [];
-      console.info(
-        `Fetched ${entities.length} component entities from catalog`,
-      );
     } catch (e) {
       console.error(`Failed to fetch entities from catalog: ${e}`);
       return [];
@@ -104,8 +99,6 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
         }
 
         const prs: GitHubPR[] = await prResponse.json();
-        console.info(
-          `Fetched ${prs.length} PRs for ${entity.metadata.name}`,);
         if (!prs.length) continue;
 
         const now = new Date();
@@ -119,9 +112,6 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
           return isRecent && isNotBump;
         });
 
-        console.info(
-          `Found ${recentPRs.length} recent PRs for ${entity.metadata.name}`,
-        );
         if (recentPRs.length) {
           const lastPr = recentPRs[0];
           const prTitle = lastPr.title;
@@ -132,7 +122,6 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
           oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
           for (const pr of recentPRs) {
-            console.info(`Fetching commits for PR: ${pr.number}`);
             const commitsResponse = await fetch(pr.commits_url, {
               headers: {
                 Authorization: `Bearer ${gitHubtoken}`,
