@@ -10,4 +10,5 @@ spec:
     email: finance_team@yourcompany.com
   children: [] # List other sub-teams here if you want
   members:
-    - vpetkova 
+    - finance-team-member
+    - both-teams-member

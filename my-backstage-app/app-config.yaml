@@ -77,9 +77,8 @@ techdocs:
 
 auth:
   providers:
-    guest:
-      userEntityRef: user:development/vpetkova
-      # userEntityRef: user:default/ghristov
+    guest: 
+      userEntityRef: user:development/identity-team-member
 
 scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
@@ -89,7 +88,7 @@ catalog:
     entityFilename: catalog-info.yaml
     pullRequestBranchName: backstage-integration
   rules:
-    - allow: [Component, System, API, Resource, Location, Group]
+    - allow: [Component, System, API, Resource, Location, Group, User]
   locations:
     # File locations are relative to the backend process, typically `packages/backend`
     #Groups
@@ -101,6 +100,16 @@ catalog:
 
     - type: file
       target: ../../catalogs/groups/identity-team.yaml
+
+    # Users
+    - type: file
+      target: ../../catalogs/users/finance-member-catalog-info.yaml
+
+    - type: file
+      target: ../../catalogs/users/identity-member-catalog-info.yaml
+
+    - type: file
+      target: ../../catalogs/users/both-teams-member-catalog-info.yaml
 
     # Systems
     - type: file

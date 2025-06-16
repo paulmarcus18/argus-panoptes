@@ -1,10 +1,10 @@
 apiVersion: backstage.io/v1alpha1
 kind: User
 metadata:
-  name: ghristov
+  name: identity-team-member
 spec:
   profile:
-    displayName: Georgi Hristov
-    email: georgi-hristov@example.com
+    displayName: Identity 1
+    email: identity@example.com
   memberOf: 
     - identity-team
