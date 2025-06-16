@@ -4,7 +4,7 @@ import {
 } from '@backstage-community/plugin-tech-insights-node';
 import { CatalogClient } from '@backstage/catalog-client';
 import { JsonObject } from '@backstage/types';
-
+import { LoggerService } from '@backstage/backend-plugin-api';
 // Represents a single workflow run from Github Actions API
 type WorkflowRun = {
   name: string;
@@ -38,7 +38,7 @@ interface PipelineStatusSummary extends JsonObject {
   successWorkflowRunsCount: number;
   failureWorkflowRunsCount: number;
   successRate: number;
-  workflowMetrics: Record<string, WorkflowMetrics>; 
+  workflowMetrics: Record<string, WorkflowMetrics>;
 }
 
 /**
@@ -48,6 +48,7 @@ async function fetchWorkflowDefinitions(
   owner: string,
   repoName: string,
   headers: Record<string, string>,
+  logger: LoggerService,
 ): Promise<WorkflowDefinition[]> {
   // API calls to get the workflow definitions first
   const workflowsApiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/workflows`;
@@ -55,10 +56,21 @@ async function fetchWorkflowDefinitions(
     const workflowsResponse = await fetch(workflowsApiUrl, { headers });
     if (workflowsResponse.ok) {
       const workflowsData = await workflowsResponse.json();
-      return workflowsData.workflows || [];
+      return workflowsData.workflows ?? [];
     }
   } catch (error) {
-    // Fails silently and returns an empty array, as the main process can continue.
+    // Log the error for debugging purposes but allow the process to continue.
+    if (error instanceof Error) {
+      logger.warn(
+        `Failed to fetch workflow definitions for ${owner}/${repoName}:`,
+        error,
+      );
+    } else {
+      // Handle cases where a non-Error value was thrown
+      logger.warn(
+        `Failed to fetch workflow definitions for ${owner}/${repoName}: An unknown error occurred.`,
+      );
+    }
   }
   return [];
 }
@@ -86,7 +98,7 @@ async function fetchAllWorkflowRuns(
     if (!response.ok) break;
 
     const data = await response.json();
-    const pageRuns = (data.workflow_runs || []) as WorkflowRun[];
+    const pageRuns = (data.workflow_runs ?? []) as WorkflowRun[];
     allRuns.push(...pageRuns);
 
     const linkHeader = response.headers.get('Link');
@@ -152,7 +164,7 @@ function calculateWorkflowMetrics(
     workflowRuns.push(run);
     runsByWorkflowId.set(run.workflow_id, workflowRuns);
   });
-  
+
   // Calculate metrics for each workflow
   runsByWorkflowId.forEach((runs, workflowId) => {
     const workflowName =
@@ -245,6 +257,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
     entityFilter,
     auth,
     discovery,
+    logger,
   }): Promise<TechInsightFact[]> {
     // Retrieve GitHub token from config
     let token: string | undefined;
@@ -283,7 +296,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
       githubEntities.map(async entity => {
         try {
           // Parse the github repo information from entity annotations
-          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] || '';
+          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] ?? '';
           const [owner, repoName] = projectSlug.split('/');
 
           if (!owner || !repoName) {
@@ -298,7 +311,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
           }
 
           const [workflowDefinitions, allRuns] = await Promise.all([
-            fetchWorkflowDefinitions(owner, repoName, headers),
+            fetchWorkflowDefinitions(owner, repoName, headers, logger),
             fetchAllWorkflowRuns(owner, repoName, headers),
           ]);
 
