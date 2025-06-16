@@ -42,6 +42,160 @@ interface PipelineStatusSummary extends JsonObject {
 }
 
 /**
+ * Helper function to fetch all workflow definitions for a repository.
+ */
+async function fetchWorkflowDefinitions(
+  owner: string,
+  repoName: string,
+  headers: Record<string, string>,
+): Promise<WorkflowDefinition[]> {
+  // API calls to get the workflow definitions first
+  const workflowsApiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/workflows`;
+  try {
+    const workflowsResponse = await fetch(workflowsApiUrl, { headers });
+    if (workflowsResponse.ok) {
+      const workflowsData = await workflowsResponse.json();
+      return workflowsData.workflows || [];
+    }
+  } catch (error) {
+    // Fails silently and returns an empty array, as the main process can continue.
+  }
+  return [];
+}
+
+/**
+ * Helper function to fetch all workflow runs using pagination.
+ */
+async function fetchAllWorkflowRuns(
+  owner: string,
+  repoName: string,
+  headers: Record<string, string>,
+): Promise<WorkflowRun[]> {
+  const allRuns: WorkflowRun[] = [];
+
+  // Fetch all workflow runs from the main branch using pagination
+  const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/runs?branch=main&per_page=100`;
+  let page = 1;
+  const maxPages = 30; // Limit to 30 pages to avoid excessive API calls
+
+  // Paginate through all workflow runs
+  while (page <= maxPages) {
+    const pageUrl = `${apiUrl}&page=${page}`;
+    const response = await fetch(pageUrl, { method: 'GET', headers });
+
+    if (!response.ok) break;
+
+    const data = await response.json();
+    const pageRuns = (data.workflow_runs || []) as WorkflowRun[];
+    allRuns.push(...pageRuns);
+
+    const linkHeader = response.headers.get('Link');
+
+    // To check if we need to fetch more pages
+    // ANd check for Link header with 'next' relation to confirm more pages
+    if (pageRuns.length < 100 || !linkHeader?.includes('rel="next"')) {
+      break;
+    }
+    page++;
+  }
+
+  // Filter for only main branch runs
+  return allRuns.filter(run => run.head_branch === 'main');
+}
+
+/**
+ * Helper function to calculate all metrics from the fetched workflow data.
+ */
+function calculateWorkflowMetrics(
+  allRuns: WorkflowRun[],
+  // Workflow definition to get accurate unique workflow counts
+  workflowDefinitions: WorkflowDefinition[],
+): PipelineStatusSummary {
+  // Count all workflow runs on main branch
+  const totalWorkflowRunsCount = allRuns.length;
+
+  // Unique workflows
+  const uniqueWorkflowsCount =
+    workflowDefinitions.length > 0
+      ? workflowDefinitions.length
+      : new Set(allRuns.map(run => run.workflow_id)).size;
+
+  // Count successful and failed runs
+  const successWorkflowRunsCount = allRuns.filter(
+    run => run.status === 'completed' && run.conclusion === 'success',
+  ).length;
+
+  const failureWorkflowRunsCount = allRuns.filter(
+    run => run.status === 'completed' && run.conclusion === 'failure',
+  ).length;
+
+  // Calculate success rate
+  const completedRuns = successWorkflowRunsCount + failureWorkflowRunsCount;
+  const successRate =
+    completedRuns > 0
+      ? Math.round((successWorkflowRunsCount / completedRuns) * 100)
+      : 0;
+
+  // Detailed metrics for each individual workflow (stored in a dictionary)
+  const workflowMetrics: Record<string, WorkflowMetrics> = {};
+
+  // Map workflow IDs to workflow names using the workflow definitions
+  const workflowIdToName = new Map<number, string>();
+  workflowDefinitions.forEach(workflow => {
+    workflowIdToName.set(workflow.id, workflow.name);
+  });
+
+  // Group runs by workflow ID
+  const runsByWorkflowId = new Map<number, WorkflowRun[]>();
+  allRuns.forEach(run => {
+    const workflowRuns = runsByWorkflowId.get(run.workflow_id) || [];
+    workflowRuns.push(run);
+    runsByWorkflowId.set(run.workflow_id, workflowRuns);
+  });
+  
+  // Calculate metrics for each workflow
+  runsByWorkflowId.forEach((runs, workflowId) => {
+    const workflowName =
+      workflowIdToName.get(workflowId) ||
+      runs[0]?.name ||
+      `workflow-${workflowId}`;
+
+    const totalRuns = runs.length;
+    const successRuns = runs.filter(
+      run => run.status === 'completed' && run.conclusion === 'success',
+    ).length;
+    const failureRuns = runs.filter(
+      run => run.status === 'completed' && run.conclusion === 'failure',
+    ).length;
+
+    const workflowCompletedRuns = successRuns + failureRuns;
+    const workflowSuccessRate =
+      workflowCompletedRuns > 0
+        ? Math.round((successRuns / workflowCompletedRuns) * 100)
+        : 0;
+
+    // Create safe key for the metrics object from workflow name
+    const safeKey = workflowName.replace(/[^a-zA-Z0-9]/g, '_');
+    workflowMetrics[safeKey] = {
+      name: workflowName,
+      totalRuns,
+      successRuns,
+      failureRuns,
+      successRate: workflowSuccessRate,
+    };
+  });
+
+  return {
+    totalWorkflowRunsCount,
+    uniqueWorkflowsCount,
+    successWorkflowRunsCount,
+    failureWorkflowRunsCount,
+    successRate,
+    workflowMetrics,
+  };
+}
+
+/**
  * Creates a fact retriever for Foundation pipeline metrics from Github Actions. 
  * 
  * This retriever queries GitHub Actions workflow data for specified entity of type 'component'.
@@ -127,192 +281,46 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
     // Process each Github-enabled component
     const results = await Promise.all(
       githubEntities.map(async entity => {
-        // Parse the github repo information from entity annotations
-        const projectSlug =
-          entity.metadata.annotations?.['github.com/project-slug'] || '';
-        const [owner, repoName] = projectSlug.split('/');
-
-        if (!owner || !repoName) {
-          return null;
-        }
-
-        // API calls to get the workflow definitions first
-        const workflowsApiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/workflows`;
-
-        const headers: Record<string, string> = {
-          Accept: 'application/vnd.github.v3+json',
-        };
-
-        if (token) {
-          headers.Authorization = `token ${token}`;
-        }
-
-        // Workflow definition to get accurate unique workflow counts
-        let workflowDefinitions: WorkflowDefinition[] = [];
-
         try {
-          const workflowsResponse = await fetch(workflowsApiUrl, { headers });
+          // Parse the github repo information from entity annotations
+          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] || '';
+          const [owner, repoName] = projectSlug.split('/');
 
-          if (workflowsResponse.ok) {
-            const workflowsData = await workflowsResponse.json();
-            workflowDefinitions = workflowsData.workflows || [];
-          } 
-        } catch (error: any) {
-          // If fetching definitions fails, proceed without them. The process can continue.
-        }
-
-        // Fetch all workflow runs from the main branch using pagination
-        const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/runs?branch=main&per_page=100`;
-
-        try {  
-          let page = 1;
-          let hasMorePages = true;
-          let allRuns: WorkflowRun[] = [];
-          const maxPages = 30; // Limit to 30 pages to avoid excessive API calls
-
-          // Paginate through all workflow runs
-          while (hasMorePages && page <= maxPages) {
-            const pageUrl = `${apiUrl}&page=${page}`;
-
-            const response = await fetch(pageUrl, {
-              method: 'GET',
-              headers,
-            });
-
-            if (!response.ok) {
-              break;
-            }
-
-            const data = await response.json();
-            const pageRuns = data.workflow_runs as WorkflowRun[];
-
-            allRuns = [...allRuns, ...pageRuns];
-
-            // To check if we need to fetch more pages
-            if (pageRuns.length < 100) {
-              hasMorePages = false;
-            } else {
-
-              // Check for Link header with 'next' relation to confirm more pages
-              const linkHeader = response.headers.get('Link');
-              hasMorePages = linkHeader
-                ? linkHeader.includes('rel="next"')
-                : false;
-            }
-
-            page++;
+          if (!owner || !repoName) {
+            return null;
           }
 
-          // Filter for only main branch runs
-          const mainBranchRuns = allRuns.filter(
-            run => run.head_branch === 'main',
-          );
-          allRuns = mainBranchRuns;
+          const headers: Record<string, string> = {
+            Accept: 'application/vnd.github.v3+json',
+          };
+          if (token) {
+            headers.Authorization = `token ${token}`;
+          }
 
-          // Handle case where no workflow runs are found and return early with empty data
+          const [workflowDefinitions, allRuns] = await Promise.all([
+            fetchWorkflowDefinitions(owner, repoName, headers),
+            fetchAllWorkflowRuns(owner, repoName, headers),
+          ]);
+
           if (allRuns.length === 0) {
             return {
-              entity: {
-                kind: entity.kind,
-                namespace: entity.metadata.namespace || 'default',
-                name: entity.metadata.name,
-              },
+              entity,
               facts: {
                 totalWorkflowRunsCount: 0,
-                uniqueWorkflowsCount: workflowDefinitions.length, // Use actual definition count
+                uniqueWorkflowsCount: workflowDefinitions.length,
                 successWorkflowRunsCount: 0,
                 failureWorkflowRunsCount: 0,
                 successRate: 0,
                 workflowMetrics: {},
-              } as PipelineStatusSummary,
-            } as TechInsightFact;
+              },
+            };
           }
 
-          // Count all workflow runs on main branch
-          const totalWorkflowRunsCount = allRuns.length;
-
-          // Unique workflows
-          const uniqueWorkflowsCount =
-            workflowDefinitions.length > 0
-              ? workflowDefinitions.length
-              : new Set(allRuns.map(run => run.workflow_id)).size;
-
-          // Count successful and failed runs
-          const successWorkflowRunsCount = allRuns.filter(
-            run => run.status === 'completed' && run.conclusion === 'success',
-          ).length;
-
-          const failureWorkflowRunsCount = allRuns.filter(
-            run => run.status === 'completed' && run.conclusion === 'failure',
-          ).length;
-
-          // Calculate success rate
-          const completedRuns =
-            successWorkflowRunsCount + failureWorkflowRunsCount;
-          const successRate =
-            completedRuns > 0
-              ? Math.round((successWorkflowRunsCount / completedRuns) * 100)
-              : 0;
-
-          // Detailed metrics for each individual workflow (stored in a dictionary)
-          const workflowMetrics: Record<string, WorkflowMetrics> = {};
-
-          // Map workflow IDs to workflow names using the workflow definitions
-          const workflowIdToName = new Map<number, string>();
-          workflowDefinitions.forEach(workflow => {
-            workflowIdToName.set(workflow.id, workflow.name);
-          });
-
-          // Group runs by workflow ID
-          const runsByWorkflowId = new Map<number, WorkflowRun[]>();
-          allRuns.forEach(run => {
-            const workflowRuns = runsByWorkflowId.get(run.workflow_id) || [];
-            workflowRuns.push(run);
-            runsByWorkflowId.set(run.workflow_id, workflowRuns);
-          });
-
-          // Calculate metrics for each workflow
-          runsByWorkflowId.forEach((runs, workflowId) => {
-            const workflowName =
-              workflowIdToName.get(workflowId) ||
-              runs[0]?.name ||
-              `workflow-${workflowId}`;
-
-            const totalRuns = runs.length;
-            const successRuns = runs.filter(
-              run => run.status === 'completed' && run.conclusion === 'success',
-            ).length;
-            const failureRuns = runs.filter(
-              run => run.status === 'completed' && run.conclusion === 'failure',
-            ).length;
-
-            const workflowCompletedRuns = successRuns + failureRuns;
-            const workflowSuccessRate =
-              workflowCompletedRuns > 0
-                ? Math.round((successRuns / workflowCompletedRuns) * 100)
-                : 0;
-
-            // Create safe key for the metrics object from workflow name
-            const safeKey = workflowName.replace(/[^a-zA-Z0-9]/g, '_');
-
-            workflowMetrics[safeKey] = {
-              name: workflowName,
-              totalRuns,
-              successRuns,
-              failureRuns,
-              successRate: workflowSuccessRate,
-            };
-          });
-
           // Construct pipelines status summary object
-          const pipelineSummary: PipelineStatusSummary = {
-            totalWorkflowRunsCount,
-            uniqueWorkflowsCount,
-            successWorkflowRunsCount,
-            failureWorkflowRunsCount,
-            successRate,
-            workflowMetrics,
-          };
+          const pipelineSummary = calculateWorkflowMetrics(
+            allRuns,
+            workflowDefinitions,
+          );
 
           // Return the fact result object for this repo
           return {
