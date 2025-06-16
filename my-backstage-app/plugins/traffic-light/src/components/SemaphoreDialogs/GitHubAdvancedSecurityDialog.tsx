@@ -8,8 +8,7 @@ import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { GithubAdvancedSecurityUtils } from '../../utils/githubAdvancedSecurityUtils';
 import { SemaphoreData, IssueDetail, Severity } from './types';
-import { calculateGitHubSecurityTrafficLight } from '../Semaphores/GitHubSecurityTrafficLight';
-import {extractSecurityThresholds} from '../Semaphores/GitHubSecurityTrafficLight'
+import { calculateGitHubSecurityTrafficLight, extractSecurityThresholds } from '../Semaphores/GitHubSecurityTrafficLight';
 import type { GridSize } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({

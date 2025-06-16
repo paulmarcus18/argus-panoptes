@@ -7,7 +7,7 @@ import { CatalogClient } from '@backstage/catalog-client';
 import { JsonObject } from '@backstage/types';
 
 // Define interfaces for the security findings as JSON-compatible types
-interface codeScanningFinding extends JsonObject {
+interface CodeScanningFinding extends JsonObject {
   severity: string;
   description: string;
   direct_link: string;
@@ -17,8 +17,8 @@ interface codeScanningFinding extends JsonObject {
 // Dictionary structure for security findings where the key is the alert number/id
 // Must be JsonObject compatible
 // This way we store all the issues per repository
-interface codeScanningFindingsDict extends JsonObject {
-  [alertId: string]: codeScanningFinding;
+interface CodeScanningFindingsDict extends JsonObject {
+  [alertId: string]: CodeScanningFinding;
 }
 
 /**
@@ -138,7 +138,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
           );
 
           // Process code scanning alerts to extract only the required information
-          const codeScanningAlerts: codeScanningFindingsDict = {};
+          const codeScanningAlerts: CodeScanningFindingsDict = {};
           
           codeScanningResponse.data.forEach(alert => {
             // Extract necessary information for code scanning alerts
@@ -148,7 +148,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
             const start_line = location?.start_line || 1; // Default to line 1 if not provided
             
             // Create finding with only the requested fields
-            const finding: codeScanningFinding = {
+            const finding: CodeScanningFinding = {
               severity: alert.rule?.security_severity_level || 'unknown',
               description: alert.rule?.description || alert.rule?.name || 'No description available',
               created_at: alert.created_at || '',
@@ -160,7 +160,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
           });
 
           // Process secret scanning alerts to create a dictionary with only the requested fields
-          const secretScanningAlerts: codeScanningFindingsDict = {};
+          const secretScanningAlerts: CodeScanningFindingsDict = {};
           
           secretScanningResponse.data.forEach(alert => {
             const alertId = `secret-${alert.number}`;

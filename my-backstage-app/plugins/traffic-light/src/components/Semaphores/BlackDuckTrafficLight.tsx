@@ -57,7 +57,7 @@ export const determineBlackDuckColor = async (
 
   // Get thresholds for traffic light colour from system annotations
   const proportion = parseFloat(
-    systemEntity?.metadata.annotations?.['tech-insights.io/blackduck-critical-check-percentage'] || '33'
+    systemEntity?.metadata.annotations?.['tech-insights.io/blackduck-critical-check-percentage'] ?? '33'
   );
 
   try {
