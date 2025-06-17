@@ -7,15 +7,15 @@ import userEvent from '@testing-library/user-event';
 import { Filters } from './Filters';
 
 describe('Filters component', () => {
-  const allSystems = ['System A', 'System B', 'System C'];
-  let selectedSystem = 'System A';
-  let repoSearch = '';
-  const onSystemChange = jest.fn(value => {
-    selectedSystem = value;
-  });
-  const onRepoSearchChange = jest.fn(value => {
-    repoSearch = value;
-  });
+  // const allSystems = ['System A', 'System B', 'System C'];
+  // let selectedSystem = 'System A';
+  // let repoSearch = '';
+  // const onSystemChange = jest.fn(value => {
+  //   selectedSystem = value;
+  // });
+  // const onRepoSearchChange = jest.fn(value => {
+  //   repoSearch = value;
+  // });
 
   beforeEach(() => {
     jest.clearAllMocks();

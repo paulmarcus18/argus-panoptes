@@ -27,19 +27,18 @@ export async function createRouter({
    */
   router.get('/summaries', async (req, res) => {
     const requestedDate = req.query.date as string;
-
     if (!requestedDate) {
       return res
         .status(400)
         .json({ error: 'Missing required "date" query param' });
     }
-
+  
     try {
       const summaries = await store.getAllSummariesForDate(requestedDate);
-      res.json(summaries);
+      return res.json(summaries); 
     } catch (error) {
       logger.error('Error fetching summaries:');
-      res.status(500).json({ error: 'Could not fetch summaries' });
+      return res.status(500).json({ error: 'Could not fetch summaries' }); 
     }
   });
 
@@ -55,16 +54,15 @@ export async function createRouter({
   router.post('/summaries', async (req, res) => {
     try {
       const { system, date, summaries } = req.body;
-
       if (!system || !date || !Array.isArray(summaries)) {
         return res.status(400).json({ error: 'Invalid request format' });
       }
-
+  
       await store.saveSummaries(system, date, summaries as SummaryPerRepo[]);
-      res.status(204).send();
+      return res.status(204).send(); 
     } catch (error) {
       logger.error('Error saving summaries:');
-      res.status(500).json({ error: 'Could not save summaries' });
+      return res.status(500).json({ error: 'Could not save summaries' }); 
     }
   });
 
@@ -73,12 +71,12 @@ export async function createRouter({
     if (!prompt) {
       return res.status(400).json({ error: 'Missing prompt' });
     }
-
+  
     const geminiToken = config.getOptionalConfigArray('integrations.gemini')?.[0]?.getOptionalString('token');
     if (!geminiToken) {
       return res.status(500).json({ error: 'Gemini token not configured' });
     }
-
+  
     try {
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiToken}`,
@@ -96,20 +94,20 @@ export async function createRouter({
           }),
         },
       );
-
+  
       if (!response.ok) {
         const error = await response.json();
         console.error('Gemini error:', error);
         return res.status(500).json({ error: error.message });
       }
-
+  
       const result = await response.json();
-      res.json(result);
+      return res.json(result); 
     } catch (err) {
       console.error('Error contacting OpenRouter:', err);
-      res.status(500).json({ error: 'Failed to generate summary' });
     }
   });
 
   return router;
 }
+

@@ -45,9 +45,9 @@ export const TrafficComponent = () => {
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   const [repos, setRepos] = useState<any[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogTitle, setDialogTitle] = useState('');
-  const [dialogItems, setDialogItems] = useState<any[]>([]);
+  // const [ setDialogOpen] = useState(false);
+  // const [ setDialogTitle] = useState('');
+  // const [ setDialogItems] = useState<any[]>([]);
   // const [setDetailedDialogOpen] = useState(false);
   // const [currentSemaphoreType, setCurrentSemaphoreType] = useState('');
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
@@ -73,11 +73,11 @@ export const TrafficComponent = () => {
     useState(false);
   const [DependabotDialogOpen, setDependabotDialogOpen] = useState(false);
 
-  const handleClick = (title: string, items: any[]) => {
-    setDialogTitle(title);
-    setDialogItems(items);
-    setDialogOpen(true);
-  };
+  // const handleClick = (title: string, items: any[]) => {
+  //   setDialogTitle(title);
+  //   setDialogItems(items);
+  //   setDialogOpen(true);
+  // };
 
   const handleSemaphoreClick = (semaphoreType: string) => {
     switch (semaphoreType) {
@@ -109,7 +109,7 @@ export const TrafficComponent = () => {
       case 'CodeScene':
         // For these, use the existing detailed dialog
         // setCurrentSemaphoreType(semaphoreType);
-        handleClick('CodeScene Details', []);
+        // handleClick('CodeScene Details', []);
         // setDetailedDialogOpen(true);
         break;
       default:
