@@ -1,28 +1,35 @@
-import { ExampleComponent } from './ExampleComponent';
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
+import React from 'react';
 import { screen } from '@testing-library/react';
-import {
-  registerMswTestHooks,
-  renderInTestApp,
-} from '@backstage/test-utils';
+import { renderInTestApp } from '@backstage/test-utils';
+import { ExampleComponent } from './ExampleComponent';
+
+// Mock the hooks used in DoraDashboard
+jest.mock('../ExampleFetchComponent/ExampleFetchComponent', () => ({
+  useProjects: () => ({
+    loading: false,
+    error: null,
+    value: ['project-alpha', 'project-beta'],
+  }),
+  useMetricsData: () => ({
+    loading: false,
+    error: null,
+    value: [
+      { id: 'df', dataPoints: [{ key: '2025-01', value: 10 }] },
+      { id: 'mltc', dataPoints: [{ key: '2025-01', value: 20 }] },
+      { id: 'cfr', dataPoints: [] },
+      { id: 'mttr', dataPoints: [] },
+    ],
+  }),
+}));
 
 describe('ExampleComponent', () => {
-  const server = setupServer();
-  // Enable sane handlers for network requests
-  registerMswTestHooks(server);
-
-  // setup mock response
-  beforeEach(() => {
-    server.use(
-      rest.get('/*', (_, res, ctx) => res(ctx.status(200), ctx.json({}))),
-    );
-  });
-
-  it('should render', async () => {
+  it('renders dashboard title and metric labels', async () => {
     await renderInTestApp(<ExampleComponent />);
-    expect(
-      screen.getByText('Welcome to dora-dashboard!'),
-    ).toBeInTheDocument();
+
+    const headings = await screen.findAllByText(/DORA Metrics Dashboard/i);
+    expect(headings.length).toBeGreaterThanOrEqual(2);
+
+    expect(screen.getByText(/Deployment Frequency/i)).toBeInTheDocument();
+    expect(screen.getByText(/Lead Time for Changes/i)).toBeInTheDocument();
   });
 });
