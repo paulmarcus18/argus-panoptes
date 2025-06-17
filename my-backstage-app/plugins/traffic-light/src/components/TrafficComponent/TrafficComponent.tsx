@@ -15,7 +15,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { Page, Content, InfoCard } from '@backstage/core-components';
 
-import { useApi } from '@backstage/core-plugin-api';
+import { identityApiRef, useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 import {
@@ -41,6 +41,7 @@ import {DependabotSemaphoreDialog}  from '../SemaphoreDialogs/DependabotSemaphor
 
 export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
+  const identityApi = useApi(identityApiRef);
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   const [repos, setRepos] = useState<any[]>([]);
@@ -155,10 +156,32 @@ export const TrafficComponent = () => {
   useEffect(() => {
     const fetchCatalogRepos = async () => {
       try {
-        const entities = await catalogApi.getEntities({
-          filter: { kind: 'Component' },
+        // Get current user identity
+        const { userEntityRef } = await identityApi.getBackstageIdentity();
+        const userName = userEntityRef.split('/').pop();
+
+        // Fetch user entity metadata from catalog
+        const userEntity = await catalogApi.getEntityByRef({
+          kind: 'User',
+          namespace: 'default',
+          name: typeof userName === 'string' ? userName : String(userName)
         });
-        const simplified = entities.items.map((entity: Entity) => ({
+
+        // Get user's teams from the entity
+        const userTeams: string[] = (userEntity?.spec?.memberOf as string[]) || [];
+
+        // Fetch all entities (Components and Systems)
+        const [componentEntities, systemEntities] = await Promise.all([
+          catalogApi.getEntities({
+            filter: { kind: 'Component' },
+          }),
+          catalogApi.getEntities({
+            filter: { kind: 'System' },
+          })
+        ]);
+
+        // Process components
+        const simplified = componentEntities.items.map((entity: Entity) => ({
           name: entity.metadata.name,
           description: entity.metadata.description ?? 'No description',
           owner:
@@ -172,17 +195,25 @@ export const TrafficComponent = () => {
           tags: entity.metadata?.tags,
           entity: entity,
         }));
-
+        
         setRepos(simplified);
-        const systems = Array.from(
-          new Set(
-            simplified.map(repo => repo.system).filter(Boolean) as string[],
-          ),
-        ).sort();
-        setAvailableSystems(systems);
-        if (systems.length > 0) {
-          const initialSystem =
-            systems[0];
+
+        // Filter systems to only include those owned by user's teams
+        const userOwnedSystems = systemEntities.items
+          .filter((system: Entity) => {
+            const systemOwner = system.spec?.owner;
+            if (typeof systemOwner === 'string') {
+              return userTeams.includes(systemOwner);
+            }
+            return false;
+          })
+          .map((system: Entity) => system.metadata.name)
+          .sort();
+        setAvailableSystems(userOwnedSystems);
+        
+        // Set the initial selected system to the first owned system
+        if (userOwnedSystems.length > 0) {
+          const initialSystem = userOwnedSystems[0];
           setSelectedSystem(initialSystem);
         }
       } catch (err) {

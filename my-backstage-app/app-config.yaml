@@ -78,7 +78,7 @@ techdocs:
 auth:
   providers:
     guest: 
-      userEntityRef: user:development/identity-team-member
+      userEntityRef: user:development/both-teams-member
 
 scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
