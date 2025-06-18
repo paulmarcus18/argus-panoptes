@@ -51,18 +51,18 @@ export async function createRouter({
    *   summaries: [{ repoName: "repo-a", summary: "..." }, ...]
    * }
    */
-  router.post('/summaries', async (req, res) => {
+  router.post('/summaries', async (req, res): Promise<void> => {
     try {
       const { system, date, summaries } = req.body;
       if (!system || !date || !Array.isArray(summaries)) {
-        return res.status(400).json({ error: 'Invalid request format' });
+        res.status(400).json({ error: 'Invalid request format' });
+        return;
       }
-  
       await store.saveSummaries(system, date, summaries as SummaryPerRepo[]);
-      return res.status(204).send(); 
+      res.status(204).send();
     } catch (error) {
       logger.error('Error saving summaries:');
-      return res.status(500).json({ error: 'Could not save summaries' }); 
+      res.status(500).json({ error: 'Could not save summaries' });
     }
   });
 
@@ -102,9 +102,10 @@ export async function createRouter({
       }
   
       const result = await response.json();
-      return res.json(result); 
+      return res.json(result);
     } catch (err) {
-      console.error('Error contacting OpenRouter:', err);
+      console.error('Error contacting Gemini:', err); // Fixed the log message too
+      return res.status(500).json({ error: 'Failed to generate content' });
     }
   });
 

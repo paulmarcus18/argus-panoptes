@@ -1,11 +1,9 @@
-import {
-  Card,
-  CardContent,
-  IconButton,
-  Typography,
-  Box,
-  useTheme,
-} from '@mui/material';
+import {useTheme} from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import DownloadIcon from '@mui/icons-material/Download';
 import { SummaryPerRepo } from '../../utils/types';
 

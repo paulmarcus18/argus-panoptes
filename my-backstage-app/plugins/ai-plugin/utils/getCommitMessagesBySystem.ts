@@ -51,7 +51,6 @@ export async function getCommitMessagesBySystem(
        * Uses the techInsightsApi to retrieve the data saved under
        * id github-commit-message-retriever.
        */
-      try {
         const facts = await techInsightsApi.getFacts(entityRef, [
           'github-commit-message-retriever',
         ]);
@@ -82,9 +81,6 @@ export async function getCommitMessagesBySystem(
             commitMessages: recentCommitMessages,
           });
         }
-      } catch (error) {
-        console.error(`Failed to retrieve facts for ${entityRef.name}:`, error);
-      }
     }
 
     /**

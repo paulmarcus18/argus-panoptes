@@ -60,16 +60,12 @@ export function useProjects() {
       const response = await fetch(url);
 
       if (!response.ok) {
-        console.error(
-          `Failed to fetch projects: ${response.status} ${response.statusText}`,
-        );
         return [];
       }
 
       const projects = await response.json();
       return Array.isArray(projects) ? projects : [];
     } catch (error) {
-      console.error('Error fetching projects:', error);
       return [];
     }
   }, []);
@@ -134,9 +130,6 @@ export function useMetricsData(
             const response = await fetch(url);
 
             if (!response.ok) {
-              console.error(
-                `Failed to fetch ${metric.label}: ${response.status} ${response.statusText}`,
-              );
               return {
                 id: metric.id,
                 dataPoints: [],
@@ -148,7 +141,6 @@ export function useMetricsData(
             // Transform API response to DataPoint format
             const dataPoints: DataPoint[] = (json || []).map((dp: any) => {
               let date: Date | undefined;
-              try {
                 if (dp.data_key) {
                   if (aggregation === 'daily') {
                     // Daily format: YYYY-MM-DD
@@ -158,11 +150,6 @@ export function useMetricsData(
                     date = new Date(dp.data_key + '-01T00:00:00');
                   }
                 }
-              } catch (e) {
-                console.warn(
-                  `Failed to parse date from data_key: ${dp.data_key}`,
-                );
-              }
 
               return {
                 key: dp.data_key,
@@ -182,7 +169,6 @@ export function useMetricsData(
               dataPoints,
             };
           } catch (error) {
-            console.error(`Error fetching ${metric.label}:`, error);
             return {
               id: metric.id,
               dataPoints: [],
@@ -193,7 +179,6 @@ export function useMetricsData(
 
       return results;
     } catch (error) {
-      console.error('Error in useMetricsData:', error);
       return [];
     }
   }, [

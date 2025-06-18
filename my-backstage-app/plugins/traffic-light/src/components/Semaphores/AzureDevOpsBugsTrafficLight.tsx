@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -24,7 +24,7 @@ export const AzureDevOpsBugsTrafficLight = ({
 
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const azureUtils = React.useMemo(() => new AzureUtils(), []);
+  const azureUtils = useMemo(() => new AzureUtils(), []);
 
 useEffect(() => {
   const fetchAzureData = async () => {
@@ -37,7 +37,6 @@ useEffect(() => {
     try {
       // 1. Get red threshold from system annotation
       let redThreshold = 0.33;
-      try {
         const systemName = entities[0].spec?.system;
         const namespace = entities[0].metadata.namespace || 'default';
 
@@ -54,9 +53,6 @@ useEffect(() => {
             redThreshold = parseFloat(thresholdAnnotation);
           }
         }
-      } catch (e) {
-        console.warn('Failed to read azure bugs red threshold, using default 0.33');
-      }
 
       // 2. Fetch facts + checks, and skip entities with null bug counts
       const validResults = await Promise.all(
@@ -94,7 +90,6 @@ useEffect(() => {
       setColor(computedColor);
       setReason(computedReason);
     } catch (err) {
-      console.error('Error fetching Azure DevOps bug data:', err);
       setColor('gray');
       setReason('Failed to retrieve Azure DevOps bug data');
     }

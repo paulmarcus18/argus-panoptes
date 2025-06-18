@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import React from 'react';
+import { useState} from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Filters } from './Filters';
@@ -69,7 +69,7 @@ describe('Filters component', () => {
     const onRepoSearchChange = jest.fn();
 
     const Wrapper = () => {
-      const [repoSearch, setRepoSearch] = React.useState('');
+      const [repoSearch, setRepoSearch] = useState('');
       return (
         <Filters
           allSystems={['System A', 'System B']}

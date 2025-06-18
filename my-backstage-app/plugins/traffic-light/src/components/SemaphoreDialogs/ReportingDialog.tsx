@@ -1,5 +1,5 @@
 
-import React from 'react';
+import {useMemo, useEffect, useState} from 'react';
 import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -46,28 +46,28 @@ export const ReportingSemaphoreDialog: React.FC<
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const reportingUtils = React.useMemo(() => new ReportingUtils(), []);
+  const reportingUtils = useMemo(() => new ReportingUtils(), []);
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [metrics, setMetrics] = React.useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [metrics, setMetrics] = useState({
     totalSuccess: 0,
     totalFailure: 0,
     totalRuns: 0,
     successRate: 0,
   });
 
-  const [lowestSuccessRepos, setLowestSuccessRepos] = React.useState<
+  const [lowestSuccessRepos, setLowestSuccessRepos] = useState<
     { name: string; url: string; successRate: number }[]
   >([]);
 
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
 
     setIsLoading(true);
@@ -76,7 +76,6 @@ export const ReportingSemaphoreDialog: React.FC<
       try {
         // 1. Get threshold from system annotations
         let redThreshold = 0.33;
-        try {
           const systemName = entities[0].spec?.system;
           const namespace = entities[0].metadata.namespace || 'default';
 
@@ -98,11 +97,6 @@ export const ReportingSemaphoreDialog: React.FC<
               redThreshold = parseFloat(thresholdAnnotation);
             }
           }
-        } catch (err) {
-          console.warn(
-            'Failed to get threshold annotation, using default 0.33',
-          );
-        }
 
         // 2. Gather facts + checks in parallel
         const results = await Promise.all(
@@ -207,7 +201,6 @@ export const ReportingSemaphoreDialog: React.FC<
           details: [],
         });
       } catch (e) {
-        console.error('Failed to fetch pipeline data:', e);
         setMetrics({
           totalSuccess: 0,
           totalFailure: 0,

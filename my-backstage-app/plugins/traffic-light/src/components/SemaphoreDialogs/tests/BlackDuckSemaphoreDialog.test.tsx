@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { ThemeProvider } from '@material-ui/core/styles';
 import { createTheme } from '@material-ui/core/styles'
@@ -147,7 +146,9 @@ describe('BlackDuckSemaphoreDialog', () => {
 
       render(
         <Wrapper>
-          <BlackDuckSemaphoreDialog open={false} onClose={mockOnClose} />
+          <BlackDuckSemaphoreDialog 
+          open={false} 
+          onClose={mockOnClose} />
         </Wrapper>
       );
 
@@ -165,7 +166,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={[mockEntity]} 
             />
@@ -194,7 +195,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={entities} 
             />
@@ -219,7 +220,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={[mockEntityWithoutBlackDuck]} 
             />
@@ -242,7 +243,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={[mockEntity]} 
             />
@@ -274,7 +275,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={multipleEntities} 
             />
@@ -301,7 +302,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={[mockEntity]} 
             />
@@ -324,7 +325,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={[mockEntity]} 
             />
@@ -347,7 +348,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open 
               onClose={mockOnClose} 
               entities={[mockEntity]} 
             />
@@ -370,7 +371,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={[mockEntity]} 
             />
@@ -393,7 +394,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open 
               onClose={mockOnClose} 
               entities={[mockEntity]} 
             />
@@ -418,7 +419,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
             <Wrapper>
             <BlackDuckSemaphoreDialog 
-                open={true} 
+                open
                 onClose={mockOnClose} 
                 entities={[mockEntity]} 
             />
@@ -444,7 +445,7 @@ describe('BlackDuckSemaphoreDialog', () => {
       render(
         <Wrapper>
           <BlackDuckSemaphoreDialog 
-            open={true} 
+            open
             onClose={mockOnClose} 
             entities={[]} 
           />
@@ -469,10 +470,10 @@ describe('BlackDuckSemaphoreDialog', () => {
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[entityWithoutNamespace]} 
+            <BlackDuckSemaphoreDialog
+              open
+              onClose={mockOnClose}
+              entities={[entityWithoutNamespace]}
             />
           </Wrapper>
         );
@@ -500,7 +501,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={[mockEntity]} 
             />
@@ -541,7 +542,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         return render(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={[mockEntity]} 
             />
@@ -559,7 +560,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         rerender(
           <Wrapper>
             <BlackDuckSemaphoreDialog 
-              open={true} 
+              open
               onClose={mockOnClose} 
               entities={[newEntity]} 
             />

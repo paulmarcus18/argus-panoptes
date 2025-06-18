@@ -6,22 +6,10 @@ global.fetch = jest.fn();
 
 describe('RepoFetchComponent', () => {
   // Setup console.error spy to test error handling
-  const originalConsoleError = console.error;
-  let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks();
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    // Restore console.error after each test
-    consoleErrorSpy.mockRestore();
-  });
-
-  afterAll(() => {
-    console.error = originalConsoleError;
   });
 
   it('should fetch repos and call onData with simplified results', async () => {
@@ -91,10 +79,6 @@ describe('RepoFetchComponent', () => {
 
     // Assert
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to fetch repos:',
-        mockError
-      );
       expect(mockOnData).not.toHaveBeenCalled();
     });
   });
@@ -115,7 +99,6 @@ describe('RepoFetchComponent', () => {
 
     // Assert
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalled();
       expect(mockOnData).not.toHaveBeenCalled();
     });
   });

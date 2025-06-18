@@ -1,4 +1,4 @@
-import React from 'react';
+import {useMemo, useEffect, useState} from 'react';
 import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -69,18 +69,18 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
   
-  const githubASUtils = React.useMemo(
+  const githubASUtils = useMemo(
     () => new GithubAdvancedSecurityUtils(),
     [],
   );
 
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   });
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Helper function to extract repository name from GitHub URL
   const extractRepoName = (url: string): string => {
@@ -96,7 +96,7 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
     return '';
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
 
     setIsLoading(true);
@@ -107,7 +107,6 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
         let systemEntity: Entity | undefined;
         let thresholds: SecurityThresholds | undefined;
         
-        try {
           const systemName = entities[0].spec?.system;
           if (systemName) {
             systemEntity = await catalogApi.getEntityByRef({
@@ -117,9 +116,6 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
             });
             thresholds = extractSecurityThresholds(systemEntity, entities.length);
           }
-        } catch (systemError) {
-          console.warn('Could not fetch system entity for thresholds:', systemError);
-        }
 
         // Get security check results (for traffic light calculation)
         const securityCheckResults = await Promise.all(
@@ -263,7 +259,6 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
           details: sortedDetails, // Use sorted details
         });
       } catch (err) {
-        console.error('GitHub Security fetch error:', err);
         setData({
           color: 'gray',
           metrics: {},

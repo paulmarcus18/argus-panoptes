@@ -113,7 +113,7 @@ export const TrafficComponent = () => {
         // setDetailedDialogOpen(true);
         break;
       default:
-        console.warn(`No dialog handler for semaphore type: ${semaphoreType}`);
+        break;
     }
   };
 
@@ -155,7 +155,6 @@ export const TrafficComponent = () => {
 
   useEffect(() => {
     const fetchCatalogRepos = async () => {
-      try {
         // Get current user identity
         const { userEntityRef } = await identityApi.getBackstageIdentity();
         const userName = userEntityRef.split('/').pop();
@@ -216,13 +215,10 @@ export const TrafficComponent = () => {
           const initialSystem = userOwnedSystems[0];
           setSelectedSystem(initialSystem);
         }
-      } catch (err) {
-        console.error('Failed to load catalog entities', err);
-      }
     };
 
     fetchCatalogRepos();
-  }, [catalogApi]);
+  }, [catalogApi, identityApi]);
 
   useEffect(() => {
     const filtered = repos.filter(repo => {
@@ -295,7 +291,6 @@ export const TrafficComponent = () => {
                   onChange={e => setSystemSearchTerm(e.target.value)}
                   variant="outlined"
                   size="small"
-                  autoFocus
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">

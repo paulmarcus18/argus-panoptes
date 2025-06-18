@@ -10,14 +10,15 @@ import { determineSemaphoreColor } from '../../utils';
 // Mock the BaseTrafficLight component
 jest.mock('../BaseTrafficLight', () => ({
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
-    <div 
+    <button 
       data-testid="base-traffic-light" 
-      data-color={color}
-      data-tooltip={tooltip}
+      data-color={color} 
+      data-tooltip={tooltip} 
       onClick={onClick}
+      type="button"
     >
       Traffic Light: {color}
-    </div>
+    </button>
   ),
 }));
 
@@ -36,7 +37,7 @@ jest.mock('../../utils', () => ({
 describe('PreproductionTrafficLight Component', () => {
   let mockCatalogApi: any;
   let mockTechInsightsApi: any;
-  let mockPreproductionUtils: any;
+  // let mockPreproductionUtils: any;
   let mockEntities: Entity[];
   let mockSystemEntity: any;
 
@@ -47,9 +48,9 @@ describe('PreproductionTrafficLight Component', () => {
 
     mockTechInsightsApi = {};
 
-    mockPreproductionUtils = {
-      getPreproductionPipelineChecks: jest.fn(),
-    };
+    // mockPreproductionUtils = {
+    //   getPreproductionPipelineChecks: jest.fn(),
+    // };
 
     mockEntities = [
       {
