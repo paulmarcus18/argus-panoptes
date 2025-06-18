@@ -5,6 +5,7 @@ import {
 import { FactResponse } from '@backstage-community/plugin-tech-insights-common';
 import { CatalogApi } from '@backstage/catalog-client';
 import { LoggerService } from '@backstage/backend-plugin-api';
+import { stringifyEntityRef } from '@backstage/catalog-model';
 
 /**
  * Type describing a dynamic threshold check.
@@ -98,15 +99,19 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
 
     // Extract system name from entity spec
     const systemName = entity.spec?.system;
-    if (!systemName) {
-      throw new Error(`Component ${entity.metadata.name} does not specify a system.`);
+    if (typeof systemName !== 'string' || !systemName) {
+      throw new Error(
+        `The 'spec.system' field for entity '${stringifyEntityRef(
+          entity,
+        )}' is missing, empty, or not a string.`,
+      );
     }
 
     // Fetch the system entity from the catalog
     const systemEntity = await this.catalogApi.getEntityByRef({
       kind: 'System',
       namespace: entity.metadata.namespace ?? 'default',
-      name: typeof systemName === 'string' ? systemName : String(systemName),
+      name: systemName,
     });
 
     if (!systemEntity) {
