@@ -57,4 +57,4 @@ metadata:
     tech-insights.io/azure-bugs-operator: 'lessThanInclusive'
 spec:
   owner: identity-team
-  members: [ghristov]
+  members: [identity-team-member, both-teams-member]

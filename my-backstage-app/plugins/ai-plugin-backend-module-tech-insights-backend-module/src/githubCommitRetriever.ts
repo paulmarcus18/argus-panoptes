@@ -134,7 +134,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
             const commits: GitHubCommit[] = await commitsResponse.json();
 
             const recentCommits = commits.filter(() => {
-              //const commitDate = new Date(commit.commit.author.date);
+              // const commitDate = new Date(commit.commit.author.date);
               return true;
             });
 

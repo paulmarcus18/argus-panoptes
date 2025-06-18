@@ -1,8 +1,8 @@
 import {
   createPlugin,
   createRoutableExtension,
+  createRouteRef,
 } from '@backstage/core-plugin-api';
-import { createRouteRef } from '@backstage/core-plugin-api';
 import { rootRouteRef } from './routes';
 
 export const commitMessagesRouteRef = createRouteRef({

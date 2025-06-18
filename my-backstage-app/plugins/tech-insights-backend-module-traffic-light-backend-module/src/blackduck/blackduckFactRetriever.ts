@@ -46,7 +46,7 @@ type BD_VERISON_DETAIL = {
 
 // Define the type for the Black Duck REST API response
 type BD_REST_API_RESPONSE = {
-    totalCount: Number;
+    totalCount: number;
     items: [];
     appliedFilters: [];
     _meta: META;

@@ -67,7 +67,7 @@ useEffect(() => {
             name: entity.metadata.name,
           };
 
-          const [facts, checks] = await Promise.all([
+          const [, checks] = await Promise.all([
             azureUtils.getAzureDevOpsBugFacts(techInsightsApi, ref),
             azureUtils.getAzureDevOpsBugChecks(techInsightsApi, ref),
           ]);

@@ -125,9 +125,9 @@ export async function getGitHubRepoStatus(
       color: 'yellow',
       reason: `Critical workflows in progress: ${inProgress.join(', ')}`,
     };
-  } else {
-    return { color: 'green', reason: 'All critical workflows succeeded.' };
-  }
+  } 
+  return { color: 'green', reason: 'All critical workflows succeeded.' };
+  
 }
 
 export function determineSemaphoreColor(
@@ -136,20 +136,24 @@ export function determineSemaphoreColor(
   redThreshold: number,
 ): { color: 'green' | 'yellow' | 'red'; reason: string } {
   const redLimit = redThreshold * totalEntities;
+  const thresholdPercentage = (redThreshold * 100).toFixed(1);
 
   if (failures === 0) {
-    return { color: 'green', reason: 'All checks passed.' };
+    return { 
+      color: 'green', 
+      reason: `All ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'} passed the check (threshold: ${thresholdPercentage}%).`,
+    };
   } else if (failures > redLimit) {
     return {
       color: 'red',
-      reason: `${failures} ${failures === 1 ? 'failure' : 'failures'}.`,
-    };
-  } else {
-    return {
-      color: 'yellow',
-      reason: `${failures} minor ${failures === 1 ? 'issue' : 'issues'}.`,
+      reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'} failed the check with a threshold of ${thresholdPercentage}%.`,
     };
   }
+  return {
+    color: 'yellow',
+    reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'} failed the check with a threshold of ${thresholdPercentage}%.`,
+  };
+
 }
 
 /**
@@ -211,7 +215,7 @@ export const getGitHubSecurityFacts = async (
       JSON.stringify(response, null, 2),
     );
 
-    const facts = response?.['githubAdvancedSecurityFactRetriever']?.facts;
+    const facts = response?.githubAdvancedSecurityFactRetriever?.facts;
 
     if (!facts) {
       console.error(

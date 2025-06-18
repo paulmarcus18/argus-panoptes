@@ -17,10 +17,11 @@
     "test:all": "backstage-cli repo test --coverage",
     "test:e2e": "playwright test",
     "fix": "backstage-cli repo fix",
-    "lint": "backstage-cli repo lint --since origin/master",
+    "lint": "backstage-cli repo lint --since origin/main",
     "lint:all": "backstage-cli repo lint",
     "prettier:check": "prettier --check .",
-    "new": "backstage-cli new"
+    "new": "backstage-cli new",
+    "prettier:write": "prettier --write ."
   },
   "workspaces": {
     "packages": [
@@ -31,18 +32,15 @@
   "devDependencies": {
     "@backstage/cli": "^0.32.1",
     "@backstage/e2e-test-utils": "^0.1.1",
-    "@eslint/js": "^9.28.0",
     "@playwright/test": "^1.32.3",
     "@types/adm-zip": "^0",
     "@types/jest": "^29.5.14",
     "@types/lodash": "^4.17.16",
-    "eslint": "^9.28.0",
     "jest": "^29.7.0",
     "node-gyp": "^10.0.0",
     "prettier": "^2.3.2",
     "ts-jest": "^29.3.2",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.33.1"
+    "typescript": "^5.8.3"
   },
   "resolutions": {
     "@types/react": "^18",

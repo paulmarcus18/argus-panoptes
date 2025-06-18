@@ -160,27 +160,30 @@ export const ReportingSemaphoreDialog: React.FC<
         const failures = results.filter(r => r.failedCheck).length;
 
         // 4. Determine traffic light color
-        const { color } = determineSemaphoreColor(
+        const { color, reason } = determineSemaphoreColor(
           failures,
           entities.length,
           redThreshold,
         );
 
-        let summary = 'Code quality is excellent with no significant issues.';
+        // Prepare summary message
+        let summary = reason;
         if (color === 'red') {
-          summary = 'Critical code quality issues require immediate attention.';
+          summary += ' Critical attention required.';
         } else if (color === 'yellow') {
-          summary = 'Code quality issues need to be addressed before release.';
+          summary += ' Issues should be addressed before release.';
+        } else {
+          summary += ' Code quality is good.';
         }
 
         // 5. Bottom 5 repos by success rate
         const lowest = [...results]
           .sort((a, b) => a.successRate - b.successRate)
           .slice(0, 5)
-          .map(({ name, url, successRate }) => ({
+          .map(({ name, url, successRate: repoSuccessRate }) => ({
             name,
             url,
-            successRate,
+            successRate: repoSuccessRate,
           }));
 
         setMetrics({

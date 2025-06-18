@@ -10,4 +10,5 @@ spec:
     email: identity_team@yourcompany.com
   children: [] # List other sub-teams here if you want
   members:
-    - ghristov 
+    - identity-team-member
+    - both-teams-member

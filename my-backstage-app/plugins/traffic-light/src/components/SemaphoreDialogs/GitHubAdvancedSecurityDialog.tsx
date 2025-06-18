@@ -8,8 +8,7 @@ import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { GithubAdvancedSecurityUtils } from '../../utils/githubAdvancedSecurityUtils';
 import { SemaphoreData, IssueDetail, Severity } from './types';
-import { calculateGitHubSecurityTrafficLight } from '../Semaphores/GitHubSecurityTrafficLight';
-import {extractSecurityThresholds} from '../Semaphores/GitHubSecurityTrafficLight'
+import { calculateGitHubSecurityTrafficLight, extractSecurityThresholds } from '../Semaphores/GitHubSecurityTrafficLight';
 import type { GridSize } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
@@ -136,10 +135,10 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
         // Get detailed security data (for metrics and details)
         const results = securityCheckResults;
 
-        let critical = 0,
-          high = 0,
-          medium = 0,
-          low = 0;
+        let critical = 0;
+        let  high = 0;
+        let  medium = 0;
+        let  low = 0;
         const details: IssueDetail[] = [];
 
         results.forEach(result => {
@@ -229,17 +228,21 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
           summary = trafficLightResult.reason;
         } else {
           // Fallback to simple logic if no thresholds available
-          color = critical > 0 || high > 0
-            ? 'red'
-            : medium > 0 || low > 0
-            ? 'yellow'
-            : 'green';
-          
-          summary = color === 'red'
-            ? 'Critical security issues require immediate attention.'
-            : color === 'yellow'
-            ? 'Security issues need to be addressed.'
-            : 'No security issues found.';
+          if (critical > 0 || high > 0) {
+            color = 'red';
+          } else if (medium > 0 || low > 0) {
+            color = 'yellow';
+          } else {
+            color = 'green';
+          }
+
+          if (color === 'red') {
+            summary = 'Critical security issues require immediate attention.';
+          } else if (color === 'yellow') {
+            summary = 'Security issues need to be addressed.';
+          } else {
+            summary = 'No security issues found.';
+          }
         }
 
         // Sort details by severity before setting the data

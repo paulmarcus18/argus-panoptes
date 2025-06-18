@@ -40,7 +40,7 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const sonarUtils = React.useMemo(() => new SonarCloudUtils(), [techInsightsApi]);
+  const sonarUtils = React.useMemo(() => new SonarCloudUtils(), []);
 
   const [data, setData] = React.useState<SemaphoreData>({
     color: 'gray',

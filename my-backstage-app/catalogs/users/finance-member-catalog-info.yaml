@@ -1,10 +1,10 @@
 apiVersion: backstage.io/v1alpha1
 kind: User
 metadata:
-  name: vpetkova
+  name: finance-team-member
 spec:
   profile:
-    displayName: Vesela Petkova
-    email: vesela-petkova@example.com
+    displayName: Finance 1
+    email: finance@example.com
   memberOf: 
     - finance-team

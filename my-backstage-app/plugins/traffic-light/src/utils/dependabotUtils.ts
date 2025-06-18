@@ -1,8 +1,6 @@
 import {
   CompoundEntityRef,
   stringifyEntityRef,
-  Entity,
-  getCompoundEntityRef,
 } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
@@ -30,7 +28,7 @@ export interface DependabotChecks {
  * methods for Dependabot facts & checks.
  */
 export class DependabotUtils {
-  constructor() {}
+
 
   /**
    * Fetches Dependabot facts for a given entity using the Tech Insights API.
@@ -42,7 +40,7 @@ export class DependabotUtils {
   ): Promise<DependabotFacts> {
     try {
       const response = await api.getFacts(entity, ['dependabotFactRetriever']);
-      const facts = response?.['dependabotFactRetriever']?.facts;
+      const facts = response?.dependabotFactRetriever?.facts;
 
       if (!facts) {
         console.error('❌ No facts found for entity:', stringifyEntityRef(entity));

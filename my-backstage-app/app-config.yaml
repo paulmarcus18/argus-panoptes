@@ -28,17 +28,17 @@ backend:
   # This is for local development only, it is not recommended to use this in production
   # The production database configuration is stored in app-config.production.yaml
   database:
-    # client: better-sqlite3
-    # connection: ':memory:'
+    client: better-sqlite3
+    connection: ':memory:'
     #client: better-sqlite3
     #connection: ':memory:',
-    client: pg
-    connection:
-      host: ${POSTGRES_HOST}
-      port: ${POSTGRES_PORT}
-      user: ${POSTGRES_USER}
-      password: ${POSTGRES_PASSWORD}
-      database: '${POSTGRES_DATABASE}'
+    # client: pg
+    # connection:
+    #   host: ${POSTGRES_HOST}
+    #   port: ${POSTGRES_PORT}
+    #   user: ${POSTGRES_USER}
+    #   password: ${POSTGRES_PASSWORD}
+    #   database: '${POSTGRES_DATABASE}'
   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
 
 integrations:
@@ -77,9 +77,8 @@ techdocs:
 
 auth:
   providers:
-    guest:
-      userEntityRef: user:development/vpetkova
-      # userEntityRef: user:default/ghristov
+    guest: 
+      userEntityRef: user:development/both-teams-member
 
 scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
@@ -89,7 +88,7 @@ catalog:
     entityFilename: catalog-info.yaml
     pullRequestBranchName: backstage-integration
   rules:
-    - allow: [Component, System, API, Resource, Location, Group]
+    - allow: [Component, System, API, Resource, Location, Group, User]
   locations:
     # File locations are relative to the backend process, typically `packages/backend`
     #Groups
@@ -101,6 +100,16 @@ catalog:
 
     - type: file
       target: ../../catalogs/groups/identity-team.yaml
+
+    # Users
+    - type: file
+      target: ../../catalogs/users/finance-member-catalog-info.yaml
+
+    - type: file
+      target: ../../catalogs/users/identity-member-catalog-info.yaml
+
+    - type: file
+      target: ../../catalogs/users/both-teams-member-catalog-info.yaml
 
     # Systems
     - type: file
@@ -218,7 +227,7 @@ techInsights:
       enabled: true
       cadence: '0 */4 * * *' # Every 4 hours
     githubAdvancedSecurityFactRetriever:
-      cadence: '0 * * * *' # every hour
+      cadence: '*/2 * * * *' # every minute
   factChecker:
     checks:
       noHighBugsCheck:

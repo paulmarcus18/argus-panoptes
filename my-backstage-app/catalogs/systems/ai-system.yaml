@@ -57,4 +57,4 @@ metadata:
     tech-insights.io/reporting-success-rate-operator: 'greaterThanInclusive'
 spec:
   owner: finance-team
-  members: [vpetkova]
+  members: [finance-team-member, both-teams-member]

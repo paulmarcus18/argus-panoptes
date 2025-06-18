@@ -6,7 +6,6 @@ import {
 } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-import { GoogleGenAI } from '@google/genai';
 import {
   Box,
   CircularProgress,
