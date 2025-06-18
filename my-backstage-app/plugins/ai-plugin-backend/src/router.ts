@@ -106,7 +106,7 @@ export async function createRouter({
       const result = await response.json();
       res.json(result);
     } catch (err) {
-      console.error('Error contacting OpenRouter:', err);
+      console.error('Error contacting Gemini:', err);
       res.status(500).json({ error: 'Failed to generate summary' });
     }
   });
