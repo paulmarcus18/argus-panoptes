@@ -270,7 +270,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
       githubEntities.map(async entity => {
         try {
           // Parse the github repo information from entity annotations
-          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] || '';
+          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] ?? '';
           const [owner, repoName] = projectSlug.split('/');
 
           if (!owner || !repoName) {
@@ -314,7 +314,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
           return {
             entity: {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             },
             facts: pipelineSummary,

@@ -14,7 +14,7 @@ export const RepoFetchComponent: React.FC<Props> = ({ onData }) => {
 
         const simplified = data.map((repo: any) => ({
           name: repo.name,
-          description: repo.description || 'No description',
+          description: repo.description ?? 'No description',
         }));
 
         onData(simplified); // This must be a function

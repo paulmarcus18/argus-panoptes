@@ -19,8 +19,8 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  SelectChangeEvent,
 } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material';
 
 // Type definitions for DORA metrics data
 export type DataPoint = {
@@ -139,7 +139,7 @@ export function useMetricsData(
             const json = await response.json();
 
             // Transform API response to DataPoint format
-            const dataPoints: DataPoint[] = (json || []).map((dp: any) => {
+            const dataPoints: DataPoint[] = (json ?? []).map((dp: any) => {
               let date: Date | undefined;
                 if (dp.data_key) {
                   if (aggregation === 'daily') {

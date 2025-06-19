@@ -215,7 +215,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
       githubEntities.map(async entity => {
         try {
           // Parse the github repo information from entity annotations
-          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] || '';
+          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] ?? '';
           const [owner, repoName] = projectSlug.split('/');
 
           if (!owner || !repoName) {
@@ -260,7 +260,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
           }
 
           // Fetch the target branch from the entity annotations file 
-          const targetBranch = entity.metadata.annotations?.['reporting/target-branch'] || 'main';
+          const targetBranch = entity.metadata.annotations?.['reporting/target-branch'] ?? 'main';
 
           const workflowMetricsPromises = includedWorkflowIds.map(
             async workflowId => {
@@ -273,7 +273,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
               );
               if (!lastRun) return null;
 
-              const workflowName = workflowDefinitions.find(w => w.id === workflowId)?.name || `Workflow ID ${workflowId}`;
+              const workflowName = workflowDefinitions.find(w => w.id === workflowId)?.name ?? `Workflow ID ${workflowId}`;
               let lastRunStatus: 'success' | 'failure' | 'unknown' = 'unknown';
               if (lastRun.status === 'completed') {
                 lastRunStatus = lastRun.conclusion === 'success' ? 'success' : 'failure';
@@ -296,7 +296,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
           return {
             entity: {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             },
             facts: reportingSummary,
