@@ -15,7 +15,8 @@ export const aiPlugin = createBackendPlugin({
         httpRouter: coreServices.httpRouter,
         config: coreServices.rootConfig, // ✅ add this line
       },
-      async init({ logger, database, httpRouter, config }) { // ✅ include config here
+      async init({ logger, database, httpRouter, config }) {
+        // ✅ include config here
         const db = await database.getClient();
         console.log('The backend is getting the db correctly', db.schema);
         const hasTable = await db.schema.hasTable('ai_summaries');
