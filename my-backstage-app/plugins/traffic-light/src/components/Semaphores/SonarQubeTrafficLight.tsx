@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -122,7 +122,7 @@ export const SonarQubeTrafficLight = ({
   const [reason, setReason] = useState('Loading SonarQube data...');
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const sonarUtils = React.useMemo(
+  const sonarUtils = useMemo(
       () => new SonarCloudUtils(),
       [],
     );
@@ -141,7 +141,7 @@ export const SonarQubeTrafficLight = ({
     };
 
     fetchData();
-  }, [entities, techInsightsApi]);
+  }, [entities, techInsightsApi, catalogApi, sonarUtils]);
 
   return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
 };

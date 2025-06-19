@@ -58,8 +58,6 @@ export const AISummaries = () => {
         const result = await generateSummaries(commitMessagesBySystem, apiBaseUrl, fetchFn);
         await postSummaries(result, today, apiBaseUrl, fetch);
         setMessagesBySystem(result);
-      } catch (err) {
-        console.error('Error in callAI:', err);
       } finally {
         setLoading(false); // ✅ Always turn off loading at the end
       }
@@ -94,7 +92,6 @@ export const AISummaries = () => {
         return;
       }
     } catch (err) {
-      console.error('Error fetching summaries:', err);
       await callAI(); // fallback in case of failure
     }
   };

@@ -1,6 +1,5 @@
 import {
   CompoundEntityRef,
-  stringifyEntityRef,
 } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
@@ -51,7 +50,6 @@ async function loadWorkflowConfig(): Promise<WorkflowConfig> {
       }
     );
   } catch (err) {
-    console.error('Config load error:', err);
     return { exclude: [], critical: [], sampleIfNoCritical: 0 };
   }
 }
@@ -69,7 +67,6 @@ export async function getGitHubRepoStatus(
   });
 
   if (!response.ok) {
-    console.error('Failed to fetch GitHub data:', response.statusText);
     return {
       color: 'red',
       reason: `GitHub API error: ${response.statusText} `,
@@ -201,27 +198,13 @@ export const getGitHubSecurityFacts = async (
   entity: CompoundEntityRef,
 ): Promise<GitHubSecurityFacts> => {
   try {
-    console.log(
-      'Fetching GitHub Security facts for entity:',
-      stringifyEntityRef(entity),
-    );
-
     const response = await api.getFacts(entity, [
       'githubAdvancedSecurityFactRetriever',
     ]);
 
-    console.log(
-      'Raw Tech Insights API response:',
-      JSON.stringify(response, null, 2),
-    );
-
     const facts = response?.githubAdvancedSecurityFactRetriever?.facts;
 
     if (!facts) {
-      console.error(
-        'No GitHub Security facts found for entity:',
-        stringifyEntityRef(entity),
-      );
       return {
         openCodeScanningAlertCount: 0,
         openSecretScanningAlertCount: 0,
@@ -247,11 +230,6 @@ export const getGitHubSecurityFacts = async (
         secretScanningAlerts as GitHubSecurityFacts['secretScanningAlerts'],
     };
   } catch (error) {
-    console.error(
-      'Error fetching GitHub Security facts for entity:',
-      stringifyEntityRef(entity),
-      error,
-    );
     return {
       openCodeScanningAlertCount: 0,
       openSecretScanningAlertCount: 0,

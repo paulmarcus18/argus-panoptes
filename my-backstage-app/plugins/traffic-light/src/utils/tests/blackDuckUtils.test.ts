@@ -1,7 +1,7 @@
 import { BlackDuckUtils, DEFAULT_METRICS, DEFAULT_CHECKS } from '../blackDuckUtils';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef, Entity } from '@backstage/catalog-model';
-import { DynamicThresholdResult, DynamicThresholdCheck } from '../../../../tech-insights-backend-module-traffic-light-backend-module/src/argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
+import type { DynamicThresholdResult, DynamicThresholdCheck } from '@internal/plugin-tech-insights-backend-module-traffic-light-backend-module';
 
 // Mock the TechInsightsApi
 const mockTechInsightsApi = {

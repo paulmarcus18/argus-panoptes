@@ -1,4 +1,4 @@
-import React from 'react';
+import {useMemo, useState, useEffect} from 'react';
 import { Grid, Paper, Typography, List, ListItem, ListItemText } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -62,17 +62,17 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
 }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
-  const dependabotUtils = React.useMemo(() => new DependabotUtils(), []);
-  const [data, setData] = React.useState<SemaphoreData>({
+  const dependabotUtils = useMemo(() => new DependabotUtils(), []);
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   });
-  const [topRepos, setTopRepos] = React.useState<RepoAlertSummary[]>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [topRepos, setTopRepos] = useState<RepoAlertSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0  ) {
       setData({
       color: 'gray',
@@ -175,7 +175,7 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
     };
 
     fetchDependabotData();
-  }, [open, entities, dependabotUtils, techInsightsApi]);
+  }, [open, entities, dependabotUtils, techInsightsApi, system]);
 
   const getRepoClassName = (repo: RepoAlertSummary) => {
     if (repo.critical > 0) return `${classes.repoItem} ${classes.criticalRepo}`;

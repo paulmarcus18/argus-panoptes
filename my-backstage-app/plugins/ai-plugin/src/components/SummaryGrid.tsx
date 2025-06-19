@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box } from '@mui/material';
 import { SummaryPerRepo } from '../../utils/types';
 import { SummaryCard } from './SummaryCard';
@@ -14,7 +13,6 @@ interface SummaryGridProps {
 
 export const SummaryGrid = ({
   filteredMessages,
-  fullMessages,
   repoSearch,
   handleDownload,
 }: SummaryGridProps) => {

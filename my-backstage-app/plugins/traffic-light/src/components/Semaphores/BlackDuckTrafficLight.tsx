@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -91,12 +91,14 @@ export const determineBlackDuckColor = async (
     if (Object.values(counts).every(v => v === 0)) {
       // All checks passed for all entities
       return { color: 'green', reason: 'All BlackDuck checks passed' };
-    } else if (counts.criticalSecurityCheckFails > 0 || redCount >= 1) {
+    } else if (counts.criticalSecurityCheckFails > 0 ) {
         // Critical security issues or at least one check failed for more than 1/3 of the entities
-        return { color: 'red', reason: `Critical security checks found or other severe security issues detected` };
-    } 
+        return { color: 'red', reason: `Critical security issues found: ${counts.criticalSecurityCheckFails} entities failed the critical security check.` };
+    } else if (redCount >= 1) {
+        return { color: 'red', reason: `Severe security issues detected: ${redCount} checks failed by at least ${proportion}% of the entities.` };
+    }
     // Some security issues, but no critical issues and no checks failed for more than 1/3 of the entities
-    return { color: 'yellow', reason: `Some security issues detected` };
+    return { color: 'yellow', reason: `Some security issues detected: ${counts.highSecurityCheckFails} entities failed the high security risks check, ${counts.mediumSecurityCheckFails} entities failed the medium security risks check.` };
    
   } catch (err) {
     return { color: 'gray', reason: 'Error fetching BlackDuck data' };
@@ -126,7 +128,7 @@ export const BlackDuckTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
-  const blackDuckUtils = React.useMemo(
+  const blackDuckUtils = useMemo(
     () => new BlackDuckUtils(),
     [],
   );
@@ -145,7 +147,7 @@ export const BlackDuckTrafficLight = ({
     };
 
     fetchData();
-  }, [entities, techInsightsApi]);
+  }, [entities, techInsightsApi, catalogApi, blackDuckUtils]);
 
   return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
 };
