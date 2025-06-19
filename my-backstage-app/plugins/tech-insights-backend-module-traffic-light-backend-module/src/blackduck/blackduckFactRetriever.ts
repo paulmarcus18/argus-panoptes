@@ -45,9 +45,9 @@ type BD_VERISON_DETAIL = {
 };
 
 // Define the type for the Black Duck REST API response
-type BD_REST_API_RESPONSE = {
+type BD_REST_API_RESPONSE<T> = {
     totalCount: number;
-    items: [];
+    items: T[];
     appliedFilters: [];
     _meta: META;
 };
@@ -123,8 +123,9 @@ export const createBlackDuckFactRetriever = (
 
                 try {
                     // Retrieve the project from Black Duck
+                    const projectQuery = `name:${projectName}`;
                     const projectRes = await fetch(
-                        `${host}/projects?limit=999&q=${encodeURIComponent(`name:${projectName}`)}`,
+                        `${host}/projects?limit=999&q=${encodeURIComponent(projectQuery)}`,
                         {
                             method: 'GET',
                             headers: {
@@ -141,18 +142,12 @@ export const createBlackDuckFactRetriever = (
                     }
 
                     // Parse the project response
-                    const project = await projectRes.json() as Promise<BD_REST_API_RESPONSE>;	
-
-                    // Initialize projectDetail and versionDetail variables
-                    let projectDetail: BD_PROJECT_DETAIL | any;
-                    let versionDetail: BD_VERISON_DETAIL | any;
+                    const project = await projectRes.json() as BD_REST_API_RESPONSE<BD_PROJECT_DETAIL>;	
 
                     // Find the project detail by name
-                    (await project).items.forEach((item: any) => {
-                        if (item.name === projectName) {
-                            projectDetail = item;
-                        }
-                    });
+                    const projectDetail = project.items.find(
+                        item => item.name === projectName,
+                    );
 
                     // If projectDetail is not found, log an error
                     if (projectDetail === undefined) {
@@ -160,10 +155,9 @@ export const createBlackDuckFactRetriever = (
                     }
 
                     // Retrieve the project version from Black Duck
+                    const versionQuery = `versionName:${projectVersion}`;
                     const versionRes = await fetch(
-                        `${projectDetail._meta.href}/versions?limit=999&q=${encodeURIComponent(
-                            `versionName:${projectVersion}`,
-                        )}`,
+                        `${projectDetail._meta.href}/versions?limit=999&q=${encodeURIComponent(versionQuery)}`,
                         {
                             method: 'GET',
                             headers: {
@@ -180,15 +174,13 @@ export const createBlackDuckFactRetriever = (
                     }
 
                     // Parse the version response
-                    const version = await versionRes.json() as Promise<BD_REST_API_RESPONSE>;
+                    // Parse the version response with the correct generic type
+                    const version = await versionRes.json() as BD_REST_API_RESPONSE<BD_VERISON_DETAIL>;
 
                     // Find the version detail by version name
-                    (await version).items.forEach((item: any) => {
-                        if (item.versionName === projectVersion) {
-                            versionDetail = item;
-                        }
-                    });
-
+                    const versionDetail = version.items.find(
+                        item => item.versionName === projectVersion,
+                    );
                     // If versionDetail is not found, log an error
                     if (versionDetail === undefined) { 
                         return null;

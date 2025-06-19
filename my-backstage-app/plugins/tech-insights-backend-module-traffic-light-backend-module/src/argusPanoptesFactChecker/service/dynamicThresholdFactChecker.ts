@@ -131,7 +131,7 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
       checksToRun.map(async check => {
         // Get the threshold value from the system entity annotation
         const thresholdStr = systemEntity.metadata.annotations?.[check.annotationKeyThreshold];
-        const thresholdNumber = parseFloat(thresholdStr || 'NaN');
+        const thresholdNumber = parseFloat(thresholdStr ?? 'NaN');
         const threshold = isNaN(thresholdNumber) ? thresholdStr : thresholdNumber;
 
         // If threshold is missing or invalid, log a warning and return result: false
@@ -156,7 +156,7 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
         const result = evaluateCheckCondition(operator, rawValue, threshold);
 
         // Log the result of the check
-        this.logger.info(`The result from the check is ${result} for ${check.id} on entity ${entityRef} part of system ${systemName}, threshold is ${operator} ${threshold} with type ${typeof threshold}, rawValue is ${rawValue}`);
+        this.logger.info(`The result from the check is ${result} for ${check.id} on entity ${entityRef} part of system ${systemName}, threshold is ${operator} ${threshold} with type ${typeof threshold}, rawValue is ${JSON.stringify(rawValue)}`);
 
         const fact: FactResponse[string] = {
           id: factId,
