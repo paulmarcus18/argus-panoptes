@@ -104,8 +104,8 @@ export async function createRouter({
       const result = await response.json();
       return res.json(result);
     } catch (err) {
-      console.error('Error contacting Gemini:', err); // Fixed the log message too
-      return res.status(500).json({ error: 'Failed to generate content' });
+      console.error('Error contacting Gemini:', err);
+      res.status(500).json({ error: 'Failed to generate summary' });
     }
   });
 
