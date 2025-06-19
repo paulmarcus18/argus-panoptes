@@ -9,14 +9,15 @@ import { BlackDuckUtils } from '../../../utils/blackDuckUtils';
 // Mock the BaseTrafficLight component
 jest.mock('../BaseTrafficLight', () => ({
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
-    <div 
+    <button 
       data-testid="base-traffic-light" 
-      data-color={color}
-      data-tooltip={tooltip}
+      data-color={color} 
+      data-tooltip={tooltip} 
       onClick={onClick}
+      type="button"
     >
       Traffic Light: {color}
-    </div>
+    </button>
   ),
 }));
 

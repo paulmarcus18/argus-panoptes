@@ -44,9 +44,9 @@ export const TrafficComponent = () => {
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   const [repos, setRepos] = useState<any[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogTitle, setDialogTitle] = useState('');
-  const [dialogItems, setDialogItems] = useState<any[]>([]);
+  // const [ setDialogOpen] = useState(false);
+  // const [ setDialogTitle] = useState('');
+  // const [ setDialogItems] = useState<any[]>([]);
   // const [setDetailedDialogOpen] = useState(false);
   // const [currentSemaphoreType, setCurrentSemaphoreType] = useState('');
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
@@ -72,11 +72,11 @@ export const TrafficComponent = () => {
     useState(false);
   const [DependabotDialogOpen, setDependabotDialogOpen] = useState(false);
 
-  const handleClick = (title: string, items: any[]) => {
-    setDialogTitle(title);
-    setDialogItems(items);
-    setDialogOpen(true);
-  };
+  // const handleClick = (title: string, items: any[]) => {
+  //   setDialogTitle(title);
+  //   setDialogItems(items);
+  //   setDialogOpen(true);
+  // };
 
   const handleSemaphoreClick = (semaphoreType: string) => {
     switch (semaphoreType) {
@@ -108,11 +108,11 @@ export const TrafficComponent = () => {
       case 'CodeScene':
         // For these, use the existing detailed dialog
         // setCurrentSemaphoreType(semaphoreType);
-        handleClick('CodeScene Details', []);
+        // handleClick('CodeScene Details', []);
         // setDetailedDialogOpen(true);
         break;
       default:
-        console.warn(`No dialog handler for semaphore type: ${semaphoreType}`);
+        break;
     }
   };
 
@@ -154,7 +154,6 @@ export const TrafficComponent = () => {
 
   useEffect(() => {
     const fetchCatalogRepos = async () => {
-      try {
         // Get current user identity
         const { userEntityRef } = await identityApi.getBackstageIdentity();
         const userName = userEntityRef.split('/').pop();
@@ -215,13 +214,10 @@ export const TrafficComponent = () => {
           const initialSystem = userOwnedSystems[0];
           setSelectedSystem(initialSystem);
         }
-      } catch (err) {
-        console.error('Failed to load catalog entities', err);
-      }
     };
 
     fetchCatalogRepos();
-  }, [catalogApi]);
+  }, [catalogApi, identityApi]);
 
   useEffect(() => {
     const filtered = repos.filter(repo => {
@@ -294,7 +290,6 @@ export const TrafficComponent = () => {
                   onChange={e => setSystemSearchTerm(e.target.value)}
                   variant="outlined"
                   size="small"
-                  autoFocus
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">

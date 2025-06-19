@@ -30,8 +30,8 @@ backend:
   database:
     # client: better-sqlite3
     # connection: ':memory:'
-    #client: better-sqlite3
-    #connection: ':memory:',
+    # #client: better-sqlite3
+    # #connection: ':memory:',
     client: pg
     connection:
       host: ${POSTGRES_HOST}
@@ -47,7 +47,7 @@ integrations:
       token: ${GITHUB_TOKEN}
   azure:
     - host: dev.azure.com
-      token: ${AZURE_DEVOPS_TOKEN}
+      token: 9TtVK6TtMAK1qFuJhlRq1Fjo6yBIeNVEvq7WX8gJ9Q0nvf6BoWcWJQQJ99BFACAAAAAAAAAAAAASAZDO1zjK
   gemini:
     - token: ${GEMINI_TOKEN}
 proxy:
@@ -77,7 +77,7 @@ techdocs:
 
 auth:
   providers:
-    guest: 
+    guest:
       userEntityRef: user:development/both-teams-member
 
 scaffolder:

@@ -1,4 +1,4 @@
-import React from 'react';
+import {useMemo, useState, useEffect} from 'react';
 import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -42,28 +42,28 @@ export const FoundationSemaphoreDialog: React.FC<
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const foundationUtils = React.useMemo(() => new FoundationUtils(), []);
+  const foundationUtils = useMemo(() => new FoundationUtils(), []);
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [metrics, setMetrics] = React.useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [metrics, setMetrics] = useState({
     totalSuccess: 0,
     totalFailure: 0,
     totalRuns: 0,
     successRate: 0,
   });
 
-  const [lowestSuccessRepos, setLowestSuccessRepos] = React.useState<
+  const [lowestSuccessRepos, setLowestSuccessRepos] = useState<
     { name: string; url: string; successRate: number }[]
   >([]);
 
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
 
     setIsLoading(true);
@@ -74,7 +74,6 @@ export const FoundationSemaphoreDialog: React.FC<
         let redThreshold = 0.33;
         let configuredRepoNames: string[] = [];
         
-        try {
           const systemName = entities[0].spec?.system;
           const namespace = entities[0].metadata.namespace || 'default';
 
@@ -108,11 +107,6 @@ export const FoundationSemaphoreDialog: React.FC<
                 .filter(name => name.length > 0);
             }
           }
-        } catch (err) {
-          console.warn(
-            'Could not fetch system configuration; using defaults',
-          );
-        }
 
         // 2. Filter entities to only include configured repositories
         const filteredEntities = configuredRepoNames.length > 0 
@@ -243,7 +237,6 @@ export const FoundationSemaphoreDialog: React.FC<
           details: [],
         });
       } catch (e) {
-        console.error('Failed to fetch Foundation pipeline data:', e);
         setMetrics({
           totalSuccess: 0,
           totalFailure: 0,

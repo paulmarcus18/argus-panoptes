@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -23,7 +23,7 @@ export const PreproductionTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
-  const preproductionUtils = React.useMemo(() => new PreproductionUtils(), []);
+  const preproductionUtils = useMemo(() => new PreproductionUtils(), []);
 
   useEffect(() => {
     const fetchData = async () => {

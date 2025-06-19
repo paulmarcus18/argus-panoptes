@@ -208,7 +208,6 @@ export async function get_monthly_mttr(
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
-  // TODO: adauga projects dupa ce schimbi slq queryul
   const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
   const dateTo = new Date(to * 1000).toISOString().split('T')[0];
   const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
@@ -280,6 +279,8 @@ export async function createDoraService({
                 return get_monthly_mttr(pool, projects, from, to)
               }
               break;
+            default:
+              logger.error(`Unsupported metric type: ${type}`);
           }
         
           throw new Error(`Unsupported aggregation: ${aggregation}`);

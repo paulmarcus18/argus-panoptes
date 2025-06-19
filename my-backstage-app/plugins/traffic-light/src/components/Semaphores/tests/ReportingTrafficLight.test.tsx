@@ -10,14 +10,15 @@ import { ReportingUtils } from '../../../utils/reportingUtils';
 // Mock the BaseTrafficLight component
 jest.mock('../BaseTrafficLight', () => ({
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
-    <div
-      data-testid="base-traffic-light"
-      data-color={color}
-      data-tooltip={tooltip}
+    <button 
+      data-testid="base-traffic-light" 
+      data-color={color} 
+      data-tooltip={tooltip} 
       onClick={onClick}
+      type="button"
     >
       Traffic Light: {color}
-    </div>
+    </button>
   ),
 }));
 
