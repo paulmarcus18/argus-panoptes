@@ -20,6 +20,7 @@ import {
   Tooltip,
   Menu,
   CircularProgress,
+  SelectChangeEvent,
 } from '@mui/material';
 import { FileDownload, PictureAsPdf, ImageOutlined } from '@mui/icons-material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
@@ -30,7 +31,6 @@ import {
   useProjects,
 } from './ExampleFetchComponent/ExampleFetchComponent';
 import { MetricChart } from './MetricChart';
-import { SelectChangeEvent } from '@mui/material';
 
 // Metric types
 type MetricType = {
@@ -92,7 +92,7 @@ export const DoraDashboard = () => {
     const endDate = new Date();
     const startDate = new Date();
     const defaultDays =
-      AGGREGATION_OPTIONS.find(opt => opt.value === aggType)?.defaultDays || 30;
+      AGGREGATION_OPTIONS.find(opt => opt.value === aggType)?.defaultDays ?? 30;
     startDate.setDate(startDate.getDate() - defaultDays);
     return { startDate, endDate };
   };
@@ -178,7 +178,7 @@ export const DoraDashboard = () => {
 
     if (newValue.includes('all')) {
       const allSelected =
-        selectedProjects.length === (availableProjects?.length || 0);
+        selectedProjects.length === (availableProjects?.length ?? 0);
       // Toggle behavior:
       setSelectedProjects(allSelected ? [] : availableProjects || []);
     } else {
@@ -492,7 +492,7 @@ export const DoraDashboard = () => {
                 input={<OutlinedInput label="Projects" />}
                 renderValue={selected => {
                   if (selected.length === 0) return 'No projects selected';
-                  if (selected.length === (availableProjects?.length || 0))
+                  if (selected.length === (availableProjects?.length ?? 0))
                     return 'All Projects';
                   if (selected.length === 1) return selected[0];
                   return `${selected.length} projects selected`;
@@ -502,7 +502,7 @@ export const DoraDashboard = () => {
                   <Checkbox
                     checked={
                       selectedProjects.length ===
-                      (availableProjects?.length || 0)
+                      (availableProjects?.length ?? 0)
                     }
                   />
                   <ListItemText primary="All Projects" />

@@ -120,13 +120,13 @@ describe('DynamicThresholdFactChecker', () => {
       );
     });
     
-    // TestL error is thrown when system name is not specified
+    // Test: error is thrown when system name is not specified
     test('throws error when component does not specify a system', async () => {
       const entityWithoutSystem = { ...testComponentEntity, spec: { type: 'service' } };
       mockCatalogApi.getEntityByRef.mockResolvedValueOnce(entityWithoutSystem);
       
       await expect(factChecker.runChecks(testEntityRef)).rejects.toThrow(
-        `Component test-component does not specify a system.`
+        `The 'spec.system' field for entity '${testEntityRef}' is missing, empty, or not a string.`,
       );
     });
     

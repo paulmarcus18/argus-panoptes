@@ -215,16 +215,16 @@ export const createBlackDuckFactRetriever = (
 
                     // Extract security risk facts from the risk profile
                     const facts = {
-                        security_risks_critical: riskProfile?.categories.SECURITY.CRITICAL || 0,
-                        security_risks_high: riskProfile?.categories.SECURITY.HIGH || 0,
-                        security_risks_medium: riskProfile?.categories.SECURITY.MEDIUM || 0,
+                        security_risks_critical: riskProfile?.categories.SECURITY.CRITICAL ?? 0,
+                        security_risks_high: riskProfile?.categories.SECURITY.HIGH ?? 0,
+                        security_risks_medium: riskProfile?.categories.SECURITY.MEDIUM ?? 0,
                     };
 
                     // Return the facts associated with this entity
                     return {
                         entity: {
                             name: entity.metadata.name,
-                            namespace: entity.metadata.namespace || 'default',
+                            namespace: entity.metadata.namespace ?? 'default',
                             kind: entity.kind,
                         },
                         facts,

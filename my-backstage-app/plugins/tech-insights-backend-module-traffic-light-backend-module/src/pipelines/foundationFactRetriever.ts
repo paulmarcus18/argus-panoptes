@@ -339,7 +339,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
           return {
             entity: {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             },
             facts: pipelineSummary,
