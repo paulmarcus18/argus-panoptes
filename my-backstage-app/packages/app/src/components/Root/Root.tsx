@@ -3,6 +3,7 @@ import { makeStyles } from '@material-ui/core';
 import HomeIcon from '@material-ui/icons/Home';
 import ExtensionIcon from '@material-ui/icons/Extension';
 import LibraryBooks from '@material-ui/icons/LibraryBooks';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import CreateComponentIcon from '@material-ui/icons/AddCircleOutline';
 import LogoFull from './LogoFull';
 import LogoIcon from './LogoIcon';
@@ -79,7 +80,7 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
         <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
         <SidebarItem icon={TrafficIcon} to="traffic-light" text="Traffic-Light Plugin" />
         <SidebarItem icon={AutoAwesomeIcon} to="ai-plugin" text="AI-Summary Plugin" />
-        <SidebarItem icon={ExtensionIcon} to="dora-dashboard" text="DORA Plugin" />
+        <SidebarItem icon={BarChartIcon} to="dora-dashboard" text="DORA Plugin" />
         {/* End global nav */}
         <SidebarDivider />
         <SidebarScrollWrapper>
