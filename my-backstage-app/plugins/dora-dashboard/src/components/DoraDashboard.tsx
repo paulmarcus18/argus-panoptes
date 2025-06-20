@@ -551,6 +551,7 @@ export const DoraDashboard = () => {
                     },
                   }}
                 />
+
                 <DatePicker
                   label="End Date"
                   value={endDate}
@@ -564,12 +565,12 @@ export const DoraDashboard = () => {
                     },
                   }}
                 />
+
                 <Button
                   variant="contained"
                   color="primary"
                   onClick={handleApplyDateFilter}
                   sx={{ mt: { xs: 2, sm: 0 }, height: { sm: 56 } }}
-                  disabled={!startDate || !endDate}
                 >
                   Apply Date Filter
                 </Button>
