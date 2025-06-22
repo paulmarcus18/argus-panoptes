@@ -45,7 +45,12 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [projectBugs, setProjectBugs] = React.useState<
-    { project: string; bugCount: number; url: string; entities: { entityName: string; }[];}[]
+    {
+      project: string;
+      bugCount: number;
+      url: string;
+      entities: { entityName: string }[];
+    }[]
   >([]);
   const [data, setData] = React.useState<SemaphoreData>({
     color: 'gray',
@@ -98,7 +103,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
 
         const projectToEntitiesMap = new Map<
           string,
-          { entityName: string}[]
+          { entityName: string }[]
         >();
 
         for (const entity of entities) {
@@ -117,7 +122,8 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
               azureUtils.getAzureDevOpsBugChecks(techInsightsApi, ref),
             ]);
 
-            if (!entity.metadata.annotations?.['azure.com/bugs-query-id']) continue;
+            if (!entity.metadata.annotations?.['azure.com/bugs-query-id'])
+              continue;
 
             const orgName =
               entity.metadata.annotations?.['azure.com/organization'] ??
@@ -243,10 +249,11 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
                   </Typography>
 
                   {project.entities.length > 0 && (
-                  <Typography className={classes.metricLabel}>
-                    Entities: {project.entities.map(e => `${e.entityName}`).join(', ')}
-                  </Typography>
-                )}
+                    <Typography className={classes.metricLabel}>
+                      Entities:{' '}
+                      {project.entities.map(e => `${e.entityName}`).join(', ')}
+                    </Typography>
+                  )}
                 </Paper>
               </Grid>
             ))}

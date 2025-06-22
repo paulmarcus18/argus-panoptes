@@ -8,7 +8,10 @@ import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { GithubAdvancedSecurityUtils } from '../../utils/githubAdvancedSecurityUtils';
 import { SemaphoreData, IssueDetail, Severity } from './types';
-import { calculateGitHubSecurityTrafficLight, extractSecurityThresholds } from '../Semaphores/GitHubSecurityTrafficLight';
+import {
+  calculateGitHubSecurityTrafficLight,
+  extractSecurityThresholds,
+} from '../Semaphores/GitHubSecurityTrafficLight';
 import type { GridSize } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
@@ -68,7 +71,7 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  
+
   const githubASUtils = React.useMemo(
     () => new GithubAdvancedSecurityUtils(),
     [],
@@ -85,14 +88,14 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
   // Helper function to extract repository name from GitHub URL
   const extractRepoName = (url: string): string => {
     if (!url) return '';
-    
+
     const urlParts = url.split('/');
     const repoIndex = urlParts.indexOf('github.com');
-    
+
     if (repoIndex !== -1 && repoIndex + 2 < urlParts.length) {
       return `${urlParts[repoIndex + 1]}/${urlParts[repoIndex + 2]}`;
     }
-    
+
     return '';
   };
 
@@ -106,19 +109,28 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
         // Get system entity and thresholds (if available)
         let systemEntity: Entity | undefined;
         let thresholds: SecurityThresholds | undefined;
-        
+
         try {
           const systemName = entities[0].spec?.system;
           if (systemName) {
             systemEntity = await catalogApi.getEntityByRef({
               kind: 'System',
               namespace: entities[0].metadata.namespace || 'default',
-              name: typeof systemName === 'string' ? systemName : String(systemName),
+              name:
+                typeof systemName === 'string'
+                  ? systemName
+                  : String(systemName),
             });
-            thresholds = extractSecurityThresholds(systemEntity, entities.length);
+            thresholds = extractSecurityThresholds(
+              systemEntity,
+              entities.length,
+            );
           }
         } catch (systemError) {
-          console.warn('Could not fetch system entity for thresholds:', systemError);
+          console.warn(
+            'Could not fetch system entity for thresholds:',
+            systemError,
+          );
         }
 
         // Get security check results (for traffic light calculation)
@@ -136,9 +148,9 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
         const results = securityCheckResults;
 
         let critical = 0;
-        let  high = 0;
-        let  medium = 0;
-        let  low = 0;
+        let high = 0;
+        let medium = 0;
+        let low = 0;
         const details: IssueDetail[] = [];
 
         results.forEach(result => {
@@ -222,9 +234,12 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
           const trafficLightResult = calculateGitHubSecurityTrafficLight(
             securityCheckResults,
             entities,
-            thresholds
+            thresholds,
           );
-          color = trafficLightResult.color === 'white' ? 'gray' : trafficLightResult.color;
+          color =
+            trafficLightResult.color === 'white'
+              ? 'gray'
+              : trafficLightResult.color;
           summary = trafficLightResult.reason;
         } else {
           // Fallback to simple logic if no thresholds available

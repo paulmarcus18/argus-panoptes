@@ -55,19 +55,19 @@ interface GitHubSecurityTrafficLightProps {
 export function calculateGitHubSecurityTrafficLight(
   securityData: SecurityResult[],
   entities: Entity[],
-  thresholds: SecurityThresholds
+  thresholds: SecurityThresholds,
 ): TrafficLightResult {
   if (!entities.length) {
     return {
       color: 'gray',
-      reason: 'No entities selected'
+      reason: 'No entities selected',
     };
   }
 
   if (!securityData.length) {
     return {
       color: 'gray',
-      reason: 'No security data available'
+      reason: 'No security data available',
     };
   }
 
@@ -80,27 +80,27 @@ export function calculateGitHubSecurityTrafficLight(
         acc.criticalCheckTrue += 1;
         acc.criticalEntities.push(entityName);
       }
-      
+
       if (result.highCheck) {
         acc.highCheckTrue += 1;
         acc.highEntities.push(entityName);
       }
-      
+
       if (result.mediumCheck) {
         acc.mediumCheckTrue += 1;
         acc.mediumEntities.push(entityName);
       }
-      
+
       if (result.lowCheck) {
         acc.lowCheckTrue += 1;
         acc.lowEntities.push(entityName);
       }
-      
+
       if (result.secretCheck) {
         acc.secretCheckTrue += 1;
         acc.secretEntities.push(entityName);
       }
-      
+
       return acc;
     },
     {
@@ -113,100 +113,153 @@ export function calculateGitHubSecurityTrafficLight(
       highEntities: [] as string[],
       mediumEntities: [] as string[],
       lowEntities: [] as string[],
-      secretEntities: [] as string[]
+      secretEntities: [] as string[],
     } as SecurityCheckTotals,
   );
 
   // Determine color and reason based on thresholds
-  const isRedCondition = 
+  const isRedCondition =
     totalChecks.criticalCheckTrue > thresholds.critical_red ||
     totalChecks.secretCheckTrue > thresholds.secrets_red ||
     totalChecks.highCheckTrue > thresholds.high_red ||
     totalChecks.mediumCheckTrue > thresholds.medium_red;
 
-  const isYellowCondition = 
+  const isYellowCondition =
     totalChecks.mediumCheckTrue > thresholds.medium_yellow ||
     totalChecks.lowCheckTrue > thresholds.low_yellow;
 
   if (isRedCondition) {
     return {
       color: 'red',
-      reason: formatRedReason(totalChecks, thresholds)
+      reason: formatRedReason(totalChecks, thresholds),
     };
   } else if (isYellowCondition) {
     return {
       color: 'yellow',
-      reason: formatYellowReason(totalChecks, thresholds)
+      reason: formatYellowReason(totalChecks, thresholds),
     };
-  } 
+  }
   return {
     color: 'green',
-    reason: 'All GitHub security checks passed for all entities'
+    reason: 'All GitHub security checks passed for all entities',
   };
-
 }
 
 /**
  * Format reason message for red traffic light
  */
-function formatRedReason(totalChecks: SecurityCheckTotals, thresholds?: SecurityThresholds): string {
+function formatRedReason(
+  totalChecks: SecurityCheckTotals,
+  thresholds?: SecurityThresholds,
+): string {
   const parts: string[] = [];
 
   if (totalChecks.criticalCheckTrue > (thresholds?.critical_red ?? 0)) {
     if (thresholds?.critical_red !== undefined) {
-      parts.push(`Critical severity issues are exceeded by ${totalChecks.criticalCheckTrue} repos, the threshold for this system is: ${thresholds.critical_red}`);
+      parts.push(
+        `Critical severity issues are exceeded by ${totalChecks.criticalCheckTrue} repos, the threshold for this system is: ${thresholds.critical_red}`,
+      );
     }
   }
   if (totalChecks.secretCheckTrue > (thresholds?.secrets_red ?? 0)) {
     if (thresholds?.secrets_red !== undefined) {
-      parts.push(`Secret scanning issues are exceeded by ${totalChecks.secretCheckTrue} repos, the threshold for this system is: ${thresholds.secrets_red}`);
+      parts.push(
+        `Secret scanning issues are exceeded by ${totalChecks.secretCheckTrue} repos, the threshold for this system is: ${thresholds.secrets_red}`,
+      );
     }
   }
   if (totalChecks.highCheckTrue > (thresholds?.high_red ?? 0)) {
     if (thresholds?.high_red !== undefined) {
-      parts.push(`High severity issues are exceeded by ${totalChecks.highCheckTrue} repos, the threshold for this system is: ${thresholds.high_red}`);
+      parts.push(
+        `High severity issues are exceeded by ${totalChecks.highCheckTrue} repos, the threshold for this system is: ${thresholds.high_red}`,
+      );
     }
   }
   if (totalChecks.mediumCheckTrue > (thresholds?.medium_red ?? 0)) {
     if (thresholds?.medium_red !== undefined) {
-      parts.push(`Medium severity issues are exceeded by ${totalChecks.mediumCheckTrue} repos, the threshold for this system is: ${thresholds.medium_red}`);
+      parts.push(
+        `Medium severity issues are exceeded by ${
+          totalChecks.mediumCheckTrue
+        } repos, the threshold for this system is: ${parseFloat(
+          thresholds.medium_red.toFixed(1),
+        )}`,
+      );
     }
-  } 
+  }
   return parts.join('\n') || 'Threshold for red traffic light exceeded.';
 }
 
 /**
  * Format reason message for yellow traffic light
  */
-function formatYellowReason(totalChecks: SecurityCheckTotals, thresholds?: SecurityThresholds): string {
+function formatYellowReason(
+  totalChecks: SecurityCheckTotals,
+  thresholds?: SecurityThresholds,
+): string {
   const parts: string[] = [];
-  
+
   if (totalChecks.mediumCheckTrue > (thresholds?.medium_yellow ?? 0)) {
     if (thresholds?.medium_yellow !== undefined) {
-      parts.push(`Medium severity issues are exceeded by ${totalChecks.mediumCheckTrue} repos, the threshold for this system is: ${thresholds.medium_yellow}`);
+      parts.push(
+        `Medium severity issues are exceeded by ${
+          totalChecks.mediumCheckTrue
+        } repos, the threshold for this system is: ${parseFloat(
+          thresholds.medium_yellow.toFixed(1),
+        )}`,
+      );
     }
-  } 
+  }
   if (totalChecks.lowCheckTrue > (thresholds?.low_yellow ?? 0)) {
     if (thresholds?.low_yellow !== undefined) {
-      parts.push(`Low severity issues are exceeded by ${totalChecks.lowCheckTrue} repos, the threshold for this system is: ${thresholds.low_yellow}`);
+      parts.push(
+        `Low severity issues are exceeded by ${
+          totalChecks.lowCheckTrue
+        } repos, the threshold for this system is: ${parseFloat(
+          thresholds.low_yellow.toFixed(1),
+        )}`,
+      );
     }
-  } 
+  }
   return parts.join('\n') || 'Threshold for yellow traffic light exceeded.';
 }
 
 /**
  * Extract security thresholds from system entity
  */
-export function extractSecurityThresholds(systemEntity: Entity | undefined, entityCount: number): SecurityThresholds {
+export function extractSecurityThresholds(
+  systemEntity: Entity | undefined,
+  entityCount: number,
+): SecurityThresholds {
   const annotations = systemEntity?.metadata.annotations || {};
-  
+
   return {
-    critical_red: parseFloat(annotations['github-advanced-security-system-critical-threshold-red'] || '0'),
-    high_red: parseFloat(annotations['github-advanced-security-system-high-threshold-red'] || '0'),
-    secrets_red: parseFloat(annotations['github-advanced-security-system-secrets-threshold-red'] || '0'),
-    medium_red: parseFloat(annotations['github-advanced-security-system-medium-threshold-red'] || '0.5') * entityCount,
-    medium_yellow: parseFloat(annotations['github-advanced-security-system-medium-threshold-yellow'] || '0.1') * entityCount,
-    low_yellow: parseFloat(annotations['github-advanced-security-system-low-threshold-yellow'] || '0.2') * entityCount,
+    critical_red: parseFloat(
+      annotations['github-advanced-security-system-critical-threshold-red'] ||
+        '0',
+    ),
+    high_red: parseFloat(
+      annotations['github-advanced-security-system-high-threshold-red'] || '0',
+    ),
+    secrets_red: parseFloat(
+      annotations['github-advanced-security-system-secrets-threshold-red'] ||
+        '0',
+    ),
+    medium_red:
+      parseFloat(
+        annotations['github-advanced-security-system-medium-threshold-red'] ||
+          '0.5',
+      ) * entityCount,
+    medium_yellow:
+      parseFloat(
+        annotations[
+          'github-advanced-security-system-medium-threshold-yellow'
+        ] || '0.1',
+      ) * entityCount,
+    low_yellow:
+      parseFloat(
+        annotations['github-advanced-security-system-low-threshold-yellow'] ||
+          '0.2',
+      ) * entityCount,
   };
 }
 
@@ -218,8 +271,10 @@ export const GitHubSecurityTrafficLight = ({
   onClick,
 }: GitHubSecurityTrafficLightProps) => {
   const [color, setColor] = useState<TrafficLightColor>('white');
-  const [reason, setReason] = useState<string>('Loading GitHub Security data...');
-  
+  const [reason, setReason] = useState<string>(
+    'Loading GitHub Security data...',
+  );
+
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
@@ -248,10 +303,14 @@ export const GitHubSecurityTrafficLight = ({
         const systemEntity = await catalogApi.getEntityByRef({
           kind: 'System',
           namespace: entities[0].metadata.namespace || 'default',
-          name: typeof systemName === 'string' ? systemName : String(systemName),
+          name:
+            typeof systemName === 'string' ? systemName : String(systemName),
         });
 
-        const thresholds = extractSecurityThresholds(systemEntity, entities.length);
+        const thresholds = extractSecurityThresholds(
+          systemEntity,
+          entities.length,
+        );
 
         // Get security data for all entities
         const securityData = await Promise.all(
@@ -265,10 +324,13 @@ export const GitHubSecurityTrafficLight = ({
         );
 
         // Calculate traffic light color and reason
-        const result = calculateGitHubSecurityTrafficLight(securityData, entities, thresholds);
+        const result = calculateGitHubSecurityTrafficLight(
+          securityData,
+          entities,
+          thresholds,
+        );
         setColor(result.color);
         setReason(result.reason);
-
       } catch (err) {
         console.error('Error fetching GitHub Security data:', err);
         setColor('gray');
@@ -280,7 +342,7 @@ export const GitHubSecurityTrafficLight = ({
   }, [entities, techInsightsApi, catalogApi, githubASUtils]);
 
   return (
-    <Tooltip title={reason} placement='right'>
+    <Tooltip title={reason} placement="right">
       <Box
         my={1}
         width={50}

@@ -1,5 +1,12 @@
 import React from 'react';
-import { Grid, Paper, Typography, List, ListItem, ListItemText } from '@material-ui/core';
+import {
+  Grid,
+  Paper,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+} from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -54,12 +61,9 @@ interface DependabotSemaphoreDialogProps {
   system: string;
 }
 
-export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps> = ({
-  open,
-  onClose,
-  entities = [],
-  system
-}) => {
+export const DependabotSemaphoreDialog: React.FC<
+  DependabotSemaphoreDialogProps
+> = ({ open, onClose, entities = [], system }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const dependabotUtils = React.useMemo(() => new DependabotUtils(), []);
@@ -73,30 +77,32 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
   const [isLoading, setIsLoading] = React.useState(false);
 
   React.useEffect(() => {
-    if (!open || entities.length === 0  ) {
+    if (!open || entities.length === 0) {
       setData({
-      color: 'gray',
-      metrics: {},
-      summary: 'No data available for this metric.',
-      details: [],
-    });
-    setTopRepos([]);
-    setIsLoading(false);
-    return;
+        color: 'gray',
+        metrics: {},
+        summary: 'No data available for this metric.',
+        details: [],
+      });
+      setTopRepos([]);
+      setIsLoading(false);
+      return;
     }
 
     setIsLoading(true);
 
     const fetchDependabotData = async () => {
       try {
-
         const results = await Promise.all(
           entities.map(async entity => {
-            const facts = await dependabotUtils.getDependabotFacts(techInsightsApi, {
-              kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
-              name: entity.metadata.name,
-            });
+            const facts = await dependabotUtils.getDependabotFacts(
+              techInsightsApi,
+              {
+                kind: entity.kind,
+                namespace: entity.metadata.namespace || 'default',
+                name: entity.metadata.name,
+              },
+            );
             return { entity, facts };
           }),
         );
@@ -105,22 +111,24 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
         let totalHigh = 0;
         let totalMedium = 0;
 
-        const repoSummaries: RepoAlertSummary[] = results.map(({ entity, facts }) => {
-          const critical = facts.critical || 0;
-          const high = facts.high || 0;
-          const medium = facts.medium || 0;
+        const repoSummaries: RepoAlertSummary[] = results.map(
+          ({ entity, facts }) => {
+            const critical = facts.critical || 0;
+            const high = facts.high || 0;
+            const medium = facts.medium || 0;
 
-          totalCritical += critical;
-          totalHigh += high;
-          totalMedium += medium;
+            totalCritical += critical;
+            totalHigh += high;
+            totalMedium += medium;
 
-          return {
-            name: entity.metadata.name,
-            critical,
-            high,
-            medium,
-          };
-        });
+            return {
+              name: entity.metadata.name,
+              critical,
+              high,
+              medium,
+            };
+          },
+        );
 
         const top5Repos = [...repoSummaries]
           .sort((a, b) => {
@@ -143,7 +151,12 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
           summary = 'No Dependabot security issues found.';
         }
 
-        const trafficLightcolor = await determineDependabotColor(system, entities, techInsightsApi, dependabotUtils);
+        const trafficLightcolor = await determineDependabotColor(
+          system,
+          entities,
+          techInsightsApi,
+          dependabotUtils,
+        );
         let color: 'green' | 'red' | 'yellow' | 'gray' = 'gray';
         color = trafficLightcolor.color;
 
@@ -226,7 +239,9 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
                           Critical: {repo.critical}
                         </span>
                       )}
-                      {repo.critical > 0 && (repo.high > 0 || repo.medium > 0) && ' | '}
+                      {repo.critical > 0 &&
+                        (repo.high > 0 || repo.medium > 0) &&
+                        ' | '}
                       {repo.high > 0 && (
                         <span style={{ color: '#f44336', fontWeight: 'bold' }}>
                           High: {repo.high}
@@ -238,9 +253,13 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
                           Medium: {repo.medium}
                         </span>
                       )}
-                      {repo.critical === 0 && repo.high === 0 && repo.medium === 0 && (
-                        <span style={{ color: '#4caf50' }}>No issues found</span>
-                      )}
+                      {repo.critical === 0 &&
+                        repo.high === 0 &&
+                        repo.medium === 0 && (
+                          <span style={{ color: '#4caf50' }}>
+                            No issues found
+                          </span>
+                        )}
                     </span>
                   }
                 />
@@ -256,7 +275,9 @@ export const DependabotSemaphoreDialog: React.FC<DependabotSemaphoreDialogProps>
     <BaseSemaphoreDialog
       open={open}
       onClose={onClose}
-      title={`Dependabot Security Alerts${system !== 'all' ? ` - ${system}` : ''}`}
+      title={`Dependabot Security Alerts${
+        system !== 'all' ? ` - ${system}` : ''
+      }`}
       data={data}
       isLoading={isLoading}
       renderMetrics={renderMetrics}

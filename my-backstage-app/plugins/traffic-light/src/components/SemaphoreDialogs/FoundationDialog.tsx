@@ -73,7 +73,7 @@ export const FoundationSemaphoreDialog: React.FC<
         // 1. Fetch system threshold and configured repositories
         let redThreshold = 0.33;
         let configuredRepoNames: string[] = [];
-        
+
         try {
           const systemName = entities[0].spec?.system;
           const namespace = entities[0].metadata.namespace || 'default';
@@ -109,17 +109,16 @@ export const FoundationSemaphoreDialog: React.FC<
             }
           }
         } catch (err) {
-          console.warn(
-            'Could not fetch system configuration; using defaults',
-          );
+          console.warn('Could not fetch system configuration; using defaults');
         }
 
         // 2. Filter entities to only include configured repositories
-        const filteredEntities = configuredRepoNames.length > 0 
-          ? entities.filter(entity => 
-              configuredRepoNames.includes(entity.metadata.name)
-            )
-          : entities; // Fallback to all entities if no configuration found
+        const filteredEntities =
+          configuredRepoNames.length > 0
+            ? entities.filter(entity =>
+                configuredRepoNames.includes(entity.metadata.name),
+              )
+            : entities; // Fallback to all entities if no configuration found
 
         if (filteredEntities.length === 0) {
           setMetrics({

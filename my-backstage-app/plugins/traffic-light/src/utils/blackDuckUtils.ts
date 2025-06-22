@@ -1,7 +1,7 @@
 import {
   CompoundEntityRef,
-  Entity, 
-  getCompoundEntityRef
+  Entity,
+  getCompoundEntityRef,
 } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
@@ -53,8 +53,6 @@ export const DEFAULT_CHECKS: BlackDuckChecks = {
  * methods for dealing with BlackDuck facts and checks.
  */
 export class BlackDuckUtils {
-
-
   /**
    * Fetches BlackDuck facts for the provided entity.
    *
@@ -62,7 +60,10 @@ export class BlackDuckUtils {
    * @param entity – The entity reference whose BlackDuck metrics should be retrieved.
    * @returns A {@link BlackDuckMetrics} object with the parsed results.
    */
-  async getBlackDuckFacts(techInsightsApi: TechInsightsApi, entity: CompoundEntityRef): Promise<BlackDuckMetrics> {
+  async getBlackDuckFacts(
+    techInsightsApi: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<BlackDuckMetrics> {
     try {
       const response = await techInsightsApi.getFacts(entity, [
         'blackduck-fact-retriever',
@@ -75,12 +76,13 @@ export class BlackDuckUtils {
       }
 
       return {
-        security_risks_critical: Number(facts.security_risks_critical ?? 0) || 0,
+        security_risks_critical:
+          Number(facts.security_risks_critical ?? 0) || 0,
         security_risks_high: Number(facts.security_risks_high ?? 0) || 0,
         security_risks_medium: Number(facts.security_risks_medium ?? 0) || 0,
       };
     } catch (error) {
-        return { ...DEFAULT_METRICS };
+      return { ...DEFAULT_METRICS };
     }
   }
 
@@ -91,14 +93,23 @@ export class BlackDuckUtils {
    * @param entity – The entity reference for which to run the checks.
    * @returns A {@link BlackDuckChecks} object containing boolean results for each check.
    */
-  async getBlackDuckChecks(techInsightsApi: TechInsightsApi, entity: CompoundEntityRef): Promise<BlackDuckChecks> {
+  async getBlackDuckChecks(
+    techInsightsApi: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<BlackDuckChecks> {
     try {
       const checkResults = await techInsightsApi.runChecks(entity);
 
       // Extract the results of each checks
-      const criticalSecurityCheck = checkResults.find(r => r.check.id === 'blackduck-critical-security-risk');
-      const highSecurityCheck = checkResults.find(r => r.check.id === 'blackduck-high-security-risk');
-      const mediumSecurityCheck = checkResults.find(r => r.check.id === 'blackduck-medium-security-risk');
+      const criticalSecurityCheck = checkResults.find(
+        r => r.check.id === 'blackduck-critical-security-risk',
+      );
+      const highSecurityCheck = checkResults.find(
+        r => r.check.id === 'blackduck-high-security-risk',
+      );
+      const mediumSecurityCheck = checkResults.find(
+        r => r.check.id === 'blackduck-medium-security-risk',
+      );
 
       // If no check results are found, log an error and return default values
       if (checkResults.length === 0) {
@@ -107,25 +118,25 @@ export class BlackDuckUtils {
 
       // Return the parsed facts, converting to appropriate types and providing defaults
       return {
-          criticalSecurityCheck: criticalSecurityCheck?.result === true,
-          highSecurityCheck: highSecurityCheck?.result === true,
-          mediumSecurityCheck: mediumSecurityCheck?.result === true,
+        criticalSecurityCheck: criticalSecurityCheck?.result === true,
+        highSecurityCheck: highSecurityCheck?.result === true,
+        mediumSecurityCheck: mediumSecurityCheck?.result === true,
       };
     } catch (error) {
-        // Return default values if an error occurs
-        return { ...DEFAULT_CHECKS};
+      // Return default values if an error occurs
+      return { ...DEFAULT_CHECKS };
     }
   }
 
   /**
    * Retrieves the top 5 critical BlackDuck repositories based on critical, high and medium security issues.
-   * 
+   *
    * @param techInsightsApi - The TechInsightsApi instance used to fetch BlackDuck facts.
    * @param entities - An array of Backstage Entity objects to check BlackDuck status for.
    * @returns A promise that resolves to an array of BlackDuckSummary objects,
-   *          containing the top 5 critical repositories based on the defined criteria. 
+   *          containing the top 5 critical repositories based on the defined criteria.
    */
-  async  getTop5CriticalBlackDuckRepos(
+  async getTop5CriticalBlackDuckRepos(
     techInsightsApi: TechInsightsApi,
     entities: Entity[],
   ): Promise<BlackDuckSummary[]> {
@@ -138,9 +149,18 @@ export class BlackDuckUtils {
         const facts = await this.getBlackDuckFacts(techInsightsApi, entityRef);
         results.push({
           entity: entityRef,
-          security_risks_critical: typeof facts.security_risks_critical === 'number' ? facts.security_risks_critical : 0,
-          security_risks_high: typeof facts.security_risks_high === 'number' ? facts.security_risks_high : 0,
-          security_risks_medium: typeof facts.security_risks_medium === 'number' ? facts.security_risks_medium : 0,
+          security_risks_critical:
+            typeof facts.security_risks_critical === 'number'
+              ? facts.security_risks_critical
+              : 0,
+          security_risks_high:
+            typeof facts.security_risks_high === 'number'
+              ? facts.security_risks_high
+              : 0,
+          security_risks_medium:
+            typeof facts.security_risks_medium === 'number'
+              ? facts.security_risks_medium
+              : 0,
         });
       } catch (err) {
         results.push({

@@ -39,7 +39,6 @@ import { TrafficLightPage } from '@internal/plugin-traffic-light';
 import { AiPluginPage } from '@internal/plugin-ai-plugin';
 import { DoraDashboardPage } from '@internal/plugin-dora-dashboard';
 
-
 const app = createApp({
   apis,
   bindRoutes({ bind }) {

@@ -28,8 +28,6 @@ export interface DependabotChecks {
  * methods for Dependabot facts & checks.
  */
 export class DependabotUtils {
-
-
   /**
    * Fetches Dependabot facts for a given entity using the Tech Insights API.
    * Returns metrics like total alert counts per severity.
@@ -43,7 +41,10 @@ export class DependabotUtils {
       const facts = response?.dependabotFactRetriever?.facts;
 
       if (!facts) {
-        console.error('❌ No facts found for entity:', stringifyEntityRef(entity));
+        console.error(
+          '❌ No facts found for entity:',
+          stringifyEntityRef(entity),
+        );
         return { critical: 0, high: 0, medium: 0 };
       }
 
@@ -67,9 +68,15 @@ export class DependabotUtils {
   ): Promise<DependabotChecks> {
     try {
       const checkResults = await api.runChecks(entity);
-      const criticalCheck = checkResults.find(r => r.check.id === 'dependabot-critical-alerts');
-      const highCheck = checkResults.find(r => r.check.id === 'dependabot-high-alerts');
-      const mediumCheck = checkResults.find(r => r.check.id === 'dependabot-medium-alerts');
+      const criticalCheck = checkResults.find(
+        r => r.check.id === 'dependabot-critical-alerts',
+      );
+      const highCheck = checkResults.find(
+        r => r.check.id === 'dependabot-high-alerts',
+      );
+      const mediumCheck = checkResults.find(
+        r => r.check.id === 'dependabot-medium-alerts',
+      );
 
       if (checkResults.length === 0) {
         return {

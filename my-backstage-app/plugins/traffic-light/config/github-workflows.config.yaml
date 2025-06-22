@@ -1,11 +1,11 @@
 workflowConfig:
   exclude:
-    - "CI Skip"
-    - "Non-critical Build"
-    - "Test-only Workflow"
+    - 'CI Skip'
+    - 'Non-critical Build'
+    - 'Test-only Workflow'
 
   critical:
-    - "Deploy to Pre-Prod"
-    - "Run Integration Tests"
+    - 'Deploy to Pre-Prod'
+    - 'Run Integration Tests'
 
-  sampleIfNoCritical: 3  # if critical workflows are empty, sample 3 from remaining non-excluded workflows
+  sampleIfNoCritical: 3 # if critical workflows are empty, sample 3 from remaining non-excluded workflows

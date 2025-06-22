@@ -6,12 +6,7 @@ import {
 } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-import {
-  Box,
-  CircularProgress,
-  Typography,
-  IconButton,
-} from '@mui/material';
+import { Box, CircularProgress, Typography, IconButton } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { keyframes } from '@emotion/react';
 import { generateSummaries } from '../../utils/createAISummary.ts';
@@ -36,7 +31,8 @@ type MessagesBySystem = Record<string, SummaryPerRepo[]>;
 export const AISummaries = () => {
   const catalogApi = useApi(catalogApiRef);
   const techInsightsApi = useApi(techInsightsApiRef);
-  const [messagesBySystem, setMessagesBySystem] = useState<MessagesBySystem | null>(null);
+  const [messagesBySystem, setMessagesBySystem] =
+    useState<MessagesBySystem | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedSystem, setSelectedSystem] = useState<string>('All');
   const [repoSearch, setRepoSearch] = useState<string>('');
@@ -47,28 +43,38 @@ export const AISummaries = () => {
   const fetchFn = fetchApi.fetch;
 
   const callAI = async () => {
-      setLoading(true);
-      try {
-        const apiBaseUrl = await discoveryApi.getBaseUrl('ai-plugin');
-        const { items: entities } = await catalogApi.getEntities({ filter: { kind: 'Component' } });
-        const systemToEntityRefs = getReposBySystem(entities);
-        const commitMessagesBySystem = await getCommitMessagesBySystem(techInsightsApi, systemToEntityRefs);
+    setLoading(true);
+    try {
+      const apiBaseUrl = await discoveryApi.getBaseUrl('ai-plugin');
+      const { items: entities } = await catalogApi.getEntities({
+        filter: { kind: 'Component' },
+      });
+      const systemToEntityRefs = getReposBySystem(entities);
+      const commitMessagesBySystem = await getCommitMessagesBySystem(
+        techInsightsApi,
+        systemToEntityRefs,
+      );
 
-        
-        const result = await generateSummaries(commitMessagesBySystem, apiBaseUrl, fetchFn);
-        await postSummaries(result, today, apiBaseUrl, fetch);
-        setMessagesBySystem(result);
-      } catch (err) {
-        console.error('Error in callAI:', err);
-      } finally {
-        setLoading(false); // ✅ Always turn off loading at the end
-      }
-  }
+      const result = await generateSummaries(
+        commitMessagesBySystem,
+        apiBaseUrl,
+        fetchFn,
+      );
+      await postSummaries(result, today, apiBaseUrl, fetch);
+      setMessagesBySystem(result);
+    } catch (err) {
+      console.error('Error in callAI:', err);
+    } finally {
+      setLoading(false); // ✅ Always turn off loading at the end
+    }
+  };
 
   const fetchSummaries = async () => {
     setLoading(true);
     const apiBaseUrl = await discoveryApi.getBaseUrl('ai-plugin');
-    const { items: systems } = await catalogApi.getEntities({ filter: { kind: 'System' } });
+    const { items: systems } = await catalogApi.getEntities({
+      filter: { kind: 'System' },
+    });
 
     try {
       const res = await fetch(`${apiBaseUrl}/summaries?date=${today}`);
@@ -118,29 +124,37 @@ export const AISummaries = () => {
   const filteredMessages = getFilteredMessages();
 
   const handleDownload = (system: string) => {
-  const data = messagesBySystem?.[system]
-    ?.map(repo => `${repo.repoName}:\n${repo.summary}\n\n`)
-    .join('');
+    const data = messagesBySystem?.[system]
+      ?.map(repo => `${repo.repoName}:\n${repo.summary}\n\n`)
+      .join('');
 
-  const blob = new Blob([data ?? ''], { type: 'text/plain' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `${system}-summaries.txt`;
-  link.click();
-};
+    const blob = new Blob([data ?? ''], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${system}-summaries.txt`;
+    link.click();
+  };
 
   return (
     <Box sx={{ padding: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 4 }}>
+      <Box
+        sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 4 }}
+      >
         <Typography variant="h4" color="text.primary" sx={{ flexGrow: 1 }}>
           AI Generated Release Notes
         </Typography>
         <IconButton
           onClick={callAI}
           aria-label="refresh"
-          sx={{ backgroundColor: 'transparent', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }, padding: 1 }}
+          sx={{
+            backgroundColor: 'transparent',
+            '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+            padding: 1,
+          }}
         >
-          <RefreshIcon sx={{ animation: loading ? `${spin} 1s linear infinite` : 'none' }} />
+          <RefreshIcon
+            sx={{ animation: loading ? `${spin} 1s linear infinite` : 'none' }}
+          />
         </IconButton>
       </Box>
 
@@ -163,13 +177,12 @@ export const AISummaries = () => {
         </Typography>
       ) : (
         <SummaryGrid
-      filteredMessages={filteredMessages}
-      fullMessages={messagesBySystem}
-      repoSearch={repoSearch}
-      handleDownload={handleDownload}
-    />
+          filteredMessages={filteredMessages}
+          fullMessages={messagesBySystem}
+          repoSearch={repoSearch}
+          handleDownload={handleDownload}
+        />
       )}
     </Box>
   );
 };
-

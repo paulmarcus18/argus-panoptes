@@ -26,7 +26,7 @@ import { createAzureDevOpsBugsRetriever } from './azure/azureDevOpsFactRetriever
 // Imports retriever that queries SonarCloud data.
 import { createSonarCloudFactRetriever } from './sonarCloud/sonarCloudFactRetriever';
 // Imports the fact retriever that collects data from Black Duck.
-import {createBlackDuckFactRetriever} from './blackduck/blackduckFactRetriever';
+import { createBlackDuckFactRetriever } from './blackduck/blackduckFactRetriever';
 // Imports the fact checker factory that evaluates dynamic thresholds.
 import { DynamicThresholdFactCheckerFactory } from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 // Imports the CatalogClient to interact with the Backstage catalog.
@@ -42,7 +42,6 @@ import { githubAdvancedSecuritychecks } from './github-advanced-security/githubA
 
 import { azureBugsChecks } from './azure/azureDevOpsFactChecker';
 import { DependabotChecks } from './dependabot/dependabotFactChecker';
-
 
 // Defines a backend module that integrates with the tech insights plugin.
 export default createBackendModule({

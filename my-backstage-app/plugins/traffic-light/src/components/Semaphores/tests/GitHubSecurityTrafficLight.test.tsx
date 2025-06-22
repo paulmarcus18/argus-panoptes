@@ -1,289 +1,3 @@
-// import { render, screen, waitFor, act } from '@testing-library/react';
-// import { TestApiProvider } from '@backstage/test-utils';
-// import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-// import { catalogApiRef } from '@backstage/plugin-catalog-react';
-// import { GithubAdvancedSecurityUtils } from '../../../utils/githubAdvancedSecurityUtils';
-// import { GitHubSecurityTrafficLight } from '../GitHubSecurityTrafficLight';
-// import { Entity } from '@backstage/catalog-model';
-
-// jest.mock('../BaseTrafficLight', () => ({
-//   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
-//     <div 
-//       data-testid="base-traffic-light" 
-//       data-color={color}
-//       data-tooltip={tooltip}
-//       onClick={onClick}
-//     >
-//       Traffic Light: {color}
-//     </div>
-//   ),
-// }));
-
-// jest.mock('../../../utils/githubAdvancedSecurityUtils', () => ({
-//   GithubAdvancedSecurityUtils: jest.fn(),
-// }));
-
-// describe('GitHubSecurityTrafficLight', () => {
-//   let mockCatalogApi: any;
-//   let mockTechInsightsApi: any;
-//   let mockGitHubUtils: any;
-//   let mockEntities: Entity[];
-
-//   beforeEach(() => {
-//     jest.clearAllMocks();
-
-//     mockCatalogApi = {
-//       getEntityByRef: jest.fn(),
-//     };
-//     mockTechInsightsApi = {};
-
-//     mockEntities = [
-//       {
-//         apiVersion: 'backstage.io/v1alpha1',
-//         kind: 'Component',
-//         metadata: { name: 'my-entity', namespace: 'default' },
-//         spec: { system: 'my-system' },
-//       },
-//     ];
-
-//     mockGitHubUtils = {
-//       getGitHubSecurityData: jest.fn().mockResolvedValue({
-//         criticalCheck: false,
-//         highCheck: false,
-//         mediumCheck: false,
-//         lowCheck: false,
-//         secretCheck: false,
-//       }),
-//     };
-
-//     (GithubAdvancedSecurityUtils as jest.Mock).mockImplementation(() => mockGitHubUtils);
-
-//     mockCatalogApi.getEntityByRef.mockResolvedValue({
-//       metadata: {
-//         annotations: {},
-//       },
-//     });
-//   });
-
-//   const renderComponent = (entities = mockEntities, onClick?: () => void) => {
-//     return render(
-//       <TestApiProvider
-//         apis={[
-//           [catalogApiRef, mockCatalogApi],
-//           [techInsightsApiRef, mockTechInsightsApi],
-//         ]}
-//       >
-//         <GitHubSecurityTrafficLight entities={entities} onClick={onClick} />
-//       </TestApiProvider>
-//     );
-//   };
-
-//   it('shows initial loading state', () => {
-//     renderComponent();
-//     const loadingIndicator = screen.getByTitle('Loading GitHub Security data...');
-//     expect(loadingIndicator).toBeInTheDocument();
-//   });
-
-//   it('renders green traffic light when all security checks pass', async () => {
-//     await act(async () => {
-//       renderComponent();
-//     });
-//     await waitFor(() => {
-//       const trafficLight = screen.getByTestId('base-traffic-light');
-//       expect(trafficLight).toHaveAttribute('data-color', 'green');
-//     });
-//   });
-
-//   it('renders red traffic light when critical issues exist', async () => {
-//     mockGitHubUtils.getGitHubSecurityData.mockResolvedValue({
-//       criticalCheck: true,
-//       highCheck: false,
-//       mediumCheck: false,
-//       lowCheck: false,
-//       secretCheck: false,
-//     });
-
-//     await act(async () => {
-//       renderComponent();
-//     });
-
-//     await waitFor(() => {
-//       const trafficLight = screen.getByTestId('base-traffic-light');
-//       expect(trafficLight).toHaveAttribute('data-color', 'red');
-//     });
-//   });
-
-//   it('renders yellow traffic light when medium/low issues exceed thresholds', async () => {
-//     mockGitHubUtils.getGitHubSecurityData.mockResolvedValue({
-//       criticalCheck: false,
-//       highCheck: false,
-//       mediumCheck: true,
-//       lowCheck: true,
-//       secretCheck: false,
-//     });
-
-//     await act(async () => {
-//       renderComponent();
-//     });
-
-//     await waitFor(() => {
-//       const trafficLight = screen.getByTestId('base-traffic-light');
-//       expect(trafficLight).toHaveAttribute('data-color', 'yellow');
-//     });
-//   });
-
-//   it('renders red traffic light when secret scanning issues exist', async () => {
-//     mockGitHubUtils.getGitHubSecurityData.mockResolvedValue({
-//       criticalCheck: false,
-//       highCheck: false,
-//       mediumCheck: false,
-//       lowCheck: false,
-//       secretCheck: true,
-//     });
-
-//     await act(async () => {
-//       renderComponent();
-//     });
-
-//     await waitFor(() => {
-//       const trafficLight = screen.getByTestId('base-traffic-light');
-//       expect(trafficLight).toHaveAttribute('data-color', 'red');
-//     });
-//   });
-
-//   it('shows error state when API call fails', async () => {
-//     mockCatalogApi.getEntityByRef.mockRejectedValue(new Error('API Error'));
-
-//     await act(async () => {
-//       renderComponent();
-//     });
-
-//     await waitFor(() => {
-//       const errorDiv = screen.getByTitle('Failed to retrieve GitHub Security data');
-//       expect(errorDiv).toBeInTheDocument();
-//     });
-//   });
-
-//   it('shows error state when GitHub security data fetch fails', async () => {
-//     mockGitHubUtils.getGitHubSecurityData.mockRejectedValue(new Error('GitHub API Error'));
-
-//     await act(async () => {
-//       renderComponent();
-//     });
-
-//     await waitFor(() => {
-//       const errorDiv = screen.getByTitle('Failed to retrieve GitHub Security data');
-//       expect(errorDiv).toBeInTheDocument();
-//     });
-//   });
-
-//   it('calls onClick when clicked', async () => {
-//     const handleClick = jest.fn();
-
-//     await act(async () => {
-//       renderComponent(mockEntities, handleClick);
-//     });
-
-//     await waitFor(() => {
-//       const trafficLight = screen.getByTestId('base-traffic-light');
-//       trafficLight.click();
-//       expect(handleClick).toHaveBeenCalled();
-//     });
-//   });
-
-//   it('fetches system entity with correct parameters', async () => {
-//     await act(async () => {
-//       renderComponent();
-//     });
-
-//     await waitFor(() => {
-//       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
-//         kind: 'System',
-//         namespace: 'default',
-//         name: 'my-system',
-//       });
-//     });
-//   });
-
-//   it('handles string system names correctly', async () => {
-//     const entityWithStringSystem = {
-//       ...mockEntities[0],
-//       spec: { system: 'string-system-name' },
-//     };
-
-//     await act(async () => {
-//       renderComponent([entityWithStringSystem]);
-//     });
-
-//     await waitFor(() => {
-//       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
-//         kind: 'System',
-//         namespace: 'default',
-//         name: 'string-system-name',
-//       });
-//     });
-//   });
-
-//   it('calls GitHub utils with correct entity reference', async () => {
-//     await act(async () => {
-//       renderComponent();
-//     });
-
-//     await waitFor(() => {
-//       expect(mockGitHubUtils.getGitHubSecurityData).toHaveBeenCalledWith(
-//         mockTechInsightsApi,
-//         {
-//           kind: 'Component',
-//           namespace: 'default',
-//           name: 'my-entity',
-//         }
-//       );
-//     });
-//   });
-
-//   it('handles entities without namespace', async () => {
-//     const entitiesWithoutNamespace = [
-//       {
-//         ...mockEntities[0],
-//         metadata: {
-//           name: 'test-component-1',
-//         },
-//         spec: {
-//           system: 'test-system',
-//         },
-//       },
-//     ];
-
-//     await act(async () => {
-//       renderComponent(entitiesWithoutNamespace);
-//     });
-
-//     await waitFor(() => {
-//       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
-//         kind: 'System',
-//         namespace: 'default',
-//         name: 'test-system',
-//       });
-//       expect(mockGitHubUtils.getGitHubSecurityData).toHaveBeenCalledWith(
-//         mockTechInsightsApi,
-//         {
-//           kind: 'Component',
-//           namespace: 'default',
-//           name: 'test-component-1',
-//         }
-//       );
-//     });
-//   });
-
-//   it('creates GithubAdvancedSecurityUtils instance correctly', async () => {
-//     await act(async () => {
-//       renderComponent();
-//     });
-//     expect(GithubAdvancedSecurityUtils).toHaveBeenCalledTimes(1);
-//   });
-// });
-
-
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -294,8 +8,8 @@ import { Entity } from '@backstage/catalog-model';
 
 jest.mock('../BaseTrafficLight', () => ({
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
-    <div 
-      data-testid="base-traffic-light" 
+    <div
+      data-testid="base-traffic-light"
       data-color={color}
       data-tooltip={tooltip}
       onClick={onClick}
@@ -342,7 +56,9 @@ describe('GitHubSecurityTrafficLight', () => {
       }),
     };
 
-    (GithubAdvancedSecurityUtils as jest.Mock).mockImplementation(() => mockGitHubUtils);
+    (GithubAdvancedSecurityUtils as jest.Mock).mockImplementation(
+      () => mockGitHubUtils,
+    );
 
     mockCatalogApi.getEntityByRef.mockResolvedValue({
       metadata: {
@@ -360,13 +76,15 @@ describe('GitHubSecurityTrafficLight', () => {
         ]}
       >
         <GitHubSecurityTrafficLight entities={entities} onClick={onClick} />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
   };
 
   it('shows initial loading state', () => {
     renderComponent();
-    const loadingIndicator = screen.getByTitle('Loading GitHub Security data...');
+    const loadingIndicator = screen.getByTitle(
+      'Loading GitHub Security data...',
+    );
     expect(loadingIndicator).toBeInTheDocument();
   });
 
@@ -376,7 +94,9 @@ describe('GitHubSecurityTrafficLight', () => {
     });
 
     await waitFor(() => {
-      const greenIndicator = screen.getByTitle('All GitHub security checks passed for all entities');
+      const greenIndicator = screen.getByTitle(
+        'All GitHub security checks passed for all entities',
+      );
       expect(greenIndicator).toBeInTheDocument();
     });
   });
@@ -395,7 +115,9 @@ describe('GitHubSecurityTrafficLight', () => {
     });
 
     await waitFor(() => {
-      const redIndicator = screen.getByTitle(/Critical severity issues are exceeded/);
+      const redIndicator = screen.getByTitle(
+        /Critical severity issues are exceeded/,
+      );
       expect(redIndicator).toBeInTheDocument();
     });
   });
@@ -414,7 +136,9 @@ describe('GitHubSecurityTrafficLight', () => {
     });
 
     await waitFor(() => {
-      const yellowIndicator = screen.getByTitle(/Medium severity issues are exceeded/);
+      const yellowIndicator = screen.getByTitle(
+        /Medium severity issues are exceeded/,
+      );
       expect(yellowIndicator).toBeInTheDocument();
     });
   });
@@ -433,7 +157,9 @@ describe('GitHubSecurityTrafficLight', () => {
     });
 
     await waitFor(() => {
-      const redSecret = screen.getByTitle(/Secret scanning issues are exceeded/);
+      const redSecret = screen.getByTitle(
+        /Secret scanning issues are exceeded/,
+      );
       expect(redSecret).toBeInTheDocument();
     });
   });
@@ -446,20 +172,26 @@ describe('GitHubSecurityTrafficLight', () => {
     });
 
     await waitFor(() => {
-      const errorDiv = screen.getByTitle('Failed to retrieve GitHub Security data');
+      const errorDiv = screen.getByTitle(
+        'Failed to retrieve GitHub Security data',
+      );
       expect(errorDiv).toBeInTheDocument();
     });
   });
 
   it('shows error state when GitHub security data fetch fails', async () => {
-    mockGitHubUtils.getGitHubSecurityData.mockRejectedValue(new Error('GitHub API Error'));
+    mockGitHubUtils.getGitHubSecurityData.mockRejectedValue(
+      new Error('GitHub API Error'),
+    );
 
     await act(async () => {
       renderComponent();
     });
 
     await waitFor(() => {
-      const errorDiv = screen.getByTitle('Failed to retrieve GitHub Security data');
+      const errorDiv = screen.getByTitle(
+        'Failed to retrieve GitHub Security data',
+      );
       expect(errorDiv).toBeInTheDocument();
     });
   });
@@ -472,7 +204,9 @@ describe('GitHubSecurityTrafficLight', () => {
     });
 
     await waitFor(() => {
-      const clickable = screen.getByTitle('All GitHub security checks passed for all entities');
+      const clickable = screen.getByTitle(
+        'All GitHub security checks passed for all entities',
+      );
       expect(clickable).toBeInTheDocument();
       clickable.click();
       expect(handleClick).toHaveBeenCalled();
@@ -524,7 +258,7 @@ describe('GitHubSecurityTrafficLight', () => {
           kind: 'Component',
           namespace: 'default',
           name: 'my-entity',
-        }
+        },
       );
     });
   });
@@ -554,7 +288,7 @@ describe('GitHubSecurityTrafficLight', () => {
           kind: 'Component',
           namespace: 'default',
           name: 'test-component-1',
-        }
+        },
       );
     });
   });

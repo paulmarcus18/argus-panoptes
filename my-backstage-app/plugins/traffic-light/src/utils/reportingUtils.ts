@@ -1,6 +1,4 @@
-import {
-  CompoundEntityRef,
-} from '@backstage/catalog-model';
+import { CompoundEntityRef } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
 /**
@@ -44,8 +42,6 @@ const DEFAULT_CHECKS: ReportingPipelineChecks = {
  * evaluating Reporting‑pipeline data.
  */
 export class ReportingUtils {
-
-
   /**
    * Fetches Reporting pipeline facts for a given entity using the Tech Insights API.
    * Returns metrics like total workflow runs, unique workflows, success count, failure count, and success rate.
@@ -54,7 +50,10 @@ export class ReportingUtils {
    * @param entity - The entity reference for which to fetch Reporting pipeline facts.
    * @returns An object containing Reporting pipeline metrics for the entity.
    */
-  async getReportingPipelineFacts(api: TechInsightsApi, entity: CompoundEntityRef): Promise<ReportingPipelineMetrics> {
+  async getReportingPipelineFacts(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<ReportingPipelineMetrics> {
     try {
       // Fetch Reporting pipeline facts for the given entity
       const response = await api.getFacts(entity, [
@@ -87,7 +86,10 @@ export class ReportingUtils {
    * @param entity - The entity reference for which to fetch Reporting pipeline facts.
    * @returns An object containing the results of the checks.
    */
-  async getReportingPipelineChecks(api: TechInsightsApi, entity: CompoundEntityRef): Promise<ReportingPipelineChecks> {
+  async getReportingPipelineChecks(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<ReportingPipelineChecks> {
     try {
       // Fetch Reporting pipeline checks for the given entity
       const checkResults = await api.runChecks(entity);

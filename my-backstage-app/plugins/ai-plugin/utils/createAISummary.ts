@@ -42,9 +42,10 @@ export async function generateSummaries(
         });
 
         const data = await response.json();
-        const summary = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? 'No summary returned.';
+        const summary =
+          data?.candidates?.[0]?.content?.parts?.[0]?.text ??
+          'No summary returned.';
         summarizedRepos.push({ repoName, summary });
-
       } catch (error) {
         console.error(`Error summarizing ${repoName} in ${system}:`, error);
       }

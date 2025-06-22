@@ -27,7 +27,6 @@ export async function createRouter({
    */
   router.get('/summaries', async (req, res) => {
     const requestedDate = req.query.date as string;
-
     if (!requestedDate) {
       return res
         .status(400)
@@ -36,10 +35,10 @@ export async function createRouter({
 
     try {
       const summaries = await store.getAllSummariesForDate(requestedDate);
-      res.json(summaries);
+      return res.json(summaries);
     } catch (error) {
       logger.error('Error fetching summaries:');
-      res.status(500).json({ error: 'Could not fetch summaries' });
+      return res.status(500).json({ error: 'Could not fetch summaries' });
     }
   });
 
@@ -52,14 +51,13 @@ export async function createRouter({
    *   summaries: [{ repoName: "repo-a", summary: "..." }, ...]
    * }
    */
-  router.post('/summaries', async (req, res) => {
+  router.post('/summaries', async (req, res): Promise<void> => {
     try {
       const { system, date, summaries } = req.body;
-
       if (!system || !date || !Array.isArray(summaries)) {
-        return res.status(400).json({ error: 'Invalid request format' });
+        res.status(400).json({ error: 'Invalid request format' });
+        return;
       }
-
       await store.saveSummaries(system, date, summaries as SummaryPerRepo[]);
       res.status(204).send();
     } catch (error) {
@@ -74,7 +72,9 @@ export async function createRouter({
       return res.status(400).json({ error: 'Missing prompt' });
     }
 
-    const geminiToken = config.getOptionalConfigArray('integrations.gemini')?.[0]?.getOptionalString('token');
+    const geminiToken = config
+      .getOptionalConfigArray('integrations.gemini')?.[0]
+      ?.getOptionalString('token');
     if (!geminiToken) {
       return res.status(500).json({ error: 'Gemini token not configured' });
     }
@@ -104,10 +104,10 @@ export async function createRouter({
       }
 
       const result = await response.json();
-      res.json(result);
+      return res.json(result);
     } catch (err) {
       console.error('Error contacting Gemini:', err);
-      res.status(500).json({ error: 'Failed to generate summary' });
+      return res.status(500).json({ error: 'Failed to generate summary' }); // Added return here
     }
   });
 

@@ -1,7 +1,14 @@
-import { BlackDuckUtils, DEFAULT_METRICS, DEFAULT_CHECKS } from '../blackDuckUtils';
+import {
+  BlackDuckUtils,
+  DEFAULT_METRICS,
+  DEFAULT_CHECKS,
+} from '../blackDuckUtils';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef, Entity } from '@backstage/catalog-model';
-import { DynamicThresholdResult, DynamicThresholdCheck } from '../../../../tech-insights-backend-module-traffic-light-backend-module/src/argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
+import {
+  DynamicThresholdResult,
+  DynamicThresholdCheck,
+} from '../../../../tech-insights-backend-module-traffic-light-backend-module/src/argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 
 // Mock the TechInsightsApi
 const mockTechInsightsApi = {
@@ -14,7 +21,10 @@ const mockTechInsightsApi = {
 } as jest.Mocked<TechInsightsApi>;
 
 // Helper function to create mock check results that match the DynamicThresholdResult format
-const createMockCheckResult = (id: string, result: boolean): DynamicThresholdResult => ({
+const createMockCheckResult = (
+  id: string,
+  result: boolean,
+): DynamicThresholdResult => ({
   check: {
     id,
     name: `${id} Check`,
@@ -60,15 +70,20 @@ describe('BlackDuckUtils', () => {
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
         'blackduck-fact-retriever': {
-            timestamp: '2023-10-01T00:00:00Z',
-            version: '1.0.0',
-            facts: mockFacts,
+          timestamp: '2023-10-01T00:00:00Z',
+          version: '1.0.0',
+          facts: mockFacts,
         },
-      }); 
+      });
 
-      const result = await blackDuckUtils.getBlackDuckFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await blackDuckUtils.getBlackDuckFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
-      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, ['blackduck-fact-retriever']);
+      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, [
+        'blackduck-fact-retriever',
+      ]);
       expect(result).toEqual({
         security_risks_critical: 5,
         security_risks_high: 10,
@@ -85,13 +100,16 @@ describe('BlackDuckUtils', () => {
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
         'blackduck-fact-retriever': {
-            timestamp: '2023-10-01T00:00:00Z',
-            version: '1.0.0',
-            facts: mockFacts,
+          timestamp: '2023-10-01T00:00:00Z',
+          version: '1.0.0',
+          facts: mockFacts,
         },
       });
 
-      const result = await blackDuckUtils.getBlackDuckFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await blackDuckUtils.getBlackDuckFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         security_risks_critical: 5,
@@ -103,13 +121,16 @@ describe('BlackDuckUtils', () => {
     it('should return default metrics when no facts are found', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({
         'blackduck-fact-retriever': {
-            timestamp: '2023-10-01T00:00:00Z',
-            version: '1.0.0',
-            facts: {},
+          timestamp: '2023-10-01T00:00:00Z',
+          version: '1.0.0',
+          facts: {},
         },
       });
 
-      const result = await blackDuckUtils.getBlackDuckFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await blackDuckUtils.getBlackDuckFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -117,7 +138,10 @@ describe('BlackDuckUtils', () => {
     it('should return default metrics when response is undefined', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({});
 
-      const result = await blackDuckUtils.getBlackDuckFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await blackDuckUtils.getBlackDuckFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -125,7 +149,10 @@ describe('BlackDuckUtils', () => {
     it('should return default metrics when API throws an error', async () => {
       mockTechInsightsApi.getFacts.mockRejectedValue(new Error('API Error'));
 
-      const result = await blackDuckUtils.getBlackDuckFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await blackDuckUtils.getBlackDuckFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -134,7 +161,7 @@ describe('BlackDuckUtils', () => {
       const mockFacts = {
         security_risks_critical: 'not-a-number',
         security_risks_high: '',
-        security_risks_medium: 'invalid',	
+        security_risks_medium: 'invalid',
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
@@ -145,12 +172,15 @@ describe('BlackDuckUtils', () => {
         },
       });
 
-      const result = await blackDuckUtils.getBlackDuckFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await blackDuckUtils.getBlackDuckFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         security_risks_critical: 0,
         security_risks_high: 0,
-        security_risks_medium: 0,	
+        security_risks_medium: 0,
       });
     });
   });
@@ -165,7 +195,10 @@ describe('BlackDuckUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await blackDuckUtils.getBlackDuckChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await blackDuckUtils.getBlackDuckChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         criticalSecurityCheck: true,
@@ -178,7 +211,10 @@ describe('BlackDuckUtils', () => {
     it('should return default checks when no check results are found', async () => {
       mockTechInsightsApi.runChecks.mockResolvedValue([]);
 
-      const result = await blackDuckUtils.getBlackDuckChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await blackDuckUtils.getBlackDuckChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_CHECKS);
       expect(mockTechInsightsApi.runChecks).toHaveBeenCalledWith(mockEntityRef);
@@ -187,12 +223,14 @@ describe('BlackDuckUtils', () => {
     it('should return default metrics when API throws an error', async () => {
       mockTechInsightsApi.getFacts.mockRejectedValue(new Error('API Error'));
 
-      const result = await blackDuckUtils.getBlackDuckChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await blackDuckUtils.getBlackDuckChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_CHECKS);
     });
   });
-
 
   describe('getTop5CriticalBlackDuckRepos', () => {
     const createMockEntity = (name: string): Entity => ({
@@ -214,25 +252,40 @@ describe('BlackDuckUtils', () => {
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '3', security_risks_high: '2', security_risks_medium: '1' },
+            facts: {
+              security_risks_critical: '3',
+              security_risks_high: '2',
+              security_risks_medium: '1',
+            },
           },
         })
         .mockResolvedValueOnce({
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '1', security_risks_high: '1', security_risks_medium: '1' },
+            facts: {
+              security_risks_critical: '1',
+              security_risks_high: '1',
+              security_risks_medium: '1',
+            },
           },
         })
         .mockResolvedValueOnce({
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '5', security_risks_high: '2', security_risks_medium: '1' },
+            facts: {
+              security_risks_critical: '5',
+              security_risks_high: '2',
+              security_risks_medium: '1',
+            },
           },
         });
 
-      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(mockTechInsightsApi, entities);
+      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(3);
       // Failed quality gates should come first
@@ -257,25 +310,40 @@ describe('BlackDuckUtils', () => {
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '0', security_risks_high: '1', security_risks_medium: '1' },
+            facts: {
+              security_risks_critical: '0',
+              security_risks_high: '1',
+              security_risks_medium: '1',
+            },
           },
         })
         .mockResolvedValueOnce({
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '0', security_risks_high: '7', security_risks_medium: '1' },
+            facts: {
+              security_risks_critical: '0',
+              security_risks_high: '7',
+              security_risks_medium: '1',
+            },
           },
         })
         .mockResolvedValueOnce({
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '0', security_risks_high: '2', security_risks_medium: '1' },
+            facts: {
+              security_risks_critical: '0',
+              security_risks_high: '2',
+              security_risks_medium: '1',
+            },
           },
         });
 
-      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(mockTechInsightsApi, entities);
+      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(3);
       expect(result[0].entity.name).toBe('high-risks');
@@ -298,25 +366,40 @@ describe('BlackDuckUtils', () => {
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '0', security_risks_high: '0', security_risks_medium: '1' },
+            facts: {
+              security_risks_critical: '0',
+              security_risks_high: '0',
+              security_risks_medium: '1',
+            },
           },
         })
         .mockResolvedValueOnce({
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '0', security_risks_high: '0', security_risks_medium: '10' },
+            facts: {
+              security_risks_critical: '0',
+              security_risks_high: '0',
+              security_risks_medium: '10',
+            },
           },
         })
         .mockResolvedValueOnce({
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '0', security_risks_high: '0', security_risks_medium: '5' },
+            facts: {
+              security_risks_critical: '0',
+              security_risks_high: '0',
+              security_risks_medium: '5',
+            },
           },
         });
 
-      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(mockTechInsightsApi, entities);
+      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(3);
       expect(result[0].entity.name).toBe('high-risks');
@@ -328,18 +411,27 @@ describe('BlackDuckUtils', () => {
     });
 
     it('should limit results to 5 repositories', async () => {
-      const entities = Array.from({ length: 10 }, (_, i) => createMockEntity(`service-${i}`));
+      const entities = Array.from({ length: 10 }, (_, i) =>
+        createMockEntity(`service-${i}`),
+      );
 
       // Mock all entities to have failed quality gates
       mockTechInsightsApi.getFacts.mockResolvedValue({
         'blackduck-fact-retriever': {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
-          facts: { security_risks_critical: '2', security_risks_high: '2', security_risks_medium: '2' },
+          facts: {
+            security_risks_critical: '2',
+            security_risks_high: '2',
+            security_risks_medium: '2',
+          },
         },
       });
 
-      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(mockTechInsightsApi, entities);
+      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(5);
     });
@@ -349,7 +441,10 @@ describe('BlackDuckUtils', () => {
 
       mockTechInsightsApi.getFacts.mockRejectedValue(new Error('API Error'));
 
-      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(mockTechInsightsApi, entities);
+      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].entity.name).toBe('failing-service');
@@ -359,7 +454,10 @@ describe('BlackDuckUtils', () => {
     });
 
     it('should handle empty entities array', async () => {
-      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(mockTechInsightsApi, []);
+      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(
+        mockTechInsightsApi,
+        [],
+      );
 
       expect(result).toHaveLength(0);
       expect(mockTechInsightsApi.getFacts).not.toHaveBeenCalled();
@@ -367,11 +465,11 @@ describe('BlackDuckUtils', () => {
 
     it('should handle mixed scenarios with complex prioritization', async () => {
       const entities = [
-        createMockEntity('perfect-repo'),      // No issues
-        createMockEntity('critical'),       // Many critical security issues
-        createMockEntity('high'),        // Many high security issues
-        createMockEntity('medium'),         // Many medium security issues
-        createMockEntity('another-critical'),    // Another with many critical issues
+        createMockEntity('perfect-repo'), // No issues
+        createMockEntity('critical'), // Many critical security issues
+        createMockEntity('high'), // Many high security issues
+        createMockEntity('medium'), // Many medium security issues
+        createMockEntity('another-critical'), // Another with many critical issues
       ];
 
       mockTechInsightsApi.getFacts
@@ -379,56 +477,79 @@ describe('BlackDuckUtils', () => {
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '0', security_risks_high: '0', security_risks_medium: '0' },
+            facts: {
+              security_risks_critical: '0',
+              security_risks_high: '0',
+              security_risks_medium: '0',
+            },
           },
         })
         .mockResolvedValueOnce({
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '10', security_risks_high: '2', security_risks_medium: '1' },
+            facts: {
+              security_risks_critical: '10',
+              security_risks_high: '2',
+              security_risks_medium: '1',
+            },
           },
         })
         .mockResolvedValueOnce({
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '0', security_risks_high: '7', security_risks_medium: '5' },
+            facts: {
+              security_risks_critical: '0',
+              security_risks_high: '7',
+              security_risks_medium: '5',
+            },
           },
         })
         .mockResolvedValueOnce({
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '0', security_risks_high: '0', security_risks_medium: '20' },
+            facts: {
+              security_risks_critical: '0',
+              security_risks_high: '0',
+              security_risks_medium: '20',
+            },
           },
         })
         .mockResolvedValueOnce({
           'blackduck-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { security_risks_critical: '5', security_risks_high: '6', security_risks_medium: '8' },
+            facts: {
+              security_risks_critical: '5',
+              security_risks_high: '6',
+              security_risks_medium: '8',
+            },
           },
         });
 
-      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(mockTechInsightsApi, entities);
+      const result = await blackDuckUtils.getTop5CriticalBlackDuckRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(5);
-      
+
       // First should be critical security issues
       expect(result[0].entity.name).toBe('critical');
       expect(result[0].security_risks_critical).toBe(10);
       expect(result[1].entity.name).toBe('another-critical');
       expect(result[1].security_risks_critical).toBe(5);
-      
+
       // Then high security issues
       expect(result[2].entity.name).toBe('high');
       expect(result[2].security_risks_high).toBe(7);
-      
+
       // Then medium security issues
       expect(result[3].entity.name).toBe('medium');
       expect(result[3].security_risks_medium).toBe(20);
-      
+
       // Then perfect repo
       expect(result[4].entity.name).toBe('perfect-repo');
     });

@@ -15,7 +15,7 @@ export const BaseTrafficLight: React.FC<BaseTrafficLightProps> = ({
   tooltip,
   onClick,
 }) => (
-  <Tooltip title={tooltip} placement='right'>
+  <Tooltip title={tooltip} placement="right">
     <Box
       my={1}
       width={50}

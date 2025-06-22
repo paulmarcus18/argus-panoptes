@@ -41,7 +41,9 @@ const mockOctokit = {
 describe('githubAdvancedSecurityFactRetriever', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    require('@backstage/catalog-client').CatalogClient.mockImplementation(() => mockCatalogClient);
+    require('@backstage/catalog-client').CatalogClient.mockImplementation(
+      () => mockCatalogClient,
+    );
     jest.doMock('@octokit/rest', () => ({
       Octokit: jest.fn(() => mockOctokit),
     }));
@@ -58,22 +60,32 @@ describe('githubAdvancedSecurityFactRetriever', () => {
 
   // Basic configuration tests
   it('should have correct basic configuration', () => {
-    expect(githubAdvancedSecurityFactRetriever.id).toBe('githubAdvancedSecurityFactRetriever');
+    expect(githubAdvancedSecurityFactRetriever.id).toBe(
+      'githubAdvancedSecurityFactRetriever',
+    );
     expect(githubAdvancedSecurityFactRetriever.version).toBe('0.2.0');
-    expect(githubAdvancedSecurityFactRetriever.entityFilter).toEqual([{ kind: 'component' }]);
+    expect(githubAdvancedSecurityFactRetriever.entityFilter).toEqual([
+      { kind: 'component' },
+    ]);
   });
 
   // Should return empty array when there is no GitHub token
   it('should return empty array when no GitHub token', async () => {
-    mockConfig.getOptionalConfigArray.mockReturnValue([{
-      getOptionalString: jest.fn().mockReturnValue(undefined),
-    }]);
+    mockConfig.getOptionalConfigArray.mockReturnValue([
+      {
+        getOptionalString: jest.fn().mockReturnValue(undefined),
+      },
+    ]);
 
     mockAuth.getOwnServiceCredentials.mockResolvedValue({});
-    mockAuth.getPluginRequestToken.mockResolvedValue({ token: 'catalog-token' });
+    mockAuth.getPluginRequestToken.mockResolvedValue({
+      token: 'catalog-token',
+    });
     mockCatalogClient.getEntities.mockResolvedValue({ items: [] });
 
-    const result = await githubAdvancedSecurityFactRetriever.handler(mockHandlerParams);
+    const result = await githubAdvancedSecurityFactRetriever.handler(
+      mockHandlerParams,
+    );
 
     expect(result).toEqual([]);
   });
@@ -84,20 +96,26 @@ describe('githubAdvancedSecurityFactRetriever', () => {
       throw new Error('Config error');
     });
 
-    const result = await githubAdvancedSecurityFactRetriever.handler(mockHandlerParams);
+    const result = await githubAdvancedSecurityFactRetriever.handler(
+      mockHandlerParams,
+    );
 
     expect(result).toEqual([]);
   });
 
   it('should successfully process entities with security alerts', async () => {
     // Setup config mock
-    mockConfig.getOptionalConfigArray.mockReturnValue([{
-      getOptionalString: jest.fn().mockReturnValue('mock-token'),
-    }]);
-    
+    mockConfig.getOptionalConfigArray.mockReturnValue([
+      {
+        getOptionalString: jest.fn().mockReturnValue('mock-token'),
+      },
+    ]);
+
     // Setup auth mocks
     mockAuth.getOwnServiceCredentials.mockResolvedValue({});
-    mockAuth.getPluginRequestToken.mockResolvedValue({ token: 'catalog-token' });
+    mockAuth.getPluginRequestToken.mockResolvedValue({
+      token: 'catalog-token',
+    });
 
     // Mock entity with GitHub annotation
     const mockEntities = [
@@ -147,7 +165,9 @@ describe('githubAdvancedSecurityFactRetriever', () => {
       .mockResolvedValueOnce({ data: mockCodeScanningAlerts })
       .mockResolvedValueOnce({ data: mockSecretScanningAlerts });
 
-    const result = await githubAdvancedSecurityFactRetriever.handler(mockHandlerParams);
+    const result = await githubAdvancedSecurityFactRetriever.handler(
+      mockHandlerParams,
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0]?.entity.name).toBe('test-component');
@@ -163,12 +183,16 @@ describe('githubAdvancedSecurityFactRetriever', () => {
   });
 
   it('should skip entities without GitHub annotations', async () => {
-    mockConfig.getOptionalConfigArray.mockReturnValue([{
-      getOptionalString: jest.fn().mockReturnValue('mock-token'),
-    }]);
-    
+    mockConfig.getOptionalConfigArray.mockReturnValue([
+      {
+        getOptionalString: jest.fn().mockReturnValue('mock-token'),
+      },
+    ]);
+
     mockAuth.getOwnServiceCredentials.mockResolvedValue({});
-    mockAuth.getPluginRequestToken.mockResolvedValue({ token: 'catalog-token' });
+    mockAuth.getPluginRequestToken.mockResolvedValue({
+      token: 'catalog-token',
+    });
 
     const mockEntities = [
       {
@@ -183,19 +207,25 @@ describe('githubAdvancedSecurityFactRetriever', () => {
 
     mockCatalogClient.getEntities.mockResolvedValue({ items: mockEntities });
 
-    const result = await githubAdvancedSecurityFactRetriever.handler(mockHandlerParams);
+    const result = await githubAdvancedSecurityFactRetriever.handler(
+      mockHandlerParams,
+    );
 
     expect(result).toEqual([]);
     expect(mockOctokit.request).not.toHaveBeenCalled();
   });
 
   it('should handle GitHub API errors by returning null', async () => {
-    mockConfig.getOptionalConfigArray.mockReturnValue([{
-      getOptionalString: jest.fn().mockReturnValue('mock-token'),
-    }]);
-    
+    mockConfig.getOptionalConfigArray.mockReturnValue([
+      {
+        getOptionalString: jest.fn().mockReturnValue('mock-token'),
+      },
+    ]);
+
     mockAuth.getOwnServiceCredentials.mockResolvedValue({});
-    mockAuth.getPluginRequestToken.mockResolvedValue({ token: 'catalog-token' });
+    mockAuth.getPluginRequestToken.mockResolvedValue({
+      token: 'catalog-token',
+    });
 
     const mockEntities = [
       {
@@ -214,19 +244,25 @@ describe('githubAdvancedSecurityFactRetriever', () => {
 
     mockOctokit.request.mockRejectedValue(new Error('API Error'));
 
-    const result = await githubAdvancedSecurityFactRetriever.handler(mockHandlerParams);
+    const result = await githubAdvancedSecurityFactRetriever.handler(
+      mockHandlerParams,
+    );
 
     expect(result).toEqual([]);
   });
 
   // counting the secuirty alerts by severity levels
   it('should count different severity levels correctly', async () => {
-    mockConfig.getOptionalConfigArray.mockReturnValue([{
-      getOptionalString: jest.fn().mockReturnValue('mock-token'),
-    }]);
-    
+    mockConfig.getOptionalConfigArray.mockReturnValue([
+      {
+        getOptionalString: jest.fn().mockReturnValue('mock-token'),
+      },
+    ]);
+
     mockAuth.getOwnServiceCredentials.mockResolvedValue({});
-    mockAuth.getPluginRequestToken.mockResolvedValue({ token: 'catalog-token' });
+    mockAuth.getPluginRequestToken.mockResolvedValue({
+      token: 'catalog-token',
+    });
 
     const mockEntities = [
       {
@@ -248,19 +284,28 @@ describe('githubAdvancedSecurityFactRetriever', () => {
         number: 1,
         rule: { security_severity_level: 'critical' },
         created_at: '2023-01-01T00:00:00Z',
-        most_recent_instance: { commit_sha: 'abc', location: { path: 'file1.js' } },
+        most_recent_instance: {
+          commit_sha: 'abc',
+          location: { path: 'file1.js' },
+        },
       },
       {
         number: 2,
         rule: { security_severity_level: 'high' },
         created_at: '2023-01-01T00:00:00Z',
-        most_recent_instance: { commit_sha: 'abc', location: { path: 'file2.js' } },
+        most_recent_instance: {
+          commit_sha: 'abc',
+          location: { path: 'file2.js' },
+        },
       },
       {
         number: 3,
         rule: { security_severity_level: 'medium' },
         created_at: '2023-01-01T00:00:00Z',
-        most_recent_instance: { commit_sha: 'abc', location: { path: 'file3.js' } },
+        most_recent_instance: {
+          commit_sha: 'abc',
+          location: { path: 'file3.js' },
+        },
       },
     ];
 
@@ -268,7 +313,9 @@ describe('githubAdvancedSecurityFactRetriever', () => {
       .mockResolvedValueOnce({ data: mockCodeScanningAlerts })
       .mockResolvedValueOnce({ data: [] });
 
-    const result = await githubAdvancedSecurityFactRetriever.handler(mockHandlerParams);
+    const result = await githubAdvancedSecurityFactRetriever.handler(
+      mockHandlerParams,
+    );
 
     expect(result[0]?.facts.criticalCount).toBe(1);
     expect(result[0]?.facts.highCount).toBe(1);
@@ -278,12 +325,16 @@ describe('githubAdvancedSecurityFactRetriever', () => {
 
   // Handling empty alerts responses
   it('should handle empty alerts responses', async () => {
-    mockConfig.getOptionalConfigArray.mockReturnValue([{
-      getOptionalString: jest.fn().mockReturnValue('mock-token'),
-    }]);
-    
+    mockConfig.getOptionalConfigArray.mockReturnValue([
+      {
+        getOptionalString: jest.fn().mockReturnValue('mock-token'),
+      },
+    ]);
+
     mockAuth.getOwnServiceCredentials.mockResolvedValue({});
-    mockAuth.getPluginRequestToken.mockResolvedValue({ token: 'catalog-token' });
+    mockAuth.getPluginRequestToken.mockResolvedValue({
+      token: 'catalog-token',
+    });
 
     const mockEntities = [
       {
@@ -304,7 +355,9 @@ describe('githubAdvancedSecurityFactRetriever', () => {
       .mockResolvedValueOnce({ data: [] }) // No code scanning alerts
       .mockResolvedValueOnce({ data: [] }); // No secret scanning alerts
 
-    const result = await githubAdvancedSecurityFactRetriever.handler(mockHandlerParams);
+    const result = await githubAdvancedSecurityFactRetriever.handler(
+      mockHandlerParams,
+    );
 
     expect(result[0]?.facts).toEqual({
       openCodeScanningAlertCount: 0,

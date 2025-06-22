@@ -1,4 +1,7 @@
-import { FactRetriever, TechInsightFact } from '@backstage-community/plugin-tech-insights-node';
+import {
+  FactRetriever,
+  TechInsightFact,
+} from '@backstage-community/plugin-tech-insights-node';
 import { CatalogClient } from '@backstage/catalog-client';
 import { JsonObject } from '@backstage/types';
 import { Entity, stringifyEntityRef } from '@backstage/catalog-model';
@@ -45,7 +48,10 @@ interface ReportingPipelineStatusSummary extends JsonObject {
 /**
  * Helper to parse and validate the reporting workflow config from annotations.
  */
-function parseReportingConfig(entity: Entity, logger: LoggerService,): ReportingWorkflowConfig | null {
+function parseReportingConfig(
+  entity: Entity,
+  logger: LoggerService,
+): ReportingWorkflowConfig | null {
   // Check annotations for reporting workflows
   const annotation = entity.metadata.annotations?.['reporting/workflows'];
   if (!annotation) {
@@ -124,10 +130,17 @@ function calculateReportingMetrics(
   workflowMetrics: WorkflowLastRunMetrics[],
 ): ReportingPipelineStatusSummary {
   // Calculate success/failure counts and rate
-  const successfulRuns = workflowMetrics.filter(m => m.lastRunStatus === 'success',).length;
-  const failedRuns = workflowMetrics.filter(m => m.lastRunStatus === 'failure',).length;
+  const successfulRuns = workflowMetrics.filter(
+    m => m.lastRunStatus === 'success',
+  ).length;
+  const failedRuns = workflowMetrics.filter(
+    m => m.lastRunStatus === 'failure',
+  ).length;
   const totalWorkflows = workflowMetrics.length;
-  const successRate = totalWorkflows > 0 ? Math.round((successfulRuns / totalWorkflows) * 10000) / 100 : 0;
+  const successRate =
+    totalWorkflows > 0
+      ? Math.round((successfulRuns / totalWorkflows) * 10000) / 100
+      : 0;
 
   return {
     workflowMetrics,
@@ -139,11 +152,11 @@ function calculateReportingMetrics(
 }
 
 /**
- * Creates a fact retriever for Reporting pipeline metrics from Github Actions. 
- * 
+ * Creates a fact retriever for Reporting pipeline metrics from Github Actions.
+ *
  * This retriever queries GitHub Actions workflow data for specified entity of type 'component',
  * focusing only on the last run of each workflow in the reporting/workflows annotation.
- * 
+ *
  * @returns A FactRetriever that collects pipeline status metrics based on last runs
  */
 export const reportingPipelineStatusFactRetriever: FactRetriever = {
@@ -153,7 +166,8 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
   schema: {
     workflowMetrics: {
       type: 'object',
-      description: 'Last run metrics for each reporting workflow as JSON object',
+      description:
+        'Last run metrics for each reporting workflow as JSON object',
     },
     totalIncludedWorkflows: {
       type: 'integer',
@@ -170,20 +184,28 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
     successRate: {
       type: 'float',
       description: 'Success rate based on last runs of included workflows',
-    }
+    },
   },
 
   /**
    * Handler function that retrieves pipeline status metrics for relevant entities.
-   * 
+   *
    * @param ctx - Context object containing configuration, logger, and other services
    * @returns Array of entity facts with pipeline status metrics
    */
-  async handler({ config, entityFilter, auth, discovery, logger, }): Promise<TechInsightFact[]> {
+  async handler({
+    config,
+    entityFilter,
+    auth,
+    discovery,
+    logger,
+  }): Promise<TechInsightFact[]> {
     // Retrieve GitHub token from config
     let token: string | undefined;
     try {
-      const githubConfigs = config.getOptionalConfigArray('integrations.github');
+      const githubConfigs = config.getOptionalConfigArray(
+        'integrations.github',
+      );
       const githubConfig = githubConfigs?.[0];
       token = githubConfig?.getOptionalString('token');
     } catch (e) {
@@ -215,7 +237,8 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
       githubEntities.map(async entity => {
         try {
           // Parse the github repo information from entity annotations
-          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] ?? '';
+          const projectSlug =
+            entity.metadata.annotations?.['github.com/project-slug'] ?? '';
           const [owner, repoName] = projectSlug.split('/');
 
           if (!owner || !repoName) {
@@ -228,7 +251,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
           }
 
           const headers: Record<string, string> = {
-            'Accept': 'application/vnd.github.v3+json',
+            Accept: 'application/vnd.github.v3+json',
           };
 
           if (token) {
@@ -259,8 +282,9 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             return null;
           }
 
-          // Fetch the target branch from the entity annotations file 
-          const targetBranch = entity.metadata.annotations?.['reporting/target-branch'] ?? 'main';
+          // Fetch the target branch from the entity annotations file
+          const targetBranch =
+            entity.metadata.annotations?.['reporting/target-branch'] ?? 'main';
 
           const workflowMetricsPromises = includedWorkflowIds.map(
             async workflowId => {
@@ -273,10 +297,13 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
               );
               if (!lastRun) return null;
 
-              const workflowName = workflowDefinitions.find(w => w.id === workflowId)?.name ?? `Workflow ID ${workflowId}`;
+              const workflowName =
+                workflowDefinitions.find(w => w.id === workflowId)?.name ??
+                `Workflow ID ${workflowId}`;
               let lastRunStatus: 'success' | 'failure' | 'unknown' = 'unknown';
               if (lastRun.status === 'completed') {
-                lastRunStatus = lastRun.conclusion === 'success' ? 'success' : 'failure';
+                lastRunStatus =
+                  lastRun.conclusion === 'success' ? 'success' : 'failure';
               }
 
               return {
@@ -308,7 +335,9 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
     );
 
     // Filter null results and ensure they match TechInsightFact type
-    const validResults = results.filter((r): r is TechInsightFact => r !== null);
+    const validResults = results.filter(
+      (r): r is TechInsightFact => r !== null,
+    );
     return validResults;
   },
 };

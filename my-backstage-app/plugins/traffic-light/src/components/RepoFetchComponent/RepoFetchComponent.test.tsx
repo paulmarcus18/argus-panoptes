@@ -29,12 +29,12 @@ describe('RepoFetchComponent', () => {
     const mockReposData = [
       { name: 'repo1', description: 'Description for repo1' },
       { name: 'repo2', description: null },
-      { name: 'repo3', description: 'Description for repo3' }
+      { name: 'repo3', description: 'Description for repo3' },
     ];
 
     const mockResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue(mockReposData)
+      json: jest.fn().mockResolvedValue(mockReposData),
     };
 
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
@@ -48,13 +48,13 @@ describe('RepoFetchComponent', () => {
     // Wait for the async function to complete
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://api.github.com/orgs/philips-labs/repos'
+        'https://api.github.com/orgs/philips-labs/repos',
       );
-      
+
       expect(mockOnData).toHaveBeenCalledWith([
         { name: 'repo1', description: 'Description for repo1' },
         { name: 'repo2', description: 'No description' },
-        { name: 'repo3', description: 'Description for repo3' }
+        { name: 'repo3', description: 'Description for repo3' },
       ]);
     });
   });
@@ -63,7 +63,7 @@ describe('RepoFetchComponent', () => {
     // Arrange
     const mockResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue([])
+      json: jest.fn().mockResolvedValue([]),
     };
 
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
@@ -93,7 +93,7 @@ describe('RepoFetchComponent', () => {
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Failed to fetch repos:',
-        mockError
+        mockError,
       );
       expect(mockOnData).not.toHaveBeenCalled();
     });
@@ -103,7 +103,7 @@ describe('RepoFetchComponent', () => {
     // Arrange
     const mockResponse = {
       ok: true,
-      json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
+      json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
     };
 
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
@@ -125,7 +125,7 @@ describe('RepoFetchComponent', () => {
     const mockReposData = [{ name: 'repo1', description: 'test' }];
     const mockResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue(mockReposData)
+      json: jest.fn().mockResolvedValue(mockReposData),
     };
 
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
@@ -157,7 +157,7 @@ describe('RepoFetchComponent', () => {
     // Arrange
     const mockResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue([])
+      json: jest.fn().mockResolvedValue([]),
     };
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 

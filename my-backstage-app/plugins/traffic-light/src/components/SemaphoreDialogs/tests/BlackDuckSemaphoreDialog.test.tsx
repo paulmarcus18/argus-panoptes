@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { ThemeProvider } from '@material-ui/core/styles';
-import { createTheme } from '@material-ui/core/styles'
+import { createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
@@ -17,13 +17,13 @@ jest.mock('../../Semaphores/BlackDuckTrafficLight');
 
 // Mock the BaseSemaphoreDialog component
 jest.mock('../BaseSemaphoreDialogs', () => ({
-  BaseSemaphoreDialog: ({ 
-    open, 
-    onClose, 
-    title, 
-    data, 
-    isLoading, 
-    renderMetrics 
+  BaseSemaphoreDialog: ({
+    open,
+    onClose,
+    title,
+    data,
+    isLoading,
+    renderMetrics,
   }: any) => (
     <div data-testid="base-semaphore-dialog">
       <div data-testid="dialog-title">{title}</div>
@@ -33,9 +33,7 @@ jest.mock('../BaseSemaphoreDialogs', () => ({
       <div data-testid="dialog-summary">{data.summary}</div>
       <div data-testid="dialog-details-count">{data.details.length}</div>
       {renderMetrics && (
-        <div data-testid="rendered-metrics">
-          {renderMetrics()}
-        </div>
+        <div data-testid="rendered-metrics">{renderMetrics()}</div>
       )}
       <button data-testid="close-button" onClick={onClose}>
         Close
@@ -58,8 +56,13 @@ const mockBlackDuckUtils = {
   getTop5CriticalBlackDuckRepos: jest.fn(),
 };
 
-const MockedBlackDuckUtils = BlackDuckUtils as jest.MockedClass<typeof BlackDuckUtils>;
-const mockedDetermineBlackDuckColor = determineBlackDuckColor as jest.MockedFunction<typeof determineBlackDuckColor>;
+const MockedBlackDuckUtils = BlackDuckUtils as jest.MockedClass<
+  typeof BlackDuckUtils
+>;
+const mockedDetermineBlackDuckColor =
+  determineBlackDuckColor as jest.MockedFunction<
+    typeof determineBlackDuckColor
+  >;
 
 // Test data
 const mockEntity: Entity = {
@@ -103,7 +106,10 @@ const mockTop5Repos = [
     security_risks_medium: 0,
   },
   {
-    entity: { ...mockEntity, metadata: { ...mockEntity.metadata, name: 'repo-2' } },
+    entity: {
+      ...mockEntity,
+      metadata: { ...mockEntity.metadata, name: 'repo-2' },
+    },
     security_risks_critical: 0,
     security_risks_high: 8,
     security_risks_medium: 0,
@@ -115,14 +121,12 @@ const theme = createTheme();
 const createWrapper = () => {
   const apis = TestApiRegistry.from(
     [techInsightsApiRef, mockTechInsightsApi],
-    [catalogApiRef, mockCatalogApi]
+    [catalogApiRef, mockCatalogApi],
   );
 
   return ({ children }: { children: React.ReactNode }) => (
     <ApiProvider apis={apis}>
-      <ThemeProvider theme={theme}>
-        {children}
-      </ThemeProvider>
+      <ThemeProvider theme={theme}>{children}</ThemeProvider>
     </ApiProvider>
   );
 };
@@ -130,14 +134,19 @@ const createWrapper = () => {
 describe('BlackDuckSemaphoreDialog', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup BlackDuckUtils mock
     MockedBlackDuckUtils.mockImplementation(() => mockBlackDuckUtils as any);
-    
+
     // Default mock implementations
     mockBlackDuckUtils.getBlackDuckFacts.mockResolvedValue(mockBlackDuckFacts);
-    mockBlackDuckUtils.getTop5CriticalBlackDuckRepos.mockResolvedValue(mockTop5Repos);
-    mockedDetermineBlackDuckColor.mockResolvedValue({ color: 'red', reason: 'Critical security risks found.' });
+    mockBlackDuckUtils.getTop5CriticalBlackDuckRepos.mockResolvedValue(
+      mockTop5Repos,
+    );
+    mockedDetermineBlackDuckColor.mockResolvedValue({
+      color: 'red',
+      reason: 'Critical security risks found.',
+    });
   });
 
   describe('Initial State', () => {
@@ -148,7 +157,7 @@ describe('BlackDuckSemaphoreDialog', () => {
       render(
         <Wrapper>
           <BlackDuckSemaphoreDialog open={false} onClose={mockOnClose} />
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByTestId('dialog-open')).toHaveTextContent('false');
@@ -164,12 +173,12 @@ describe('BlackDuckSemaphoreDialog', () => {
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[mockEntity]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntity]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -180,7 +189,7 @@ describe('BlackDuckSemaphoreDialog', () => {
             kind: 'Component',
             namespace: 'default',
             name: 'test-component',
-          }
+          },
         );
       });
     });
@@ -193,12 +202,12 @@ describe('BlackDuckSemaphoreDialog', () => {
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={entities} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={entities}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -206,7 +215,7 @@ describe('BlackDuckSemaphoreDialog', () => {
         expect(mockBlackDuckUtils.getBlackDuckFacts).toHaveBeenCalledTimes(1);
         expect(mockBlackDuckUtils.getBlackDuckFacts).toHaveBeenCalledWith(
           mockTechInsightsApi,
-          expect.objectContaining({ name: 'test-component' })
+          expect.objectContaining({ name: 'test-component' }),
         );
       });
     });
@@ -218,12 +227,12 @@ describe('BlackDuckSemaphoreDialog', () => {
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[mockEntityWithoutBlackDuck]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntityWithoutBlackDuck]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -235,18 +244,20 @@ describe('BlackDuckSemaphoreDialog', () => {
     it('handles API errors gracefully', async () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
-      
-      mockBlackDuckUtils.getBlackDuckFacts.mockRejectedValue(new Error('API Error'));
+
+      mockBlackDuckUtils.getBlackDuckFacts.mockRejectedValue(
+        new Error('API Error'),
+      );
 
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[mockEntity]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntity]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -260,8 +271,14 @@ describe('BlackDuckSemaphoreDialog', () => {
     it('correctly aggregates security risk totals', async () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
-      
-      const multipleEntities = [mockEntity, { ...mockEntity, metadata: { ...mockEntity.metadata, name: 'entity-2' } }];
+
+      const multipleEntities = [
+        mockEntity,
+        {
+          ...mockEntity,
+          metadata: { ...mockEntity.metadata, name: 'entity-2' },
+        },
+      ];
       mockBlackDuckUtils.getBlackDuckFacts
         .mockResolvedValueOnce(mockBlackDuckFacts)
         .mockResolvedValueOnce({
@@ -273,12 +290,12 @@ describe('BlackDuckSemaphoreDialog', () => {
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={multipleEntities} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={multipleEntities}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -300,17 +317,19 @@ describe('BlackDuckSemaphoreDialog', () => {
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[mockEntity]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntity]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('2');
+        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
+          '2',
+        );
       });
     });
 
@@ -318,17 +337,20 @@ describe('BlackDuckSemaphoreDialog', () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
 
-      mockedDetermineBlackDuckColor.mockResolvedValue({ color: 'red', reason: 'Critical security risks found.' });
+      mockedDetermineBlackDuckColor.mockResolvedValue({
+        color: 'red',
+        reason: 'Critical security risks found.',
+      });
 
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[mockEntity]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntity]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -341,17 +363,20 @@ describe('BlackDuckSemaphoreDialog', () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
 
-      mockedDetermineBlackDuckColor.mockResolvedValue({ color: 'yellow', reason: 'Security risks need to be addressed before release.' });
+      mockedDetermineBlackDuckColor.mockResolvedValue({
+        color: 'yellow',
+        reason: 'Security risks need to be addressed before release.',
+      });
 
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[mockEntity]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntity]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -364,17 +389,20 @@ describe('BlackDuckSemaphoreDialog', () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
 
-      mockedDetermineBlackDuckColor.mockResolvedValue({ color: 'green', reason: 'No critical security risks were found.' });
+      mockedDetermineBlackDuckColor.mockResolvedValue({
+        color: 'green',
+        reason: 'No critical security risks were found.',
+      });
 
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[mockEntity]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntity]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -392,12 +420,12 @@ describe('BlackDuckSemaphoreDialog', () => {
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[mockEntity]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntity]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -416,19 +444,19 @@ describe('BlackDuckSemaphoreDialog', () => {
 
       await act(async () => {
         render(
-            <Wrapper>
-            <BlackDuckSemaphoreDialog 
-                open={true} 
-                onClose={mockOnClose} 
-                entities={[mockEntity]} 
+          <Wrapper>
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntity]}
             />
-            </Wrapper>
+          </Wrapper>,
         );
       });
 
       expect(screen.getByTestId('dialog-title')).toHaveTextContent('BlackDuck');
       expect(screen.getByTestId('dialog-open')).toHaveTextContent('true');
-      
+
       // Test onClose callback
       const closeButton = screen.getByTestId('close-button');
       closeButton.click();
@@ -443,12 +471,12 @@ describe('BlackDuckSemaphoreDialog', () => {
 
       render(
         <Wrapper>
-          <BlackDuckSemaphoreDialog 
-            open={true} 
-            onClose={mockOnClose} 
-            entities={[]} 
+          <BlackDuckSemaphoreDialog
+            open={true}
+            onClose={mockOnClose}
+            entities={[]}
           />
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(mockBlackDuckUtils.getBlackDuckFacts).not.toHaveBeenCalled();
@@ -457,7 +485,7 @@ describe('BlackDuckSemaphoreDialog', () => {
     it('handles entities without namespace', async () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
-      
+
       const entityWithoutNamespace: Entity = {
         ...mockEntity,
         metadata: {
@@ -469,19 +497,19 @@ describe('BlackDuckSemaphoreDialog', () => {
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[entityWithoutNamespace]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[entityWithoutNamespace]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
       await waitFor(() => {
         expect(mockBlackDuckUtils.getBlackDuckFacts).toHaveBeenCalledWith(
           mockTechInsightsApi,
-          expect.objectContaining({ namespace: 'default' })
+          expect.objectContaining({ namespace: 'default' }),
         );
       });
     });
@@ -489,7 +517,7 @@ describe('BlackDuckSemaphoreDialog', () => {
     it('handles missing security risk data', async () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
-      
+
       mockBlackDuckUtils.getBlackDuckFacts.mockResolvedValue({
         security_risks_critical: undefined,
         security_risks_high: null,
@@ -499,12 +527,12 @@ describe('BlackDuckSemaphoreDialog', () => {
       await act(async () => {
         render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[mockEntity]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntity]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -522,12 +550,12 @@ describe('BlackDuckSemaphoreDialog', () => {
 
       render(
         <Wrapper>
-          <BlackDuckSemaphoreDialog 
-            open={false} 
-            onClose={mockOnClose} 
-            entities={[mockEntity]} 
+          <BlackDuckSemaphoreDialog
+            open={false}
+            onClose={mockOnClose}
+            entities={[mockEntity]}
           />
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(mockBlackDuckUtils.getBlackDuckFacts).not.toHaveBeenCalled();
@@ -540,12 +568,12 @@ describe('BlackDuckSemaphoreDialog', () => {
       const { rerender } = await act(async () => {
         return render(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[mockEntity]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[mockEntity]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 
@@ -553,17 +581,20 @@ describe('BlackDuckSemaphoreDialog', () => {
         expect(mockBlackDuckUtils.getBlackDuckFacts).toHaveBeenCalledTimes(1);
       });
 
-      const newEntity = { ...mockEntity, metadata: { ...mockEntity.metadata, name: 'new-entity' } };
-      
+      const newEntity = {
+        ...mockEntity,
+        metadata: { ...mockEntity.metadata, name: 'new-entity' },
+      };
+
       await act(async () => {
         rerender(
           <Wrapper>
-            <BlackDuckSemaphoreDialog 
-              open={true} 
-              onClose={mockOnClose} 
-              entities={[newEntity]} 
+            <BlackDuckSemaphoreDialog
+              open={true}
+              onClose={mockOnClose}
+              entities={[newEntity]}
             />
-          </Wrapper>
+          </Wrapper>,
         );
       });
 

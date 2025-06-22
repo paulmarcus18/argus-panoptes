@@ -89,7 +89,10 @@ describe('ReportingTrafficLight Component', () => {
     jest.clearAllMocks();
   });
 
-  const renderComponent = (entities: Entity[] = mockEntities, onClick?: () => void) => {
+  const renderComponent = (
+    entities: Entity[] = mockEntities,
+    onClick?: () => void,
+  ) => {
     return render(
       <TestApiProvider
         apis={[
@@ -98,7 +101,7 @@ describe('ReportingTrafficLight Component', () => {
         ]}
       >
         <ReportingTrafficLight entities={entities} onClick={onClick} />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
   };
 
@@ -106,7 +109,10 @@ describe('ReportingTrafficLight Component', () => {
     renderComponent();
     const light = screen.getByTestId('base-traffic-light');
     expect(light).toHaveAttribute('data-color', 'white');
-    expect(light).toHaveAttribute('data-tooltip', 'Loading Reporting pipeline data...');
+    expect(light).toHaveAttribute(
+      'data-tooltip',
+      'Loading Reporting pipeline data...',
+    );
   });
 
   it('sets gray when no entities are passed', async () => {
@@ -160,7 +166,10 @@ describe('ReportingTrafficLight Component', () => {
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'red');
-      expect(light).toHaveAttribute('data-tooltip', 'Reporting failures detected');
+      expect(light).toHaveAttribute(
+        'data-tooltip',
+        'Reporting failures detected',
+      );
     });
   });
 

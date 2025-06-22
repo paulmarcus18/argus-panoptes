@@ -6,7 +6,8 @@ export const DependabotChecks: DynamicThresholdCheck[] = [
     name: 'Dependabot Critical Alerts Count',
     type: 'number',
     factIds: ['dependabotFactRetriever', 'critical'],
-    annotationKeyThreshold: 'tech-insights.io/dependabot-critical-alert-threshold',
+    annotationKeyThreshold:
+      'tech-insights.io/dependabot-critical-alert-threshold',
     annotationKeyOperator: 'tech-insights.io/dependabot-operator',
     description: 'Maximum number of critical Dependabot alerts allowed',
   },
@@ -24,7 +25,8 @@ export const DependabotChecks: DynamicThresholdCheck[] = [
     name: 'Dependabot Medium Alerts Count',
     type: 'number',
     factIds: ['dependabotFactRetriever', 'medium'],
-    annotationKeyThreshold: 'tech-insights.io/dependabot-medium-alert-threshold',
+    annotationKeyThreshold:
+      'tech-insights.io/dependabot-medium-alert-threshold',
     annotationKeyOperator: 'tech-insights.io/dependabot-operator',
     description: 'Maximum number of medium Dependabot alerts allowed',
   },

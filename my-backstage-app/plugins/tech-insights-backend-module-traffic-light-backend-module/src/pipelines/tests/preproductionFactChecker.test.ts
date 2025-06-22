@@ -1,14 +1,14 @@
-import { preproductionPipelineChecks } from "../preproductionFactChecker";
+import { preproductionPipelineChecks } from '../preproductionFactChecker';
 
 describe('Preproduction Pipeline Checks Configuration', () => {
   const requiredFields = [
-    'id', 
-    'name', 
-    'type', 
-    'factIds', 
-    'annotationKeyThreshold', 
-    'annotationKeyOperator', 
-    'description'
+    'id',
+    'name',
+    'type',
+    'factIds',
+    'annotationKeyThreshold',
+    'annotationKeyOperator',
+    'description',
   ];
 
   // Test: each check should have the required fields
@@ -25,11 +25,15 @@ describe('Preproduction Pipeline Checks Configuration', () => {
     preproductionPipelineChecks.forEach(check => {
       // Check IDs follow the pattern 'preproduction-*'
       expect(check.id).toMatch(/^preproduction-/);
-      
+
       // Check that annotation keys follow convention
-      expect(check.annotationKeyThreshold).toMatch(/^tech-insights\.io\/preproduction-/);
-      expect(check.annotationKeyOperator).toMatch(/^tech-insights\.io\/preproduction-/);
-      
+      expect(check.annotationKeyThreshold).toMatch(
+        /^tech-insights\.io\/preproduction-/,
+      );
+      expect(check.annotationKeyOperator).toMatch(
+        /^tech-insights\.io\/preproduction-/,
+      );
+
       // Check that all factIds arrays start with the correct retriever
       expect(check.factIds[0]).toBe('githubPipelineStatusFactRetriever');
     });
@@ -39,10 +43,12 @@ describe('Preproduction Pipeline Checks Configuration', () => {
   test('checks cover expected metrics', () => {
     // Verify that important pipeline metrics are covered
     const expectedMetrics = ['successRate'];
-    
+
     // Extract second factId (the actual metric being checked)
-    const coveredMetrics = preproductionPipelineChecks.map(check => check.factIds[1]);
-    
+    const coveredMetrics = preproductionPipelineChecks.map(
+      check => check.factIds[1],
+    );
+
     // Ensure all expected metrics are covered
     expectedMetrics.forEach(metric => {
       expect(coveredMetrics).toContain(metric);
@@ -52,12 +58,15 @@ describe('Preproduction Pipeline Checks Configuration', () => {
   // Test: verify specific check configurations
   test('preproduction success rate check is properly configured', () => {
     const successRateCheck = preproductionPipelineChecks.find(
-      check => check.id === 'preproduction-success-rate'
+      check => check.id === 'preproduction-success-rate',
     );
-    
+
     expect(successRateCheck).toBeDefined();
     expect(successRateCheck?.type).toBe('percentage');
-    expect(successRateCheck?.factIds).toEqual(['githubPipelineStatusFactRetriever', 'successRate']);
+    expect(successRateCheck?.factIds).toEqual([
+      'githubPipelineStatusFactRetriever',
+      'successRate',
+    ]);
     expect(successRateCheck?.name).toBe('Preproduction Pipeline Success Rate');
     expect(successRateCheck?.description).toContain('pipeline success rate');
   });
@@ -67,7 +76,7 @@ describe('Preproduction Pipeline Checks Configuration', () => {
     preproductionPipelineChecks.forEach(check => {
       const expectedThresholdKey = `tech-insights.io/${check.id}-threshold`;
       const expectedOperatorKey = `tech-insights.io/${check.id}-operator`;
-      
+
       expect(check.annotationKeyThreshold).toBe(expectedThresholdKey);
       expect(check.annotationKeyOperator).toBe(expectedOperatorKey);
     });
@@ -86,7 +95,7 @@ describe('Preproduction Pipeline Checks Configuration', () => {
   // Test: type field validation
   test('type field contains valid values', () => {
     const validTypes = ['percentage', 'number', 'boolean'];
-    
+
     preproductionPipelineChecks.forEach(check => {
       expect(validTypes).toContain(check.type);
     });

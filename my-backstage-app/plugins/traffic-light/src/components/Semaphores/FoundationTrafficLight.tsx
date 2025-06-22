@@ -21,10 +21,7 @@ export const FoundationTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
-  const foundationUtils = React.useMemo(
-    () => new FoundationUtils(),
-    [],
-  );
+  const foundationUtils = React.useMemo(() => new FoundationUtils(), []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,11 +68,12 @@ export const FoundationTrafficLight = ({
         }
 
         // Step 4: Filter entities to only include configured repositories
-        const filteredEntities = configuredRepoNames.length > 0 
-          ? entities.filter(entity => 
-              configuredRepoNames.includes(entity.metadata.name)
-            )
-          : entities; // Fallback to all entities if no configuration found
+        const filteredEntities =
+          configuredRepoNames.length > 0
+            ? entities.filter(entity =>
+                configuredRepoNames.includes(entity.metadata.name),
+              )
+            : entities; // Fallback to all entities if no configuration found
 
         if (filteredEntities.length === 0) {
           setColor('gray');

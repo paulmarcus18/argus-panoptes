@@ -25,18 +25,24 @@ describe('SonarCloud Fact Retriever', () => {
       token: 'test-token',
     },
   });
-  
+
   const mockLogger = getVoidLogger();
 
   // Mock discovery API for service URLs
   const mockDiscovery = {
-    getBaseUrl: jest.fn().mockResolvedValue('http://backstage.test/api/catalog'),
-    getExternalBaseUrl: jest.fn().mockResolvedValue('http://backstage.test/external'),
+    getBaseUrl: jest
+      .fn()
+      .mockResolvedValue('http://backstage.test/api/catalog'),
+    getExternalBaseUrl: jest
+      .fn()
+      .mockResolvedValue('http://backstage.test/external'),
   };
-  
+
   // Mock authentication API
   const mockAuth: any = {
-    getPluginRequestToken: jest.fn().mockResolvedValue({ token: 'catalog-token' }),
+    getPluginRequestToken: jest
+      .fn()
+      .mockResolvedValue({ token: 'catalog-token' }),
     getOwnServiceCredentials: jest.fn().mockResolvedValue('service-creds'),
     authenticate: jest.fn(),
     isPrincipal: jest.fn().mockImplementation(() => false),
@@ -44,13 +50,13 @@ describe('SonarCloud Fact Retriever', () => {
     getLimitedUserToken: jest.fn(),
     listPublicServiceKeys: jest.fn(),
   };
-  
+
   // Reset mocks before each test
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetEntitiesImpl.mockReset();
   });
-  
+
   /**
    * Helper function to create a test entity
    * @param overrides - Partial entity metadata to override defaults
@@ -92,45 +98,47 @@ describe('SonarCloud Fact Retriever', () => {
   // Test: Fact retriever is created with correct configuration
   it('should create a fact retriever with correct id and schema', async () => {
     const factRetriever = createSonarCloudFactRetriever(mockConfig);
-    
+
     // Verify the fact retriever is set up correctly
-    expect(factRetriever).toEqual(expect.objectContaining({
-      id: 'sonarcloud-fact-retriever',
-      version: '1.0',
-      entityFilter: [{ kind: 'component' }],
-      schema: {
-        bugs: {
-          type: 'integer',
-          description: 'Number of bugs detected by SonarCloud',
+    expect(factRetriever).toEqual(
+      expect.objectContaining({
+        id: 'sonarcloud-fact-retriever',
+        version: '1.0',
+        entityFilter: [{ kind: 'component' }],
+        schema: {
+          bugs: {
+            type: 'integer',
+            description: 'Number of bugs detected by SonarCloud',
+          },
+          code_smells: {
+            type: 'integer',
+            description: 'Number of code smells detected by SonarCloud',
+          },
+          vulnerabilities: {
+            type: 'integer',
+            description: 'Number of vulnerabilities detected',
+          },
+          code_coverage: {
+            type: 'float',
+            description: 'Percentage of code coverage from SonarCloud',
+          },
+          quality_gate: {
+            type: 'string',
+            description: 'Quality gate status from SonarCloud',
+          },
         },
-        code_smells: {
-          type: 'integer',
-          description: 'Number of code smells detected by SonarCloud',
-        },
-        vulnerabilities: {
-          type: 'integer',
-          description: 'Number of vulnerabilities detected',
-        },
-        code_coverage: {
-          type: 'float',
-          description: 'Percentage of code coverage from SonarCloud',
-        },
-        quality_gate: {
-          type: 'string',
-          description: 'Quality gate status from SonarCloud',
-        },
-      },
-      handler: expect.any(Function),
-    }));
+        handler: expect.any(Function),
+      }),
+    );
   });
 
-  // Test: Retrieves SonarCloud metrics for enabled components  
+  // Test: Retrieves SonarCloud metrics for enabled components
   it('should retrieve SonarCloud metrics for enabled components', async () => {
     // Setup test entity
     const testEntity = createTestEntity();
-    
+
     mockGetEntitiesImpl.mockResolvedValue({ items: [testEntity] });
-    
+
     // Fetch metrics data
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -145,7 +153,7 @@ describe('SonarCloud Fact Retriever', () => {
         },
       }),
     });
-    
+
     // Fetch quality gate status
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -169,7 +177,7 @@ describe('SonarCloud Fact Retriever', () => {
 
     // Create the fact retriever
     const factRetriever = createSonarCloudFactRetriever(mockConfig);
-    
+
     // Execute the handler
     const result = await factRetriever.handler({
       config: mockConfig,
@@ -181,9 +189,9 @@ describe('SonarCloud Fact Retriever', () => {
         read: jest.fn(),
         readTree: jest.fn(),
         search: jest.fn(),
-      } as unknown as UrlReaderService
+      } as unknown as UrlReaderService,
     });
-    
+
     // Verify the results
     expect(result[0]).toEqual({
       entity: {
@@ -199,7 +207,7 @@ describe('SonarCloud Fact Retriever', () => {
         quality_gate: 'OK',
       },
     });
-    
+
     // Verify that fetch was called with the correct URLs and headers
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockFetch).toHaveBeenNthCalledWith(
@@ -207,21 +215,25 @@ describe('SonarCloud Fact Retriever', () => {
       'https://sonarcloud.io/api/measures/component?component=test-project&metricKeys=bugs,code_smells,vulnerabilities,coverage',
       {
         headers: {
-          'Authorization': `Basic ${Buffer.from('test-token:').toString('base64')}`,
+          Authorization: `Basic ${Buffer.from('test-token:').toString(
+            'base64',
+          )}`,
         },
-      }
+      },
     );
     expect(mockFetch).toHaveBeenNthCalledWith(
       2,
       'https://sonarcloud.io/api/qualitygates/project_status?projectKey=test-project',
       {
         headers: {
-          'Authorization': `Basic ${Buffer.from('test-token:').toString('base64')}`,
+          Authorization: `Basic ${Buffer.from('test-token:').toString(
+            'base64',
+          )}`,
         },
-      }
+      },
     );
   });
-  
+
   // Test: Filters out components without SonarCloud enabled
   it('should filter out components that do not have SonarCloud enabled', async () => {
     // Setup mock entities - one enabled, one disabled
@@ -235,9 +247,11 @@ describe('SonarCloud Fact Retriever', () => {
         },
       },
     });
-    
-    mockGetEntitiesImpl.mockResolvedValue({ items: [enabledEntity, disabledEntity] });
-    
+
+    mockGetEntitiesImpl.mockResolvedValue({
+      items: [enabledEntity, disabledEntity],
+    });
+
     // Fetch metrics data
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -273,10 +287,10 @@ describe('SonarCloud Fact Retriever', () => {
         },
       }),
     });
-    
+
     // Create the fact retriever
     const factRetriever = createSonarCloudFactRetriever(mockConfig);
-    
+
     // Execute the handler
     const result = await factRetriever.handler({
       config: mockConfig,
@@ -288,17 +302,17 @@ describe('SonarCloud Fact Retriever', () => {
         read: jest.fn(),
         readTree: jest.fn(),
         search: jest.fn(),
-      } as unknown as UrlReaderService
+      } as unknown as UrlReaderService,
     });
-    
+
     // Verify only one result is returned (the enabled entity)
     expect(result).toHaveLength(1);
     expect(result[0].entity.name).toBe('test-component');
-    
+
     // Verify fetch was called only for the enabled entity (2 calls in total)
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
-  
+
   // Test: Handles missing project key annotation
   it('should handle missing project key annotation', async () => {
     // Setup mock entity with missing project key
@@ -311,12 +325,12 @@ describe('SonarCloud Fact Retriever', () => {
         },
       },
     });
-    
+
     mockGetEntitiesImpl.mockResolvedValue({ items: [noKeyEntity] });
-    
+
     // Create the fact retriever
     const factRetriever = createSonarCloudFactRetriever(mockConfig);
-    
+
     // Execute the handler
     const result = await factRetriever.handler({
       config: mockConfig,
@@ -328,22 +342,22 @@ describe('SonarCloud Fact Retriever', () => {
         read: jest.fn(),
         readTree: jest.fn(),
         search: jest.fn(),
-      } as unknown as UrlReaderService
+      } as unknown as UrlReaderService,
     });
-    
+
     // Verify no results are returned
     expect(result).toHaveLength(0);
-    
+
     // Verify fetch was not called
     expect(mockFetch).not.toHaveBeenCalled();
   });
-  
+
   // Test: Handles SonarCloud API failures
   it('should handle SonarCloud API failures', async () => {
     const testEntity = createTestEntity();
-    
+
     mockGetEntitiesImpl.mockResolvedValue({ items: [testEntity] });
-    
+
     // Mock a failed API response
     mockFetch.mockResolvedValueOnce({
       ok: false,
@@ -351,10 +365,10 @@ describe('SonarCloud Fact Retriever', () => {
       statusText: 'Unauthorized',
       text: async () => 'Invalid token',
     });
-    
+
     // Create the fact retriever
     const factRetriever = createSonarCloudFactRetriever(mockConfig);
-    
+
     // Execute the handler
     const result = await factRetriever.handler({
       config: mockConfig,
@@ -366,19 +380,19 @@ describe('SonarCloud Fact Retriever', () => {
         read: jest.fn(),
         readTree: jest.fn(),
         search: jest.fn(),
-      } as unknown as UrlReaderService
+      } as unknown as UrlReaderService,
     });
-    
+
     // Verify no results are returned
     expect(result).toHaveLength(0);
   });
-  
+
   // Test: Handles missing metric values in SonarCloud response
   it('should handle missing metric values in SonarCloud response', async () => {
     const testEntity = createTestEntity();
-    
+
     mockGetEntitiesImpl.mockResolvedValue({ items: [testEntity] });
-    
+
     // Mock a response with missing metrics
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -412,10 +426,10 @@ describe('SonarCloud Fact Retriever', () => {
         },
       }),
     });
-    
+
     // Create the fact retriever
     const factRetriever = createSonarCloudFactRetriever(mockConfig);
-    
+
     // Execute the handler
     const result = await factRetriever.handler({
       config: mockConfig,
@@ -427,9 +441,9 @@ describe('SonarCloud Fact Retriever', () => {
         read: jest.fn(),
         readTree: jest.fn(),
         search: jest.fn(),
-      } as unknown as UrlReaderService
+      } as unknown as UrlReaderService,
     });
-    
+
     // Verify the results - missing metrics should be 0
     expect(result).toHaveLength(1);
     expect(result[0].facts).toEqual({
@@ -437,16 +451,16 @@ describe('SonarCloud Fact Retriever', () => {
       code_smells: 0,
       vulnerabilities: 0,
       code_coverage: 0.0,
-      quality_gate: 'OK'
+      quality_gate: 'OK',
     });
   });
-  
+
   // Test: Handles missing quality gate status in SonarCloud response
   it('should handle missing quality gate status in SonarCloud response', async () => {
     const testEntity = createTestEntity();
-    
+
     mockGetEntitiesImpl.mockResolvedValue({ items: [testEntity] });
-    
+
     // Mock a response with missing metrics
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -474,10 +488,10 @@ describe('SonarCloud Fact Retriever', () => {
         },
       }),
     });
-    
+
     // Create the fact retriever
     const factRetriever = createSonarCloudFactRetriever(mockConfig);
-    
+
     // Execute the handler
     const result = await factRetriever.handler({
       config: mockConfig,
@@ -489,9 +503,9 @@ describe('SonarCloud Fact Retriever', () => {
         read: jest.fn(),
         readTree: jest.fn(),
         search: jest.fn(),
-      } as unknown as UrlReaderService
+      } as unknown as UrlReaderService,
     });
-    
+
     // Verify the results - missing metrics should be 0
     expect(result).toHaveLength(1);
     expect(result[0].facts).toEqual({
@@ -499,7 +513,7 @@ describe('SonarCloud Fact Retriever', () => {
       code_smells: 45,
       vulnerabilities: 5,
       code_coverage: 10.5,
-      quality_gate: 'NONE'
+      quality_gate: 'NONE',
     });
   });
 
@@ -516,10 +530,10 @@ describe('SonarCloud Fact Retriever', () => {
         },
       },
     });
-    
+
     // Set up mock response directly
     mockGetEntitiesImpl.mockResolvedValue({ items: [entity1, entity2] });
-    
+
     // Fetch metrics for both projects
     mockFetch
       .mockResolvedValueOnce({
@@ -548,7 +562,7 @@ describe('SonarCloud Fact Retriever', () => {
           },
         }),
       });
-    
+
     // Fetch quality gate status for both projects
     mockFetch
       .mockResolvedValueOnce({
@@ -569,7 +583,8 @@ describe('SonarCloud Fact Retriever', () => {
             ignoredConditions: false,
           },
         }),
-      }).mockResolvedValueOnce({
+      })
+      .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           projectStatus: {
@@ -586,12 +601,12 @@ describe('SonarCloud Fact Retriever', () => {
             periods: [],
             ignoredConditions: false,
           },
-      }),
-    });
-      
+        }),
+      });
+
     // Create the fact retriever
     const factRetriever = createSonarCloudFactRetriever(mockConfig);
-    
+
     // Execute the handler
     const result = await factRetriever.handler({
       config: mockConfig,
@@ -603,12 +618,12 @@ describe('SonarCloud Fact Retriever', () => {
         read: jest.fn(),
         readTree: jest.fn(),
         search: jest.fn(),
-      } as unknown as UrlReaderService
+      } as unknown as UrlReaderService,
     });
-    
+
     // Verify the results for both components
     expect(result).toHaveLength(2);
-    
+
     expect(result[0].entity.name).toBe('test-component');
     expect(result[0].facts).toEqual({
       bugs: 10,
@@ -617,7 +632,7 @@ describe('SonarCloud Fact Retriever', () => {
       code_coverage: 10.5,
       quality_gate: 'OK',
     });
-    
+
     expect(result[1].entity.name).toBe('component-2');
     expect(result[1].facts).toEqual({
       bugs: 3,
@@ -626,36 +641,40 @@ describe('SonarCloud Fact Retriever', () => {
       code_coverage: 30.2,
       quality_gate: 'OK',
     });
-    
+
     // Verify fetch was called twice with the correct URLs
     expect(mockFetch).toHaveBeenCalledTimes(4);
     expect(mockFetch).toHaveBeenNthCalledWith(
       1,
       'https://sonarcloud.io/api/measures/component?component=test-project&metricKeys=bugs,code_smells,vulnerabilities,coverage',
-      expect.any(Object)
+      expect.any(Object),
     );
     expect(mockFetch).toHaveBeenNthCalledWith(
       2,
       'https://sonarcloud.io/api/measures/component?component=project-2&metricKeys=bugs,code_smells,vulnerabilities,coverage',
-      expect.any(Object)
+      expect.any(Object),
     );
     expect(mockFetch).toHaveBeenNthCalledWith(
       3,
       'https://sonarcloud.io/api/qualitygates/project_status?projectKey=test-project',
       {
         headers: {
-          'Authorization': `Basic ${Buffer.from('test-token:').toString('base64')}`,
+          Authorization: `Basic ${Buffer.from('test-token:').toString(
+            'base64',
+          )}`,
         },
-      }
+      },
     );
     expect(mockFetch).toHaveBeenNthCalledWith(
       4,
       'https://sonarcloud.io/api/qualitygates/project_status?projectKey=project-2',
       {
         headers: {
-          'Authorization': `Basic ${Buffer.from('test-token:').toString('base64')}`,
+          Authorization: `Basic ${Buffer.from('test-token:').toString(
+            'base64',
+          )}`,
         },
-      }
+      },
     );
   });
 });

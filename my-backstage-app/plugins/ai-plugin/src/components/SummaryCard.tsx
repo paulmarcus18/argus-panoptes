@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Card,
   CardContent,
@@ -26,7 +25,7 @@ export const SummaryCard = ({
   const theme = useTheme();
 
   const filteredRepos = repos.filter(repo =>
-    repo.repoName.toLowerCase().includes(repoSearch.toLowerCase())
+    repo.repoName.toLowerCase().includes(repoSearch.toLowerCase()),
   );
 
   return (

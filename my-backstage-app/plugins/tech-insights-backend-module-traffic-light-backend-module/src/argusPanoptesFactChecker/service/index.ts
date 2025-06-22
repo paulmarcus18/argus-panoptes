@@ -3,6 +3,4 @@ export {
   DynamicThresholdFactChecker,
 } from './dynamicThresholdFactChecker';
 
-export type {
-  DynamicThresholdFactCheckerFactoryOptions,
-} from './dynamicThresholdFactChecker';
+export type { DynamicThresholdFactCheckerFactoryOptions } from './dynamicThresholdFactChecker';

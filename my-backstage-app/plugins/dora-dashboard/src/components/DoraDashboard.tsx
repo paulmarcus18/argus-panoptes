@@ -204,34 +204,10 @@ export const DoraDashboard = () => {
         alert('Start date must be before end date');
         return;
       }
-
-      // Validate date range based on aggregation type
-      const daysDiff = Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
       setFilterDates({ start: startDate, end: endDate });
     } else {
       alert('Please select both start and end dates');
     }
-  };
-
-  const formatDateRange = () => {
-    const start = filterDates.start || startDate;
-    const end = filterDates.end || endDate;
-
-    if (!start || !end) return 'No date range selected';
-
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    };
-
-    return `${start.toLocaleDateString(
-      'en-US',
-      options,
-    )} - ${end.toLocaleDateString('en-US', options)}`;
   };
 
   // Export functions

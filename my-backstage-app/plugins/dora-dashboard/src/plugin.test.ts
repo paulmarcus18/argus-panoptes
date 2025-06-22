@@ -1,6 +1,4 @@
-import React from 'react';
 import { doraDashboardPlugin, DoraDashboardPage } from './plugin';
-import { rootRouteRef } from './routes';
 
 describe('dora-dashboard plugin', () => {
   it('should be defined', () => {

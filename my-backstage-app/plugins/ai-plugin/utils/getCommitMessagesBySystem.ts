@@ -76,7 +76,11 @@ export async function getCommitMessagesBySystem(
          * list is being populated with a new object of the type
          * CommitsPerRepo.
          */
-        if (typeof recentCommitMessages === 'string' && timestamp && isToday(timestamp)) {
+        if (
+          typeof recentCommitMessages === 'string' &&
+          timestamp &&
+          isToday(timestamp)
+        ) {
           allCommitMessages.push({
             repoName: entityRef.name,
             commitMessages: recentCommitMessages,

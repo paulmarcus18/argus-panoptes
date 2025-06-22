@@ -24,7 +24,7 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
     try {
       const response = await client.getEntities(
         { filter: { kind: 'Component' } },
-        { token }
+        { token },
       );
       entities = response.items ?? [];
     } catch (e) {
@@ -32,7 +32,8 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
       return [];
     }
 
-    const azureConfigs = ctx.config.getOptionalConfigArray('integrations.azure');
+    const azureConfigs =
+      ctx.config.getOptionalConfigArray('integrations.azure');
     const azureConfig = azureConfigs?.[0];
     const pat = azureConfig?.getOptionalString('token');
 
@@ -74,7 +75,7 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
               Authorization: `Basic ${encodedPat}`,
               Accept: 'application/json',
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -99,7 +100,9 @@ export const createAzureDevOpsBugsRetriever: FactRetriever = {
           },
         });
       } catch (err) {
-        console.error(`Error retrieving bugs for ${entity.metadata.name}: ${err}`);
+        console.error(
+          `Error retrieving bugs for ${entity.metadata.name}: ${err}`,
+        );
       }
     }
 

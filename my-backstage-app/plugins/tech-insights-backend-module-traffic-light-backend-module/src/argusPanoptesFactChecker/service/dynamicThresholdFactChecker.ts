@@ -45,17 +45,45 @@ function evaluateCheckCondition(
 
   switch (operator) {
     case 'greaterThan':
-      return (rawValue !== undefined && isNumber && typeof threshold === 'number' && rawValue > threshold);
+      return (
+        rawValue !== undefined &&
+        isNumber &&
+        typeof threshold === 'number' &&
+        rawValue > threshold
+      );
     case 'greaterThanInclusive':
-      return (rawValue !== undefined && isNumber && typeof threshold === 'number' && rawValue >= threshold);
+      return (
+        rawValue !== undefined &&
+        isNumber &&
+        typeof threshold === 'number' &&
+        rawValue >= threshold
+      );
     case 'lessThan':
-      return (rawValue !== undefined && isNumber && typeof threshold === 'number' && rawValue < threshold);
+      return (
+        rawValue !== undefined &&
+        isNumber &&
+        typeof threshold === 'number' &&
+        rawValue < threshold
+      );
     case 'lessThanInclusive':
-      return (rawValue !== undefined && isNumber && typeof threshold === 'number' && rawValue <= threshold);
+      return (
+        rawValue !== undefined &&
+        isNumber &&
+        typeof threshold === 'number' &&
+        rawValue <= threshold
+      );
     case 'equal':
-      return (rawValue !== undefined && (isNumber || isString) && rawValue === threshold);
+      return (
+        rawValue !== undefined &&
+        (isNumber || isString) &&
+        rawValue === threshold
+      );
     case 'notEqual':
-      return (rawValue !== undefined && (isNumber || isString) && rawValue !== threshold);
+      return (
+        rawValue !== undefined &&
+        (isNumber || isString) &&
+        rawValue !== threshold
+      );
     default:
       return false; // Default to false if operator is not recognized
   }
@@ -79,13 +107,15 @@ function formatFactValue(rawValue: any): number | string | [] {
  * It fetches the entity, retrieves the relevant facts, and compares them to thresholds
  * defined in entity annotations.
  */
-export class DynamicThresholdFactChecker implements FactChecker<DynamicThresholdCheck, DynamicThresholdResult> {
+export class DynamicThresholdFactChecker
+  implements FactChecker<DynamicThresholdCheck, DynamicThresholdResult>
+{
   constructor(
     private readonly catalogApi: CatalogApi,
     private readonly repository: TechInsightsStore,
     private readonly logger: LoggerService,
     private readonly checks: DynamicThresholdCheck[],
-  ) { }
+  ) {}
 
   // Run checks for a given entity
   async runChecks(
@@ -119,7 +149,9 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
     }
 
     // Filter checks to run by checkIds if provided
-    const checksToRun = this.checks.filter(c => !checkIds || checkIds.includes(c.id));
+    const checksToRun = this.checks.filter(
+      c => !checkIds || checkIds.includes(c.id),
+    );
     // Retrieve the latest facts for all relevant factIds
     const factValues = await this.repository.getLatestFactsByIds(
       checksToRun.map(c => c.factIds).flat(),
@@ -130,9 +162,12 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
     return await Promise.all(
       checksToRun.map(async check => {
         // Get the threshold value from the system entity annotation
-        const thresholdStr = systemEntity.metadata.annotations?.[check.annotationKeyThreshold];
+        const thresholdStr =
+          systemEntity.metadata.annotations?.[check.annotationKeyThreshold];
         const thresholdNumber = parseFloat(thresholdStr ?? 'NaN');
-        const threshold = isNaN(thresholdNumber) ? thresholdStr : thresholdNumber;
+        const threshold = isNaN(thresholdNumber)
+          ? thresholdStr
+          : thresholdNumber;
 
         // If threshold is missing or invalid, log a warning and return result: false
         if (threshold === undefined) {
@@ -150,13 +185,24 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
         const factId = check.factIds[0];
         const factContainer = factValues[factId];
         const rawValue = factContainer?.facts?.[check.factIds[1]];
-        this.logger.warn(`[DEBUG] fact keys: ${Object.keys(factContainer?.facts || {}).join(', ')}`);
+        this.logger.warn(
+          `[DEBUG] fact keys: ${Object.keys(factContainer?.facts || {}).join(
+            ', ',
+          )}`,
+        );
 
-        const operator = systemEntity.metadata.annotations?.[check.annotationKeyOperator];
+        const operator =
+          systemEntity.metadata.annotations?.[check.annotationKeyOperator];
         const result = evaluateCheckCondition(operator, rawValue, threshold);
 
         // Log the result of the check
-        this.logger.info(`The result from the check is ${result} for ${check.id} on entity ${entityRef} part of system ${systemName}, threshold is ${operator} ${threshold} with type ${typeof threshold}, rawValue is ${JSON.stringify(rawValue)}`);
+        this.logger.info(
+          `The result from the check is ${result} for ${
+            check.id
+          } on entity ${entityRef} part of system ${systemName}, threshold is ${operator} ${threshold} with type ${typeof threshold}, rawValue is ${JSON.stringify(
+            rawValue,
+          )}`,
+        );
 
         const fact: FactResponse[string] = {
           id: factId,
@@ -171,7 +217,6 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
           result,
         };
       }),
-
     );
   }
 
@@ -181,14 +226,19 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
    * @returns An object with a boolean 'valid' and an optional message.
    */
   async validate(check: DynamicThresholdCheck) {
-    const valid = Boolean(check.factIds.length !== 0 && check.annotationKeyThreshold && check.annotationKeyOperator);
+    const valid = Boolean(
+      check.factIds.length !== 0 &&
+        check.annotationKeyThreshold &&
+        check.annotationKeyOperator,
+    );
     return {
       valid,
       ...(valid
         ? {}
         : {
-          message: 'Each check must have a valid factId, annotationKeyThreshold and annotationKeyOperator.',
-        }),
+            message:
+              'Each check must have a valid factId, annotationKeyThreshold and annotationKeyOperator.',
+          }),
     };
   }
 
@@ -197,7 +247,6 @@ export class DynamicThresholdFactChecker implements FactChecker<DynamicThreshold
    * @returns Promise resolving to an array of DynamicThresholdCheck objects.
    */
   async getChecks(): Promise<DynamicThresholdCheck[]> {
-
     return this.checks;
   }
 }
@@ -227,7 +276,6 @@ export class DynamicThresholdFactCheckerFactory {
    * Constructs a new DynamicThresholdFactChecker using the provided TechInsightsStore.
    */
   construct(repository: TechInsightsStore) {
-
     return new DynamicThresholdFactChecker(
       this.catalogApi,
       repository,

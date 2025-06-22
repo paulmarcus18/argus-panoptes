@@ -32,11 +32,9 @@ interface BlackDuckSemaphoreDialogProps {
   entities?: Entity[];
 }
 
-export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> = ({
-  open,
-  onClose,
-  entities = [],
-}) => {
+export const BlackDuckSemaphoreDialog: React.FC<
+  BlackDuckSemaphoreDialogProps
+> = ({ open, onClose, entities = [] }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
@@ -58,7 +56,9 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
       try {
         // Filter entities to only those with BlackDuck enabled
         const enabledEntities = entities.filter(
-          e => e.metadata.annotations?.['tech-insights.io/blackduck-enabled'] === 'true'
+          e =>
+            e.metadata.annotations?.['tech-insights.io/blackduck-enabled'] ===
+            'true',
         );
 
         if (enabledEntities.length === 0) {
@@ -99,8 +99,12 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
 
         // Create details array from results
         const details: IssueDetail[] = [];
-        
-        const displayedRepos = await blackDuckUtils.getTop5CriticalBlackDuckRepos(techInsightsApi, enabledEntities);
+
+        const displayedRepos =
+          await blackDuckUtils.getTop5CriticalBlackDuckRepos(
+            techInsightsApi,
+            enabledEntities,
+          );
 
         for (const repo of displayedRepos) {
           // Create a description and determine severity based on the repo's issues
@@ -124,12 +128,17 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
           // Add the detail to the array
           details.push({
             severity: severity as 'critical' | 'high' | 'medium' | 'low',
-            description:  description,
+            description: description,
           });
         }
 
         // Determine the overall status color
-        const trafficLightcolor = await determineBlackDuckColor(entities, catalogApi, techInsightsApi, blackDuckUtils);
+        const trafficLightcolor = await determineBlackDuckColor(
+          entities,
+          catalogApi,
+          techInsightsApi,
+          blackDuckUtils,
+        );
         let color: 'green' | 'red' | 'yellow' | 'gray' = 'green';
         color = trafficLightcolor.color;
 
@@ -145,7 +154,12 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
         setData({ color, metrics: totals, summary, details });
       } catch (err) {
         // Set default data in case of error
-        setData({ color: 'gray', metrics: {}, summary: 'Failed to load BlackDuck data.', details: [] });
+        setData({
+          color: 'gray',
+          metrics: {},
+          summary: 'Failed to load BlackDuck data.',
+          details: [],
+        });
       } finally {
         setIsLoading(false);
       }
@@ -161,7 +175,9 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
           <Typography variant="h4" className={classes.metricValue}>
             {data.metrics.security_risks_critical}
           </Typography>
-          <Typography className={classes.metricLabel}>Critical Security Risks</Typography>
+          <Typography className={classes.metricLabel}>
+            Critical Security Risks
+          </Typography>
         </Paper>
       </Grid>
       <Grid item xs={4}>
@@ -169,7 +185,9 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
           <Typography variant="h4" className={classes.metricValue}>
             {data.metrics.security_risks_high}
           </Typography>
-          <Typography className={classes.metricLabel}>High Security Risks</Typography>
+          <Typography className={classes.metricLabel}>
+            High Security Risks
+          </Typography>
         </Paper>
       </Grid>
       <Grid item xs={4}>
@@ -177,7 +195,9 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
           <Typography variant="h4" className={classes.metricValue}>
             {data.metrics.security_risks_medium}
           </Typography>
-          <Typography className={classes.metricLabel}>Medium Security Risks</Typography>
+          <Typography className={classes.metricLabel}>
+            Medium Security Risks
+          </Typography>
         </Paper>
       </Grid>
     </Grid>

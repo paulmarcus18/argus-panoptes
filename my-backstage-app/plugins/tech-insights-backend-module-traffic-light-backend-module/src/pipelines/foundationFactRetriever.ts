@@ -208,10 +208,10 @@ function calculateWorkflowMetrics(
 }
 
 /**
- * Creates a fact retriever for Foundation pipeline metrics from Github Actions. 
- * 
+ * Creates a fact retriever for Foundation pipeline metrics from Github Actions.
+ *
  * This retriever queries GitHub Actions workflow data for specified entity of type 'component'.
- * 
+ *
  * @returns A FactRetriever that collects pipeline status metrics
  */
 export const foundationPipelineStatusFactRetriever: FactRetriever = {
@@ -248,7 +248,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
 
   /**
    * Handler function that retrieves pipeline status metrics for relevant entities.
-   * 
+   *
    * @param ctx - Context object containing configuration, logger, and other services
    * @returns Array of entity facts with pipeline status metrics
    */
@@ -296,7 +296,8 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
       githubEntities.map(async entity => {
         try {
           // Parse the github repo information from entity annotations
-          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] ?? '';
+          const projectSlug =
+            entity.metadata.annotations?.['github.com/project-slug'] ?? '';
           const [owner, repoName] = projectSlug.split('/');
 
           if (!owner || !repoName) {

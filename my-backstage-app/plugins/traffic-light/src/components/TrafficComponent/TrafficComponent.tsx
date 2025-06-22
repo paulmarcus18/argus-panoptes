@@ -36,7 +36,7 @@ import { SonarQubeSemaphoreDialog } from '../SemaphoreDialogs/SonarQubeDialog';
 import { PreproductionSemaphoreDialog } from '../SemaphoreDialogs/PreProductionDialog';
 import { FoundationSemaphoreDialog } from '../SemaphoreDialogs/FoundationDialog';
 import { ReportingSemaphoreDialog } from '../SemaphoreDialogs/ReportingDialog';
-import {DependabotSemaphoreDialog}  from '../SemaphoreDialogs/DependabotSemaphoreDialog'
+import { DependabotSemaphoreDialog } from '../SemaphoreDialogs/DependabotSemaphoreDialog';
 
 export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
@@ -44,9 +44,9 @@ export const TrafficComponent = () => {
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   const [repos, setRepos] = useState<any[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogTitle, setDialogTitle] = useState('');
-  const [dialogItems, setDialogItems] = useState<any[]>([]);
+  const [, setDialogOpen] = useState(false);
+  const [, setDialogTitle] = useState('');
+  const [, setDialogItems] = useState<any[]>([]);
   // const [setDetailedDialogOpen] = useState(false);
   // const [currentSemaphoreType, setCurrentSemaphoreType] = useState('');
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
@@ -80,7 +80,7 @@ export const TrafficComponent = () => {
 
   const handleSemaphoreClick = (semaphoreType: string) => {
     switch (semaphoreType) {
-       case 'BlackDuck':
+      case 'BlackDuck':
         setBlackDuckDialogOpen(true);
         break;
       case 'Github Advanced Security':
@@ -147,10 +147,10 @@ export const TrafficComponent = () => {
   const handleCloseSonarQubeDialog = () => {
     setSonarQubeDialogOpen(false);
   };
-  
+
   const handleCloseDependabotDialog = () => {
     setDependabotDialogOpen(false);
-  }
+  };
 
   useEffect(() => {
     const fetchCatalogRepos = async () => {
@@ -163,11 +163,12 @@ export const TrafficComponent = () => {
         const userEntity = await catalogApi.getEntityByRef({
           kind: 'User',
           namespace: 'default',
-          name: typeof userName === 'string' ? userName : String(userName)
+          name: typeof userName === 'string' ? userName : String(userName),
         });
 
         // Get user's teams from the entity
-        const userTeams: string[] = (userEntity?.spec?.memberOf as string[]) || [];
+        const userTeams: string[] =
+          (userEntity?.spec?.memberOf as string[]) || [];
 
         // Fetch all entities (Components and Systems)
         const [componentEntities, systemEntities] = await Promise.all([
@@ -176,7 +177,7 @@ export const TrafficComponent = () => {
           }),
           catalogApi.getEntities({
             filter: { kind: 'System' },
-          })
+          }),
         ]);
 
         // Process components
@@ -194,7 +195,7 @@ export const TrafficComponent = () => {
           tags: entity.metadata?.tags,
           entity: entity,
         }));
-        
+
         setRepos(simplified);
 
         // Filter systems to only include those owned by user's teams
@@ -209,7 +210,7 @@ export const TrafficComponent = () => {
           .map((system: Entity) => system.metadata.name)
           .sort();
         setAvailableSystems(userOwnedSystems);
-        
+
         // Set the initial selected system to the first owned system
         if (userOwnedSystems.length > 0) {
           const initialSystem = userOwnedSystems[0];
@@ -359,9 +360,7 @@ export const TrafficComponent = () => {
 
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <InfoCard
-              title="Security Checks"
-            >
+            <InfoCard title="Security Checks">
               <Typography variant="subtitle1">Dependabot</Typography>
               <TrafficLightDependabot
                 entities={selectedEntities}
@@ -410,9 +409,7 @@ export const TrafficComponent = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <InfoCard
-              title="Software Quality"
-            >
+            <InfoCard title="Software Quality">
               <Typography variant="subtitle1">SonarQube</Typography>
               <SonarQubeTrafficLight
                 entities={selectedEntities}
@@ -429,9 +426,7 @@ export const TrafficComponent = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <InfoCard
-              title="Azure DevOps"
-            >
+            <InfoCard title="Azure DevOps">
               <Typography variant="subtitle1">Bugs</Typography>
               <AzureDevOpsBugsTrafficLight
                 entities={selectedEntities}

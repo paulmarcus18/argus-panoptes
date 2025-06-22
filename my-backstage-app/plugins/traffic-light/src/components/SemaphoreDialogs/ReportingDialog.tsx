@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -119,11 +118,9 @@ export const ReportingSemaphoreDialog: React.FC<
             ]);
 
             const successRate =
-              facts.successfulRuns + facts.failedRuns >
-              0
+              facts.successfulRuns + facts.failedRuns > 0
                 ? (facts.successfulRuns /
-                    (facts.successfulRuns +
-                      facts.failedRuns)) *
+                    (facts.successfulRuns + facts.failedRuns)) *
                   100
                 : 0;
 

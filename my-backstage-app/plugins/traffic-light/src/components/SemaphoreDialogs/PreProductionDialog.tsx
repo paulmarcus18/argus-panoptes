@@ -76,7 +76,7 @@ export const PreproductionSemaphoreDialog: React.FC<
         // 1. Get threshold and configured repositories from system annotations
         let redThreshold = 0.33;
         let configuredRepoNames: string[] = [];
-        
+
         try {
           const systemName = entities[0].spec?.system;
           const namespace = entities[0].metadata.namespace || 'default';
@@ -112,17 +112,16 @@ export const PreproductionSemaphoreDialog: React.FC<
             }
           }
         } catch (err) {
-          console.warn(
-            'Failed to get system configuration, using defaults',
-          );
+          console.warn('Failed to get system configuration, using defaults');
         }
 
         // 2. Filter entities to only include configured repositories
-        const filteredEntities = configuredRepoNames.length > 0 
-          ? entities.filter(entity => 
-              configuredRepoNames.includes(entity.metadata.name)
-            )
-          : entities; // Fallback to all entities if no configuration found
+        const filteredEntities =
+          configuredRepoNames.length > 0
+            ? entities.filter(entity =>
+                configuredRepoNames.includes(entity.metadata.name),
+              )
+            : entities; // Fallback to all entities if no configuration found
 
         if (filteredEntities.length === 0) {
           setMetrics({
@@ -135,7 +134,8 @@ export const PreproductionSemaphoreDialog: React.FC<
           setData({
             color: 'gray',
             metrics: {},
-            summary: 'No configured repositories found for preproduction checks.',
+            summary:
+              'No configured repositories found for preproduction checks.',
             details: [],
           });
           return;

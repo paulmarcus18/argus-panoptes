@@ -39,15 +39,20 @@ describe('SonarCloudUtils', () => {
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
         'sonarcloud-fact-retriever': {
-            timestamp: '2023-10-01T00:00:00Z',
-            version: '1.0.0',
-            facts: mockFacts,
+          timestamp: '2023-10-01T00:00:00Z',
+          version: '1.0.0',
+          facts: mockFacts,
         },
       });
 
-      const result = await sonarCloudUtils.getSonarQubeFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await sonarCloudUtils.getSonarQubeFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
-      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, ['sonarcloud-fact-retriever']);
+      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, [
+        'sonarcloud-fact-retriever',
+      ]);
       expect(result).toEqual({
         bugs: 5,
         code_smells: 10,
@@ -68,13 +73,16 @@ describe('SonarCloudUtils', () => {
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
         'sonarcloud-fact-retriever': {
-            timestamp: '2023-10-01T00:00:00Z',
-            version: '1.0.0',
-            facts: mockFacts,
+          timestamp: '2023-10-01T00:00:00Z',
+          version: '1.0.0',
+          facts: mockFacts,
         },
       });
 
-      const result = await sonarCloudUtils.getSonarQubeFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await sonarCloudUtils.getSonarQubeFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         bugs: 0,
@@ -88,13 +96,16 @@ describe('SonarCloudUtils', () => {
     it('should return default metrics when no facts are found', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({
         'sonarcloud-fact-retriever': {
-            timestamp: '2023-10-01T00:00:00Z',
-            version: '1.0.0',
-            facts: {},
+          timestamp: '2023-10-01T00:00:00Z',
+          version: '1.0.0',
+          facts: {},
         },
       });
 
-      const result = await sonarCloudUtils.getSonarQubeFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await sonarCloudUtils.getSonarQubeFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -102,7 +113,10 @@ describe('SonarCloudUtils', () => {
     it('should return default metrics when response is undefined', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({});
 
-      const result = await sonarCloudUtils.getSonarQubeFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await sonarCloudUtils.getSonarQubeFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -110,7 +124,10 @@ describe('SonarCloudUtils', () => {
     it('should return default metrics when API throws an error', async () => {
       mockTechInsightsApi.getFacts.mockRejectedValue(new Error('API Error'));
 
-      const result = await sonarCloudUtils.getSonarQubeFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await sonarCloudUtils.getSonarQubeFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -132,7 +149,10 @@ describe('SonarCloudUtils', () => {
         },
       });
 
-      const result = await sonarCloudUtils.getSonarQubeFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await sonarCloudUtils.getSonarQubeFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         bugs: 0, // Number('not-a-number') becomes NaN, fallback to 0
@@ -164,25 +184,46 @@ describe('SonarCloudUtils', () => {
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'ERROR', vulnerabilities: '1', bugs: '1', code_smells: '1', code_coverage: '90' },
+            facts: {
+              quality_gate: 'ERROR',
+              vulnerabilities: '1',
+              bugs: '1',
+              code_smells: '1',
+              code_coverage: '90',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '10', bugs: '10', code_smells: '10', code_coverage: '50' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '10',
+              bugs: '10',
+              code_smells: '10',
+              code_coverage: '50',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'ERROR', vulnerabilities: '2', bugs: '2', code_smells: '2', code_coverage: '80' },
+            facts: {
+              quality_gate: 'ERROR',
+              vulnerabilities: '2',
+              bugs: '2',
+              code_smells: '2',
+              code_coverage: '80',
+            },
           },
         });
 
-      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(mockTechInsightsApi, entities);
+      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(3);
       // Failed quality gates should come first
@@ -207,25 +248,46 @@ describe('SonarCloudUtils', () => {
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '2', bugs: '1', code_smells: '1', code_coverage: '90' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '2',
+              bugs: '1',
+              code_smells: '1',
+              code_coverage: '90',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '10', bugs: '1', code_smells: '1', code_coverage: '90' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '10',
+              bugs: '1',
+              code_smells: '1',
+              code_coverage: '90',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '5', bugs: '1', code_smells: '1', code_coverage: '90' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '5',
+              bugs: '1',
+              code_smells: '1',
+              code_coverage: '90',
+            },
           },
         });
 
-      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(mockTechInsightsApi, entities);
+      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(3);
       expect(result[0].entity.name).toBe('high-vuln');
@@ -247,18 +309,33 @@ describe('SonarCloudUtils', () => {
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '0', bugs: '2', code_smells: '1', code_coverage: '90' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '0',
+              bugs: '2',
+              code_smells: '1',
+              code_coverage: '90',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '0', bugs: '10', code_smells: '1', code_coverage: '90' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '0',
+              bugs: '10',
+              code_smells: '1',
+              code_coverage: '90',
+            },
           },
         });
 
-      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(mockTechInsightsApi, entities);
+      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(2);
       expect(result[0].entity.name).toBe('high-bugs');
@@ -278,18 +355,33 @@ describe('SonarCloudUtils', () => {
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '0', bugs: '0', code_smells: '5', code_coverage: '90' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '0',
+              bugs: '0',
+              code_smells: '5',
+              code_coverage: '90',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '0', bugs: '0', code_smells: '15', code_coverage: '90' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '0',
+              bugs: '0',
+              code_smells: '15',
+              code_coverage: '90',
+            },
           },
         });
 
-      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(mockTechInsightsApi, entities);
+      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(2);
       expect(result[0].entity.name).toBe('high-smells');
@@ -309,18 +401,33 @@ describe('SonarCloudUtils', () => {
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '0', bugs: '0', code_smells: '0', code_coverage: '95' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '0',
+              bugs: '0',
+              code_smells: '0',
+              code_coverage: '95',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '0', bugs: '0', code_smells: '0', code_coverage: '60' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '0',
+              bugs: '0',
+              code_smells: '0',
+              code_coverage: '60',
+            },
           },
         });
 
-      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(mockTechInsightsApi, entities);
+      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(2);
       expect(result[0].entity.name).toBe('low-coverage');
@@ -330,18 +437,29 @@ describe('SonarCloudUtils', () => {
     });
 
     it('should limit results to 5 repositories', async () => {
-      const entities = Array.from({ length: 10 }, (_, i) => createMockEntity(`service-${i}`));
+      const entities = Array.from({ length: 10 }, (_, i) =>
+        createMockEntity(`service-${i}`),
+      );
 
       // Mock all entities to have failed quality gates
       mockTechInsightsApi.getFacts.mockResolvedValue({
         'sonarcloud-fact-retriever': {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
-          facts: { quality_gate: 'ERROR', vulnerabilities: '1', bugs: '1', code_smells: '1', code_coverage: '90' },
+          facts: {
+            quality_gate: 'ERROR',
+            vulnerabilities: '1',
+            bugs: '1',
+            code_smells: '1',
+            code_coverage: '90',
+          },
         },
       });
 
-      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(mockTechInsightsApi, entities);
+      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(5);
     });
@@ -351,7 +469,10 @@ describe('SonarCloudUtils', () => {
 
       mockTechInsightsApi.getFacts.mockRejectedValue(new Error('API Error'));
 
-      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(mockTechInsightsApi, entities);
+      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].entity.name).toBe('failing-service');
@@ -363,7 +484,10 @@ describe('SonarCloudUtils', () => {
     });
 
     it('should handle empty entities array', async () => {
-      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(mockTechInsightsApi, []);
+      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(
+        mockTechInsightsApi,
+        [],
+      );
 
       expect(result).toHaveLength(0);
       expect(mockTechInsightsApi.getFacts).not.toHaveBeenCalled();
@@ -371,13 +495,13 @@ describe('SonarCloudUtils', () => {
 
     it('should handle mixed scenarios with complex prioritization', async () => {
       const entities = [
-        createMockEntity('perfect-repo'),      // No issues
-        createMockEntity('failed-gate'),       // Failed quality gate
-        createMockEntity('high-vulns'),        // High vulnerabilities
-        createMockEntity('many-bugs'),         // Many bugs
-        createMockEntity('smelly-code'),       // Code smells
-        createMockEntity('low-coverage'),      // Low coverage
-        createMockEntity('another-failed'),    // Another failed gate
+        createMockEntity('perfect-repo'), // No issues
+        createMockEntity('failed-gate'), // Failed quality gate
+        createMockEntity('high-vulns'), // High vulnerabilities
+        createMockEntity('many-bugs'), // Many bugs
+        createMockEntity('smelly-code'), // Code smells
+        createMockEntity('low-coverage'), // Low coverage
+        createMockEntity('another-failed'), // Another failed gate
       ];
 
       mockTechInsightsApi.getFacts
@@ -385,70 +509,115 @@ describe('SonarCloudUtils', () => {
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '0', bugs: '0', code_smells: '0', code_coverage: '95' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '0',
+              bugs: '0',
+              code_smells: '0',
+              code_coverage: '95',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'ERROR', vulnerabilities: '2', bugs: '1', code_smells: '5', code_coverage: '80' },
+            facts: {
+              quality_gate: 'ERROR',
+              vulnerabilities: '2',
+              bugs: '1',
+              code_smells: '5',
+              code_coverage: '80',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '15', bugs: '2', code_smells: '3', code_coverage: '85' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '15',
+              bugs: '2',
+              code_smells: '3',
+              code_coverage: '85',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '0', bugs: '20', code_smells: '1', code_coverage: '90' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '0',
+              bugs: '20',
+              code_smells: '1',
+              code_coverage: '90',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '0', bugs: '0', code_smells: '30', code_coverage: '88' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '0',
+              bugs: '0',
+              code_smells: '30',
+              code_coverage: '88',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'OK', vulnerabilities: '0', bugs: '0', code_smells: '0', code_coverage: '45' },
+            facts: {
+              quality_gate: 'OK',
+              vulnerabilities: '0',
+              bugs: '0',
+              code_smells: '0',
+              code_coverage: '45',
+            },
           },
         })
         .mockResolvedValueOnce({
           'sonarcloud-fact-retriever': {
             timestamp: '2023-10-01T00:00:00Z',
             version: '1.0.0',
-            facts: { quality_gate: 'ERROR', vulnerabilities: '1', bugs: '1', code_smells: '1', code_coverage: '70' },
+            facts: {
+              quality_gate: 'ERROR',
+              vulnerabilities: '1',
+              bugs: '1',
+              code_smells: '1',
+              code_coverage: '70',
+            },
           },
         });
 
-      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(mockTechInsightsApi, entities);
+      const result = await sonarCloudUtils.getTop5CriticalSonarCloudRepos(
+        mockTechInsightsApi,
+        entities,
+      );
 
       expect(result).toHaveLength(5);
-      
+
       // First should be failed quality gates
       expect(result[0].entity.name).toBe('failed-gate');
       expect(result[0].quality_gate).toBe(1);
       expect(result[1].entity.name).toBe('another-failed');
       expect(result[1].quality_gate).toBe(1);
-      
+
       // Then high vulnerabilities
       expect(result[2].entity.name).toBe('high-vulns');
       expect(result[2].vulnerabilities).toBe(15);
-      
+
       // Then high bugs
       expect(result[3].entity.name).toBe('many-bugs');
       expect(result[3].bugs).toBe(20);
-      
+
       // Then code smells
       expect(result[4].entity.name).toBe('smelly-code');
       expect(result[4].code_smells).toBe(30);

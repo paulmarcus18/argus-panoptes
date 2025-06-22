@@ -6,10 +6,8 @@ export const azureBugsChecks: DynamicThresholdCheck[] = [
     name: 'Azure Bugs',
     type: 'number',
     factIds: ['azure-devops-bugs-retriever', 'azure_bug_count'],
-    annotationKeyThreshold:
-      'tech-insights.io/azure-bugs-threshold',
+    annotationKeyThreshold: 'tech-insights.io/azure-bugs-threshold',
     annotationKeyOperator: 'tech-insights.io/azure-bugs-operator',
-    description:
-      'Maximum number of Azure DevOps bugs allowed',
+    description: 'Maximum number of Azure DevOps bugs allowed',
   },
 ];

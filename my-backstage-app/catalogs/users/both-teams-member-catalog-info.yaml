@@ -6,6 +6,6 @@ spec:
   profile:
     displayName: Both 1
     email: both@example.com
-  memberOf: 
+  memberOf:
     - finance-team
     - identity-team

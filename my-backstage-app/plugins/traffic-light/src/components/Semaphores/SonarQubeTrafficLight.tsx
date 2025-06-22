@@ -3,7 +3,7 @@ import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import { SonarCloudUtils} from '../../utils/sonarCloudUtils';
+import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
 
 /**
@@ -13,9 +13,9 @@ import { BaseTrafficLight } from './BaseTrafficLight';
  * - Yellow: The number of entities that failed the quality gate is between the yellow threshold and the red threshold(set in system file).
  * - Red: The number of entities that failed the quality gate is above the red threshold (set in system file).
  * - Gray: No entities are selected, data cannot be retrieved or threshold cannot be retrieved.
- * 
+ *
  * The component also returns a reason for the color selection, which can be used in tooltips or logs.
- * 
+ *
  * @param entities - An array of Backstage Entity objects to check SonarQube status for.
  * @param catalogApi - The Backstage Catalog API to fetch entity metadata.
  * @param techInsightsApi - The Backstage Tech Insights API to fetch SonarQube facts.
@@ -26,17 +26,16 @@ export const determineSonarQubeColor = async (
   entities: Entity[],
   catalogApi: any,
   techInsightsApi: any,
-  sonarUtils: SonarCloudUtils
+  sonarUtils: SonarCloudUtils,
 ): Promise<{ color: 'green' | 'red' | 'yellow' | 'gray'; reason: string }> => {
-
-  // If no entities are provided, return gray color 
+  // If no entities are provided, return gray color
   if (!entities.length) {
     return { color: 'gray', reason: 'No entities selected' };
   }
 
   // Filter entities to only those with SonarQube enabled
   const enabledEntities = entities.filter(
-    e => e.metadata.annotations?.['sonarcloud.io/enabled'] === 'true'
+    e => e.metadata.annotations?.['sonarcloud.io/enabled'] === 'true',
   );
 
   if (!enabledEntities.length) {
@@ -53,15 +52,19 @@ export const determineSonarQubeColor = async (
   const systemEntity = await catalogApi.getEntityByRef({
     kind: 'system',
     namespace: 'default',
-    name: typeof systemName === 'string' ? systemName : String(systemName)
+    name: typeof systemName === 'string' ? systemName : String(systemName),
   });
 
   // Get thresholds for traffic light colour from system annotations
   const redThreshold = parseFloat(
-    systemEntity?.metadata.annotations?.['tech-insights.io/sonarcloud-quality-gate-red-threshold-percentage'] || '50'
+    systemEntity?.metadata.annotations?.[
+      'tech-insights.io/sonarcloud-quality-gate-red-threshold-percentage'
+    ] || '50',
   );
   const yellowThreshold = parseFloat(
-    systemEntity?.metadata.annotations?.['tech-insights.io/sonarcloud-quality-gate-yellow-threshold-percentage'] || '25'
+    systemEntity?.metadata.annotations?.[
+      'tech-insights.io/sonarcloud-quality-gate-yellow-threshold-percentage'
+    ] || '25',
   );
 
   try {
@@ -82,22 +85,32 @@ export const determineSonarQubeColor = async (
 
     // If the number of entities that failed the quality gate check is above the red threshold
     // Set the colour to red
-    if (totalFailedQualityGate >= redThreshold * entities.length / 100) {
-      return { color: 'red', reason: `${totalFailedQualityGate} entities failed the quality gate check` };
-    } else if (totalFailedQualityGate >= yellowThreshold * entities.length / 100) {	
+    if (totalFailedQualityGate >= (redThreshold * entities.length) / 100) {
+      return {
+        color: 'red',
+        reason: `${totalFailedQualityGate} entities failed the quality gate check`,
+      };
+    } else if (
+      totalFailedQualityGate >=
+      (yellowThreshold * entities.length) / 100
+    ) {
       // If the number of entities that failed the quality gate check is between the red and the yellow threshold
       // Set the colour to yellow
-      return { color: 'yellow', reason: `${totalFailedQualityGate} entities failed the quality gate check` };
-    }	 
+      return {
+        color: 'yellow',
+        reason: `${totalFailedQualityGate} entities failed the quality gate check`,
+      };
+    }
     // If the number of entities that failed the quality gate check is below the yellow threshold
-    // Set the colour to green 
-    return { color: 'green', reason: `${totalFailedQualityGate} entities failed the quality gate check` };
-    
+    // Set the colour to green
+    return {
+      color: 'green',
+      reason: `${totalFailedQualityGate} entities failed the quality gate check`,
+    };
   } catch (err) {
     return { color: 'gray', reason: 'Error fetching SonarQube data' };
   }
-}
-
+};
 
 /**
  * SonarQubeTrafficLight is a React component that displays a colored traffic light indicator
@@ -116,16 +129,13 @@ export const SonarQubeTrafficLight = ({
   system?: string | undefined;
   onClick?: () => void;
 }) => {
-  const [color, setColor] = useState<
-    'green' | 'red' | 'yellow' | 'gray' 
-  >('gray');
+  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray'>(
+    'gray',
+  );
   const [reason, setReason] = useState('Loading SonarQube data...');
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const sonarUtils = React.useMemo(
-      () => new SonarCloudUtils(),
-      [],
-    );
+  const sonarUtils = React.useMemo(() => new SonarCloudUtils(), []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -133,9 +143,9 @@ export const SonarQubeTrafficLight = ({
         entities,
         catalogApi,
         techInsightsApi,
-        sonarUtils
+        sonarUtils,
       );
-      
+
       setColor(sonarQubeColorAndReason.color);
       setReason(sonarQubeColorAndReason.reason);
     };

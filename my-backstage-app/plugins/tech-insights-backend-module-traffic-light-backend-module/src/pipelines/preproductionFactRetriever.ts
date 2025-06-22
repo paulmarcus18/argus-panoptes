@@ -1,4 +1,7 @@
-import { FactRetriever, TechInsightFact } from '@backstage-community/plugin-tech-insights-node';
+import {
+  FactRetriever,
+  TechInsightFact,
+} from '@backstage-community/plugin-tech-insights-node';
 import { CatalogClient } from '@backstage/catalog-client';
 import { JsonObject } from '@backstage/types';
 import { Entity } from '@backstage/catalog-model';
@@ -41,7 +44,10 @@ interface PipelineStatusSummary extends JsonObject {
  * @param excludePatterns - Array of regex patterns to match against
  * @returns true if the workflow should be excluded, false otherwise
  */
-function shouldExcludeWorkflow(workflowName: string, excludePatterns: string[]): boolean {
+function shouldExcludeWorkflow(
+  workflowName: string,
+  excludePatterns: string[],
+): boolean {
   return excludePatterns.some(pattern => {
     try {
       const regex = new RegExp(pattern, 'i'); // case-insensitive matching
@@ -58,7 +64,8 @@ function shouldExcludeWorkflow(workflowName: string, excludePatterns: string[]):
 function parseWorkflowConfig(entity: Entity): WorkflowConfig {
   const workflowConfig: WorkflowConfig = { excludePatterns: [] };
   // Check annotations for workflow patterns to exclude
-  const excludeAnnotation = entity.metadata.annotations?.['preproduction/exclude'];
+  const excludeAnnotation =
+    entity.metadata.annotations?.['preproduction/exclude'];
   if (excludeAnnotation) {
     try {
       const excludeList = JSON.parse(excludeAnnotation);
@@ -139,7 +146,7 @@ async function fetchAllWorkflowRuns(
     page++;
   }
 
-  // Filter runs to only include those on the main branch 
+  // Filter runs to only include those on the main branch
   return allRuns.filter(run => run.head_branch === 'main');
 }
 
@@ -177,8 +184,8 @@ function calculatePreproductionMetrics(
   const successRate =
     totalCompletedRuns > 0
       ? parseFloat(
-        ((successWorkflowRunsCount / totalCompletedRuns) * 100).toFixed(2),
-      )
+          ((successWorkflowRunsCount / totalCompletedRuns) * 100).toFixed(2),
+        )
       : 0;
 
   return {
@@ -195,10 +202,10 @@ function calculatePreproductionMetrics(
 
 /**
  * Creates a fact retriever for Pre-production pipeline metrics from GitHub Actions.
- * 
+ *
  * This retriever queries GitHub Actions workflow data for specified entity of type 'component'.
  * Supports regex patterns for excluding workflows based on their names.
- * 
+ *
  * @returns A FactRetriever that collects pipeline status metrics
  */
 export const githubPipelineStatusFactRetriever: FactRetriever = {
@@ -208,37 +215,50 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
   schema: {
     totalWorkflowRunsCount: {
       type: 'integer',
-      description: 'Total number of workflow runs on main branch (including excluded)',
+      description:
+        'Total number of workflow runs on main branch (including excluded)',
     },
     uniqueWorkflowsCount: {
       type: 'integer',
-      description: 'Number of unique workflows that have runs (matching GitHub UI)',
+      description:
+        'Number of unique workflows that have runs (matching GitHub UI)',
     },
     successWorkflowRunsCount: {
       type: 'integer',
-      description: 'Number of successful workflow runs (excluding workflows matching exclude patterns)',
+      description:
+        'Number of successful workflow runs (excluding workflows matching exclude patterns)',
     },
     failureWorkflowRunsCount: {
       type: 'integer',
-      description: 'Number of failed workflow runs (excluding workflows matching exclude patterns)',
+      description:
+        'Number of failed workflow runs (excluding workflows matching exclude patterns)',
     },
     successRate: {
       type: 'float',
-      description: 'Success rate percentage (0-100) of workflow runs (excluding workflows matching exclude patterns)',
-    }
+      description:
+        'Success rate percentage (0-100) of workflow runs (excluding workflows matching exclude patterns)',
+    },
   },
 
   /**
    * Handler function that retrieves pipeline status metrics for relevant entities.
-   * 
+   *
    * @param ctx - Context object containing configuration, logger, and other services
    * @returns Array of entity facts with pipeline status metrics
    */
-  async handler({ config, entityFilter, auth, discovery, logger }): Promise<TechInsightFact[]> {
+  async handler({
+    config,
+    entityFilter,
+    auth,
+    discovery,
+    logger,
+  }): Promise<TechInsightFact[]> {
     // Retrieve GitHub token from config
     let token: string | undefined;
     try {
-      const githubConfigs = config.getOptionalConfigArray('integrations.github');
+      const githubConfigs = config.getOptionalConfigArray(
+        'integrations.github',
+      );
       const githubConfig = githubConfigs?.[0];
       token = githubConfig?.getOptionalString('token');
     } catch (e) {
@@ -265,12 +285,13 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
       return !!slug;
     });
 
-    // Process each Github-enabled component 
+    // Process each Github-enabled component
     const results = await Promise.all(
       githubEntities.map(async entity => {
         try {
           // Parse the github repo information from entity annotations
-          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] ?? '';
+          const projectSlug =
+            entity.metadata.annotations?.['github.com/project-slug'] ?? '';
           const [owner, repoName] = projectSlug.split('/');
 
           if (!owner || !repoName) {
@@ -279,7 +300,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
 
           const workflowConfig: WorkflowConfig = parseWorkflowConfig(entity);
           const headers: Record<string, string> = {
-            'Accept': 'application/vnd.github.v3+json',
+            Accept: 'application/vnd.github.v3+json',
           };
 
           if (token) {
@@ -326,7 +347,9 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
     );
 
     // Filter out null results and return valid pipeline metrics
-    const validResults = results.filter((r): r is TechInsightFact => r !== null);
+    const validResults = results.filter(
+      (r): r is TechInsightFact => r !== null,
+    );
     return validResults;
   },
 };

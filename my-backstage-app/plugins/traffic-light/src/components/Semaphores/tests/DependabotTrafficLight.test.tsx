@@ -2,7 +2,10 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import { TrafficLightDependabot } from '../TrafficLightDependabot';
-import { techInsightsApiRef, TechInsightsApi } from '@backstage/plugin-tech-insights';
+import {
+  techInsightsApiRef,
+  TechInsightsApi,
+} from '@backstage/plugin-tech-insights';
 import { TestApiProvider } from '@backstage/test-utils';
 import { Entity } from '@backstage/catalog-model';
 import { DependabotUtils } from '../../../utils/dependabotUtils';
@@ -40,10 +43,16 @@ describe('TrafficLightDependabot', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  const renderComponent = (systemName?: string, entities: Entity[] = mockEntities) =>
+  const renderComponent = (
+    systemName?: string,
+    entities: Entity[] = mockEntities,
+  ) =>
     render(
       <TestApiProvider apis={[[techInsightsApiRef, mockTechInsightsApi]]}>
-        <TrafficLightDependabot systemName={systemName as any} entities={entities} />
+        <TrafficLightDependabot
+          systemName={systemName as any}
+          entities={entities}
+        />
       </TestApiProvider>,
     );
 
@@ -57,7 +66,9 @@ describe('TrafficLightDependabot', () => {
   it('shows gray when systemName is empty', async () => {
     renderComponent('', mockEntities);
     await waitFor(() => {
-      expect(screen.getByTitle(/No entities found for system/i)).toBeInTheDocument();
+      expect(
+        screen.getByTitle(/No entities found for system/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -72,7 +83,9 @@ describe('TrafficLightDependabot', () => {
     ];
     renderComponent(undefined, fallbackEntities);
     await waitFor(() => {
-      expect(screen.getByTitle(/No entities found for system/i)).toBeInTheDocument();
+      expect(
+        screen.getByTitle(/No entities found for system/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -97,7 +110,9 @@ describe('TrafficLightDependabot', () => {
     renderComponent('fallback-system', fallbackEntities);
 
     await waitFor(() => {
-      expect(screen.getByTitle('All dependabot checks passed')).toBeInTheDocument();
+      expect(
+        screen.getByTitle('All dependabot checks passed'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -111,7 +126,9 @@ describe('TrafficLightDependabot', () => {
     }));
     renderComponent('mock-system');
     await waitFor(() => {
-      expect(screen.getByTitle('All dependabot checks passed')).toBeInTheDocument();
+      expect(
+        screen.getByTitle('All dependabot checks passed'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -119,12 +136,22 @@ describe('TrafficLightDependabot', () => {
     (DependabotUtils as jest.Mock).mockImplementation(() => ({
       getDependabotChecks: jest
         .fn()
-        .mockResolvedValueOnce({ criticalAlertCheck: false, highAlertCheck: true, mediumAlertCheck: true })
-        .mockResolvedValueOnce({ criticalAlertCheck: true, highAlertCheck: true, mediumAlertCheck: true }),
+        .mockResolvedValueOnce({
+          criticalAlertCheck: false,
+          highAlertCheck: true,
+          mediumAlertCheck: true,
+        })
+        .mockResolvedValueOnce({
+          criticalAlertCheck: true,
+          highAlertCheck: true,
+          mediumAlertCheck: true,
+        }),
     }));
     renderComponent('mock-system');
     await waitFor(() => {
-      expect(screen.getByTitle(/Critical alerts exceed threshold/i)).toBeInTheDocument();
+      expect(
+        screen.getByTitle(/Critical alerts exceed threshold/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -132,12 +159,22 @@ describe('TrafficLightDependabot', () => {
     (DependabotUtils as jest.Mock).mockImplementation(() => ({
       getDependabotChecks: jest
         .fn()
-        .mockResolvedValueOnce({ criticalAlertCheck: true, highAlertCheck: false, mediumAlertCheck: true })
-        .mockResolvedValueOnce({ criticalAlertCheck: true, highAlertCheck: true, mediumAlertCheck: true }),
+        .mockResolvedValueOnce({
+          criticalAlertCheck: true,
+          highAlertCheck: false,
+          mediumAlertCheck: true,
+        })
+        .mockResolvedValueOnce({
+          criticalAlertCheck: true,
+          highAlertCheck: true,
+          mediumAlertCheck: true,
+        }),
     }));
     renderComponent('mock-system');
     await waitFor(() => {
-      expect(screen.getByTitle(/minor critical issues in dependabot alerts/i)).toBeInTheDocument();
+      expect(
+        screen.getByTitle(/minor critical issues in dependabot alerts/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -147,7 +184,9 @@ describe('TrafficLightDependabot', () => {
     }));
     renderComponent('mock-system');
     await waitFor(() => {
-      expect(screen.getByTitle('Error fetching dependabot data')).toBeInTheDocument();
+      expect(
+        screen.getByTitle('Error fetching dependabot data'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -157,7 +196,9 @@ describe('TrafficLightDependabot', () => {
     }));
     renderComponent('mock-system');
     await waitFor(() => {
-      expect(screen.getByTitle('Error fetching dependabot data')).toBeInTheDocument();
+      expect(
+        screen.getByTitle('Error fetching dependabot data'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -168,9 +209,9 @@ describe('TrafficLightDependabot', () => {
     }));
     renderComponent('mock-system', unmatchedEntities);
     await waitFor(() => {
-      expect(screen.getByTitle('No entities found for system: mock-system')).toBeInTheDocument();
+      expect(
+        screen.getByTitle('No entities found for system: mock-system'),
+      ).toBeInTheDocument();
     });
   });
 });
-
-

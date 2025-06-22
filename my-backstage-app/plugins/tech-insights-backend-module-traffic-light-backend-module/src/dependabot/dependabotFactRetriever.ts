@@ -12,21 +12,23 @@ export const createDependabotFactRetriever = (
     version: '0.3.0',
     entityFilter: [{ kind: 'Component' }],
     schema: {
-      'critical': {
+      critical: {
         type: 'integer',
         description: 'Number of critical severity Dependabot alerts',
       },
-      'high': {
+      high: {
         type: 'integer',
         description: 'Number of high severity Dependabot alerts',
       },
-      'medium': {
+      medium: {
         type: 'integer',
         description: 'Number of medium severity Dependabot alerts',
       },
     },
     handler: async ({ discovery, auth }) => {
-      const githubConfigs = config.getOptionalConfigArray('integrations.github');
+      const githubConfigs = config.getOptionalConfigArray(
+        'integrations.github',
+      );
       const githubToken = githubConfigs?.[0]?.getOptionalString('token');
       if (!githubToken) {
         logger.error('Missing GitHub token in config');
@@ -49,7 +51,8 @@ export const createDependabotFactRetriever = (
 
       const results = await Promise.all(
         entities.map(async entity => {
-          const repoUrl = entity.metadata.annotations?.['github.com/project-slug'];
+          const repoUrl =
+            entity.metadata.annotations?.['github.com/project-slug'];
           if (!repoUrl) return null;
 
           const [owner, name] = repoUrl.split('/');
@@ -59,7 +62,9 @@ export const createDependabotFactRetriever = (
               { owner, repo: name, per_page: 100 },
             );
 
-            const openAlerts = alertsResponse.data.filter(a => a.state === 'open');
+            const openAlerts = alertsResponse.data.filter(
+              a => a.state === 'open',
+            );
 
             let critical = 0;
             let high = 0;
@@ -69,10 +74,13 @@ export const createDependabotFactRetriever = (
               const severity = alert.security_advisory?.severity?.toLowerCase();
               if (severity === 'critical') critical++;
               else if (severity === 'high') high++;
-              else if (severity === 'moderate' || severity === 'medium') medium++;
+              else if (severity === 'moderate' || severity === 'medium')
+                medium++;
             }
 
-            logger.info(`✅ ${entity.metadata.name} → critical: ${critical}, high: ${high}, medium: ${medium}`);
+            logger.info(
+              `✅ ${entity.metadata.name} → critical: ${critical}, high: ${high}, medium: ${medium}`,
+            );
 
             return {
               entity: {
@@ -81,9 +89,9 @@ export const createDependabotFactRetriever = (
                 namespace: entity.metadata.namespace ?? 'default',
               },
               facts: {
-                'critical': critical,
-                'high': high,
-                'medium': medium,
+                critical: critical,
+                high: high,
+                medium: medium,
               },
             };
           } catch (e) {
@@ -93,7 +101,9 @@ export const createDependabotFactRetriever = (
         }),
       );
 
-      return results.filter(Boolean) as NonNullable<Awaited<ReturnType<FactRetriever['handler']>>>;
+      return results.filter(Boolean) as NonNullable<
+        Awaited<ReturnType<FactRetriever['handler']>>
+      >;
     },
   };
 };

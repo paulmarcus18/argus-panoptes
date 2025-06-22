@@ -3,7 +3,6 @@ import {
   BackstageUserPrincipal,
 } from '@backstage/backend-plugin-api';
 
-
 // TODO: delete this
 export interface TodoItem {
   title: string;
@@ -30,11 +29,7 @@ export interface TodoListService {
 }
 
 // might need to change these based on database
-export type MetricType =
-  | 'df'
-  | 'mltc'
-  | 'cfr'
-  | 'mttr';
+export type MetricType = 'df' | 'mltc' | 'cfr' | 'mttr';
 
 export type Aggregation = 'daily' | 'monthly';
 
@@ -49,7 +44,7 @@ export interface DoraService {
     aggregation: Aggregation,
     project: string[],
     from: number,
-    to: number
+    to: number,
   ): Promise<MetricItem[]>;
   getProjectNames(): Promise<string[]>;
 }

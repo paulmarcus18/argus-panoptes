@@ -125,9 +125,8 @@ export async function getGitHubRepoStatus(
       color: 'yellow',
       reason: `Critical workflows in progress: ${inProgress.join(', ')}`,
     };
-  } 
+  }
   return { color: 'green', reason: 'All critical workflows succeeded.' };
-  
 }
 
 export function determineSemaphoreColor(
@@ -139,21 +138,26 @@ export function determineSemaphoreColor(
   const thresholdPercentage = (redThreshold * 100).toFixed(1);
 
   if (failures === 0) {
-    return { 
-      color: 'green', 
-      reason: `All ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'} passed the check (threshold: ${thresholdPercentage}%).`,
+    return {
+      color: 'green',
+      reason: `All ${totalEntities} ${
+        totalEntities === 1 ? 'entity' : 'entities'
+      } passed the check (threshold: ${thresholdPercentage}%).`,
     };
   } else if (failures > redLimit) {
     return {
       color: 'red',
-      reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'} failed the check with a threshold of ${thresholdPercentage}%.`,
+      reason: `${failures} out of ${totalEntities} ${
+        totalEntities === 1 ? 'entity' : 'entities'
+      } failed the check with a threshold of ${thresholdPercentage}%.`,
     };
   }
   return {
     color: 'yellow',
-    reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'} failed the check with a threshold of ${thresholdPercentage}%.`,
+    reason: `${failures} out of ${totalEntities} ${
+      totalEntities === 1 ? 'entity' : 'entities'
+    } failed the check with a threshold of ${thresholdPercentage}%.`,
   };
-
 }
 
 /**

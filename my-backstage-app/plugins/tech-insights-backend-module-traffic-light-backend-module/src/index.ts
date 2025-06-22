@@ -5,4 +5,4 @@
  * @packageDocumentation
  */
 
-export {default } from './module';
+export { default } from './module';

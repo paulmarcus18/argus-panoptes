@@ -6,10 +6,8 @@ export const reportingPipelineChecks: DynamicThresholdCheck[] = [
     name: 'Reporting Pipeline Success Rate',
     type: 'percentage',
     factIds: ['reportingPipelineStatusFactRetriever', 'successRate'],
-    annotationKeyThreshold:
-      'tech-insights.io/reporting-success-rate-threshold',
-    annotationKeyOperator:
-      'tech-insights.io/reporting-success-rate-operator',
+    annotationKeyThreshold: 'tech-insights.io/reporting-success-rate-threshold',
+    annotationKeyOperator: 'tech-insights.io/reporting-success-rate-operator',
     description:
       'Minimum pipeline success rate required for reporting components',
   },

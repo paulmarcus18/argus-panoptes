@@ -1,10 +1,5 @@
 import { Grid } from '@material-ui/core';
-import {
-  Header,
-  Page,
-  Content,
-  HeaderLabel,
-} from '@backstage/core-components';
+import { Header, Page, Content, HeaderLabel } from '@backstage/core-components';
 import { DoraDashboard } from '../DoraDashboard';
 
 export const ExampleComponent = () => (

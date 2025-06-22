@@ -7,7 +7,6 @@ export async function postSummaries(
   fetchFn: typeof fetch,
 ): Promise<void> {
   for (const [system, summaries] of Object.entries(data)) {
-    try {
       const response = await fetchFn(`${apiBaseUrl}/summaries`, {
         method: 'POST',
         headers: {
@@ -21,14 +20,7 @@ export async function postSummaries(
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(
-          `POST Summaries failed for '${system}': ${response.status}`,
-          errorText,
-        );
+        await response.text();
       }
-    } catch (err) {
-      console.error(`POST Summaries threw error for '${system}':`, err);
-    }
   }
 }

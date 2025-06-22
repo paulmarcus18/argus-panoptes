@@ -3,14 +3,17 @@ import { Entity } from '@backstage/catalog-model';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import { BlackDuckTrafficLight, determineBlackDuckColor } from '../BlackDuckTrafficLight';
+import {
+  BlackDuckTrafficLight,
+  determineBlackDuckColor,
+} from '../BlackDuckTrafficLight';
 import { BlackDuckUtils } from '../../../utils/blackDuckUtils';
 
 // Mock the BaseTrafficLight component
 jest.mock('../BaseTrafficLight', () => ({
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
-    <div 
-      data-testid="base-traffic-light" 
+    <div
+      data-testid="base-traffic-light"
       data-color={color}
       data-tooltip={tooltip}
       onClick={onClick}
@@ -110,7 +113,7 @@ describe('determineBlackDuckColor', () => {
       [],
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('gray');
@@ -131,7 +134,7 @@ describe('determineBlackDuckColor', () => {
       entitiesWithoutBlackDuck,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('gray');
@@ -149,7 +152,7 @@ describe('determineBlackDuckColor', () => {
       entitiesWithoutSystem,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('gray');
@@ -177,7 +180,7 @@ describe('determineBlackDuckColor', () => {
       mockEntities,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('green');
@@ -205,7 +208,7 @@ describe('determineBlackDuckColor', () => {
       mockEntities,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('red');
@@ -234,7 +237,7 @@ describe('determineBlackDuckColor', () => {
       mockEntities,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('red');
@@ -263,7 +266,7 @@ describe('determineBlackDuckColor', () => {
       mockEntities,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('yellow');
@@ -296,7 +299,7 @@ describe('determineBlackDuckColor', () => {
       mockEntities,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('red');
@@ -334,7 +337,7 @@ describe('determineBlackDuckColor', () => {
       mockEntities,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('yellow');
@@ -362,20 +365,22 @@ describe('determineBlackDuckColor', () => {
       mockEntities,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('red');
   });
 
   it('should return gray on error fetching BlackDuck data', async () => {
-    mockBlackDuckUtils.getBlackDuckChecks.mockRejectedValue(new Error('API Error'));
+    mockBlackDuckUtils.getBlackDuckChecks.mockRejectedValue(
+      new Error('API Error'),
+    );
 
     const result = await determineBlackDuckColor(
       mockEntities,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('gray');
@@ -399,7 +404,7 @@ describe('determineBlackDuckColor', () => {
       [entityWithStringSystem],
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -432,7 +437,7 @@ describe('determineBlackDuckColor', () => {
       mockEntities,
       mockCatalogApi,
       mockTechInsightsApi,
-      mockBlackDuckUtils
+      mockBlackDuckUtils,
     );
 
     expect(result.color).toEqual('yellow');
@@ -482,14 +487,19 @@ describe('BlackDuckTrafficLight Component', () => {
         mediumSecurityCheck: true,
       }),
     };
-    (BlackDuckUtils as jest.Mock).mockImplementation(() => mockBlackDuckUtilsInstance);
+    (BlackDuckUtils as jest.Mock).mockImplementation(
+      () => mockBlackDuckUtilsInstance,
+    );
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  const renderComponent = (entities: Entity[] = mockEntities, onClick?: () => void) => {
+  const renderComponent = (
+    entities: Entity[] = mockEntities,
+    onClick?: () => void,
+  ) => {
     return render(
       <TestApiProvider
         apis={[
@@ -498,7 +508,7 @@ describe('BlackDuckTrafficLight Component', () => {
         ]}
       >
         <BlackDuckTrafficLight entities={entities} onClick={onClick} />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
   };
 
@@ -521,7 +531,9 @@ describe('BlackDuckTrafficLight Component', () => {
         mediumSecurityCheck: true,
       }),
     };
-    (BlackDuckUtils as jest.Mock).mockImplementation(() => mockBlackDuckUtilsInstance);
+    (BlackDuckUtils as jest.Mock).mockImplementation(
+      () => mockBlackDuckUtilsInstance,
+    );
 
     await act(async () => {
       renderComponent();
@@ -569,7 +581,9 @@ describe('BlackDuckTrafficLight Component', () => {
     const mockBlackDuckUtilsInstance = {
       getBlackDuckChecks: jest.fn().mockRejectedValue(new Error('API Error')),
     };
-    (BlackDuckUtils as jest.Mock).mockImplementation(() => mockBlackDuckUtilsInstance);
+    (BlackDuckUtils as jest.Mock).mockImplementation(
+      () => mockBlackDuckUtilsInstance,
+    );
 
     await act(async () => {
       renderComponent();
@@ -593,7 +607,7 @@ describe('BlackDuckTrafficLight Component', () => {
     });
 
     const trafficLight = screen.getByTestId('base-traffic-light');
-    
+
     await act(async () => {
       trafficLight.click();
     });
@@ -603,7 +617,7 @@ describe('BlackDuckTrafficLight Component', () => {
 
   it('should re-fetch data when entities prop changes', async () => {
     let component: ReturnType<typeof render>;
-    
+
     await act(async () => {
       component = renderComponent();
     });
@@ -633,7 +647,7 @@ describe('BlackDuckTrafficLight Component', () => {
           ]}
         >
           <BlackDuckTrafficLight entities={newEntities} />
-        </TestApiProvider>
+        </TestApiProvider>,
       );
     });
 
@@ -648,7 +662,7 @@ describe('BlackDuckTrafficLight Component', () => {
     await act(async () => {
       renderComponent();
     });
-    
+
     expect(BlackDuckUtils).toHaveBeenCalledTimes(1);
   });
 
