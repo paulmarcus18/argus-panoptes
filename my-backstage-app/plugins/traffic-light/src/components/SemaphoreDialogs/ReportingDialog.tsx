@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -45,166 +45,146 @@ export const ReportingSemaphoreDialog: React.FC<
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const reportingUtils = React.useMemo(() => new ReportingUtils(), []);
+  const reportingUtils = useMemo(() => new ReportingUtils(), []);
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [metrics, setMetrics] = React.useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [metrics, setMetrics] = useState({
     totalSuccess: 0,
     totalFailure: 0,
     totalRuns: 0,
     successRate: 0,
   });
 
-  const [lowestSuccessRepos, setLowestSuccessRepos] = React.useState<
+  const [lowestSuccessRepos, setLowestSuccessRepos] = useState<
     { name: string; url: string; successRate: number }[]
   >([]);
 
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
-
+  
     setIsLoading(true);
-
+  
     const fetchPipelineMetrics = async () => {
-      try {
-        // 1. Get threshold from system annotations
-        let redThreshold = 0.33;
-        try {
-          const systemName = entities[0].spec?.system;
-          const namespace = entities[0].metadata.namespace || 'default';
-
-          if (systemName) {
-            const systemEntity = await catalogApi.getEntityByRef({
-              kind: 'System',
-              namespace,
-              name:
-                typeof systemName === 'string'
-                  ? systemName
-                  : String(systemName),
-            });
-
-            const thresholdAnnotation =
-              systemEntity?.metadata.annotations?.[
-                'reporting-check-threshold-red'
-              ];
-            if (thresholdAnnotation) {
-              redThreshold = parseFloat(thresholdAnnotation);
-            }
-          }
-        } catch (err) {
-          console.warn(
-            'Failed to get threshold annotation, using default 0.33',
-          );
+      // 1. Get threshold from system annotations
+      let redThreshold = 0.33;
+      const systemName = entities[0].spec?.system;
+      const namespace = entities[0].metadata.namespace ?? 'default';
+  
+      if (systemName) {
+        const systemEntity = await catalogApi.getEntityByRef({
+          kind: 'System',
+          namespace,
+          name: typeof systemName === 'string' ? systemName : String(systemName),
+        });
+  
+        const thresholdAnnotation =
+          systemEntity?.metadata.annotations?.['reporting-check-threshold-red'];
+        if (thresholdAnnotation) {
+          redThreshold = parseFloat(thresholdAnnotation);
         }
-
-        // 2. Gather facts + checks in parallel
-        const results = await Promise.all(
-          entities.map(async entity => {
-            const ref = {
-              kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
-              name: entity.metadata.name,
-            };
-
-            const [facts, check] = await Promise.all([
-              reportingUtils.getReportingPipelineFacts(techInsightsApi, ref),
-              reportingUtils.getReportingPipelineChecks(techInsightsApi, ref),
-            ]);
-
-            const successRate =
-              facts.successfulRuns + facts.failedRuns > 0
-                ? (facts.successfulRuns /
-                    (facts.successfulRuns + facts.failedRuns)) *
-                  100
-                : 0;
-
-            const projectSlug =
-              entity.metadata.annotations?.['github.com/project-slug'];
-            const url = projectSlug
-              ? `https://github.com/${projectSlug}/actions`
-              : '#';
-
-            return {
-              name: entity.metadata.name,
-              url,
-              successRate: parseFloat(successRate.toFixed(2)),
-              successWorkflowRunsCount: facts.successfulRuns,
-              failureWorkflowRunsCount: facts.failedRuns,
-              failedCheck: check.successRateCheck === false,
-            };
-          }),
-        );
-
-        // 3. Metrics aggregation
-        const totalSuccess = results.reduce(
-          (sum, r) => sum + r.successWorkflowRunsCount,
-          0,
-        );
-        const totalFailure = results.reduce(
-          (sum, r) => sum + r.failureWorkflowRunsCount,
-          0,
-        );
-        const totalRuns = totalSuccess + totalFailure;
-        const successRate =
-          totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
-
-        const failures = results.filter(r => r.failedCheck).length;
-
-        // 4. Determine traffic light color
-        const { color, reason } = determineSemaphoreColor(
-          failures,
-          entities.length,
-          redThreshold,
-        );
-
-        // Prepare summary message
-        let summary = reason;
-        if (color === 'red') {
-          summary += ' Critical attention required.';
-        } else if (color === 'yellow') {
-          summary += ' Issues should be addressed before release.';
-        } else {
-          summary += ' Code quality is good.';
-        }
-
-        // 5. Bottom 5 repos by success rate
-        const lowest = [...results]
-          .sort((a, b) => a.successRate - b.successRate)
-          .slice(0, 5)
-          .map(({ name, url, successRate: repoSuccessRate }) => ({
-            name,
+      }
+  
+      // 2. Gather facts + checks in parallel
+      const results = await Promise.all(
+        entities.map(async entity => {
+          const ref = {
+            kind: entity.kind,
+            namespace: entity.metadata.namespace || 'default',
+            name: entity.metadata.name,
+          };
+  
+          const [facts, check] = await Promise.all([
+            reportingUtils.getReportingPipelineFacts(techInsightsApi, ref),
+            reportingUtils.getReportingPipelineChecks(techInsightsApi, ref),
+          ]);
+  
+          const successRate =
+            facts.successfulRuns + facts.failedRuns > 0
+              ? (facts.successfulRuns / (facts.successfulRuns + facts.failedRuns)) * 100
+              : 0;
+  
+          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'];
+          const url = projectSlug ? `https://github.com/${projectSlug}/actions` : '#';
+  
+          return {
+            name: entity.metadata.name,
             url,
-            successRate: repoSuccessRate,
-          }));
-
-        setMetrics({
+            successRate: parseFloat(successRate.toFixed(2)),
+            successWorkflowRunsCount: facts.successfulRuns,
+            failureWorkflowRunsCount: facts.failedRuns,
+            failedCheck: check.successRateCheck === false,
+          };
+        }),
+      );
+  
+      // 3. Metrics aggregation
+      const totalSuccess = results.reduce((sum, r) => sum + r.successWorkflowRunsCount, 0);
+      const totalFailure = results.reduce((sum, r) => sum + r.failureWorkflowRunsCount, 0);
+      const totalRuns = totalSuccess + totalFailure;
+      const successRate = totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
+  
+      const failures = results.filter(r => r.failedCheck).length;
+  
+      // 4. Determine traffic light color
+      const { color, reason } = determineSemaphoreColor(failures, entities.length, redThreshold);
+  
+      // Prepare summary message
+      let summary = reason;
+      if (color === 'red') {
+        summary += ' Critical attention required.';
+      } else if (color === 'yellow') {
+        summary += ' Issues should be addressed before release.';
+      } else {
+        summary += ' Code quality is good.';
+      }
+  
+      // 5. Bottom 5 repos by success rate
+      const lowest = [...results]
+        .sort((a, b) => a.successRate - b.successRate)
+        .slice(0, 5)
+        .map(({ name, url, successRate: repoSuccessRate }) => ({
+          name,
+          url,
+          successRate: repoSuccessRate,
+        }));
+  
+      // Set all state at once
+      setMetrics({
+        totalSuccess,
+        totalFailure,
+        totalRuns,
+        successRate: parseFloat(successRate.toFixed(2)),
+      });
+  
+      setLowestSuccessRepos(lowest);
+  
+      setData({
+        color,
+        summary,
+        metrics: {
           totalSuccess,
           totalFailure,
           totalRuns,
           successRate: parseFloat(successRate.toFixed(2)),
-        });
-
-        setLowestSuccessRepos(lowest);
-
-        setData({
-          color,
-          summary,
-          metrics: {
-            totalSuccess,
-            totalFailure,
-            totalRuns,
-            successRate: parseFloat(successRate.toFixed(2)),
-          },
-          details: [],
-        });
-      } catch (e) {
-        console.error('Failed to fetch pipeline data:', e);
+        },
+        details: [],
+      });
+    };
+  
+    // Handle success and error cases using promise chain
+    fetchPipelineMetrics()
+      .then(() => {
+        // Success case - nothing additional needed
+      })
+      .catch(() => {
+        // Error fallback without logging
         setMetrics({
           totalSuccess: 0,
           totalFailure: 0,
@@ -218,12 +198,10 @@ export const ReportingSemaphoreDialog: React.FC<
           summary: 'Failed to load metrics.',
           details: [],
         });
-      } finally {
+      })
+      .finally(() => {
         setIsLoading(false);
-      }
-    };
-
-    fetchPipelineMetrics();
+      });
   }, [open, entities, techInsightsApi, catalogApi, reportingUtils]);
 
   const renderMetrics = () => (

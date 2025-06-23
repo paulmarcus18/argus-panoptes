@@ -1,4 +1,4 @@
-import React from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -36,15 +36,6 @@ interface GitHubSemaphoreDialogProps {
   entities?: Entity[];
 }
 
-interface SecurityThresholds {
-  critical_red: number;
-  high_red: number;
-  secrets_red: number;
-  medium_red: number;
-  medium_yellow: number;
-  low_yellow: number;
-}
-
 /**
  * Sort issues by severity (critical first, then high, medium, low)
  */
@@ -72,18 +63,18 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
-  const githubASUtils = React.useMemo(
+  const githubASUtils = useMemo(
     () => new GithubAdvancedSecurityUtils(),
     [],
   );
 
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   });
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Helper function to extract repository name from GitHub URL
   const extractRepoName = (url: string): string => {
@@ -99,198 +90,186 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
     return '';
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
-
+  
     setIsLoading(true);
-
+  
+    const fetchSystemEntity = async () => {
+      const systemName = entities[0].spec?.system;
+      if (!systemName) return { systemEntity: undefined, thresholds: undefined };
+  
+      const systemEntity = await catalogApi.getEntityByRef({
+        kind: 'System',
+        namespace: entities[0].metadata.namespace ?? 'default',
+        name: typeof systemName === 'string' ? systemName : String(systemName),
+      });
+  
+      const thresholds = extractSecurityThresholds(systemEntity, entities.length);
+      return { systemEntity, thresholds };
+    };
+  
     const fetchSecurityData = async () => {
-      try {
-        // Get system entity and thresholds (if available)
-        let systemEntity: Entity | undefined;
-        let thresholds: SecurityThresholds | undefined;
-
-        try {
-          const systemName = entities[0].spec?.system;
-          if (systemName) {
-            systemEntity = await catalogApi.getEntityByRef({
-              kind: 'System',
-              namespace: entities[0].metadata.namespace || 'default',
-              name:
-                typeof systemName === 'string'
-                  ? systemName
-                  : String(systemName),
-            });
-            thresholds = extractSecurityThresholds(
-              systemEntity,
-              entities.length,
-            );
+      // Get system entity and thresholds (with separate error handling)
+      const systemData = await fetchSystemEntity().catch(() => ({
+        systemEntity: undefined,
+        thresholds: undefined,
+      }));
+  
+      // Get security check results (for traffic light calculation)
+      const securityCheckResults = await Promise.all(
+        entities.map(entity =>
+          githubASUtils.getGitHubSecurityData(techInsightsApi, {
+            kind: entity.kind,
+            namespace: entity.metadata.namespace ?? 'default',
+            name: entity.metadata.name,
+          }),
+        ),
+      );
+  
+      // Get detailed security data (for metrics and details)
+      const results = securityCheckResults;
+  
+      let critical = 0;
+      let high = 0;
+      let medium = 0;
+      let low = 0;
+      const details: IssueDetail[] = [];
+  
+      results.forEach(result => {
+        // Process code scanning alerts
+        Object.values(result.codeScanningAlerts || {}).forEach(alert => {
+          const a = alert as any;
+  
+          // Count by severity
+          const severity = (a.severity as Severity) || 'medium';
+          switch (severity) {
+            case 'critical':
+              critical++;
+              break;
+            case 'high':
+              high++;
+              break;
+            case 'medium':
+              medium++;
+              break;
+            case 'low':
+              low++;
+              break;
+            default:
+              medium++;
           }
-        } catch (systemError) {
-          console.warn(
-            'Could not fetch system entity for thresholds:',
-            systemError,
-          );
-        }
-
-        // Get security check results (for traffic light calculation)
-        const securityCheckResults = await Promise.all(
-          entities.map(entity =>
-            githubASUtils.getGitHubSecurityData(techInsightsApi, {
-              kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
-              name: entity.metadata.name,
-            }),
-          ),
-        );
-
-        // Get detailed security data (for metrics and details)
-        const results = securityCheckResults;
-
-        let critical = 0;
-        let high = 0;
-        let medium = 0;
-        let low = 0;
-        const details: IssueDetail[] = [];
-
-        results.forEach(result => {
-          // Process code scanning alerts
-          Object.values(result.codeScanningAlerts || {}).forEach(alert => {
-            const a = alert as any;
-
-            // Count by severity
-            const severity = (a.severity as Severity) || 'medium';
-            switch (severity) {
-              case 'critical':
-                critical++;
-                break;
-              case 'high':
-                high++;
-                break;
-              case 'medium':
-                medium++;
-                break;
-              case 'low':
-                low++;
-                break;
-              default:
-                medium++;
-            }
-
-            // Extract repository name from direct_link or html_url
-            const repoName = extractRepoName(a.direct_link || a.html_url || '');
-
-            // Add repository name to description if available
-            const description = repoName
-              ? `[${repoName}] ${a.description}`
-              : a.description;
-
-            details.push({
-              severity,
-              description,
-              component: a.location?.path,
-              url: a.html_url || a.direct_link,
-              directLink: a.direct_link,
-            });
-          });
-
-          // Process secret scanning alerts (most are high severity)
-          Object.values(result.secretScanningAlerts || {}).forEach(alert => {
-            const a = alert as any;
-            high++;
-
-            // Extract repository name from html_url
-            const repoName = extractRepoName(a.html_url || '');
-
-            // Add repository name to description if available
-            const description = repoName
-              ? `[${repoName}] ${a.description}`
-              : a.description;
-
-            details.push({
-              severity: 'high',
-              description,
-              url: a.html_url,
-              directLink: a.html_url,
-            });
+  
+          // Extract repository name from direct_link or html_url
+          const repoName = extractRepoName(a.direct_link ?? a.html_url ?? '');
+  
+          // Add repository name to description if available
+          const description = repoName
+            ? `[${repoName}] ${a.description}`
+            : a.description;
+  
+          details.push({
+            severity,
+            description,
+            component: a.location?.path,
+            url: a.html_url ?? a.direct_link,
+            directLink: a.direct_link,
           });
         });
-
-        const totalCode = results.reduce(
-          (sum, r) => sum + r.openCodeScanningAlertCount,
-          0,
+  
+        // Process secret scanning alerts (most are high severity)
+        Object.values(result.secretScanningAlerts || {}).forEach(alert => {
+          const a = alert as any;
+          high++;
+  
+          // Extract repository name from html_url
+          const repoName = extractRepoName(a.html_url ?? '');
+  
+          // Add repository name to description if available
+          const description = repoName
+            ? `[${repoName}] ${a.description}`
+            : a.description;
+  
+          details.push({
+            severity: 'high',
+            description,
+            url: a.html_url,
+            directLink: a.html_url,
+          });
+        });
+      });
+  
+      const totalCode = results.reduce((sum, r) => sum + r.openCodeScanningAlertCount, 0);
+      const totalSecret = results.reduce((sum, r) => sum + r.openSecretScanningAlertCount, 0);
+  
+      // Determine color using the traffic light function if thresholds are available
+      let color: 'red' | 'yellow' | 'green' | 'gray';
+      let summary: string;
+  
+      if (systemData.thresholds) {
+        // Use the traffic light calculation function
+        const trafficLightResult = calculateGitHubSecurityTrafficLight(
+          securityCheckResults,
+          entities,
+          systemData.thresholds,
         );
-        const totalSecret = results.reduce(
-          (sum, r) => sum + r.openSecretScanningAlertCount,
-          0,
-        );
-
-        // Determine color using the traffic light function if thresholds are available
-        let color: 'red' | 'yellow' | 'green' | 'gray';
-        let summary: string;
-
-        if (thresholds) {
-          // Use the traffic light calculation function
-          const trafficLightResult = calculateGitHubSecurityTrafficLight(
-            securityCheckResults,
-            entities,
-            thresholds,
-          );
-          color =
-            trafficLightResult.color === 'white'
-              ? 'gray'
-              : trafficLightResult.color;
-          summary = trafficLightResult.reason;
+        color = trafficLightResult.color === 'white' ? 'gray' : trafficLightResult.color;
+        summary = trafficLightResult.reason;
+      } else {
+        // Fallback to simple logic if no thresholds available
+        if (critical > 0 || high > 0) {
+          color = 'red';
+        } else if (medium > 0 || low > 0) {
+          color = 'yellow';
         } else {
-          // Fallback to simple logic if no thresholds available
-          if (critical > 0 || high > 0) {
-            color = 'red';
-          } else if (medium > 0 || low > 0) {
-            color = 'yellow';
-          } else {
-            color = 'green';
-          }
-
-          if (color === 'red') {
-            summary = 'Critical security issues require immediate attention.';
-          } else if (color === 'yellow') {
-            summary = 'Security issues need to be addressed.';
-          } else {
-            summary = 'No security issues found.';
-          }
+          color = 'green';
         }
-
-        // Sort details by severity before setting the data
-        const sortedDetails = sortIssuesBySeverity(details);
-
-        setData({
-          color,
-          metrics: {
-            criticalIssues: critical,
-            highIssues: high,
-            mediumIssues: medium,
-            lowIssues: low,
-            totalIssues: totalCode + totalSecret,
-            totalCodeScanningAlerts: totalCode,
-            totalSecretScanningAlerts: totalSecret,
-          },
-          summary,
-          details: sortedDetails, // Use sorted details
-        });
-      } catch (err) {
-        console.error('GitHub Security fetch error:', err);
+  
+        if (color === 'red') {
+          summary = 'Critical security issues require immediate attention.';
+        } else if (color === 'yellow') {
+          summary = 'Security issues need to be addressed.';
+        } else {
+          summary = 'No security issues found.';
+        }
+      }
+  
+      // Sort details by severity before setting the data
+      const sortedDetails = sortIssuesBySeverity(details);
+  
+      setData({
+        color,
+        metrics: {
+          criticalIssues: critical,
+          highIssues: high,
+          mediumIssues: medium,
+          lowIssues: low,
+          totalIssues: totalCode + totalSecret,
+          totalCodeScanningAlerts: totalCode,
+          totalSecretScanningAlerts: totalSecret,
+        },
+        summary,
+        details: sortedDetails,
+      });
+    };
+  
+    // Handle success and error using promise chain
+    fetchSecurityData()
+      .then(() => {
+        // Success case - nothing additional needed
+      })
+      .catch(() => {
+        // Error fallback
         setData({
           color: 'gray',
           metrics: {},
           summary: 'Failed to load GitHub Security data.',
           details: [],
         });
-      } finally {
+      })
+      .finally(() => {
         setIsLoading(false);
-      }
-    };
-
-    fetchSecurityData();
+      });
   }, [open, entities, githubASUtils, techInsightsApi, catalogApi]);
 
   const renderMetrics = () => (
@@ -310,7 +289,7 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
               className={classes.metricValue}
               style={{ color: color as string | undefined }}
             >
-              {value || 0}
+              {value ?? 0}
             </Typography>
             <Typography className={classes.metricLabel}>{label}</Typography>
           </Paper>

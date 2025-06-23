@@ -166,7 +166,7 @@ export const BlackDuckSemaphoreDialog: React.FC<
     };
 
     fetchBlackDuckData();
-  }, [open, entities, blackDuckUtils, techInsightsApi]);
+  }, [open, entities, blackDuckUtils, techInsightsApi, catalogApi]);
 
   const renderMetrics = () => (
     <Grid container spacing={2}>

@@ -188,7 +188,7 @@ export const DependabotSemaphoreDialog: React.FC<
     };
 
     fetchDependabotData();
-  }, [open, entities, dependabotUtils, techInsightsApi]);
+  }, [open, entities, dependabotUtils, techInsightsApi, system]);
 
   const getRepoClassName = (repo: RepoAlertSummary) => {
     if (repo.critical > 0) return `${classes.repoItem} ${classes.criticalRepo}`;
