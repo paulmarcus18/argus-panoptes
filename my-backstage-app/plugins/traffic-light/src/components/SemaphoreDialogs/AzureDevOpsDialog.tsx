@@ -73,7 +73,9 @@ async function getSystemThreshold(
   const systemName = entities[0].spec?.system;
   const namespace = entities[0].metadata.namespace ?? 'default';
 
-  if (!systemName) return defaultThreshold;
+  if (typeof systemName !== 'string' || !systemName) {
+    return defaultThreshold;
+  }
 
   try {
     const systemEntity = await catalogApi.getEntityByRef({
@@ -89,8 +91,7 @@ async function getSystemThreshold(
       : defaultThreshold;
   } catch (err) {
     console.warn(
-      'Could not fetch system threshold annotation; using default 0.33',
-    );
+      'Could not fetch system threshold annotation; using default 0.33', err);
     return defaultThreshold;
   }
 }

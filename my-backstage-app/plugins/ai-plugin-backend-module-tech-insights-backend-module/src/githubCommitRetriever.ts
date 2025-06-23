@@ -1,14 +1,3 @@
-/**
- * GitHub Commit Data Retriever Module
- * 
- * This module implements a Tech Insights fact retriever that extracts commit data from GitHub
- * repositories associated with Backstage catalog entities. It collects information about
- * recent pull requests, commit counts, and commit messages to provide insights into
- * repository activity patterns.
- * 
- * The retriever focuses on data from the last week and filters out dependency bump commits
- * to provide more meaningful activity metrics.
- */
 
 import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
 import { Entity } from '@backstage/catalog-model';
