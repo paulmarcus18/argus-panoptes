@@ -8090,6 +8090,7 @@ __metadata:
     "@testing-library/react": "npm:^14.0.0"
     "@testing-library/user-event": "npm:^14.0.0"
     html2canvas: "npm:^1.4.1"
+    jspdf: "npm:^2.5.2"
     msw: "npm:^1.0.0"
     react: "npm:^16.13.1 || ^17.0.0 || ^18.0.0"
     react-use: "npm:^17.2.4"
@@ -8127,6 +8128,7 @@ __metadata:
     "@backstage/core-components": "npm:^0.17.1"
     "@backstage/core-plugin-api": "npm:^1.10.6"
     "@backstage/dev-utils": "npm:^1.1.9"
+    "@backstage/plugin-catalog-react": "npm:^1.17.0"
     "@backstage/plugin-tech-insights": "npm:^0.3.27"
     "@backstage/test-utils": "npm:^1.7.7"
     "@backstage/theme": "npm:^0.6.5"
@@ -25305,7 +25307,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jspdf@npm:^2.5.1":
+"jspdf@npm:^2.5.1, jspdf@npm:^2.5.2":
   version: 2.5.2
   resolution: "jspdf@npm:2.5.2"
   dependencies:

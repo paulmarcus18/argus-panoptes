@@ -160,7 +160,7 @@ export const BlackDuckTrafficLight = ({
     };
 
     fetchData();
-  }, [entities, techInsightsApi]);
+  }, [entities, techInsightsApi, catalogApi, blackDuckUtils]);
 
   return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
 };

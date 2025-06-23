@@ -151,7 +151,7 @@ export const SonarQubeTrafficLight = ({
     };
 
     fetchData();
-  }, [entities, techInsightsApi]);
+  }, [entities, techInsightsApi, catalogApi, sonarUtils]);
 
   return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
 };

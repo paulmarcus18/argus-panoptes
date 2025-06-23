@@ -1,7 +1,5 @@
-import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { ThemeProvider } from '@material-ui/core/styles';
-import { createTheme } from '@material-ui/core/styles';
+import { ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
@@ -121,7 +119,7 @@ describe('PreproductionSemaphoreDialog', () => {
       render(
         <Wrapper>
           <PreproductionSemaphoreDialog
-            open={true}
+            open
             onClose={mockOnClose}
             entities={[mockEntity]}
           />
@@ -150,7 +148,7 @@ describe('PreproductionSemaphoreDialog', () => {
       render(
         <Wrapper>
           <PreproductionSemaphoreDialog
-            open={true}
+            open
             onClose={mockOnClose}
             entities={[]}
           />
@@ -174,7 +172,7 @@ describe('PreproductionSemaphoreDialog', () => {
       render(
         <Wrapper>
           <PreproductionSemaphoreDialog
-            open={true}
+            open
             onClose={mockOnClose}
             entities={[mockEntity]}
           />
@@ -217,7 +215,7 @@ describe('PreproductionSemaphoreDialog', () => {
       render(
         <Wrapper>
           <PreproductionSemaphoreDialog
-            open={true}
+            open
             onClose={mockOnClose}
             entities={[mockEntity]}
           />

@@ -302,7 +302,7 @@ export const GitHubSecurityTrafficLight = ({
 
         const systemEntity = await catalogApi.getEntityByRef({
           kind: 'System',
-          namespace: entities[0].metadata.namespace || 'default',
+          namespace: entities[0].metadata.namespace ?? 'default',
           name:
             typeof systemName === 'string' ? systemName : String(systemName),
         });
@@ -332,7 +332,6 @@ export const GitHubSecurityTrafficLight = ({
         setColor(result.color);
         setReason(result.reason);
       } catch (err) {
-        console.error('Error fetching GitHub Security data:', err);
         setColor('gray');
         setReason('Failed to retrieve GitHub Security data');
       }

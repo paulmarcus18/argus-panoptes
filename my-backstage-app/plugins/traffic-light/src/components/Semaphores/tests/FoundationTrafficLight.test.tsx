@@ -7,16 +7,27 @@ import { FoundationTrafficLight } from '../FoundationTrafficLight';
 import { determineSemaphoreColor } from '../../utils';
 import { FoundationUtils } from '../../../utils/foundationUtils';
 
+// Mock the BaseTrafficLight component
 jest.mock('../BaseTrafficLight', () => ({
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
-    <div
+    <button
+      type="button"
       data-testid="base-traffic-light"
       data-color={color}
       data-tooltip={tooltip}
       onClick={onClick}
+      style={{
+        border: 'none',
+        borderRadius: '50%',
+        width: '50px',
+        height: '50px',
+        backgroundColor: color ?? 'gray',
+        cursor: 'pointer',
+        padding: 0,
+      }}
     >
       Traffic Light: {color}
-    </div>
+    </button>
   ),
 }));
 

@@ -36,7 +36,6 @@ export const AzureDevOpsBugsTrafficLight = ({
       try {
         // 1. Get red threshold from system annotation
         let redThreshold = 0.33;
-        try {
           const systemName = entities[0].spec?.system;
           const namespace = entities[0].metadata.namespace || 'default';
 
@@ -58,11 +57,6 @@ export const AzureDevOpsBugsTrafficLight = ({
               redThreshold = parseFloat(thresholdAnnotation);
             }
           }
-        } catch (e) {
-          console.warn(
-            'Failed to read azure bugs red threshold, using default 0.33',
-          );
-        }
 
         // 2. Fetch facts + checks, and skip entities with null bug counts
         const projectBugMap = new Map<
@@ -73,7 +67,7 @@ export const AzureDevOpsBugsTrafficLight = ({
         for (const entity of entities) {
           const ref = {
             kind: entity.kind,
-            namespace: entity.metadata.namespace || 'default',
+            namespace: entity.metadata.namespace ?? 'default',
             name: entity.metadata.name,
           };
 
@@ -115,7 +109,6 @@ export const AzureDevOpsBugsTrafficLight = ({
         setColor(computedColor);
         setReason(computedReason);
       } catch (err) {
-        console.error('Error fetching Azure DevOps bug data:', err);
         setColor('gray');
         setReason('Failed to retrieve Azure DevOps bug data');
       }

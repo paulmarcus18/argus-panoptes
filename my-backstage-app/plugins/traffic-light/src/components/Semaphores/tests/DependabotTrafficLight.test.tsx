@@ -36,8 +36,6 @@ describe('TrafficLightDependabot', () => {
     // Suppress findDOMNode deprecation warning from Material-UI Tooltip
     jest.spyOn(console, 'error').mockImplementation((msg, ...args) => {
       if (typeof msg === 'string' && msg.includes('findDOMNode')) return;
-      // @ts-ignore
-      console.error(msg, ...args);
     });
   });
 

@@ -36,6 +36,7 @@
     "@mui/material": "^5.17.1",
     "@mui/x-charts": "^8.3.1",
     "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.2",
     "react-use": "^17.2.4"
   },
   "peerDependencies": {

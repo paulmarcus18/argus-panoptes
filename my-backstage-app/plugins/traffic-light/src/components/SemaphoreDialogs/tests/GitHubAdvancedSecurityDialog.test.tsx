@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
@@ -104,7 +103,7 @@ describe('GitHubSemaphoreDialog', () => {
     });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={onClose} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -127,7 +126,7 @@ describe('GitHubSemaphoreDialog', () => {
     mockedTrafficLight.mockReturnValue({ color: 'green', reason: 'No security issues found.' });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -151,7 +150,7 @@ describe('GitHubSemaphoreDialog', () => {
     mockCatalogApi.getEntityByRef.mockRejectedValue(new Error('No system entity'));
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -166,7 +165,7 @@ describe('GitHubSemaphoreDialog', () => {
     mockGithubUtils.getGitHubSecurityData.mockRejectedValue(new Error('API failure'));
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -187,7 +186,7 @@ describe('GitHubSemaphoreDialog', () => {
     });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={onClose} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} /></Wrapper>);
     });
 
     const closeButton = screen.getByTestId('close-button');
@@ -215,7 +214,7 @@ describe('GitHubSemaphoreDialog', () => {
     mockedTrafficLight.mockReturnValue({ color: 'red', reason: 'Critical issues found.' });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -252,7 +251,7 @@ describe('GitHubSemaphoreDialog', () => {
     mockedTrafficLight.mockReturnValue({ color: 'red', reason: 'Security issues found.' });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -296,7 +295,7 @@ describe('GitHubSemaphoreDialog', () => {
     });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -331,7 +330,7 @@ describe('GitHubSemaphoreDialog', () => {
     mockedTrafficLight.mockReturnValue({ color: 'green', reason: 'No issues found.' });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entityInCustomNamespace]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entityInCustomNamespace]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -357,7 +356,7 @@ describe('GitHubSemaphoreDialog', () => {
     });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -395,7 +394,7 @@ describe('GitHubSemaphoreDialog', () => {
     mockedTrafficLight.mockReturnValue({ color: 'red', reason: 'Critical issues found.' });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -415,7 +414,7 @@ describe('GitHubSemaphoreDialog', () => {
     mockGithubUtils.getGitHubSecurityData.mockReturnValue(delayedPromise);
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
     });
 
     // Should show loading state
@@ -456,7 +455,7 @@ describe('GitHubSemaphoreDialog', () => {
     });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entityWithStringSystem]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entityWithStringSystem]} /></Wrapper>);
     });
 
     await waitFor(() => {
@@ -487,7 +486,7 @@ describe('GitHubSemaphoreDialog', () => {
     });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open={true} onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
     });
 
     await waitFor(() => {

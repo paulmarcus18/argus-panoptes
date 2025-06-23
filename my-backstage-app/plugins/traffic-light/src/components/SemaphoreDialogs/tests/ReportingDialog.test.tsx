@@ -1,7 +1,5 @@
-import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { ThemeProvider } from '@material-ui/core/styles';
-import { createTheme } from '@material-ui/core/styles';
+import { ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
@@ -107,7 +105,7 @@ describe('ReportingSemaphoreDialog', () => {
       render(
         <Wrapper>
           <ReportingSemaphoreDialog
-            open={true}
+            open
             onClose={onClose}
             entities={[mockEntity]}
           />
@@ -136,7 +134,7 @@ describe('ReportingSemaphoreDialog', () => {
       render(
         <Wrapper>
           <ReportingSemaphoreDialog
-            open={true}
+            open
             onClose={jest.fn()}
             entities={[mockEntity]}
           />
@@ -171,7 +169,7 @@ describe('ReportingSemaphoreDialog', () => {
       render(
         <Wrapper>
           <ReportingSemaphoreDialog
-            open={true}
+            open
             onClose={onClose}
             entities={[mockEntity]}
           />
