@@ -1,12 +1,20 @@
-import { LoggerService } from '@backstage/backend-plugin-api';
+import {
+  LoggerService,
+  resolvePackagePath,
+} from '@backstage/backend-plugin-api';
 import { Config } from '@backstage/config';
 import { createDbPool, DbConfig } from './db';
-import mysql from 'mysql2/promise'; // Needed to type the pool
-
+import mysql from 'mysql2/promise';
 import { MetricItem, DoraService, MetricType, Aggregation } from './types';
-
 import fs from 'fs';
-import path from 'path';
+
+const getSqlFilePath = (fileName: string): string => {
+  return resolvePackagePath(
+    '@internal/plugin-dora-dashboard-backend',
+    'src/services/DoraService/queries',
+    fileName,
+  );
+};
 
 export async function get_daily_cfr(
   pool: mysql.Pool,
@@ -14,13 +22,12 @@ export async function get_daily_cfr(
   from: number,
   to: number,
 ): Promise<MetricItem[]> {
-  const sqlFilePath = path.join(__dirname, 'queries/cfr_daily.sql');
+  const sqlFilePath = getSqlFilePath('cfr_daily.sql');
   let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
-  // TODO: adauga projects dupa ce schimbi slq queryul
   const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
   const dateTo = new Date(to * 1000).toISOString().split('T')[0];
   const params = [dateFrom, dateTo, ...projects, dateFrom, dateTo];
@@ -40,13 +47,12 @@ export async function get_monthly_cfr(
   from: number,
   to: number,
 ): Promise<MetricItem[]> {
-  const sqlFilePath = path.join(__dirname, 'queries/cfr_monthly.sql');
+  const sqlFilePath = getSqlFilePath('cfr_monthly.sql');
   let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
-  // TODO: adauga projects dupa ce schimbi slq queryul
   const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
   const dateTo = new Date(to * 1000).toISOString().split('T')[0];
   const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
@@ -66,14 +72,12 @@ export async function get_daily_df(
   from: number,
   to: number,
 ): Promise<MetricItem[]> {
-  const sqlFilePath = path.join(__dirname, 'queries/df_daily.sql');
+  const sqlFilePath = getSqlFilePath('df_daily.sql');
   let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
-  // Dynamically inject (?, ?, ?) based on number of projects
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
-  // Convert from and to timestamps to ISO date strings
   const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
   const dateTo = new Date(to * 1000).toISOString().split('T')[0];
   const params = [dateFrom, dateTo, ...projects, dateFrom, dateTo];
@@ -93,14 +97,12 @@ export async function get_monthly_df(
   from: number,
   to: number,
 ): Promise<MetricItem[]> {
-  const sqlFilePath = path.join(__dirname, 'queries/df_monthly.sql');
+  const sqlFilePath = getSqlFilePath('df_monthly.sql');
   let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
-  // Dynamically inject (?, ?, ?) based on number of projects
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
-  // Convert from and to timestamps to ISO date strings
   const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
   const dateTo = new Date(to * 1000).toISOString().split('T')[0];
   const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
@@ -120,10 +122,9 @@ export async function get_daily_mltc(
   from: number,
   to: number,
 ): Promise<MetricItem[]> {
-  const sqlFilePath = path.join(__dirname, 'queries/mltc_daily.sql');
+  const sqlFilePath = getSqlFilePath('mltc_daily.sql');
   let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
-  // Dynamically inject (?, ?, ...) based on the number of projects
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
@@ -146,10 +147,9 @@ export async function get_monthly_mltc(
   from: number,
   to: number,
 ): Promise<MetricItem[]> {
-  const sqlFilePath = path.join(__dirname, 'queries/mltc_monthly.sql');
+  const sqlFilePath = getSqlFilePath('mltc_monthly.sql');
   let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
-  // Dynamically inject (?, ?, ...) based on the number of projects
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
@@ -172,14 +172,12 @@ export async function get_daily_mttr(
   from: number,
   to: number,
 ): Promise<MetricItem[]> {
-  const sqlFilePath = path.join(__dirname, 'queries/mttr_daily.sql');
+  const sqlFilePath = getSqlFilePath('mttr_daily.sql');
   let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
-  // Dynamically inject (?, ?, ...) based on the number of projects
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
-  // TODO: adauga projects dupa ce schimbi slq queryul
   const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
   const dateTo = new Date(to * 1000).toISOString().split('T')[0];
   const params = [dateFrom, dateTo, ...projects, dateFrom, dateTo];
@@ -199,14 +197,12 @@ export async function get_monthly_mttr(
   from: number,
   to: number,
 ): Promise<MetricItem[]> {
-  const sqlFilePath = path.join(__dirname, 'queries/mttr_monthly.sql');
+  const sqlFilePath = getSqlFilePath('mttr_monthly.sql');
   let sqlQuery = fs.readFileSync(sqlFilePath, 'utf8');
 
-  // Dynamically inject (?, ?, ...) based on the number of projects
   const placeholders = projects.map(() => '?').join(', ');
   sqlQuery = sqlQuery.replace('IN (?)', `IN (${placeholders})`);
 
-  // TODO: adauga projects dupa ce schimbi slq queryul
   const dateFrom = new Date(from * 1000).toISOString().split('T')[0];
   const dateTo = new Date(to * 1000).toISOString().split('T')[0];
   const params = [...projects, dateFrom, dateTo, dateFrom, dateTo];
@@ -275,6 +271,8 @@ export async function createDoraService({
             return get_monthly_mttr(pool, projects, from, to);
           }
           break;
+        default:
+          throw new Error(`Unsupported DORA metric type: ${type}`);
       }
 
       throw new Error(`Unsupported aggregation: ${aggregation}`);

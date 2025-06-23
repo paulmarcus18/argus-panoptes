@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   useApi,
   discoveryApiRef,
@@ -6,16 +6,19 @@ import {
 } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
-import { Box, CircularProgress, Typography, IconButton } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import CircularProgress from '@mui/material/CircularProgress';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { keyframes } from '@emotion/react';
-import { generateSummaries } from '../../utils/createAISummary.ts';
-import { postSummaries } from '../../utils/saveToDatabase.ts';
-import { getReposBySystem } from '../../utils/getReposBySystem.ts';
-import { getCommitMessagesBySystem } from '../../utils/getCommitMessagesBySystem.ts';
+import { generateSummaries } from '../../utils/createAISummary';
+import { postSummaries } from '../../utils/saveToDatabase';
+import { getReposBySystem } from '../../utils/getReposBySystem';
+import { getCommitMessagesBySystem } from '../../utils/getCommitMessagesBySystem';
 import { SummaryPerRepo } from 'plugins/ai-plugin/utils/types';
-import { SummaryGrid } from './SummaryGrid.tsx';
-import { Filters } from './Filters.tsx';
+import { SummaryGrid } from './SummaryGrid';
+import { Filters } from './Filters';
 
 const spin = keyframes`
   from {
@@ -31,24 +34,29 @@ type MessagesBySystem = Record<string, SummaryPerRepo[]>;
 export const AISummaries = () => {
   const catalogApi = useApi(catalogApiRef);
   const techInsightsApi = useApi(techInsightsApiRef);
+  const fetchApi = useApi(fetchApiRef);
+  const discoveryApi = useApi(discoveryApiRef);
+
   const [messagesBySystem, setMessagesBySystem] =
     useState<MessagesBySystem | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedSystem, setSelectedSystem] = useState<string>('All');
   const [repoSearch, setRepoSearch] = useState<string>('');
-  const { fetch } = useApi(fetchApiRef);
-  const discoveryApi = useApi(discoveryApiRef);
-  const today = new Date().toISOString().split('T')[0];
-  const fetchApi = useApi(fetchApiRef); // ✅ call this at top level
-  const fetchFn = fetchApi.fetch;
+  const [error, setError] = useState<string | null>(null);
 
-  const callAI = async () => {
+  // Memoize today to prevent unnecessary recalculations
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  const callAI = useCallback(async () => {
     setLoading(true);
+    setError(null);
+
     try {
       const apiBaseUrl = await discoveryApi.getBaseUrl('ai-plugin');
       const { items: entities } = await catalogApi.getEntities({
         filter: { kind: 'Component' },
       });
+
       const systemToEntityRefs = getReposBySystem(entities);
       const commitMessagesBySystem = await getCommitMessagesBySystem(
         techInsightsApi,
@@ -58,29 +66,34 @@ export const AISummaries = () => {
       const result = await generateSummaries(
         commitMessagesBySystem,
         apiBaseUrl,
-        fetchFn,
+        fetchApi.fetch,
       );
-      await postSummaries(result, today, apiBaseUrl, fetch);
+
+      await postSummaries(result, today, apiBaseUrl, fetchApi.fetch);
       setMessagesBySystem(result);
     } catch (err) {
-      console.error('Error in callAI:', err);
+      setError('Failed to generate AI summaries. Please try again.');
     } finally {
-      setLoading(false); // ✅ Always turn off loading at the end
+      setLoading(false);
     }
-  };
+  }, [today, discoveryApi, catalogApi, techInsightsApi, fetchApi]);
 
-  const fetchSummaries = async () => {
+  const fetchSummaries = useCallback(async () => {
     setLoading(true);
-    const apiBaseUrl = await discoveryApi.getBaseUrl('ai-plugin');
-    const { items: systems } = await catalogApi.getEntities({
-      filter: { kind: 'System' },
-    });
+    setError(null);
 
     try {
-      const res = await fetch(`${apiBaseUrl}/summaries?date=${today}`);
+      const apiBaseUrl = await discoveryApi.getBaseUrl('ai-plugin');
+      const { items: systems } = await catalogApi.getEntities({
+        filter: { kind: 'System' },
+      });
+
+      const res = await fetchApi.fetch(`${apiBaseUrl}/summaries?date=${today}`);
+
       if (res.ok) {
         const data: Record<string, SummaryPerRepo[]> = await res.json();
 
+        // Ensure all systems have an entry
         for (const entity of systems) {
           const systemName = entity.metadata.name;
           if (!(systemName in data)) {
@@ -88,52 +101,110 @@ export const AISummaries = () => {
           }
         }
 
-        // Always set data even if empty
         setMessagesBySystem(data);
 
         const hasAnyData = Object.values(data).some(repos => repos.length > 0);
         if (!hasAnyData) {
           await callAI(); // generate AI if summaries are empty
         }
-
-        setLoading(false);
-        return;
+      } else {
+        throw new Error(
+          `Failed to fetch summaries: ${res.status} ${res.statusText}`,
+        );
       }
     } catch (err) {
-      console.error('Error fetching summaries:', err);
+      setError('Failed to fetch summaries. Generating new ones...');
       await callAI(); // fallback in case of failure
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [today, discoveryApi, catalogApi, fetchApi, callAI]);
 
   useEffect(() => {
     fetchSummaries();
-  }, []);
+  }, [fetchSummaries]);
 
-  const allSystems = ['All', ...Object.keys(messagesBySystem ?? {})];
+  const allSystems = useMemo(
+    () => ['All', ...Object.keys(messagesBySystem ?? {})],
+    [messagesBySystem],
+  );
 
-  const getFilteredMessages = (): MessagesBySystem => {
+  const getFilteredMessages = useCallback((): MessagesBySystem => {
     if (!messagesBySystem) return {};
+
     const result: MessagesBySystem = {};
     for (const [system, repos] of Object.entries(messagesBySystem)) {
       if (selectedSystem !== 'All' && system !== selectedSystem) continue;
       result[system] = repos;
     }
     return result;
-  };
+  }, [messagesBySystem, selectedSystem]);
 
-  const filteredMessages = getFilteredMessages();
+  const filteredMessages = useMemo(
+    () => getFilteredMessages(),
+    [getFilteredMessages],
+  );
 
-  const handleDownload = (system: string) => {
-    const data = messagesBySystem?.[system]
-      ?.map(repo => `${repo.repoName}:\n${repo.summary}\n\n`)
-      .join('');
+  const handleDownload = useCallback(
+    (system: string) => {
+      const data = messagesBySystem?.[system]
+        ?.map(repo => `${repo.repoName}:\n${repo.summary}\n\n`)
+        .join('');
 
-    const blob = new Blob([data ?? ''], { type: 'text/plain' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${system}-summaries.txt`;
-    link.click();
-  };
+      const blob = new Blob([data ?? ''], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${system}-summaries.txt`;
+      link.click();
+    },
+    [messagesBySystem],
+  );
+
+  // Conditional rendering function to avoid nested ternary
+  const renderContent = useCallback(() => {
+    if (loading || !messagesBySystem) {
+      return (
+        <Box display="flex" justifyContent="center" alignItems="center" mt={5}>
+          <CircularProgress />
+          <Typography sx={{ ml: 2 }}>Loading release notes...</Typography>
+        </Box>
+      );
+    }
+
+    if (error) {
+      return (
+        <Box display="flex" justifyContent="center" alignItems="center" mt={5}>
+          <Typography variant="body1" color="error">
+            {error}
+          </Typography>
+        </Box>
+      );
+    }
+
+    if (Object.keys(filteredMessages).length === 0) {
+      return (
+        <Typography variant="body1" color="text.secondary">
+          No systems match your filters.
+        </Typography>
+      );
+    }
+
+    return (
+      <SummaryGrid
+        filteredMessages={filteredMessages}
+        fullMessages={messagesBySystem}
+        repoSearch={repoSearch}
+        handleDownload={handleDownload}
+      />
+    );
+  }, [
+    loading,
+    messagesBySystem,
+    error,
+    filteredMessages,
+    repoSearch,
+    handleDownload,
+  ]);
 
   return (
     <Box sx={{ padding: 4 }}>
@@ -145,6 +216,7 @@ export const AISummaries = () => {
         </Typography>
         <IconButton
           onClick={callAI}
+          disabled={loading}
           aria-label="refresh"
           sx={{
             backgroundColor: 'transparent',
@@ -166,23 +238,7 @@ export const AISummaries = () => {
         onRepoSearchChange={setRepoSearch}
       />
 
-      {loading || !messagesBySystem ? (
-        <Box display="flex" justifyContent="center" alignItems="center" mt={5}>
-          <CircularProgress />
-          <Typography sx={{ ml: 2 }}>Loading release notes...</Typography>
-        </Box>
-      ) : Object.keys(filteredMessages).length === 0 ? (
-        <Typography variant="body1" color="text.secondary">
-          No systems match your filters.
-        </Typography>
-      ) : (
-        <SummaryGrid
-          filteredMessages={filteredMessages}
-          fullMessages={messagesBySystem}
-          repoSearch={repoSearch}
-          handleDownload={handleDownload}
-        />
-      )}
+      {renderContent()}
     </Box>
   );
 };
