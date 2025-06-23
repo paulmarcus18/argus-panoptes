@@ -229,4 +229,250 @@ describe('FoundationSemaphoreDialog', () => {
     closeBtn.click();
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
+
+  it('renders lowest success rate repos sorted and with correct data', async () => {
+    const Wrapper = createWrapper();
+    const mockOnClose = jest.fn();
+
+    mockFoundationUtils.getFoundationPipelineFacts.mockImplementation(
+      async (_, ref) => {
+        if (ref.name === 'repo-a')
+          return { successWorkflowRunsCount: 2, failureWorkflowRunsCount: 8 };
+        if (ref.name === 'repo-b')
+          return { successWorkflowRunsCount: 7, failureWorkflowRunsCount: 3 };
+        return { successWorkflowRunsCount: 0, failureWorkflowRunsCount: 0 };
+      },
+    );
+    mockFoundationUtils.getFoundationPipelineChecks.mockResolvedValue({
+      successRateCheck: false,
+    });
+
+    const entityA = {
+      ...mockEntity,
+      metadata: {
+        ...mockEntity.metadata,
+        name: 'repo-a',
+        annotations: { 'github.com/project-slug': 'org/repo-a' },
+      },
+    };
+    const entityB = {
+      ...mockEntity,
+      metadata: {
+        ...mockEntity.metadata,
+        name: 'repo-b',
+        annotations: { 'github.com/project-slug': 'org/repo-b' },
+      },
+    };
+    const configEntity = {
+      ...mockSystemEntity,
+      metadata: {
+        ...mockSystemEntity.metadata,
+        annotations: {
+          'foundation-configured-repositories': 'repo-a,repo-b',
+        },
+      },
+    };
+
+    mockCatalogApi.getEntityByRef.mockResolvedValue(configEntity);
+
+    await act(async () => {
+      render(
+        <Wrapper>
+          <FoundationSemaphoreDialog
+            open={true}
+            onClose={mockOnClose}
+            entities={[entityA, entityB]}
+          />
+        </Wrapper>,
+      );
+    });
+
+    await waitFor(() => {
+      const links = screen.getAllByRole('link');
+      expect(links[0]).toHaveTextContent('repo-a');
+      expect(links[0]).toHaveAttribute(
+        'href',
+        'https://github.com/org/repo-a/actions',
+      );
+      expect(screen.getByText(/Success Rate: 20%/)).toBeInTheDocument();
+    });
+  });
+
+  it('uses default threshold when annotation is not a number', async () => {
+    const Wrapper = createWrapper();
+    const mockOnClose = jest.fn();
+
+    mockCatalogApi.getEntityByRef.mockResolvedValue({
+      ...mockSystemEntity,
+      metadata: {
+        ...mockSystemEntity.metadata,
+        annotations: {
+          'foundation-check-threshold-red': 'invalid-number',
+          'foundation-configured-repositories': 'mock-service',
+        },
+      },
+    });
+
+    await act(async () => {
+      render(
+        <Wrapper>
+          <FoundationSemaphoreDialog
+            open={true}
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
+    });
+  });
+
+  it('falls back to all entities if no configured repositories', async () => {
+    const Wrapper = createWrapper();
+    const mockOnClose = jest.fn();
+
+    mockCatalogApi.getEntityByRef.mockResolvedValue({
+      ...mockSystemEntity,
+      metadata: {
+        ...mockSystemEntity.metadata,
+        annotations: {
+          'foundation-check-threshold-red': '0.4',
+        },
+      },
+    });
+
+    await act(async () => {
+      render(
+        <Wrapper>
+          <FoundationSemaphoreDialog
+            open={true}
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
+      expect(screen.getByTestId('rendered-metrics')).toBeInTheDocument();
+    });
+  });
+
+  it('handles entity with no system defined gracefully', async () => {
+    const Wrapper = createWrapper();
+    const mockOnClose = jest.fn();
+
+    const entityWithoutSystem = {
+      ...mockEntity,
+      spec: {},
+    };
+
+    await act(async () => {
+      render(
+        <Wrapper>
+          <FoundationSemaphoreDialog
+            open={true}
+            onClose={mockOnClose}
+            entities={[entityWithoutSystem]}
+          />
+        </Wrapper>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
+    });
+  });
+
+  it('handles entities with no github annotation', async () => {
+    const Wrapper = createWrapper();
+    const mockOnClose = jest.fn();
+
+    const entityWithoutGithub = {
+      ...mockEntity,
+      metadata: {
+        ...mockEntity.metadata,
+        annotations: {},
+      },
+    };
+
+    await act(async () => {
+      render(
+        <Wrapper>
+          <FoundationSemaphoreDialog
+            open={true}
+            onClose={mockOnClose}
+            entities={[entityWithoutGithub]}
+          />
+        </Wrapper>,
+      );
+    });
+
+    await waitFor(() => {
+      const link = screen.getByText('mock-service') as HTMLAnchorElement;
+      expect(link.getAttribute('href')).toBe('#');
+    });
+  });
+
+  it('renders correct summary for yellow color', async () => {
+    const Wrapper = createWrapper();
+    const mockOnClose = jest.fn();
+
+    mockedDetermineSemaphoreColor.mockReturnValue({
+      color: 'yellow',
+      reason: 'Moderate failure rate.',
+    });
+
+    await act(async () => {
+      render(
+        <Wrapper>
+          <FoundationSemaphoreDialog
+            open={true}
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
+      expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
+        /Moderate failure rate\. Issues should be addressed/,
+      );
+    });
+  });
+
+  it('renders correct summary for green color', async () => {
+    const Wrapper = createWrapper();
+    const mockOnClose = jest.fn();
+
+    mockedDetermineSemaphoreColor.mockReturnValue({
+      color: 'green',
+      reason: 'Everything looks good.',
+    });
+
+    await act(async () => {
+      render(
+        <Wrapper>
+          <FoundationSemaphoreDialog
+            open={true}
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dialog-color')).toHaveTextContent('green');
+      expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
+        /Everything looks good\. Code quality is good/,
+      );
+    });
+  });
 });

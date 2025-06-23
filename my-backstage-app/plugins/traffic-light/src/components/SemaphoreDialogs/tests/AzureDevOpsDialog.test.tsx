@@ -93,6 +93,14 @@ const mockSystemEntity = {
 
 describe('AzureDevOpsSemaphoreDialog', () => {
   beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation((msg, ...args) => {
+      if (
+        typeof msg === 'string' &&
+        msg.includes('Warning: findDOMNode is deprecated')
+      ) {
+        return;
+      }
+    });
     jest.clearAllMocks();
     MockedAzureUtils.mockImplementation(() => mockAzureUtils as any);
     mockCatalogApi.getEntityByRef.mockResolvedValue(mockSystemEntity);
@@ -164,7 +172,12 @@ describe('AzureDevOpsSemaphoreDialog', () => {
   });
 
   it('handles API failure gracefully', async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
     mockAzureUtils.getAzureDevOpsBugFacts.mockRejectedValue(new Error('fail'));
+
     await act(async () => {
       render(
         <Wrapper>
@@ -183,6 +196,8 @@ describe('AzureDevOpsSemaphoreDialog', () => {
         'Failed to load metrics.',
       );
     });
+
+    consoleErrorSpy.mockRestore();
   });
 
   it('invokes onClose when the close button is clicked', async () => {
