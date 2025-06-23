@@ -22,7 +22,9 @@
     "test": "backstage-cli package test",
     "clean": "backstage-cli package clean",
     "prepack": "backstage-cli package prepack",
-    "postpack": "backstage-cli package postpack"
+    "postpack": "backstage-cli package postpack",
+    "tsc": "tsc",
+    "tsc:full": "tsc --skipLibCheck false --incremental false"
   },
   "dependencies": {
     "@backstage/core-components": "^0.17.1",
@@ -31,6 +33,8 @@
     "@material-ui/core": "^4.9.13",
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.61",
+    "@mui/material": "^5.17.1",
+    "@mui/x-charts": "^8.3.1",
     "react-use": "^17.2.4"
   },
   "peerDependencies": {

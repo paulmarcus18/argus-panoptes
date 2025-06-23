@@ -14,7 +14,9 @@
     "lint:all": "backstage-cli package lint",
     "test": "jest",
     "clean": "backstage-cli package clean",
-    "build-image": "docker build ../.. -f Dockerfile --tag backstage"
+    "build-image": "docker build ../.. -f Dockerfile --tag backstage",
+    "tsc": "tsc",
+    "tsc:full": "tsc --skipLibCheck false --incremental false"
   },
   "dependencies": {
     "@backstage-community/plugin-tech-insights-backend": "^2.2.1",

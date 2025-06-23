@@ -12,7 +12,9 @@
     "clean": "backstage-cli package clean",
     "test": "backstage-cli package test",
     "lint": "backstage-cli package lint --since origin/main",
-    "lint:all": "backstage-cli package lint"
+    "lint:all": "backstage-cli package lint",
+    "tsc": "tsc",
+    "tsc:full": "tsc --skipLibCheck false --incremental false"
   },
   "dependencies": {
     "@backstage/app-defaults": "^1.6.1",

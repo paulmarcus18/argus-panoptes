@@ -8084,6 +8084,8 @@ __metadata:
     "@material-ui/core": "npm:^4.9.13"
     "@material-ui/icons": "npm:^4.9.1"
     "@material-ui/lab": "npm:^4.0.0-alpha.61"
+    "@mui/material": "npm:^5.17.1"
+    "@mui/x-charts": "npm:^8.3.1"
     "@testing-library/jest-dom": "npm:^6.0.0"
     "@testing-library/react": "npm:^14.0.0"
     "@testing-library/user-event": "npm:^14.0.0"
@@ -8118,11 +8120,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/plugin-traffic-light@workspace:plugins/traffic-light"
   dependencies:
+    "@backstage/catalog-model": "npm:^1.7.4"
     "@backstage/cli": "npm:^0.32.0"
     "@backstage/core-app-api": "npm:^1.16.1"
     "@backstage/core-components": "npm:^0.17.1"
     "@backstage/core-plugin-api": "npm:^1.10.6"
     "@backstage/dev-utils": "npm:^1.1.9"
+    "@backstage/plugin-tech-insights": "npm:^0.3.27"
     "@backstage/test-utils": "npm:^1.7.7"
     "@backstage/theme": "npm:^0.6.5"
     "@material-ui/core": "npm:^4.9.13"

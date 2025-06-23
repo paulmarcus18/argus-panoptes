@@ -1,47 +1,13 @@
 import { BarChart } from '@mui/x-charts/BarChart';
-import { Typography, Box, Paper } from '@mui/material';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
 
-export type MetricChartProps = {
+type MetricChartProps = {
   title: string;
   description?: string;
   data: { label: string; value: number }[];
   color?: string;
-};
-
-// Shared formatter function (for both Y-axis and bars)
-export const formatValue = (type: string, value: any): string => {
-  if (value === null || value === undefined || isNaN(Number(value))) {
-    return 'N/A';
-  }
-
-  const num = Number(value);
-  switch (type) {
-    case 'cfr': // Change Failure Rate
-      return `${(num * 100).toFixed(1)}%`;
-    case 'mltc': // Lead Time for Changes
-    case 'mttr': // Time to Restore Service
-      return num.toFixed(1);
-    case 'df': // Deployment Frequency
-      return num.toString();
-    default:
-      return num.toFixed(1);
-  }
-};
-
-// Get metric ID by title
-const getMetricIdFromTitle = (title: string): string => {
-  switch (title) {
-    case 'Deployment Frequency':
-      return 'df';
-    case 'Lead Time for Changes':
-      return 'mltc';
-    case 'Time to Restore Service':
-      return 'mttr';
-    case 'Change Failure Rate':
-      return 'cfr';
-    default:
-      return 'unknown';
-  }
 };
 
 export const MetricChart = ({
@@ -50,9 +16,56 @@ export const MetricChart = ({
   data,
   color = '#00e5ff',
 }: MetricChartProps) => {
-  const metricId = getMetricIdFromTitle(title);
   const chartData = data.map(item => item.value);
   const xLabels = data.map(item => item.label);
+
+  // Determine Y-axis configuration based on chart type
+  const getYAxisConfig = () => {
+    switch (title) {
+      case 'Deployment Frequency':
+        return {
+          label: '',
+          tickLabelStyle: { fontSize: 10 },
+          valueFormatter: (value: number) => value.toString(),
+        };
+      case 'Lead Time for Changes':
+      case 'Time to Restore Service':
+        return {
+          label: 'Hours',
+          tickLabelStyle: { fontSize: 10 },
+          valueFormatter: (value: number) => value.toString(),
+        };
+      case 'Change Failure Rate':
+        return {
+          label: '',
+          tickLabelStyle: { fontSize: 10 },
+          valueFormatter: (value: number) => `${(value * 100).toFixed(0)}%`,
+        };
+      default:
+        return {
+          label: 'Value',
+          tickLabelStyle: { fontSize: 10 },
+          valueFormatter: (value: number) => value.toString(),
+        };
+    }
+  };
+
+  // Format data labels on bars
+  const formatDataLabel = (value: number) => {
+    switch (title) {
+      case 'Deployment Frequency':
+        return value.toString();
+      case 'Lead Time for Changes':
+      case 'Time to Restore Service':
+        return value.toFixed(1);
+      case 'Change Failure Rate':
+        return `${(value * 100).toFixed(1)}%`;
+      default:
+        return value.toFixed(1);
+    }
+  };
+
+  const yAxisConfig = getYAxisConfig();
 
   return (
     <Paper
@@ -89,14 +102,9 @@ export const MetricChart = ({
           ]}
           yAxis={[
             {
-              label:
-                metricId === 'mltc' || metricId === 'mttr'
-                  ? 'Hours'
-                  : metricId === 'unknown'
-                  ? 'Value'
-                  : '',
-              tickLabelStyle: { fontSize: 10 },
-              valueFormatter: (val: any) => formatValue(metricId, val),
+              label: yAxisConfig.label,
+              tickLabelStyle: yAxisConfig.tickLabelStyle,
+              valueFormatter: yAxisConfig.valueFormatter,
             },
           ]}
           margin={{ top: 30, left: 50, bottom: 26, right: 4 }}
@@ -105,7 +113,11 @@ export const MetricChart = ({
             {
               data: chartData,
               color,
-              valueFormatter: (val: any) => formatValue(metricId, val),
+              valueFormatter: (value: number | null) => {
+                const numericValue = Number(value);
+                if (isNaN(numericValue)) return 'N/A';
+                return formatDataLabel(numericValue);
+              },
             },
           ]}
         />
