@@ -1,7 +1,5 @@
-import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { ThemeProvider } from '@material-ui/core/styles';
-import { createTheme } from '@material-ui/core/styles';
+import { ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
 import { ApiProvider } from '@backstage/core-app-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -126,7 +124,7 @@ describe('AzureDevOpsSemaphoreDialog', () => {
       render(
         <Wrapper>
           <AzureDevOpsSemaphoreDialog
-            open={true}
+            open
             onClose={jest.fn()}
             entities={[mockEntity]}
           />
@@ -153,7 +151,7 @@ describe('AzureDevOpsSemaphoreDialog', () => {
     render(
       <Wrapper>
         <AzureDevOpsSemaphoreDialog
-          open={true}
+          open
           onClose={jest.fn()}
           entities={[]}
         />
@@ -169,7 +167,7 @@ describe('AzureDevOpsSemaphoreDialog', () => {
       render(
         <Wrapper>
           <AzureDevOpsSemaphoreDialog
-            open={true}
+            open
             onClose={jest.fn()}
             entities={[mockEntity]}
           />
@@ -192,7 +190,7 @@ describe('AzureDevOpsSemaphoreDialog', () => {
       render(
         <Wrapper>
           <AzureDevOpsSemaphoreDialog
-            open={true}
+            open
             onClose={onClose}
             entities={[mockEntity]}
           />

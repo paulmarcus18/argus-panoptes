@@ -173,12 +173,23 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
         // Set the real data
         setData({ color, metrics: totals, summary, details });
       } catch (err) {
-        // Set default data in case of error
+        // Report to error tracking service (if available)
+        // errorReporter?.captureException(err);
+        
+        // Provide meaningful user feedback based on error type
+        const errorMessage = err instanceof Error 
+          ? `Failed to load SonarQube data: ${err.message}` 
+          : 'Failed to load SonarQube data due to an unknown error.';
+          
         setData({
           color: 'gray',
           metrics: {},
-          summary: 'Failed to load SonarQube data.',
-          details: [],
+          summary: errorMessage,
+          details: [{
+            severity: 'critical',
+            description: 'Unable to retrieve code quality metrics. Please try again later.',
+            url: '',
+          }],
         });
       } finally {
         setIsLoading(false);
@@ -186,7 +197,7 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
     };
 
     fetchSonarData();
-  }, [open, entities, sonarUtils, techInsightsApi]);
+  }, [open, entities, sonarUtils, techInsightsApi, catalogApi]);
 
   const renderMetrics = () => (
     <Grid container spacing={2}>
