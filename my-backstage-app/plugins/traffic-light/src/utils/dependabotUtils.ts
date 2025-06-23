@@ -41,10 +41,6 @@ export class DependabotUtils {
       const facts = response?.dependabotFactRetriever?.facts;
 
       if (!facts) {
-        console.error(
-          '❌ No facts found for entity:',
-          stringifyEntityRef(entity),
-        );
         return { critical: 0, high: 0, medium: 0 };
       }
 

@@ -295,7 +295,6 @@ export const TrafficComponent = () => {
                   onChange={e => setSystemSearchTerm(e.target.value)}
                   variant="outlined"
                   size="small"
-                  autoFocus
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">

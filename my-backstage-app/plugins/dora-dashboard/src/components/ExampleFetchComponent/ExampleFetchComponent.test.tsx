@@ -16,8 +16,6 @@ beforeAll(() => {
     ) {
       return;
     }
-    // Call original console.warn for all other messages
-    console.warn(msg);
   });
 });
 

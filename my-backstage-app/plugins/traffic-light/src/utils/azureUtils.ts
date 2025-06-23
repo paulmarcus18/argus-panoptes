@@ -53,11 +53,6 @@ export class AzureUtils {
 
       return { azureBugCount: bugCount };
     } catch (error) {
-      console.error(
-        'Error fetching Azure DevOps facts for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
       return { ...DEFAULT_METRICS };
     }
   }
@@ -78,11 +73,6 @@ export class AzureUtils {
         bugCountCheck: bugCheck?.result === true,
       };
     } catch (error) {
-      console.error(
-        'Error running Azure DevOps bug check for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
       return { ...DEFAULT_CHECKS };
     }
   }
