@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { DependabotSemaphoreDialog } from '../DependabotSemaphoreDialog';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -47,7 +46,7 @@ describe('DependabotSemaphoreDialog', () => {
     render(
       <TestApiProvider apis={[[techInsightsApiRef, {} as any]]}>
         <DependabotSemaphoreDialog
-          open={true}
+          open
           onClose={() => {}}
           entities={[mockEntity]}
           system="my-system"
@@ -58,8 +57,6 @@ describe('DependabotSemaphoreDialog', () => {
     await waitFor(() => {
       expect(screen.getByText(/Total Issues/i)).toBeInTheDocument();
       expect(screen.getByText(/Total Repositories/i)).toBeInTheDocument(); 
-//       const criticals = screen.getAllByText('Critical');
-// expect(criticals[0]).toBeInTheDocument();
       expect(screen.getAllByText(/Critical/i)[0]).toBeInTheDocument(); 
     });
 
@@ -83,7 +80,7 @@ describe('DependabotSemaphoreDialog', () => {
     render(
       <TestApiProvider apis={[[techInsightsApiRef, {} as any]]}>
         <DependabotSemaphoreDialog
-          open={true}
+          open
           onClose={() => {}}
           entities={[mockEntity]}
           system="my-system"
@@ -108,7 +105,7 @@ describe('DependabotSemaphoreDialog', () => {
     render(
       <TestApiProvider apis={[[techInsightsApiRef, {} as any]]}>
         <DependabotSemaphoreDialog
-          open={true}
+          open
           onClose={() => {}}
           entities={[mockEntity]}
           system="my-system"

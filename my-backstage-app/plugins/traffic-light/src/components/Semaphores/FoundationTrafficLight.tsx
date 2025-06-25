@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -21,7 +21,7 @@ export const FoundationTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
-  const foundationUtils = React.useMemo(() => new FoundationUtils(), []);
+  const foundationUtils = useMemo(() => new FoundationUtils(), []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,7 +51,7 @@ export const FoundationTrafficLight = ({
         const redThresholdRaw =
           systemEntity?.metadata.annotations?.[
             'foundation-check-threshold-red'
-          ] || '0.33';
+          ] ?? '0.33';
         const redThreshold = parseFloat(redThresholdRaw);
 
         // Step 3: Get configured repositories for foundation checks

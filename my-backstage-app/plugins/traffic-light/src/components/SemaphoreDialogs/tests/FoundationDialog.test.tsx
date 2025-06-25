@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -115,17 +115,15 @@ describe('FoundationSemaphoreDialog', () => {
     const Wrapper = createWrapper();
     const mockOnClose = jest.fn();
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open
-            onClose={mockOnClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -144,17 +142,15 @@ describe('FoundationSemaphoreDialog', () => {
       metadata: { annotations: {} },
     });
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open
-            onClose={mockOnClose}
-            entities={[]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -168,17 +164,15 @@ describe('FoundationSemaphoreDialog', () => {
       new Error('API failure'),
     );
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open
-            onClose={mockOnClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -211,16 +205,18 @@ describe('FoundationSemaphoreDialog', () => {
     const Wrapper = createWrapper();
     const mockOnClose = jest.fn();
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open
-            onClose={mockOnClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('close-button')).toBeInTheDocument();
     });
 
     const closeBtn = screen.getByTestId('close-button');
@@ -273,17 +269,15 @@ describe('FoundationSemaphoreDialog', () => {
 
     mockCatalogApi.getEntityByRef.mockResolvedValue(configEntity);
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open={true}
-            onClose={mockOnClose}
-            entities={[entityA, entityB]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[entityA, entityB]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       const links = screen.getAllByRole('link');
@@ -311,17 +305,15 @@ describe('FoundationSemaphoreDialog', () => {
       },
     });
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open={true}
-            onClose={mockOnClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -342,17 +334,15 @@ describe('FoundationSemaphoreDialog', () => {
       },
     });
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open={true}
-            onClose={mockOnClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -369,17 +359,15 @@ describe('FoundationSemaphoreDialog', () => {
       spec: {},
     };
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open={true}
-            onClose={mockOnClose}
-            entities={[entityWithoutSystem]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[entityWithoutSystem]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -398,17 +386,15 @@ describe('FoundationSemaphoreDialog', () => {
       },
     };
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open={true}
-            onClose={mockOnClose}
-            entities={[entityWithoutGithub]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[entityWithoutGithub]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       const link = screen.getByText('mock-service') as HTMLAnchorElement;
@@ -425,17 +411,15 @@ describe('FoundationSemaphoreDialog', () => {
       reason: 'Moderate failure rate.',
     });
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open={true}
-            onClose={mockOnClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
@@ -454,17 +438,15 @@ describe('FoundationSemaphoreDialog', () => {
       reason: 'Everything looks good.',
     });
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <FoundationSemaphoreDialog
-            open={true}
-            onClose={mockOnClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <FoundationSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('green');

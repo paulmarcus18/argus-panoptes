@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
-
+import {useState, useMemo, useEffect} from 'react';
 /**
  * The component fetches SonarQube quality gate status for each provided entity using the Tech Insights API,
  * aggregates the results, and determines the appropriate traffic light color:
@@ -135,7 +134,7 @@ export const SonarQubeTrafficLight = ({
   const [reason, setReason] = useState('Loading SonarQube data...');
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const sonarUtils = React.useMemo(() => new SonarCloudUtils(), []);
+  const sonarUtils = useMemo(() => new SonarCloudUtils(), []);
 
   useEffect(() => {
     const fetchData = async () => {

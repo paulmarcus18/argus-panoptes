@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { BaseTrafficLight } from './BaseTrafficLight';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -38,7 +38,7 @@ export const determineDependabotColor = async (
       filteredEntities.map(entity =>
         dependabotUtils.getDependabotChecks(techInsightsApi, {
           kind: entity.kind,
-          namespace: entity.metadata.namespace || 'default',
+          namespace: entity.metadata.namespace ?? 'default',
           name: entity.metadata.name,
         }),
       ),
@@ -90,7 +90,7 @@ export const TrafficLightDependabot = ({
   const [reason, setReason] = useState('Fetching Dependabot status...');
 
   const techInsightsApi = useApi(techInsightsApiRef);
-  const dependabotUtils = React.useMemo(() => new DependabotUtils(), []);
+  const dependabotUtils = useMemo(() => new DependabotUtils(), []);
 
   useEffect(() => {
     if (!entities.length) {

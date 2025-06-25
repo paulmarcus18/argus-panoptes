@@ -9,7 +9,6 @@
  * and presents it in a user-friendly format with visual indicators of severity.
  */
 
-import React from 'react';
 import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -20,7 +19,7 @@ import { AzureUtils } from '../../utils/azureUtils';
 import { determineSemaphoreColor } from '../utils';
 import { SemaphoreData } from './types';
 import { CatalogApi, catalogApiRef } from '@backstage/plugin-catalog-react';
-
+import {useState, useMemo, useEffect} from 'react';
 /**
  * Styles for the dialog components
  */
@@ -192,12 +191,12 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
 > = ({ open, onClose, entities = [] }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
-  const azureUtils = React.useMemo(() => new AzureUtils(), []);
+  const azureUtils = useMemo(() => new AzureUtils(), []);
   const catalogApi = useApi(catalogApiRef);
 
   // State for loading status and data
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [projectBugs, setProjectBugs] = React.useState<
+  const [isLoading, setIsLoading] = useState(false);
+  const [projectBugs, setProjectBugs] = useState<
     {
       project: string;
       bugCount: number;
@@ -205,7 +204,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
       entities: { entityName: string }[];
     }[]
   >([]);
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
@@ -215,7 +214,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
   /**
    * Effect to fetch bug metrics when the dialog is opened
    */
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
 
     const fetchBugMetrics = async () => {
@@ -275,7 +274,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
     };
 
     fetchBugMetrics();
-  }, [open, entities, techInsightsApi, azureUtils]);
+  }, [open, entities, techInsightsApi, azureUtils, catalogApi]);
 
   // Calculated metrics for display
   const totalBugCount = projectBugs.reduce((sum, p) => sum + p.bugCount, 0);

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Grid,
   Paper,
@@ -16,6 +15,7 @@ import { DependabotUtils, RepoAlertSummary } from '../../utils/dependabotUtils';
 import { SemaphoreData } from './types';
 import type { GridSize } from '@material-ui/core';
 import { determineDependabotColor } from '../Semaphores/TrafficLightDependabot';
+import { useEffect, useMemo, useState } from 'react';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -66,17 +66,17 @@ export const DependabotSemaphoreDialog: React.FC<
 > = ({ open, onClose, entities = [], system }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
-  const dependabotUtils = React.useMemo(() => new DependabotUtils(), []);
-  const [data, setData] = React.useState<SemaphoreData>({
+  const dependabotUtils = useMemo(() => new DependabotUtils(), []);
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   });
-  const [topRepos, setTopRepos] = React.useState<RepoAlertSummary[]>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [topRepos, setTopRepos] = useState<RepoAlertSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) {
       setData({
         color: 'gray',
@@ -99,7 +99,7 @@ export const DependabotSemaphoreDialog: React.FC<
               techInsightsApi,
               {
                 kind: entity.kind,
-                namespace: entity.metadata.namespace || 'default',
+                namespace: entity.metadata.namespace ?? 'default',
                 name: entity.metadata.name,
               },
             );

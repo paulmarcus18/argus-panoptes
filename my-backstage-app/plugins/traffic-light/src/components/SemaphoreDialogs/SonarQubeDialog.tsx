@@ -1,4 +1,3 @@
-import React from 'react';
 import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -9,6 +8,7 @@ import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 import { SemaphoreData, IssueDetail } from './types';
 import { Entity } from '@backstage/catalog-model';
 import { determineSonarQubeColor } from '../Semaphores/SonarQubeTrafficLight';
+import {useEffect, useMemo, useState} from 'react';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -40,17 +40,17 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const sonarUtils = React.useMemo(() => new SonarCloudUtils(), []);
+  const sonarUtils = useMemo(() => new SonarCloudUtils(), []);
 
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   });
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
     setIsLoading(true);
 
