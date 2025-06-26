@@ -279,7 +279,7 @@ export const DoraDashboard = () => {
     try {
       // Import libraries dynamically
       const html2canvas = (await import('html2canvas')).default;
-      const jsPDF = (await import('jspdf')).jsPDF;
+      const { default: JSPDF } = await import('jspdf');
 
       // Create canvas from the dashboard
       const canvas = await html2canvas(dashboardRef.current, {
@@ -290,7 +290,7 @@ export const DoraDashboard = () => {
       });
 
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
+      const pdf = new JSPDF({
         orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
         unit: 'px',
         format: [canvas.width, canvas.height],

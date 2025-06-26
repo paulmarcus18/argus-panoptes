@@ -1,4 +1,3 @@
--- Metric 1: Number of deployments per month
 WITH _deployments AS (
   SELECT 
     DATE_FORMAT(deployment_finished_date, '%y/%m') AS month,

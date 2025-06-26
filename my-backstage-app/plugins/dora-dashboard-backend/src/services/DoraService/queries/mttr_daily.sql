@@ -1,4 +1,3 @@
--- Metric 4: Median time to restore service (MTTR) per day
 WITH RECURSIVE calendar_days AS (
   SELECT DATE(?) AS day
   UNION ALL
@@ -16,7 +15,7 @@ _incidents AS (
     ON i.scope_id = pm.row_id 
     AND pm.`table` = i.`table`
   WHERE
-    pm.project_name IN (?)  -- Replace dynamically for testing
+    pm.project_name IN (?)
     AND i.lead_time_minutes IS NOT NULL
     AND i.resolution_date BETWEEN ? AND ?
 ),
