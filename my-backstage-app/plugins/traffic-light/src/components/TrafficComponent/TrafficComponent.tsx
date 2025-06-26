@@ -42,13 +42,7 @@ export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
   const identityApi = useApi(identityApiRef);
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
-
   const [repos, setRepos] = useState<any[]>([]);
-  const [, setDialogOpen] = useState(false);
-  const [, setDialogTitle] = useState('');
-  const [, setDialogItems] = useState<any[]>([]);
-  // const [setDetailedDialogOpen] = useState(false);
-  // const [currentSemaphoreType, setCurrentSemaphoreType] = useState('');
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
   const [onlyCritical, setOnlyCritical] = useState(true);
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
@@ -71,12 +65,6 @@ export const TrafficComponent = () => {
   const [githubSecurityDialogOpen, setGithubSecurityDialogOpen] =
     useState(false);
   const [DependabotDialogOpen, setDependabotDialogOpen] = useState(false);
-
-  const handleClick = (title: string, items: any[]) => {
-    setDialogTitle(title);
-    setDialogItems(items);
-    setDialogOpen(true);
-  };
 
   const handleSemaphoreClick = (semaphoreType: string) => {
     switch (semaphoreType) {
@@ -107,18 +95,11 @@ export const TrafficComponent = () => {
         break;
       case 'CodeScene':
         // For these, use the existing detailed dialog
-        // setCurrentSemaphoreType(semaphoreType);
-        handleClick('CodeScene Details', []);
-        // setDetailedDialogOpen(true);
         break;
       default:
         break;
     }
   };
-
-  // const handleCloseDetailedDialog = () => {
-  //   setDetailedDialogOpen(false);
-  // };
 
   const handleCloseBlackDuckDialog = () => {
     setBlackDuckDialogOpen(false);
@@ -154,71 +135,71 @@ export const TrafficComponent = () => {
 
   useEffect(() => {
     const fetchCatalogRepos = async () => {
-        // Get current user identity
-        const { userEntityRef } = await identityApi.getBackstageIdentity();
-        const userName = userEntityRef.split('/').pop();
+      // Get current user identity
+      const { userEntityRef } = await identityApi.getBackstageIdentity();
+      const userName = userEntityRef.split('/').pop();
 
-        // Fetch user entity metadata from catalog
-        const userEntity = await catalogApi.getEntityByRef({
-          kind: 'User',
-          namespace: 'default',
-          name: typeof userName === 'string' ? userName : String(userName),
-        });
+      // Fetch user entity metadata from catalog
+      const userEntity = await catalogApi.getEntityByRef({
+        kind: 'User',
+        namespace: 'default',
+        name: typeof userName === 'string' ? userName : String(userName),
+      });
 
-        // Get user's teams from the entity
-        const userTeams: string[] =
-          (userEntity?.spec?.memberOf as string[]) || [];
+      // Get user's teams from the entity
+      const userTeams: string[] =
+        (userEntity?.spec?.memberOf as string[]) || [];
 
-        // Fetch all entities (Components and Systems)
-        const [componentEntities, systemEntities] = await Promise.all([
-          catalogApi.getEntities({
-            filter: { kind: 'Component' },
-          }),
-          catalogApi.getEntities({
-            filter: { kind: 'System' },
-          }),
-        ]);
+      // Fetch all entities (Components and Systems)
+      const [componentEntities, systemEntities] = await Promise.all([
+        catalogApi.getEntities({
+          filter: { kind: 'Component' },
+        }),
+        catalogApi.getEntities({
+          filter: { kind: 'System' },
+        }),
+      ]);
 
-        // Process components
-        const simplified = componentEntities.items.map((entity: Entity) => ({
-          name: entity.metadata.name,
-          description: entity.metadata.description ?? 'No description',
-          owner:
-            typeof entity.spec?.owner === 'string'
-              ? entity.spec.owner.toLowerCase()
-              : undefined,
-          system:
-            typeof entity.spec?.system === 'string'
-              ? entity.spec.system
-              : undefined,
-          tags: entity.metadata?.tags,
-          entity: entity,
-        }));
+      // Process components
+      const simplified = componentEntities.items.map((entity: Entity) => ({
+        name: entity.metadata.name,
+        description: entity.metadata.description ?? 'No description',
+        owner:
+          typeof entity.spec?.owner === 'string'
+            ? entity.spec.owner.toLowerCase()
+            : undefined,
+        system:
+          typeof entity.spec?.system === 'string'
+            ? entity.spec.system
+            : undefined,
+        tags: entity.metadata?.tags,
+        entity: entity,
+      }));
 
-        setRepos(simplified);
+      setRepos(simplified);
 
-        // Filter systems to only include those owned by user's teams
-        const userOwnedSystems = systemEntities.items
-          .filter((system: Entity) => {
-            const systemOwner = system.spec?.owner;
-            if (typeof systemOwner === 'string') {
-              return userTeams.includes(systemOwner);
-            }
-            return false;
-          })
-          .map((system: Entity) => system.metadata.name)
-          .sort();
-        setAvailableSystems(userOwnedSystems);
+      // Filter systems to only include those owned by user's teams
+      const userOwnedSystems = systemEntities.items
+        .filter((system: Entity) => {
+          const systemOwner = system.spec?.owner;
+          if (typeof systemOwner === 'string') {
+            return userTeams.includes(systemOwner);
+          }
+          return false;
+        })
+        .map((system: Entity) => system.metadata.name)
+        .sort((a, b) => a.localeCompare(b));
+      setAvailableSystems(userOwnedSystems);
 
-        // Set the initial selected system to the first owned system
-        if (userOwnedSystems.length > 0) {
-          const initialSystem = userOwnedSystems[0];
-          setSelectedSystem(initialSystem);
-        }
+      // Set the initial selected system to the first owned system
+      if (userOwnedSystems.length > 0) {
+        const initialSystem = userOwnedSystems[0];
+        setSelectedSystem(initialSystem);
+      }
     };
 
     fetchCatalogRepos();
-  }, [catalogApi. getEntities, identityApi, catalogApi]);
+  }, [catalogApi.getEntities, identityApi, catalogApi]);
 
   useEffect(() => {
     const filtered = repos.filter(repo => {

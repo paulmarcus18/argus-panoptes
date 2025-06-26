@@ -1,6 +1,5 @@
 import {
   CompoundEntityRef,
-  stringifyEntityRef,
 } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
@@ -11,15 +10,14 @@ export type TrafficLightColor = 'green' | 'yellow' | 'red';
 interface WorkflowRun {
   id: number;
   name: string;
-  status: 'completed' | 'queued' | 'in_progress' | string;
+  status: 'completed' | 'queued' | 'in_progress';
   conclusion:
-    | 'success'
-    | 'failure'
-    | 'timed_out'
-    | 'cancelled'
-    | 'neutral'
-    | null
-    | string;
+  | 'success'
+  | 'failure'
+  | 'timed_out'
+  | 'cancelled'
+  | 'neutral'
+  | null;
   [key: string]: any;
 }
 
@@ -44,16 +42,60 @@ async function loadWorkflowConfig(): Promise<WorkflowConfig> {
     if (!res.ok) throw new Error('Failed to load config');
     const data = await res.json();
     return (
-      data.workflowConfig || {
+      data.workflowConfig ?? {
         exclude: [],
         critical: [],
         sampleIfNoCritical: 0,
       }
     );
   } catch (err) {
+    console.error("Failed to load '/config/github-workflows.json':", err);
     return { exclude: [], critical: [], sampleIfNoCritical: 0 };
   }
 }
+
+function classifyRunStatus(run: WorkflowRun): 'failing' | 'inProgress' | 'ok' {
+  if (run.status !== 'completed') {
+    return 'inProgress';
+  }
+  if (['failure', 'timed_out', 'cancelled'].includes(run.conclusion ?? '')) {
+    return 'failing';
+  }
+  return 'ok';
+}
+
+function getLatestRuns(
+  allRuns: WorkflowRun[],
+  exclude: string[],
+): Map<string, WorkflowRun> {
+  const latestPerWorkflow = new Map<string, WorkflowRun>();
+  for (const run of allRuns) {
+    if (!exclude.includes(run.name) && !latestPerWorkflow.has(run.name)) {
+      latestPerWorkflow.set(run.name, run);
+    }
+  }
+  return latestPerWorkflow;
+}
+
+function getFinalStatus(
+  failing: string[],
+  inProgress: string[],
+): { color: TrafficLightColor; reason: string } {
+  if (failing.length > 0) {
+    return {
+      color: 'red',
+      reason: `Critical workflows failed: ${failing.join(', ')}`,
+    };
+  }
+  if (inProgress.length > 0) {
+    return {
+      color: 'yellow',
+      reason: `Critical workflows in progress: ${inProgress.join(', ')}`,
+    };
+  }
+  return { color: 'green', reason: 'All critical workflows succeeded.' };
+}
+
 
 export async function getGitHubRepoStatus(
   repoName: string,
@@ -91,40 +133,23 @@ export async function getGitHubRepoStatus(
       ? critical
       : shuffleArray(allWorkflowNames).slice(0, sampleIfNoCritical);
 
-  const latestPerWorkflow = new Map<string, WorkflowRun>();
-  for (const run of allRuns) {
-    if (!exclude.includes(run.name) && !latestPerWorkflow.has(run.name)) {
-      latestPerWorkflow.set(run.name, run);
-    }
-  }
-
+  const latestPerWorkflow = getLatestRuns(allRuns, exclude);
   const failing: string[] = [];
   const inProgress: string[] = [];
 
-  for (const [name, run] of latestPerWorkflow.entries()) {
-    if (criticalWorkflows.includes(name)) {
-      if (run.status !== 'completed') {
-        inProgress.push(name);
-      } else if (
-        ['failure', 'timed_out', 'cancelled'].includes(run.conclusion || '')
-      ) {
+  for (const name of criticalWorkflows) {
+    const run = latestPerWorkflow.get(name);
+    if (run) {
+      const status = classifyRunStatus(run);
+      if (status === 'failing') {
         failing.push(name);
+      } else if (status === 'inProgress') {
+        inProgress.push(name);
       }
     }
   }
 
-  if (failing.length > 0) {
-    return {
-      color: 'red',
-      reason: `Critical workflows failed: ${failing.join(', ')}`,
-    };
-  } else if (inProgress.length > 0) {
-    return {
-      color: 'yellow',
-      reason: `Critical workflows in progress: ${inProgress.join(', ')}`,
-    };
-  }
-  return { color: 'green', reason: 'All critical workflows succeeded.' };
+  return getFinalStatus(failing, inProgress);
 }
 
 export function determineSemaphoreColor(
@@ -138,23 +163,20 @@ export function determineSemaphoreColor(
   if (failures === 0) {
     return {
       color: 'green',
-      reason: `All ${totalEntities} ${
-        totalEntities === 1 ? 'entity' : 'entities'
-      } passed the check (threshold: ${thresholdPercentage}%).`,
+      reason: `All ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'
+        } passed the check (threshold: ${thresholdPercentage}%).`,
     };
   } else if (failures > redLimit) {
     return {
       color: 'red',
-      reason: `${failures} out of ${totalEntities} ${
-        totalEntities === 1 ? 'entity' : 'entities'
-      } failed the check with a threshold of ${thresholdPercentage}%.`,
+      reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'
+        } failed the check with a threshold of ${thresholdPercentage}%.`,
     };
   }
   return {
     color: 'yellow',
-    reason: `${failures} out of ${totalEntities} ${
-      totalEntities === 1 ? 'entity' : 'entities'
-    } failed the check with a threshold of ${thresholdPercentage}%.`,
+    reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'
+      } failed the check with a threshold of ${thresholdPercentage}%.`,
   };
 }
 
@@ -236,6 +258,7 @@ export const getGitHubSecurityFacts = async (
         secretScanningAlerts as GitHubSecurityFacts['secretScanningAlerts'],
     };
   } catch (error) {
+    console.error('Failed to fetch GitHub security facts:', error);
     return {
       openCodeScanningAlertCount: 0,
       openSecretScanningAlertCount: 0,

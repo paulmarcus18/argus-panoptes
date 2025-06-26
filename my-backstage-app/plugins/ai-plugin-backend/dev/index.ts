@@ -9,7 +9,7 @@ import { catalogServiceMock } from '@backstage/plugin-catalog-node/testUtils';
 // Start up the backend by running `yarn start` in the package directory.
 // Once it's up and running, try out the following requests:
 //
-// Create a new todo item, standalone or for the sample component:
+// Create a new task entry, standalone or for the sample component:
 //
 //   curl http://localhost:7007/api/ai-plugin/todos -H 'Content-Type: application/json' -d '{"title": "My Todo"}'
 //   curl http://localhost:7007/api/ai-plugin/todos -H 'Content-Type: application/json' -d '{"title": "My Todo", "entityRef": "component:default/sample"}'
