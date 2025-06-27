@@ -74,6 +74,7 @@ export class ReportingUtils {
         successRate: Number(facts.successRate ?? 0),
       };
     } catch (error) {
+      console.error('Error fetching reporting pipeline facts:', error);
       return { ...DEFAULT_METRICS };
     }
   }
@@ -106,6 +107,7 @@ export class ReportingUtils {
         successRateCheck: successRateCheck?.result === true,
       };
     } catch (error) {
+      console.error('Error fetching reporting pipeline checks:', error);
       return { ...DEFAULT_CHECKS };
     }
   }
