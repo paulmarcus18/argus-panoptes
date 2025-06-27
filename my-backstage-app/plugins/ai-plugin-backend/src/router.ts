@@ -1,13 +1,12 @@
 import express from 'express';
-import { LoggerService } from '@backstage/backend-plugin-api';
-import { PluginDatabaseManager } from '@backstage/backend-common';
+import { LoggerService, DatabaseService } from '@backstage/backend-plugin-api';
 import { AISummaryStore } from './utils/aiSummaryStore';
 import { SummaryPerRepo } from 'plugins/ai-plugin/utils/types';
 import { Config } from '@backstage/config';
 
 interface RouterOptions {
   logger: LoggerService;
-  database: PluginDatabaseManager;
+  database: DatabaseService;
   config: Config;
 }
 
@@ -37,7 +36,10 @@ export async function createRouter({
       const summaries = await store.getAllSummariesForDate(requestedDate);
       return res.json(summaries);
     } catch (error) {
-      logger.error('Error fetching summaries:');
+      logger.error(
+        'Error fetching summaries:',
+        error instanceof Error ? error : { error: String(error) },
+      );
       return res.status(500).json({ error: 'Could not fetch summaries' });
     }
   });
@@ -61,7 +63,10 @@ export async function createRouter({
       await store.saveSummaries(system, date, summaries as SummaryPerRepo[]);
       res.status(204).send();
     } catch (error) {
-      logger.error('Error saving summaries:');
+      logger.error(
+        'Error saving summaries:',
+        error instanceof Error ? error : { error: String(error) },
+      );
       res.status(500).json({ error: 'Could not save summaries' });
     }
   });
