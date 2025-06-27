@@ -39,7 +39,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="dependabot-traffic-light"
       onClick={onClick}
     >
-      Dependabot Traffic Light ({entities?.length || 0} entities)
+      Dependabot Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   GitHubSecurityTrafficLight: ({ entities, onClick }: any) => (
@@ -48,7 +48,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="github-security-traffic-light"
       onClick={onClick}
     >
-      GitHub Security Traffic Light ({entities?.length || 0} entities)
+      GitHub Security Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   SonarQubeTrafficLight: ({ entities, onClick }: any) => (
@@ -57,7 +57,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="sonarqube-traffic-light"
       onClick={onClick}
     >
-      SonarQube Traffic Light ({entities?.length || 0} entities)
+      SonarQube Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   PreproductionTrafficLight: ({ entities, onClick }: any) => (
@@ -66,7 +66,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="preproduction-traffic-light"
       onClick={onClick}
     >
-      Preproduction Traffic Light ({entities?.length || 0} entities)
+      Preproduction Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   FoundationTrafficLight: ({ entities, onClick }: any) => (
@@ -75,7 +75,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="foundation-traffic-light"
       onClick={onClick}
     >
-      Foundation Traffic Light ({entities?.length || 0} entities)
+      Foundation Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   AzureDevOpsBugsTrafficLight: ({ entities, onClick }: any) => (
@@ -84,7 +84,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="azure-devops-bugs-traffic-light"
       onClick={onClick}
     >
-      Azure DevOps Bugs Traffic Light ({entities?.length || 0} entities)
+      Azure DevOps Bugs Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   BlackDuckTrafficLight: ({ entities, onClick }: any) => (
@@ -93,7 +93,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="blackduck-traffic-light"
       onClick={onClick}
     >
-      BlackDuck Traffic Light ({entities?.length || 0} entities)
+      BlackDuck Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
@@ -117,7 +117,7 @@ jest.mock('../Semaphores/ReportingTrafficLight', () => ({
       data-testid="reporting-traffic-light"
       onClick={onClick}
     >
-      Reporting Traffic Light ({entities?.length || 0} entities)
+      Reporting Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
 }));
@@ -263,10 +263,6 @@ class ErrorBoundary extends Component<
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
-  }
-
-  componentDidCatch(error: Error) {
-    // Suppress the error in tests
   }
 
   render() {
