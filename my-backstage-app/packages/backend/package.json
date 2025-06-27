@@ -10,11 +10,11 @@
   "scripts": {
     "start": "backstage-cli package start",
     "build": "backstage-cli package build",
-    "lint": "backstage-cli package lint --since origin/main",
     "lint:all": "backstage-cli package lint",
-    "test": "jest",
+    "test": "backstage-cli package test",
     "clean": "backstage-cli package clean",
-    "build-image": "docker build ../.. -f Dockerfile --tag backstage",
+    "prepack": "backstage-cli package prepack",
+    "postpack": "backstage-cli package postpack",
     "tsc": "tsc",
     "tsc:full": "tsc --skipLibCheck false --incremental false"
   },

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -9,6 +8,7 @@ import { BlackDuckUtils } from '../../utils/blackDuckUtils';
 import { SemaphoreData, IssueDetail } from './types';
 import { Entity } from '@backstage/catalog-model';
 import { determineBlackDuckColor } from '../Semaphores/BlackDuckTrafficLight';
+import {useEffect, useMemo, useState} from 'react';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -38,17 +38,17 @@ export const BlackDuckSemaphoreDialog: React.FC<
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const blackDuckUtils = React.useMemo(() => new BlackDuckUtils(), []);
+  const blackDuckUtils = useMemo(() => new BlackDuckUtils(), []);
 
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   });
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
     setIsLoading(true);
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -10,6 +9,7 @@ import { FoundationUtils } from '../../utils/foundationUtils';
 import type { GridSize } from '@material-ui/core';
 import { SemaphoreData } from './types';
 import { determineSemaphoreColor } from '../utils';
+import {useEffect, useMemo, useState} from 'react';
 
 /**
  * Styles for the dialog components
@@ -66,7 +66,6 @@ async function getSystemConfig(
     return defaultConfig;
   }
 
-  try {
     const namespace = entities[0].metadata.namespace ?? 'default';
     const systemEntity = await catalogApi.getEntityByRef({
       kind: 'System',
@@ -92,10 +91,6 @@ async function getSystemConfig(
         .map(name => name.trim())
         .filter(name => name.length > 0);
     }
-  } catch (err) {
-    console.warn('Could not fetch system configuration; using defaults', err);
-  }
-
   return defaultConfig;
 }
 
@@ -111,11 +106,11 @@ export const FoundationSemaphoreDialog: React.FC<
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const foundationUtils = React.useMemo(() => new FoundationUtils(), []);
+  const foundationUtils = useMemo(() => new FoundationUtils(), []);
 
   // Component state
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [metrics, setMetrics] = React.useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [metrics, setMetrics] = useState({
     totalSuccess: 0,
     totalFailure: 0,
     totalRuns: 0,
@@ -123,12 +118,12 @@ export const FoundationSemaphoreDialog: React.FC<
   });
 
   // Repositories with lowest success rates for display
-  const [lowestSuccessRepos, setLowestSuccessRepos] = React.useState<
+  const [lowestSuccessRepos, setLowestSuccessRepos] = useState<
     { name: string; url: string; successRate: number }[]
   >([]);
 
   // Semaphore data containing color and summary
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
@@ -138,7 +133,7 @@ export const FoundationSemaphoreDialog: React.FC<
   /**
    * Effect hook to fetch metrics data when the dialog opens
    */
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
 
     const fetchMetrics = async () => {
