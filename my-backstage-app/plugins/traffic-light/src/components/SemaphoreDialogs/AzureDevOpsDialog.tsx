@@ -65,39 +65,39 @@ interface AzureBugInsightsDialogProps {
  * @param entities - List of entities to derive the system from
  * @returns The threshold value (default: 0.33 if not specified)
  */
-async function getSystemThreshold(
+function getSystemThreshold(
   catalogApi: CatalogApi,
   entities: Entity[],
 ): Promise<number> {
   const defaultThreshold = 0.33;
-  if (!entities.length) return defaultThreshold;
-
+  
+  if (!entities.length) {
+    return Promise.resolve(defaultThreshold);
+  }
+  
   const systemName = entities[0].spec?.system;
   const namespace = entities[0].metadata.namespace ?? 'default';
-
+  
   if (typeof systemName !== 'string' || !systemName) {
-    return defaultThreshold;
+    return Promise.resolve(defaultThreshold);
   }
-
-  try {
-    const systemEntity = await catalogApi.getEntityByRef({
-      kind: 'System',
-      namespace,
-      name: String(systemName),
-    });
-
+  
+  return catalogApi.getEntityByRef({
+    kind: 'System',
+    namespace,
+    name: String(systemName),
+  })
+  .then(systemEntity => {
     const thresholdAnnotation =
       systemEntity?.metadata.annotations?.['azure-bugs-check-threshold-red'];
     return thresholdAnnotation
       ? parseFloat(thresholdAnnotation)
       : defaultThreshold;
-  } catch (err) {
-    console.warn(
-      'Could not fetch system threshold annotation; using default 0.33',
-      err,
-    );
+  })
+  .catch(() => {
+    // Could not fetch system threshold annotation; using default 0.33
     return defaultThreshold;
-  }
+  });
 }
 
 /**
@@ -225,61 +225,60 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
    */
   useEffect(() => {
     if (!open || entities.length === 0) return;
-
-    const fetchBugMetrics = async () => {
-      setIsLoading(true);
-      try {
-        // Get threshold configuration from system entity
-        const redThreshold = await getSystemThreshold(catalogApi, entities);
-
-        // Process entities to get bug data
-        const { projectBugMap, projectToEntitiesMap } =
-          await processEntitiesForBugs(entities, azureUtils, techInsightsApi);
-
-        // Convert map data to sorted array for display
-        const projectList = Array.from(projectBugMap.entries())
-          .map(([project, { bugCount, url }]) => ({
-            project,
-            bugCount,
-            url,
-            entities: projectToEntitiesMap.get(project) ?? [],
-          }))
-          .sort((a, b) => b.bugCount - a.bugCount);
-
-        setProjectBugs(projectList);
-
-        // Calculate total bugs across all projects
-        const totalBugCount = projectList.reduce(
-          (sum, p) => sum + p.bugCount,
-          0,
-        );
-
-        // Determine traffic light color based on threshold and failure count
-        const failures = Array.from(projectBugMap.values()).filter(
-          r => r.failedCheck,
-        ).length;
-        const { color } = determineSemaphoreColor(
-          failures,
-          entities.length,
-          redThreshold,
-        );
-
-        // Generate summary message based on severity
-        let summary = 'No bugs detected.';
-        if (color === 'yellow') {
-          summary = 'Moderate bug levels found. Review advised.';
-        } else if (color === 'red') {
-          summary = 'High bug count detected. Immediate action recommended.';
-        }
-
-        setData({
-          color,
-          summary,
-          metrics: { totalBugCount },
-          details: [],
-        });
-      } catch (e) {
-        console.error('Failed to fetch Azure DevOps bug data:', e);
+  
+    setIsLoading(true);
+  
+    getSystemThreshold(catalogApi, entities)
+      .then(redThreshold => {
+        return processEntitiesForBugs(entities, azureUtils, techInsightsApi)
+          .then(({ projectBugMap, projectToEntitiesMap }) => {
+            // Convert map data to sorted array for display
+            const projectList = Array.from(projectBugMap.entries())
+              .map(([project, { bugCount, url }]) => ({
+                project,
+                bugCount,
+                url,
+                entities: projectToEntitiesMap.get(project) ?? [],
+              }))
+              .sort((a, b) => b.bugCount - a.bugCount);
+  
+            setProjectBugs(projectList);
+  
+            // Calculate total bugs across all projects
+            const totalBugCount = projectList.reduce(
+              (sum, p) => sum + p.bugCount,
+              0,
+            );
+  
+            // Determine traffic light color based on threshold and failure count
+            const failures = Array.from(projectBugMap.values()).filter(
+              r => r.failedCheck,
+            ).length;
+  
+            const { color } = determineSemaphoreColor(
+              failures,
+              entities.length,
+              redThreshold,
+            );
+  
+            // Generate summary message based on severity
+            let summary = 'No bugs detected.';
+            if (color === 'yellow') {
+              summary = 'Moderate bug levels found. Review advised.';
+            } else if (color === 'red') {
+              summary = 'High bug count detected. Immediate action recommended.';
+            }
+  
+            setData({
+              color,
+              summary,
+              metrics: { totalBugCount },
+              details: [],
+            });
+          });
+      })
+      .catch(() => {
+        // Failed to fetch Azure DevOps bug data
         setProjectBugs([]);
         setData({
           color: 'gray',
@@ -287,12 +286,10 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
           metrics: {},
           details: [],
         });
-      } finally {
+      })
+      .finally(() => {
         setIsLoading(false);
-      }
-    };
-
-    fetchBugMetrics();
+      });
   }, [open, entities, techInsightsApi, azureUtils, catalogApi]);
 
   // Calculated metrics for display
