@@ -64,7 +64,7 @@ export const createDependabotFactRetriever = (
             );
 
             const openAlerts = alertsResponse.data.filter(
-              a => a.state === 'open',
+              (a: { state: string }) => a.state === 'open',
             );
 
             let critical = 0;
