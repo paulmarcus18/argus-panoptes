@@ -78,7 +78,7 @@ export const PreproductionSemaphoreDialog: React.FC<
         let configuredRepoNames: string[] = [];
 
         const systemName = entities[0].spec?.system;
-        const namespace = entities[0].metadata.namespace || 'default';
+        const namespace = entities[0].metadata.namespace?? 'default';
 
         if (systemName) {
           const systemEntity = await catalogApi.getEntityByRef({
@@ -140,7 +140,7 @@ export const PreproductionSemaphoreDialog: React.FC<
           filteredEntities.map(async entity => {
             const ref = {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             };
 
