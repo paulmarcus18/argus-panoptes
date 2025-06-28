@@ -59,7 +59,7 @@ describe('MetricChart', () => {
     it('uses default color', () => {
       renderWithTheme(<MetricChart title="Test Chart" data={mockData} />);
       const series = JSON.parse(
-        screen.getByTestId('bar-chart').getAttribute('data-series') || '[]',
+        screen.getByTestId('bar-chart').getAttribute('data-series') ?? '[]',
       );
       expect(series[0].color).toBe('#00e5ff');
     });
@@ -69,7 +69,7 @@ describe('MetricChart', () => {
         <MetricChart title="Test" data={mockData} color="#ff0000" />,
       );
       const series = JSON.parse(
-        screen.getByTestId('bar-chart').getAttribute('data-series') || '[]',
+        screen.getByTestId('bar-chart').getAttribute('data-series') ?? '[]',
       );
       expect(series[0].color).toBe('#ff0000');
     });
@@ -95,8 +95,8 @@ describe('MetricChart', () => {
     it('maps data to chart correctly', () => {
       renderWithTheme(<MetricChart title="Test" data={mockData} />);
       const chart = screen.getByTestId('bar-chart');
-      const series = JSON.parse(chart.getAttribute('data-series') || '[]');
-      const xAxis = JSON.parse(chart.getAttribute('data-x-axis') || '[]');
+      const series = JSON.parse(chart.getAttribute('data-series') ?? '[]');
+      const xAxis = JSON.parse(chart.getAttribute('data-x-axis') ?? '[]');
       expect(series[0].data).toEqual([10, 15, 8]);
       expect(xAxis[0].data).toEqual(['Week 1', 'Week 2', 'Week 3']);
     });
@@ -104,7 +104,7 @@ describe('MetricChart', () => {
     it('handles empty dataset', () => {
       renderWithTheme(<MetricChart title="Test Chart" data={[]} />);
       const chart = screen.getByTestId('bar-chart');
-      const series = JSON.parse(chart.getAttribute('data-series') || '[]');
+      const series = JSON.parse(chart.getAttribute('data-series') ?? '[]');
       expect(series[0].data).toEqual([]);
     });
   });
@@ -119,7 +119,7 @@ describe('MetricChart', () => {
     ])('sets y-axis for %s', (title, expectedLabel) => {
       renderWithTheme(<MetricChart title={title} data={mockData} />);
       const chart = screen.getByTestId('bar-chart');
-      const yAxis = JSON.parse(chart.getAttribute('data-y-axis') || '[]');
+      const yAxis = JSON.parse(chart.getAttribute('data-y-axis') ?? '[]');
       expect(yAxis[0].label).toBe(expectedLabel);
       expect(yAxis[0].tickLabelStyle.fontSize).toBe(10);
     });
@@ -127,7 +127,7 @@ describe('MetricChart', () => {
     it('sets x-axis config', () => {
       renderWithTheme(<MetricChart title="Test" data={mockData} />);
       const chart = screen.getByTestId('bar-chart');
-      const xAxis = JSON.parse(chart.getAttribute('data-x-axis') || '[]');
+      const xAxis = JSON.parse(chart.getAttribute('data-x-axis') ?? '[]');
       expect(xAxis[0].label).toBe('Date Range');
     });
   });

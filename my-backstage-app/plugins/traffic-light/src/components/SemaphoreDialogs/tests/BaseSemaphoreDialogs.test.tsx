@@ -80,7 +80,7 @@ describe('BaseSemaphoreDialog', () => {
         onClose={mockOnClose}
         title="Security"
         data={mockData}
-        isLoading={true}
+        isLoading
       />,
     );
 
