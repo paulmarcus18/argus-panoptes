@@ -26,12 +26,18 @@ jest.mock('@backstage/catalog-client', () => ({
 }));
 
 const requestMock = jest.fn();
-
-jest.mock('@octokit/rest', () => ({
-  Octokit: jest.fn().mockImplementation(() => ({
-    request: requestMock,
-  })),
+jest.mock('./octokitLoader', () => ({
+  loadOctokit: jest.fn().mockResolvedValue(
+    jest.fn().mockImplementation(() => ({
+      request: requestMock,
+    }))
+  ),
 }));
+// jest.mock('@octokit/rest', () => ({
+//   Octokit: jest.fn().mockImplementation(() => ({
+//     request: requestMock,
+//   })),
+// }));
 
 describe('createDependabotFactRetriever', () => {
   const mockLogger = {
