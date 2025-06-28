@@ -29,8 +29,12 @@ jest.mock('../BaseSemaphoreDialogs', () => ({
       <div data-testid="dialog-color">{data.color}</div>
       <div data-testid="dialog-summary">{data.summary}</div>
       <div data-testid="dialog-details-count">{data.details.length}</div>
-      {renderMetrics && <div data-testid="rendered-metrics">{renderMetrics()}</div>}
-      <button data-testid="close-button" onClick={onClose}>Close</button>
+      {renderMetrics && (
+        <div data-testid="rendered-metrics">{renderMetrics()}</div>
+      )}
+      <button data-testid="close-button" onClick={onClose}>
+        Close
+      </button>
     </div>
   ),
 }));
@@ -39,8 +43,13 @@ const mockTechInsightsApi = { getFacts: jest.fn() };
 const mockCatalogApi = { getEntityByRef: jest.fn() };
 const mockGithubUtils = { getGitHubSecurityData: jest.fn() };
 
-const MockedGithubUtils = GithubAdvancedSecurityUtils as jest.MockedClass<typeof GithubAdvancedSecurityUtils>;
-const mockedTrafficLight = calculateGitHubSecurityTrafficLight as jest.MockedFunction<typeof calculateGitHubSecurityTrafficLight>;
+const MockedGithubUtils = GithubAdvancedSecurityUtils as jest.MockedClass<
+  typeof GithubAdvancedSecurityUtils
+>;
+const mockedTrafficLight =
+  calculateGitHubSecurityTrafficLight as jest.MockedFunction<
+    typeof calculateGitHubSecurityTrafficLight
+  >;
 
 const entity: Entity = {
   apiVersion: 'backstage.io/v1alpha1',
@@ -53,7 +62,7 @@ const theme = createTheme();
 const createWrapper = () => {
   const apis = TestApiRegistry.from(
     [techInsightsApiRef, mockTechInsightsApi],
-    [catalogApiRef, mockCatalogApi]
+    [catalogApiRef, mockCatalogApi],
   );
 
   return ({ children }: { children: React.ReactNode }) => (
@@ -71,10 +80,16 @@ describe('GitHubSemaphoreDialog', () => {
 
   it('renders closed state initially', () => {
     const Wrapper = createWrapper();
-    render(<Wrapper><GitHubSemaphoreDialog open={false} onClose={jest.fn()} /></Wrapper>);
+    render(
+      <Wrapper>
+        <GitHubSemaphoreDialog open={false} onClose={jest.fn()} />
+      </Wrapper>,
+    );
 
     expect(screen.getByTestId('dialog-open')).toHaveTextContent('false');
-    expect(screen.getByTestId('dialog-title')).toHaveTextContent('GitHub Advanced Security');
+    expect(screen.getByTestId('dialog-title')).toHaveTextContent(
+      'GitHub Advanced Security',
+    );
   });
 
   it('fetches and processes data correctly when opened', async () => {
@@ -85,11 +100,22 @@ describe('GitHubSemaphoreDialog', () => {
       openCodeScanningAlertCount: 3,
       openSecretScanningAlertCount: 2,
       codeScanningAlerts: {
-        a1: { severity: 'high', description: 'Issue A', html_url: 'https://github.com/org/repo/a1' },
-        a2: { severity: 'low', description: 'Issue B', html_url: 'https://github.com/org/repo/a2' },
+        a1: {
+          severity: 'high',
+          description: 'Issue A',
+          html_url: 'https://github.com/org/repo/a1',
+        },
+        a2: {
+          severity: 'low',
+          description: 'Issue B',
+          html_url: 'https://github.com/org/repo/a2',
+        },
       },
       secretScanningAlerts: {
-        s1: { description: 'Secret A', html_url: 'https://github.com/org/repo/s1' },
+        s1: {
+          description: 'Secret A',
+          html_url: 'https://github.com/org/repo/s1',
+        },
       },
     });
 
@@ -103,12 +129,18 @@ describe('GitHubSemaphoreDialog', () => {
     });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} /></Wrapper>);
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} />
+        </Wrapper>,
+      );
     });
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
-      expect(screen.getByTestId('dialog-summary')).toHaveTextContent('Critical security issues require immediate attention.');
+      expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
+        'Critical security issues require immediate attention.',
+      );
       expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('3');
     });
   });
@@ -123,10 +155,17 @@ describe('GitHubSemaphoreDialog', () => {
       secretScanningAlerts: {},
     });
 
-    mockedTrafficLight.mockReturnValue({ color: 'green', reason: 'No security issues found.' });
+    mockedTrafficLight.mockReturnValue({
+      color: 'green',
+      reason: 'No security issues found.',
+    });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
     });
 
     await waitFor(() => {
@@ -142,35 +181,55 @@ describe('GitHubSemaphoreDialog', () => {
       openCodeScanningAlertCount: 1,
       openSecretScanningAlertCount: 0,
       codeScanningAlerts: {
-        a1: { severity: 'critical', description: 'Critical Alert', html_url: '' },
+        a1: {
+          severity: 'critical',
+          description: 'Critical Alert',
+          html_url: '',
+        },
       },
       secretScanningAlerts: {},
     });
 
-    mockCatalogApi.getEntityByRef.mockRejectedValue(new Error('No system entity'));
+    mockCatalogApi.getEntityByRef.mockRejectedValue(
+      new Error('No system entity'),
+    );
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
     });
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
-      expect(screen.getByTestId('dialog-summary')).toHaveTextContent('Critical security issues require immediate attention.');
+      expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
+        'Critical security issues require immediate attention.',
+      );
     });
   });
 
   it('handles API error gracefully', async () => {
     const Wrapper = createWrapper();
 
-    mockGithubUtils.getGitHubSecurityData.mockRejectedValue(new Error('API failure'));
+    mockGithubUtils.getGitHubSecurityData.mockRejectedValue(
+      new Error('API failure'),
+    );
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
     });
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
-      expect(screen.getByTestId('dialog-summary')).toHaveTextContent('Failed to load GitHub Security data.');
+      expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
+        'Failed to load GitHub Security data.',
+      );
     });
   });
 
@@ -186,7 +245,11 @@ describe('GitHubSemaphoreDialog', () => {
     });
 
     await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} /></Wrapper>);
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} />
+        </Wrapper>,
+      );
     });
 
     const closeButton = screen.getByTestId('close-button');
@@ -195,302 +258,378 @@ describe('GitHubSemaphoreDialog', () => {
   });
 });
 
-  // Test severity sorting
-  it('sorts security issues by severity correctly', async () => {
-    const Wrapper = createWrapper();
+// Test severity sorting
+it('sorts security issues by severity correctly', async () => {
+  const Wrapper = createWrapper();
 
-    mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
-      openCodeScanningAlertCount: 4,
-      openSecretScanningAlertCount: 0,
-      codeScanningAlerts: {
-        a1: { severity: 'low', description: 'Low Issue', html_url: 'https://github.com/org/repo/a1' },
-        a2: { severity: 'critical', description: 'Critical Issue', html_url: 'https://github.com/org/repo/a2' },
-        a3: { severity: 'medium', description: 'Medium Issue', html_url: 'https://github.com/org/repo/a3' },
-        a4: { severity: 'high', description: 'High Issue', html_url: 'https://github.com/org/repo/a4' },
+  mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
+    openCodeScanningAlertCount: 4,
+    openSecretScanningAlertCount: 0,
+    codeScanningAlerts: {
+      a1: {
+        severity: 'low',
+        description: 'Low Issue',
+        html_url: 'https://github.com/org/repo/a1',
       },
-      secretScanningAlerts: {},
-    });
-
-    mockedTrafficLight.mockReturnValue({ color: 'red', reason: 'Critical issues found.' });
-
-    await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
-    });
-
-    await waitFor(() => {
-      // Verify that details are sorted by severity (critical, high, medium, low)
-      const component = screen.getByTestId('base-semaphore-dialog');
-      expect(component).toBeInTheDocument();
-      expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('4');
-    });
+      a2: {
+        severity: 'critical',
+        description: 'Critical Issue',
+        html_url: 'https://github.com/org/repo/a2',
+      },
+      a3: {
+        severity: 'medium',
+        description: 'Medium Issue',
+        html_url: 'https://github.com/org/repo/a3',
+      },
+      a4: {
+        severity: 'high',
+        description: 'High Issue',
+        html_url: 'https://github.com/org/repo/a4',
+      },
+    },
+    secretScanningAlerts: {},
   });
 
-  // Test repository name extraction
-  it('extracts repository names from URLs correctly', async () => {
-    const Wrapper = createWrapper();
-
-    mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
-      openCodeScanningAlertCount: 2,
-      openSecretScanningAlertCount: 1,
-      codeScanningAlerts: {
-        a1: { 
-          severity: 'high', 
-          description: 'Issue with repo name', 
-          html_url: 'https://github.com/myorg/myrepo/security/code-scanning/1',
-          direct_link: 'https://github.com/myorg/myrepo/blob/main/file.js#L10'
-        },
-      },
-      secretScanningAlerts: {
-        s1: { 
-          description: 'Secret detected', 
-          html_url: 'https://github.com/myorg/myrepo/security/secret-scanning/1'
-        },
-      },
-    });
-
-    mockedTrafficLight.mockReturnValue({ color: 'red', reason: 'Security issues found.' });
-
-    await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('2');
-      // Repository names should be extracted and prepended to descriptions
-    });
+  mockedTrafficLight.mockReturnValue({
+    color: 'red',
+    reason: 'Critical issues found.',
   });
 
-  // Test system entity with custom thresholds
-  it('uses custom thresholds from system entity', async () => {
-    const Wrapper = createWrapper();
-    const systemEntity = {
-      metadata: { 
-        annotations: { 
-          'github/security.thresholds': JSON.stringify({
-            critical_red: 1,
-            high_red: 2,
-            secrets_red: 1,
-            medium_red: 5,
-            medium_yellow: 3,
-            low_yellow: 10
-          })
-        }
-      },
-    };
-
-    mockCatalogApi.getEntityByRef.mockResolvedValue(systemEntity);
-    mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
-      openCodeScanningAlertCount: 2,
-      openSecretScanningAlertCount: 0,
-      codeScanningAlerts: {
-        a1: { severity: 'medium', description: 'Medium Issue', html_url: '' },
-        a2: { severity: 'medium', description: 'Another Medium Issue', html_url: '' },
-      },
-      secretScanningAlerts: {},
-    });
-
-    mockedTrafficLight.mockReturnValue({ 
-      color: 'yellow', 
-      reason: 'Medium severity issues within threshold.' 
-    });
-
-    await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
-    });
-
-    await waitFor(() => {
-      expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
-        kind: 'System',
-        namespace: 'default',
-        name: 'example-system',
-      });
-      expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
-    });
+  await act(async () => {
+    render(
+      <Wrapper>
+        <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+      </Wrapper>,
+    );
   });
 
-  // Test different namespace handling
-  it('handles entities in different namespaces', async () => {
-    const Wrapper = createWrapper();
-    const entityInCustomNamespace = {
-      ...entity,
-      metadata: { ...entity.metadata, namespace: 'custom-namespace' },
-    };
+  await waitFor(() => {
+    // Verify that details are sorted by severity (critical, high, medium, low)
+    const component = screen.getByTestId('base-semaphore-dialog');
+    expect(component).toBeInTheDocument();
+    expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('4');
+  });
+});
 
-    mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
+// Test repository name extraction
+it('extracts repository names from URLs correctly', async () => {
+  const Wrapper = createWrapper();
+
+  mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
+    openCodeScanningAlertCount: 2,
+    openSecretScanningAlertCount: 1,
+    codeScanningAlerts: {
+      a1: {
+        severity: 'high',
+        description: 'Issue with repo name',
+        html_url: 'https://github.com/myorg/myrepo/security/code-scanning/1',
+        direct_link: 'https://github.com/myorg/myrepo/blob/main/file.js#L10',
+      },
+    },
+    secretScanningAlerts: {
+      s1: {
+        description: 'Secret detected',
+        html_url: 'https://github.com/myorg/myrepo/security/secret-scanning/1',
+      },
+    },
+  });
+
+  mockedTrafficLight.mockReturnValue({
+    color: 'red',
+    reason: 'Security issues found.',
+  });
+
+  await act(async () => {
+    render(
+      <Wrapper>
+        <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+      </Wrapper>,
+    );
+  });
+
+  await waitFor(() => {
+    expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('2');
+    // Repository names should be extracted and prepended to descriptions
+  });
+});
+
+// Test system entity with custom thresholds
+it('uses custom thresholds from system entity', async () => {
+  const Wrapper = createWrapper();
+  const systemEntity = {
+    metadata: {
+      annotations: {
+        'github/security.thresholds': JSON.stringify({
+          critical_red: 1,
+          high_red: 2,
+          secrets_red: 1,
+          medium_red: 5,
+          medium_yellow: 3,
+          low_yellow: 10,
+        }),
+      },
+    },
+  };
+
+  mockCatalogApi.getEntityByRef.mockResolvedValue(systemEntity);
+  mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
+    openCodeScanningAlertCount: 2,
+    openSecretScanningAlertCount: 0,
+    codeScanningAlerts: {
+      a1: { severity: 'medium', description: 'Medium Issue', html_url: '' },
+      a2: {
+        severity: 'medium',
+        description: 'Another Medium Issue',
+        html_url: '',
+      },
+    },
+    secretScanningAlerts: {},
+  });
+
+  mockedTrafficLight.mockReturnValue({
+    color: 'yellow',
+    reason: 'Medium severity issues within threshold.',
+  });
+
+  await act(async () => {
+    render(
+      <Wrapper>
+        <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+      </Wrapper>,
+    );
+  });
+
+  await waitFor(() => {
+    expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
+      kind: 'System',
+      namespace: 'default',
+      name: 'example-system',
+    });
+    expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
+  });
+});
+
+// Test different namespace handling
+it('handles entities in different namespaces', async () => {
+  const Wrapper = createWrapper();
+  const entityInCustomNamespace = {
+    ...entity,
+    metadata: { ...entity.metadata, namespace: 'custom-namespace' },
+  };
+
+  mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
+    openCodeScanningAlertCount: 0,
+    openSecretScanningAlertCount: 0,
+    codeScanningAlerts: {},
+    secretScanningAlerts: {},
+  });
+
+  mockCatalogApi.getEntityByRef.mockResolvedValue({
+    metadata: { annotations: {} },
+  });
+
+  mockedTrafficLight.mockReturnValue({
+    color: 'green',
+    reason: 'No issues found.',
+  });
+
+  await act(async () => {
+    render(
+      <Wrapper>
+        <GitHubSemaphoreDialog
+          open
+          onClose={jest.fn()}
+          entities={[entityInCustomNamespace]}
+        />
+      </Wrapper>,
+    );
+  });
+
+  await waitFor(() => {
+    expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
+      kind: 'System',
+      namespace: 'custom-namespace',
+      name: 'example-system',
+    });
+  });
+});
+
+// Test alert without severity (should default to medium)
+it('handles alerts without severity correctly', async () => {
+  const Wrapper = createWrapper();
+
+  mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
+    openCodeScanningAlertCount: 1,
+    openSecretScanningAlertCount: 0,
+    codeScanningAlerts: {
+      a1: { description: 'Issue without severity', html_url: '' }, // No severity field
+    },
+    secretScanningAlerts: {},
+  });
+
+  await act(async () => {
+    render(
+      <Wrapper>
+        <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+      </Wrapper>,
+    );
+  });
+
+  await waitFor(() => {
+    expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
+    expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('1');
+  });
+});
+
+// Test metrics rendering
+it('renders metrics correctly with all severity levels', async () => {
+  const Wrapper = createWrapper();
+
+  mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
+    openCodeScanningAlertCount: 10,
+    openSecretScanningAlertCount: 5,
+    codeScanningAlerts: {
+      a1: { severity: 'critical', description: 'Critical 1', html_url: '' },
+      a2: { severity: 'critical', description: 'Critical 2', html_url: '' },
+      a3: { severity: 'high', description: 'High 1', html_url: '' },
+      a4: { severity: 'high', description: 'High 2', html_url: '' },
+      a5: { severity: 'high', description: 'High 3', html_url: '' },
+      a6: { severity: 'medium', description: 'Medium 1', html_url: '' },
+      a7: { severity: 'medium', description: 'Medium 2', html_url: '' },
+      a8: { severity: 'low', description: 'Low 1', html_url: '' },
+    },
+    secretScanningAlerts: {
+      s1: { description: 'Secret 1', html_url: '' },
+      s2: { description: 'Secret 2', html_url: '' },
+      s3: { description: 'Secret 3', html_url: '' },
+      s4: { description: 'Secret 4', html_url: '' },
+      s5: { description: 'Secret 5', html_url: '' },
+    },
+  });
+
+  mockedTrafficLight.mockReturnValue({
+    color: 'red',
+    reason: 'Critical issues found.',
+  });
+
+  await act(async () => {
+    render(
+      <Wrapper>
+        <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+      </Wrapper>,
+    );
+  });
+
+  await waitFor(() => {
+    expect(screen.getByTestId('rendered-metrics')).toBeInTheDocument();
+    expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('13'); // 8 code + 5 secret
+  });
+});
+
+// Test loading state
+it('shows loading state while fetching data', async () => {
+  const Wrapper = createWrapper();
+  let resolvePromise: (value: any) => void;
+  const delayedPromise = new Promise(resolve => {
+    resolvePromise = resolve;
+  });
+
+  mockGithubUtils.getGitHubSecurityData.mockReturnValue(delayedPromise);
+
+  await act(async () => {
+    render(
+      <Wrapper>
+        <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+      </Wrapper>,
+    );
+  });
+
+  // Should show loading state
+  expect(screen.getByTestId('dialog-loading')).toHaveTextContent('true');
+
+  // Resolve the promise
+  await act(async () => {
+    resolvePromise!({
       openCodeScanningAlertCount: 0,
       openSecretScanningAlertCount: 0,
       codeScanningAlerts: {},
       secretScanningAlerts: {},
     });
-
-    mockCatalogApi.getEntityByRef.mockResolvedValue({
-      metadata: { annotations: {} },
-    });
-
-    mockedTrafficLight.mockReturnValue({ color: 'green', reason: 'No issues found.' });
-
-    await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entityInCustomNamespace]} /></Wrapper>);
-    });
-
-    await waitFor(() => {
-      expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
-        kind: 'System',
-        namespace: 'custom-namespace',
-        name: 'example-system',
-      });
-    });
   });
 
-  // Test alert without severity (should default to medium)
-  it('handles alerts without severity correctly', async () => {
-    const Wrapper = createWrapper();
+  await waitFor(() => {
+    expect(screen.getByTestId('dialog-loading')).toHaveTextContent('false');
+  });
+});
 
-    mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
-      openCodeScanningAlertCount: 1,
-      openSecretScanningAlertCount: 0,
-      codeScanningAlerts: {
-        a1: { description: 'Issue without severity', html_url: '' }, // No severity field
+// Test string system name handling
+it('handles string system name correctly', async () => {
+  const Wrapper = createWrapper();
+  const entityWithStringSystem = {
+    ...entity,
+    spec: { type: 'service', system: 'string-system-name' },
+  };
+
+  mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
+    openCodeScanningAlertCount: 0,
+    openSecretScanningAlertCount: 0,
+    codeScanningAlerts: {},
+    secretScanningAlerts: {},
+  });
+
+  mockCatalogApi.getEntityByRef.mockResolvedValue({
+    metadata: { annotations: {} },
+  });
+
+  await act(async () => {
+    render(
+      <Wrapper>
+        <GitHubSemaphoreDialog
+          open
+          onClose={jest.fn()}
+          entities={[entityWithStringSystem]}
+        />
+      </Wrapper>,
+    );
+  });
+
+  await waitFor(() => {
+    expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
+      kind: 'System',
+      namespace: 'default',
+      name: 'string-system-name',
+    });
+  });
+});
+
+// Test alert with location path
+it('includes component path when available', async () => {
+  const Wrapper = createWrapper();
+
+  mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
+    openCodeScanningAlertCount: 1,
+    openSecretScanningAlertCount: 0,
+    codeScanningAlerts: {
+      a1: {
+        severity: 'high',
+        description: 'Issue with path',
+        html_url: 'https://github.com/org/repo/a1',
+        location: { path: 'src/components/Component.tsx' },
       },
-      secretScanningAlerts: {},
-    });
-
-    await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
-      expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('1');
-    });
+    },
+    secretScanningAlerts: {},
   });
 
-  // Test metrics rendering
-  it('renders metrics correctly with all severity levels', async () => {
-    const Wrapper = createWrapper();
-
-    mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
-      openCodeScanningAlertCount: 10,
-      openSecretScanningAlertCount: 5,
-      codeScanningAlerts: {
-        a1: { severity: 'critical', description: 'Critical 1', html_url: '' },
-        a2: { severity: 'critical', description: 'Critical 2', html_url: '' },
-        a3: { severity: 'high', description: 'High 1', html_url: '' },
-        a4: { severity: 'high', description: 'High 2', html_url: '' },
-        a5: { severity: 'high', description: 'High 3', html_url: '' },
-        a6: { severity: 'medium', description: 'Medium 1', html_url: '' },
-        a7: { severity: 'medium', description: 'Medium 2', html_url: '' },
-        a8: { severity: 'low', description: 'Low 1', html_url: '' },
-      },
-      secretScanningAlerts: {
-        s1: { description: 'Secret 1', html_url: '' },
-        s2: { description: 'Secret 2', html_url: '' },
-        s3: { description: 'Secret 3', html_url: '' },
-        s4: { description: 'Secret 4', html_url: '' },
-        s5: { description: 'Secret 5', html_url: '' },
-      },
-    });
-
-    mockedTrafficLight.mockReturnValue({ color: 'red', reason: 'Critical issues found.' });
-
-    await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId('rendered-metrics')).toBeInTheDocument();
-      expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('13'); // 8 code + 5 secret
-    });
+  await act(async () => {
+    render(
+      <Wrapper>
+        <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+      </Wrapper>,
+    );
   });
 
-  // Test loading state
-  it('shows loading state while fetching data', async () => {
-    const Wrapper = createWrapper();
-    let resolvePromise: (value: any) => void;
-    const delayedPromise = new Promise(resolve => {
-      resolvePromise = resolve;
-    });
-
-    mockGithubUtils.getGitHubSecurityData.mockReturnValue(delayedPromise);
-
-    await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
-    });
-
-    // Should show loading state
-    expect(screen.getByTestId('dialog-loading')).toHaveTextContent('true');
-
-    // Resolve the promise
-    await act(async () => {
-      resolvePromise!({
-        openCodeScanningAlertCount: 0,
-        openSecretScanningAlertCount: 0,
-        codeScanningAlerts: {},
-        secretScanningAlerts: {},
-      });
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId('dialog-loading')).toHaveTextContent('false');
-    });
+  await waitFor(() => {
+    expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('1');
+    // Component path should be included in the details
   });
-
-  // Test string system name handling
-  it('handles string system name correctly', async () => {
-    const Wrapper = createWrapper();
-    const entityWithStringSystem = {
-      ...entity,
-      spec: { type: 'service', system: 'string-system-name' },
-    };
-
-    mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
-      openCodeScanningAlertCount: 0,
-      openSecretScanningAlertCount: 0,
-      codeScanningAlerts: {},
-      secretScanningAlerts: {},
-    });
-
-    mockCatalogApi.getEntityByRef.mockResolvedValue({
-      metadata: { annotations: {} },
-    });
-
-    await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entityWithStringSystem]} /></Wrapper>);
-    });
-
-    await waitFor(() => {
-      expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
-        kind: 'System',
-        namespace: 'default',
-        name: 'string-system-name',
-      });
-    });
-  });
-
-  // Test alert with location path
-  it('includes component path when available', async () => {
-    const Wrapper = createWrapper();
-
-    mockGithubUtils.getGitHubSecurityData.mockResolvedValue({
-      openCodeScanningAlertCount: 1,
-      openSecretScanningAlertCount: 0,
-      codeScanningAlerts: {
-        a1: { 
-          severity: 'high', 
-          description: 'Issue with path', 
-          html_url: 'https://github.com/org/repo/a1',
-          location: { path: 'src/components/Component.tsx' }
-        },
-      },
-      secretScanningAlerts: {},
-    });
-
-    await act(async () => {
-      render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('1');
-      // Component path should be included in the details
-    });
-  });
+});

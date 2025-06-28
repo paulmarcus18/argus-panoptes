@@ -11,19 +11,22 @@ export function determineSemaphoreColor(
   if (failures === 0) {
     return {
       color: 'green',
-      reason: `All ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'
-        } passed the check (threshold: ${thresholdPercentage}%).`,
+      reason: `All ${totalEntities} ${
+        totalEntities === 1 ? 'entity' : 'entities'
+      } passed the check (threshold: ${thresholdPercentage}%).`,
     };
   } else if (failures > redLimit) {
     return {
       color: 'red',
-      reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'
-        } failed the check with a threshold of ${thresholdPercentage}%.`,
+      reason: `${failures} out of ${totalEntities} ${
+        totalEntities === 1 ? 'entity' : 'entities'
+      } failed the check with a threshold of ${thresholdPercentage}%.`,
     };
   }
   return {
     color: 'yellow',
-    reason: `${failures} out of ${totalEntities} ${totalEntities === 1 ? 'entity' : 'entities'
-      } failed the check with a threshold of ${thresholdPercentage}%.`,
+    reason: `${failures} out of ${totalEntities} ${
+      totalEntities === 1 ? 'entity' : 'entities'
+    } failed the check with a threshold of ${thresholdPercentage}%.`,
   };
 }

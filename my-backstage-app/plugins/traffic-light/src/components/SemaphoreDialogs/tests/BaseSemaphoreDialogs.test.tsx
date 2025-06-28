@@ -4,7 +4,7 @@ import { SemaphoreData } from '../types';
 
 describe('BaseSemaphoreDialog', () => {
   const mockOnClose = jest.fn();
-  
+
   const mockData: SemaphoreData = {
     color: 'red',
     summary: 'Critical issues detected',
@@ -14,25 +14,25 @@ describe('BaseSemaphoreDialog', () => {
         description: 'Critical vulnerability detected',
         url: 'https://example.com/issue/1',
         directLink: 'https://example.com/issue/1/details',
-        component: 'backend-service'
+        component: 'backend-service',
       },
       {
         severity: 'high',
         description: 'High severity bug found',
         url: 'https://example.com/issue/2',
-        component: 'frontend'
+        component: 'frontend',
       },
       {
         severity: 'medium',
         description: 'Medium severity code smell',
-        component: 'api'
+        component: 'api',
       },
       {
         severity: 'low',
         description: 'Low priority technical debt',
-      }
+      },
     ],
-    metrics: {}
+    metrics: {},
   };
 
   const mockRenderMetrics = jest.fn(() => (
@@ -50,7 +50,7 @@ describe('BaseSemaphoreDialog', () => {
         onClose={mockOnClose}
         title="Security"
         data={mockData}
-      />
+      />,
     );
 
     expect(screen.getByText('Security Status')).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe('BaseSemaphoreDialog', () => {
         onClose={mockOnClose}
         title="Security"
         data={mockData}
-      />
+      />,
     );
 
     const closeButton = screen.getByRole('button', { name: /close/i });
@@ -81,11 +81,13 @@ describe('BaseSemaphoreDialog', () => {
         title="Security"
         data={mockData}
         isLoading={true}
-      />
+      />,
     );
 
     expect(screen.getByText('Loading data...')).toBeInTheDocument();
-    expect(screen.queryByText('Critical issues detected')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Critical issues detected'),
+    ).not.toBeInTheDocument();
   });
 
   it('renders custom metrics when provided', () => {
@@ -96,7 +98,7 @@ describe('BaseSemaphoreDialog', () => {
         title="Security"
         data={mockData}
         renderMetrics={mockRenderMetrics}
-      />
+      />,
     );
 
     expect(mockRenderMetrics).toHaveBeenCalledTimes(1);
@@ -110,7 +112,7 @@ describe('BaseSemaphoreDialog', () => {
         onClose={mockOnClose}
         title="Security"
         data={{ ...mockData, color: 'red' }}
-      />
+      />,
     );
 
     // For red color, expect error icon
@@ -122,7 +124,7 @@ describe('BaseSemaphoreDialog', () => {
         onClose={mockOnClose}
         title="Security"
         data={{ ...mockData, color: 'yellow' }}
-      />
+      />,
     );
 
     // For yellow color, expect warning icon
@@ -134,7 +136,7 @@ describe('BaseSemaphoreDialog', () => {
         onClose={mockOnClose}
         title="Security"
         data={{ ...mockData, color: 'green' }}
-      />
+      />,
     );
 
     // For green color, expect check circle icon
@@ -146,7 +148,7 @@ describe('BaseSemaphoreDialog', () => {
         onClose={mockOnClose}
         title="Security"
         data={{ ...mockData, color: 'gray' }}
-      />
+      />,
     );
 
     // For any other color, expect info icon
@@ -160,11 +162,13 @@ describe('BaseSemaphoreDialog', () => {
         onClose={mockOnClose}
         title="Security"
         data={mockData}
-      />
+      />,
     );
 
     // Check that all issues are rendered
-    expect(screen.getByText('Critical vulnerability detected')).toBeInTheDocument();
+    expect(
+      screen.getByText('Critical vulnerability detected'),
+    ).toBeInTheDocument();
     expect(screen.getByText('High severity bug found')).toBeInTheDocument();
     expect(screen.getByText('Medium severity code smell')).toBeInTheDocument();
     expect(screen.getByText('Low priority technical debt')).toBeInTheDocument();
@@ -188,7 +192,7 @@ describe('BaseSemaphoreDialog', () => {
         onClose={mockOnClose}
         title="Security"
         data={mockData}
-      />
+      />,
     );
 
     // Find links
@@ -196,7 +200,10 @@ describe('BaseSemaphoreDialog', () => {
     expect(links).toHaveLength(2); // Two issues have URLs
 
     // Check first link (should use directLink when available)
-    expect(links[0]).toHaveAttribute('href', 'https://example.com/issue/1/details');
+    expect(links[0]).toHaveAttribute(
+      'href',
+      'https://example.com/issue/1/details',
+    );
     expect(links[0]).toHaveTextContent('Critical vulnerability detected');
 
     // Check second link
@@ -211,7 +218,7 @@ describe('BaseSemaphoreDialog', () => {
         onClose={mockOnClose}
         title="Security"
         data={{ ...mockData, details: [] }}
-      />
+      />,
     );
 
     expect(screen.queryByText('Issues')).not.toBeInTheDocument();

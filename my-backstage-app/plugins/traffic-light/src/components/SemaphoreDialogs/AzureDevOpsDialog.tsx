@@ -4,7 +4,7 @@
  * This component displays a dialog containing information about Azure DevOps bugs
  * for entities in a Backstage catalog. It shows bug metrics including total count,
  * project breakdown, and traffic light indicators based on threshold values.
- * 
+ *
  * The component fetches bug data from Azure DevOps using Tech Insights API
  * and presents it in a user-friendly format with visual indicators of severity.
  */
@@ -12,14 +12,17 @@
 import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
-import { TechInsightsApi, techInsightsApiRef } from '@backstage/plugin-tech-insights';
+import {
+  TechInsightsApi,
+  techInsightsApiRef,
+} from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { AzureUtils } from '../../utils/azureUtils';
 import { determineSemaphoreColor } from '../utils';
 import { SemaphoreData } from './types';
 import { CatalogApi, catalogApiRef } from '@backstage/plugin-catalog-react';
-import {useState, useMemo, useEffect} from 'react';
+import { useState, useMemo, useEffect } from 'react';
 /**
  * Styles for the dialog components
  */
@@ -53,11 +56,11 @@ interface AzureBugInsightsDialogProps {
 
 /**
  * Fetches the system-level threshold for bug counts.
- * 
+ *
  * Looks up the system entity associated with the provided entities and
- * retrieves the 'azure-bugs-check-threshold-red' annotation to determine 
+ * retrieves the 'azure-bugs-check-threshold-red' annotation to determine
  * the threshold at which the bug count should be considered "red" (critical).
- * 
+ *
  * @param catalogApi - The Backstage catalog API
  * @param entities - List of entities to derive the system from
  * @returns The threshold value (default: 0.33 if not specified)
@@ -90,7 +93,9 @@ async function getSystemThreshold(
       : defaultThreshold;
   } catch (err) {
     console.warn(
-      'Could not fetch system threshold annotation; using default 0.33', err);
+      'Could not fetch system threshold annotation; using default 0.33',
+      err,
+    );
     return defaultThreshold;
   }
 }
@@ -114,12 +119,12 @@ type ProjectEntityInfo = { entityName: string };
 
 /**
  * Processes a list of entities to fetch and map their Azure DevOps bug data.
- * 
+ *
  * This function:
  * 1. Groups entities by their associated Azure DevOps projects
  * 2. Fetches bug data for each unique project
  * 3. Creates mappings between projects, bug data, and related entities
- * 
+ *
  * @param entities - List of catalog entities to process
  * @param azureUtils - Utility for Azure DevOps operations
  * @param techInsightsApi - API for accessing Tech Insights data
@@ -150,7 +155,11 @@ async function processEntitiesForBugs(
 
     // Fetch bug data once per project, skipping if already fetched or invalid
     const queryId = entity.metadata.annotations?.['azure.com/bugs-query-id'];
-    if (projectName === 'unknown' || projectBugMap.has(projectName) || !queryId) {
+    if (
+      projectName === 'unknown' ||
+      projectBugMap.has(projectName) ||
+      !queryId
+    ) {
       continue;
     }
 
@@ -182,7 +191,7 @@ async function processEntitiesForBugs(
 
 /**
  * Main component for displaying Azure DevOps bug information in a dialog.
- * 
+ *
  * This component fetches bug data from Azure DevOps for the provided entities,
  * calculates metrics, and displays them in a dialog with visual indicators.
  */
@@ -222,9 +231,10 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
       try {
         // Get threshold configuration from system entity
         const redThreshold = await getSystemThreshold(catalogApi, entities);
-        
+
         // Process entities to get bug data
-        const { projectBugMap, projectToEntitiesMap } = await processEntitiesForBugs(entities, azureUtils, techInsightsApi);
+        const { projectBugMap, projectToEntitiesMap } =
+          await processEntitiesForBugs(entities, azureUtils, techInsightsApi);
 
         // Convert map data to sorted array for display
         const projectList = Array.from(projectBugMap.entries())
@@ -239,11 +249,20 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
         setProjectBugs(projectList);
 
         // Calculate total bugs across all projects
-        const totalBugCount = projectList.reduce((sum, p) => sum + p.bugCount, 0,);
+        const totalBugCount = projectList.reduce(
+          (sum, p) => sum + p.bugCount,
+          0,
+        );
 
         // Determine traffic light color based on threshold and failure count
-        const failures = Array.from(projectBugMap.values()).filter(r => r.failedCheck,).length;
-        const { color } = determineSemaphoreColor(failures, entities.length, redThreshold,);
+        const failures = Array.from(projectBugMap.values()).filter(
+          r => r.failedCheck,
+        ).length;
+        const { color } = determineSemaphoreColor(
+          failures,
+          entities.length,
+          redThreshold,
+        );
 
         // Generate summary message based on severity
         let summary = 'No bugs detected.';

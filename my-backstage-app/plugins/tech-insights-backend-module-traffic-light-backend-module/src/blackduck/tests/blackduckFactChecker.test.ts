@@ -152,10 +152,11 @@ describe('BlackDuck Checks Configuration', () => {
   // Test: verify all security risk severity levels are covered
   test('covers all security risk severity levels', () => {
     const severityLevels = ['critical', 'high', 'medium'];
-    
+
     severityLevels.forEach(severity => {
-      const checkExists = BlackDuckChecks.some(check =>
-        check.id.includes(severity) && check.factIds[1].includes(severity),
+      const checkExists = BlackDuckChecks.some(
+        check =>
+          check.id.includes(severity) && check.factIds[1].includes(severity),
       );
       expect(checkExists).toBe(true);
     });
@@ -166,13 +167,13 @@ describe('BlackDuck Checks Configuration', () => {
     BlackDuckChecks.forEach(check => {
       // Check name starts with "BlackDuck"
       expect(check.name).toMatch(/^BlackDuck/);
-      
+
       // Check name contains security risk terminology
       expect(check.name).toMatch(/Security Risk$/);
-      
+
       // Check description contains "security risk"
       expect(check.description.toLowerCase()).toContain('security risk');
-      
+
       // Check description mentions BlackDuck
       expect(check.description).toContain('BlackDuck');
     });
@@ -192,12 +193,16 @@ describe('BlackDuck Checks Configuration', () => {
 
   // Test: ensure no duplicate annotation keys
   test('all annotation keys are unique', () => {
-    const thresholdKeys = BlackDuckChecks.map(check => check.annotationKeyThreshold);
-    const operatorKeys = BlackDuckChecks.map(check => check.annotationKeyOperator);
-    
+    const thresholdKeys = BlackDuckChecks.map(
+      check => check.annotationKeyThreshold,
+    );
+    const operatorKeys = BlackDuckChecks.map(
+      check => check.annotationKeyOperator,
+    );
+
     const uniqueThresholdKeys = [...new Set(thresholdKeys)];
     const uniqueOperatorKeys = [...new Set(operatorKeys)];
-    
+
     expect(thresholdKeys).toHaveLength(uniqueThresholdKeys.length);
     expect(operatorKeys).toHaveLength(uniqueOperatorKeys.length);
   });

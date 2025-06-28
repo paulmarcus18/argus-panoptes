@@ -36,27 +36,25 @@ export const AzureDevOpsBugsTrafficLight = ({
       try {
         // 1. Get red threshold from system annotation
         let redThreshold = 0.33;
-          const systemName = entities[0].spec?.system;
-          const namespace = entities[0].metadata.namespace || 'default';
+        const systemName = entities[0].spec?.system;
+        const namespace = entities[0].metadata.namespace || 'default';
 
-          if (systemName) {
-            const systemEntity = await catalogApi.getEntityByRef({
-              kind: 'System',
-              namespace,
-              name:
-                typeof systemName === 'string'
-                  ? systemName
-                  : String(systemName),
-            });
+        if (systemName) {
+          const systemEntity = await catalogApi.getEntityByRef({
+            kind: 'System',
+            namespace,
+            name:
+              typeof systemName === 'string' ? systemName : String(systemName),
+          });
 
-            const thresholdAnnotation =
-              systemEntity?.metadata.annotations?.[
-                'azure-bugs-check-threshold-red'
-              ];
-            if (thresholdAnnotation) {
-              redThreshold = parseFloat(thresholdAnnotation);
-            }
+          const thresholdAnnotation =
+            systemEntity?.metadata.annotations?.[
+              'azure-bugs-check-threshold-red'
+            ];
+          if (thresholdAnnotation) {
+            redThreshold = parseFloat(thresholdAnnotation);
           }
+        }
 
         // 2. Fetch facts + checks, and skip entities with null bug counts
         const projectBugMap = new Map<

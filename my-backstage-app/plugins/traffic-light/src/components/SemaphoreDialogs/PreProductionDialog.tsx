@@ -9,7 +9,7 @@ import { PreproductionUtils } from '../../utils/preproductionUtils';
 import type { GridSize } from '@material-ui/core';
 import { SemaphoreData } from './types';
 import { determineSemaphoreColor } from '../utils';
-import {useState, useMemo, useEffect} from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -77,39 +77,37 @@ export const PreproductionSemaphoreDialog: React.FC<
         let redThreshold = 0.33;
         let configuredRepoNames: string[] = [];
 
-          const systemName = entities[0].spec?.system;
-          const namespace = entities[0].metadata.namespace || 'default';
+        const systemName = entities[0].spec?.system;
+        const namespace = entities[0].metadata.namespace || 'default';
 
-          if (systemName) {
-            const systemEntity = await catalogApi.getEntityByRef({
-              kind: 'System',
-              namespace,
-              name:
-                typeof systemName === 'string'
-                  ? systemName
-                  : String(systemName),
-            });
+        if (systemName) {
+          const systemEntity = await catalogApi.getEntityByRef({
+            kind: 'System',
+            namespace,
+            name:
+              typeof systemName === 'string' ? systemName : String(systemName),
+          });
 
-            const thresholdAnnotation =
-              systemEntity?.metadata.annotations?.[
-                'preproduction-check-threshold-red'
-              ];
-            if (thresholdAnnotation) {
-              redThreshold = parseFloat(thresholdAnnotation);
-            }
-
-            // Get configured repositories for preproduction checks
-            const configuredReposAnnotation =
-              systemEntity?.metadata.annotations?.[
-                'preproduction-configured-repositories'
-              ];
-            if (configuredReposAnnotation) {
-              configuredRepoNames = configuredReposAnnotation
-                .split(',')
-                .map(name => name.trim())
-                .filter(name => name.length > 0);
-            }
+          const thresholdAnnotation =
+            systemEntity?.metadata.annotations?.[
+              'preproduction-check-threshold-red'
+            ];
+          if (thresholdAnnotation) {
+            redThreshold = parseFloat(thresholdAnnotation);
           }
+
+          // Get configured repositories for preproduction checks
+          const configuredReposAnnotation =
+            systemEntity?.metadata.annotations?.[
+              'preproduction-configured-repositories'
+            ];
+          if (configuredReposAnnotation) {
+            configuredRepoNames = configuredReposAnnotation
+              .split(',')
+              .map(name => name.trim())
+              .filter(name => name.length > 0);
+          }
+        }
 
         // 2. Filter entities to only include configured repositories
         const filteredEntities =

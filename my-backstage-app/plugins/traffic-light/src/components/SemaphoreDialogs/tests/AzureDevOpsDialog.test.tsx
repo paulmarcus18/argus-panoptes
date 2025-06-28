@@ -158,11 +158,7 @@ describe('AzureDevOpsSemaphoreDialog', () => {
   it('handles no entities gracefully', () => {
     render(
       <Wrapper>
-        <AzureDevOpsSemaphoreDialog
-          open
-          onClose={jest.fn()}
-          entities={[]}
-        />
+        <AzureDevOpsSemaphoreDialog open onClose={jest.fn()} entities={[]} />
       </Wrapper>,
     );
     expect(mockAzureUtils.getAzureDevOpsBugFacts).not.toHaveBeenCalled();

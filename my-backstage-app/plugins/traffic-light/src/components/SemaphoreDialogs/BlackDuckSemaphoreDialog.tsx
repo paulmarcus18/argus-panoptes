@@ -8,7 +8,7 @@ import { BlackDuckUtils } from '../../utils/blackDuckUtils';
 import { SemaphoreData, IssueDetail } from './types';
 import { Entity } from '@backstage/catalog-model';
 import { determineBlackDuckColor } from '../Semaphores/BlackDuckTrafficLight';
-import {useEffect, useMemo, useState} from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {

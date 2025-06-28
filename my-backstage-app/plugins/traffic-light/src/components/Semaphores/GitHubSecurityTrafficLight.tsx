@@ -278,10 +278,7 @@ export const GitHubSecurityTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
-  const githubASUtils = useMemo(
-    () => new GithubAdvancedSecurityUtils(),
-    [],
-  );
+  const githubASUtils = useMemo(() => new GithubAdvancedSecurityUtils(), []);
 
   useEffect(() => {
     const fetchGitHubSecurityData = async () => {

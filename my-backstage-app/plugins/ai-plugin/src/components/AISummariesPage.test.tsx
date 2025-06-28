@@ -145,9 +145,7 @@ describe('AISummaries', () => {
       json: async () => ({}),
     });
     // Mock generateSummaries to simulate a failure.
-    (generateSummaries as jest.Mock).mockRejectedValue(
-      new Error('AI failed'),
-    );
+    (generateSummaries as jest.Mock).mockRejectedValue(new Error('AI failed'));
 
     renderComponent();
 
@@ -187,9 +185,17 @@ describe('AISummaries', () => {
     await userEvent.click(systemFilter);
 
     // Check that all systems, including the one not in the fetch response, are options.
-    expect(await screen.findByRole('option', { name: 'All'})).toBeInTheDocument();
-    expect(await screen.findByRole('option', { name: 'system1'})).toBeInTheDocument();
-    expect(await screen.findByRole('option', { name: 'system2'})).toBeInTheDocument();
-    expect(await screen.findByRole('option', { name: 'system3'})).toBeInTheDocument();
+    expect(
+      await screen.findByRole('option', { name: 'All' }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole('option', { name: 'system1' }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole('option', { name: 'system2' }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole('option', { name: 'system3' }),
+    ).toBeInTheDocument();
   });
 });

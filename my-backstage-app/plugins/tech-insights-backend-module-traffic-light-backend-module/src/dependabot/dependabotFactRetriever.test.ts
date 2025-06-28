@@ -30,7 +30,7 @@ jest.mock('./octokitLoader', () => ({
   loadOctokit: jest.fn().mockResolvedValue(
     jest.fn().mockImplementation(() => ({
       request: requestMock,
-    }))
+    })),
   ),
 }));
 // jest.mock('@octokit/rest', () => ({
@@ -48,15 +48,19 @@ describe('createDependabotFactRetriever', () => {
   } as any;
 
   const mockConfig = {
-    getOptionalConfigArray: jest.fn().mockReturnValue([
-      { getOptionalString: jest.fn().mockReturnValue('mock-token') },
-    ]),
+    getOptionalConfigArray: jest
+      .fn()
+      .mockReturnValue([
+        { getOptionalString: jest.fn().mockReturnValue('mock-token') },
+      ]),
   } as any;
 
   const mockConfigWithoutToken = {
-    getOptionalConfigArray: jest.fn().mockReturnValue([
-      { getOptionalString: jest.fn().mockReturnValue(undefined) },
-    ]),
+    getOptionalConfigArray: jest
+      .fn()
+      .mockReturnValue([
+        { getOptionalString: jest.fn().mockReturnValue(undefined) },
+      ]),
   } as any;
 
   const mockDiscovery = {
@@ -64,8 +68,12 @@ describe('createDependabotFactRetriever', () => {
   } as any;
 
   const mockAuth = {
-    getOwnServiceCredentials: jest.fn().mockResolvedValue({ token: 'service-token' }),
-    getPluginRequestToken: jest.fn().mockResolvedValue({ token: 'catalog-token' }),
+    getOwnServiceCredentials: jest
+      .fn()
+      .mockResolvedValue({ token: 'service-token' }),
+    getPluginRequestToken: jest
+      .fn()
+      .mockResolvedValue({ token: 'catalog-token' }),
   } as any;
 
   const urlReader = {} as any;
@@ -157,7 +165,10 @@ describe('createDependabotFactRetriever', () => {
       }),
     }));
 
-    const factRetrieverWithoutSlug = createDependabotFactRetriever(mockConfig, mockLogger);
+    const factRetrieverWithoutSlug = createDependabotFactRetriever(
+      mockConfig,
+      mockLogger,
+    );
 
     const result = await factRetrieverWithoutSlug.handler({
       discovery: mockDiscovery,
@@ -171,7 +182,10 @@ describe('createDependabotFactRetriever', () => {
   });
 
   it('returns empty if GitHub token is missing', async () => {
-    const retriever = createDependabotFactRetriever(mockConfigWithoutToken, mockLogger);
+    const retriever = createDependabotFactRetriever(
+      mockConfigWithoutToken,
+      mockLogger,
+    );
 
     const result = await retriever.handler({
       discovery: mockDiscovery,
@@ -181,7 +195,9 @@ describe('createDependabotFactRetriever', () => {
       urlReader,
     });
 
-    expect(mockLogger.error).toHaveBeenCalledWith('Missing GitHub token in config');
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Missing GitHub token in config',
+    );
     expect(result).toEqual([]);
   });
 });

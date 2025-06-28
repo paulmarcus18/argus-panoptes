@@ -1,4 +1,8 @@
-import { AzureUtils, AzureDevOpsBugMetrics, AzureDevOpsBugChecks } from '../azureUtils';
+import {
+  AzureUtils,
+  AzureDevOpsBugMetrics,
+  AzureDevOpsBugChecks,
+} from '../azureUtils';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef } from '@backstage/catalog-model';
 
@@ -19,10 +23,7 @@ const mockEntityRef: CompoundEntityRef = {
   name: 'test-service',
 };
 
-const createMockCheckResult = (
-  id: string,
-  result: boolean | null = true,
-) => ({
+const createMockCheckResult = (id: string, result: boolean | null = true) => ({
   check: {
     id,
     type: 'boolean',
@@ -40,7 +41,6 @@ const createMockCheckResult = (
     },
   },
 });
-
 
 const DEFAULT_METRICS: AzureDevOpsBugMetrics = {
   azureBugCount: 0,
@@ -70,7 +70,10 @@ describe('AzureUtils', () => {
         },
       });
 
-      const result = await azureUtils.getAzureDevOpsBugFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await azureUtils.getAzureDevOpsBugFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual({ azureBugCount: 42 });
     });
 
@@ -83,19 +86,30 @@ describe('AzureUtils', () => {
         },
       });
 
-      const result = await azureUtils.getAzureDevOpsBugFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await azureUtils.getAzureDevOpsBugFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual(DEFAULT_METRICS);
     });
 
     it('handles undefined response', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({});
-      const result = await azureUtils.getAzureDevOpsBugFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await azureUtils.getAzureDevOpsBugFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual(DEFAULT_METRICS);
     });
 
     it('handles API errors gracefully', async () => {
-      mockTechInsightsApi.getFacts.mockRejectedValue(new Error('Failed to fetch'));
-      const result = await azureUtils.getAzureDevOpsBugFacts(mockTechInsightsApi, mockEntityRef);
+      mockTechInsightsApi.getFacts.mockRejectedValue(
+        new Error('Failed to fetch'),
+      );
+      const result = await azureUtils.getAzureDevOpsBugFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual(DEFAULT_METRICS);
     });
 
@@ -110,7 +124,10 @@ describe('AzureUtils', () => {
         },
       });
 
-      const result = await azureUtils.getAzureDevOpsBugFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await azureUtils.getAzureDevOpsBugFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual({ azureBugCount: 13 });
     });
 
@@ -123,7 +140,10 @@ describe('AzureUtils', () => {
         },
       });
 
-      const result = await azureUtils.getAzureDevOpsBugFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await azureUtils.getAzureDevOpsBugFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual(DEFAULT_METRICS);
     });
   });
@@ -134,7 +154,10 @@ describe('AzureUtils', () => {
         createMockCheckResult('azure-bugs', true),
       ]);
 
-      const result = await azureUtils.getAzureDevOpsBugChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await azureUtils.getAzureDevOpsBugChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual({ bugCountCheck: true });
     });
 
@@ -143,7 +166,10 @@ describe('AzureUtils', () => {
         createMockCheckResult('azure-bugs', false),
       ]);
 
-      const result = await azureUtils.getAzureDevOpsBugChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await azureUtils.getAzureDevOpsBugChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual({ bugCountCheck: false });
     });
 
@@ -152,7 +178,10 @@ describe('AzureUtils', () => {
         createMockCheckResult('some-other-check', true),
       ]);
 
-      const result = await azureUtils.getAzureDevOpsBugChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await azureUtils.getAzureDevOpsBugChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual(DEFAULT_CHECKS);
     });
 
@@ -160,13 +189,21 @@ describe('AzureUtils', () => {
       const mockResult = createMockCheckResult('azure-bugs', null);
       mockTechInsightsApi.runChecks.mockResolvedValue([mockResult]);
 
-      const result = await azureUtils.getAzureDevOpsBugChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await azureUtils.getAzureDevOpsBugChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual(DEFAULT_CHECKS);
     });
 
     it('returns default check on error', async () => {
-      mockTechInsightsApi.runChecks.mockRejectedValue(new Error('Run check failed'));
-      const result = await azureUtils.getAzureDevOpsBugChecks(mockTechInsightsApi, mockEntityRef);
+      mockTechInsightsApi.runChecks.mockRejectedValue(
+        new Error('Run check failed'),
+      );
+      const result = await azureUtils.getAzureDevOpsBugChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual(DEFAULT_CHECKS);
     });
 
@@ -176,9 +213,11 @@ describe('AzureUtils', () => {
         createMockCheckResult('azure-bugs', true),
       ]);
 
-      const result = await azureUtils.getAzureDevOpsBugChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await azureUtils.getAzureDevOpsBugChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
       expect(result).toEqual({ bugCountCheck: true });
     });
   });
 });
-

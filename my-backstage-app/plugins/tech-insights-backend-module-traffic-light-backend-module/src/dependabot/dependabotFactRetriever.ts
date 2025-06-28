@@ -47,7 +47,6 @@ export const createDependabotFactRetriever = (
         { token: catalogToken },
       );
 
-      // const Octokit = (await import('@octokit/rest')).Octokit;
       const Octokit = await loadOctokit();
       const octokit = new Octokit({ auth: githubToken });
 

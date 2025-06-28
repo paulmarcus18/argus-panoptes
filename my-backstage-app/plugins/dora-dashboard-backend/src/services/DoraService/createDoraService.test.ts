@@ -10,7 +10,9 @@ jest.mock('mysql2/promise', () => ({
 }));
 
 jest.mock('fs', () => ({
-  readFileSync: jest.fn(() => 'SELECT * FROM metrics WHERE date BETWEEN ? AND ? AND project IN (?)'),
+  readFileSync: jest.fn(
+    () => 'SELECT * FROM metrics WHERE date BETWEEN ? AND ? AND project IN (?)',
+  ),
 }));
 
 jest.mock('@backstage/backend-plugin-api', () => ({
@@ -49,7 +51,9 @@ describe('DoraService', () => {
     const names = await service.getProjectNames();
 
     expect(names).toEqual(['proj1', 'proj2']);
-    expect(mockExecute).toHaveBeenCalledWith('SELECT DISTINCT name FROM projects');
+    expect(mockExecute).toHaveBeenCalledWith(
+      'SELECT DISTINCT name FROM projects',
+    );
   });
 
   it('should log and throw on DB error in getProjectNames', async () => {
@@ -71,16 +75,25 @@ describe('DoraService', () => {
     ['mltc', 'monthly'],
     ['mttr', 'daily'],
     ['mttr', 'monthly'],
-  ])('should return data for metric=%s and aggregation=%s', async (metric, agg) => {
-    const fakeResult = [{ date: '2024-01-01', value: 42 }];
-    mockExecute.mockResolvedValueOnce([fakeResult]);
+  ])(
+    'should return data for metric=%s and aggregation=%s',
+    async (metric, agg) => {
+      const fakeResult = [{ date: '2024-01-01', value: 42 }];
+      mockExecute.mockResolvedValueOnce([fakeResult]);
 
-    const service = await createDoraService({ logger, config });
-    const result = await service.getMetric(metric as any, agg as any, ['project1'], 1, 2);
+      const service = await createDoraService({ logger, config });
+      const result = await service.getMetric(
+        metric as any,
+        agg as any,
+        ['project1'],
+        1,
+        2,
+      );
 
-    expect(result).toEqual(fakeResult);
-    expect(mockExecute).toHaveBeenCalled();
-  });
+      expect(result).toEqual(fakeResult);
+      expect(mockExecute).toHaveBeenCalled();
+    },
+  );
 
   it('throws for unsupported metric type', async () => {
     const service = await createDoraService({ logger, config });

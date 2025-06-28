@@ -144,11 +144,7 @@ describe('FoundationSemaphoreDialog', () => {
 
     render(
       <Wrapper>
-        <FoundationSemaphoreDialog
-          open
-          onClose={mockOnClose}
-          entities={[]}
-        />
+        <FoundationSemaphoreDialog open onClose={mockOnClose} entities={[]} />
       </Wrapper>,
     );
 

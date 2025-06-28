@@ -34,7 +34,8 @@ const mockSystemEntity = {
   metadata: {
     annotations: {
       'tech-insights.io/sonarcloud-quality-gate-red-threshold-percentage': '50',
-      'tech-insights.io/sonarcloud-quality-gate-yellow-threshold-percentage': '25',
+      'tech-insights.io/sonarcloud-quality-gate-yellow-threshold-percentage':
+        '25',
     },
   },
 };
@@ -80,28 +81,53 @@ describe('determineSonarQubeColor', () => {
   });
 
   it('returns gray if no entities are provided', async () => {
-    const result = await determineSonarQubeColor([], mockCatalogApi, mockTechInsightsApi, mockSonarUtils);
+    const result = await determineSonarQubeColor(
+      [],
+      mockCatalogApi,
+      mockTechInsightsApi,
+      mockSonarUtils,
+    );
     expect(result.color).toBe('gray');
     expect(result.reason).toMatch(/No entities selected/);
   });
 
   it('returns gray if no enabled entities', async () => {
-    const disabled = [{ ...entities[0], metadata: { ...entities[0].metadata, annotations: {} } }];
-    const result = await determineSonarQubeColor(disabled, mockCatalogApi, mockTechInsightsApi, mockSonarUtils);
+    const disabled = [
+      {
+        ...entities[0],
+        metadata: { ...entities[0].metadata, annotations: {} },
+      },
+    ];
+    const result = await determineSonarQubeColor(
+      disabled,
+      mockCatalogApi,
+      mockTechInsightsApi,
+      mockSonarUtils,
+    );
     expect(result.color).toBe('gray');
     expect(result.reason).toMatch(/No entities have SonarQube enabled/);
   });
 
   it('returns gray if system metadata is missing', async () => {
     const noSystem = [{ ...entities[0], spec: {} }];
-    const result = await determineSonarQubeColor(noSystem, mockCatalogApi, mockTechInsightsApi, mockSonarUtils);
+    const result = await determineSonarQubeColor(
+      noSystem,
+      mockCatalogApi,
+      mockTechInsightsApi,
+      mockSonarUtils,
+    );
     expect(result.color).toBe('gray');
     expect(result.reason).toMatch(/System metadata is missing/);
   });
 
   it('returns green if all pass', async () => {
     mockSonarUtils.getSonarQubeFacts.mockResolvedValue({ quality_gate: 'OK' });
-    const result = await determineSonarQubeColor(entities, mockCatalogApi, mockTechInsightsApi, mockSonarUtils);
+    const result = await determineSonarQubeColor(
+      entities,
+      mockCatalogApi,
+      mockTechInsightsApi,
+      mockSonarUtils,
+    );
     expect(result.color).toBe('green');
   });
 
@@ -124,7 +150,12 @@ describe('determineSonarQubeColor', () => {
       .mockResolvedValueOnce({ quality_gate: 'OK' })
       .mockResolvedValueOnce({ quality_gate: 'OK' });
 
-    const result = await determineSonarQubeColor(fourEntities, mockCatalogApi, mockTechInsightsApi, mockSonarUtils);
+    const result = await determineSonarQubeColor(
+      fourEntities,
+      mockCatalogApi,
+      mockTechInsightsApi,
+      mockSonarUtils,
+    );
     expect(result.color).toBe('yellow');
   });
 
@@ -133,13 +164,23 @@ describe('determineSonarQubeColor', () => {
       .mockResolvedValueOnce({ quality_gate: 'ERROR' }) // 50%
       .mockResolvedValueOnce({ quality_gate: 'OK' });
 
-    const result = await determineSonarQubeColor(entities, mockCatalogApi, mockTechInsightsApi, mockSonarUtils);
+    const result = await determineSonarQubeColor(
+      entities,
+      mockCatalogApi,
+      mockTechInsightsApi,
+      mockSonarUtils,
+    );
     expect(result.color).toBe('red');
   });
 
   it('returns gray on error', async () => {
     mockSonarUtils.getSonarQubeFacts.mockRejectedValue(new Error('oops'));
-    const result = await determineSonarQubeColor(entities, mockCatalogApi, mockTechInsightsApi, mockSonarUtils);
+    const result = await determineSonarQubeColor(
+      entities,
+      mockCatalogApi,
+      mockTechInsightsApi,
+      mockSonarUtils,
+    );
     expect(result.color).toBe('gray');
   });
 });
@@ -177,12 +218,14 @@ describe('SonarQubeTrafficLight component', () => {
 
   const renderComponent = (entities = mockEntities, onClick?: () => void) => {
     return render(
-      <TestApiProvider apis={[
-        [catalogApiRef, mockCatalogApi],
-        [techInsightsApiRef, mockTechInsightsApi],
-      ]}>
+      <TestApiProvider
+        apis={[
+          [catalogApiRef, mockCatalogApi],
+          [techInsightsApiRef, mockTechInsightsApi],
+        ]}
+      >
         <SonarQubeTrafficLight entities={entities} onClick={onClick} />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
   };
 
@@ -192,7 +235,10 @@ describe('SonarQubeTrafficLight component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('base-traffic-light')).toHaveAttribute('data-color', 'green');
+      expect(screen.getByTestId('base-traffic-light')).toHaveAttribute(
+        'data-color',
+        'green',
+      );
     });
   });
 
@@ -202,7 +248,10 @@ describe('SonarQubeTrafficLight component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('base-traffic-light')).toHaveAttribute('data-color', 'gray');
+      expect(screen.getByTestId('base-traffic-light')).toHaveAttribute(
+        'data-color',
+        'gray',
+      );
     });
   });
 
@@ -223,31 +272,40 @@ describe('SonarQubeTrafficLight component', () => {
 
   it('re-fetches on entity prop change', async () => {
     const { rerender } = render(
-      <TestApiProvider apis={[
-        [catalogApiRef, mockCatalogApi],
-        [techInsightsApiRef, mockTechInsightsApi],
-      ]}>
+      <TestApiProvider
+        apis={[
+          [catalogApiRef, mockCatalogApi],
+          [techInsightsApiRef, mockTechInsightsApi],
+        ]}
+      >
         <SonarQubeTrafficLight entities={mockEntities} />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId('base-traffic-light')).toHaveAttribute('data-color', 'green');
+      expect(screen.getByTestId('base-traffic-light')).toHaveAttribute(
+        'data-color',
+        'green',
+      );
     });
 
-    const newEntities = [{
-      ...mockEntities[0],
-      metadata: { ...mockEntities[0].metadata, name: 'comp2' }
-    }];
+    const newEntities = [
+      {
+        ...mockEntities[0],
+        metadata: { ...mockEntities[0].metadata, name: 'comp2' },
+      },
+    ];
 
     await act(async () => {
       rerender(
-        <TestApiProvider apis={[
-          [catalogApiRef, mockCatalogApi],
-          [techInsightsApiRef, mockTechInsightsApi],
-        ]}>
+        <TestApiProvider
+          apis={[
+            [catalogApiRef, mockCatalogApi],
+            [techInsightsApiRef, mockTechInsightsApi],
+          ]}
+        >
           <SonarQubeTrafficLight entities={newEntities} />
-        </TestApiProvider>
+        </TestApiProvider>,
       );
     });
 
@@ -256,4 +314,3 @@ describe('SonarQubeTrafficLight component', () => {
     });
   });
 });
-

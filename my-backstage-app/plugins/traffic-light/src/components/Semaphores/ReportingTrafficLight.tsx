@@ -28,7 +28,7 @@ export const ReportingTrafficLight = ({
     'green' | 'yellow' | 'red' | 'gray' | 'white'
   >('white');
   const [reason, setReason] = useState('Loading Reporting pipeline data...');
-  
+
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
   const reportingUtils = useMemo(() => new ReportingUtils(), []);
@@ -37,57 +37,62 @@ export const ReportingTrafficLight = ({
    * Fetches the red threshold from system entity annotation
    * Uses defensive programming instead of exception handling
    */
-  const fetchRedThreshold = useCallback(async (entityList: Entity[]): Promise<number> => {
-    const defaultThreshold = 0.33;
-    
-    if (!entityList.length) return defaultThreshold;
-    
-    const systemName = entityList[0].spec?.system;
-    const namespace = entityList[0].metadata.namespace ?? 'default';
-    
-    if (!systemName) return defaultThreshold;
-    
-    const systemEntityRef = {
-      kind: 'System',
-      namespace,
-      name: typeof systemName === 'string' ? systemName : String(systemName),
-    };
+  const fetchRedThreshold = useCallback(
+    async (entityList: Entity[]): Promise<number> => {
+      const defaultThreshold = 0.33;
 
-    const systemEntity = await catalogApi.getEntityByRef(systemEntityRef);
-    
-    const thresholdAnnotation =
-      systemEntity?.metadata.annotations?.['reporting-check-threshold-red'];
-    
-    if (!thresholdAnnotation) return defaultThreshold;
-    
-    const parsed = parseFloat(thresholdAnnotation);
-    return isNaN(parsed) ? defaultThreshold : parsed;
-  }, [catalogApi]);
+      if (!entityList.length) return defaultThreshold;
+
+      const systemName = entityList[0].spec?.system;
+      const namespace = entityList[0].metadata.namespace ?? 'default';
+
+      if (!systemName) return defaultThreshold;
+
+      const systemEntityRef = {
+        kind: 'System',
+        namespace,
+        name: typeof systemName === 'string' ? systemName : String(systemName),
+      };
+
+      const systemEntity = await catalogApi.getEntityByRef(systemEntityRef);
+
+      const thresholdAnnotation =
+        systemEntity?.metadata.annotations?.['reporting-check-threshold-red'];
+
+      if (!thresholdAnnotation) return defaultThreshold;
+
+      const parsed = parseFloat(thresholdAnnotation);
+      return isNaN(parsed) ? defaultThreshold : parsed;
+    },
+    [catalogApi],
+  );
 
   /**
    * Fetches reporting pipeline checks for all entities
    * Lets individual promise rejections bubble up naturally
    */
-  const fetchReportingChecks = useCallback(async (entityList: Entity[]) => {
-    const checkPromises = entityList.map(entity =>
-      reportingUtils.getReportingPipelineChecks(techInsightsApi, {
-        kind: entity.kind,
-        namespace: entity.metadata.namespace ?? 'default',
-        name: entity.metadata.name,
-      })
-    );
+  const fetchReportingChecks = useCallback(
+    async (entityList: Entity[]) => {
+      const checkPromises = entityList.map(entity =>
+        reportingUtils.getReportingPipelineChecks(techInsightsApi, {
+          kind: entity.kind,
+          namespace: entity.metadata.namespace ?? 'default',
+          name: entity.metadata.name,
+        }),
+      );
 
-    const results = await Promise.allSettled(checkPromises);
-    
-    // Count only fulfilled promises where successRateCheck is false
-    const failures = results
-      .filter(result => result.status === 'fulfilled')
-      .map(result => (result as PromiseFulfilledResult<any>).value)
-      .filter(r => r?.successRateCheck === false)
-      .length;
-    
-    return { failures, total: entityList.length };
-  }, [reportingUtils, techInsightsApi]);
+      const results = await Promise.allSettled(checkPromises);
+
+      // Count only fulfilled promises where successRateCheck is false
+      const failures = results
+        .filter(result => result.status === 'fulfilled')
+        .map(result => (result as PromiseFulfilledResult<any>).value)
+        .filter(r => r?.successRateCheck === false).length;
+
+      return { failures, total: entityList.length };
+    },
+    [reportingUtils, techInsightsApi],
+  );
 
   useEffect(() => {
     if (!entities.length) {

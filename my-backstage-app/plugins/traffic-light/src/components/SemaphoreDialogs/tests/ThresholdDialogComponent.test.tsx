@@ -28,7 +28,9 @@ describe('ThresholdDialog', () => {
     }
     const formControl = label.closest('.MuiFormControl-root') as HTMLElement;
     if (!formControl) {
-      throw new Error(`Could not find a MuiFormControl-root for label: ${labelText}`);
+      throw new Error(
+        `Could not find a MuiFormControl-root for label: ${labelText}`,
+      );
     }
     return within(formControl).getByRole('spinbutton');
   };
@@ -93,8 +95,7 @@ describe('ThresholdDialog', () => {
     expect(mockSetThresholds).toHaveBeenCalledTimes(1);
 
     // To test the final state update, we can inspect the last call.
-    const updater =
-      mockSetThresholds.mock.calls[0][0];
+    const updater = mockSetThresholds.mock.calls[0][0];
     const previousState = { BlackDuck: { 'High security risks': '5' } };
     const newState = updater(previousState);
 

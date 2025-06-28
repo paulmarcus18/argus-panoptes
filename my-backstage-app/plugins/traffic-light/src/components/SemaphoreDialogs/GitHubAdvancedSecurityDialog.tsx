@@ -6,7 +6,10 @@ import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
-import { GithubAdvancedSecurityUtils, GitHubSecurityFacts } from '../../utils/githubAdvancedSecurityUtils';
+import {
+  GithubAdvancedSecurityUtils,
+  GitHubSecurityFacts,
+} from '../../utils/githubAdvancedSecurityUtils';
 import { SemaphoreData, IssueDetail, Severity } from './types';
 import {
   calculateGitHubSecurityTrafficLight,
@@ -128,7 +131,6 @@ const processSecurityResults = (results: GitHubSecurityFacts[]) => {
   return { critical, high, medium, low, details };
 };
 
-
 /**
  * Sort issues by severity (critical first, then high, medium, low)
  */
@@ -156,10 +158,7 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
-  const githubASUtils = useMemo(
-    () => new GithubAdvancedSecurityUtils(),
-    [],
-  );
+  const githubASUtils = useMemo(() => new GithubAdvancedSecurityUtils(), []);
 
   const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
@@ -185,7 +184,10 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
         name: systemName,
       });
 
-      const thresholds = extractSecurityThresholds(systemEntity, entities.length);
+      const thresholds = extractSecurityThresholds(
+        systemEntity,
+        entities.length,
+      );
       return { systemEntity, thresholds };
     };
 
@@ -231,7 +233,10 @@ export const GitHubSemaphoreDialog: React.FC<GitHubSemaphoreDialogProps> = ({
           entities,
           systemData.thresholds,
         );
-        color = trafficLightResult.color === 'white' ? 'gray' : trafficLightResult.color;
+        color =
+          trafficLightResult.color === 'white'
+            ? 'gray'
+            : trafficLightResult.color;
         summary = trafficLightResult.reason;
       } else {
         // Fallback to simple logic if no thresholds available

@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { TrafficLightPage } from './TrafficLightPage'; 
+import { TrafficLightPage } from './TrafficLightPage';
 
 describe('TrafficLightPage', () => {
   it('renders without crashing', () => {
@@ -18,7 +18,9 @@ describe('TrafficLightPage', () => {
 
   it('contains a welcome paragraph', () => {
     render(<TrafficLightPage />);
-    const paragraph = screen.getByText(/welcome to the traffic light plugin page!/i);
+    const paragraph = screen.getByText(
+      /welcome to the traffic light plugin page!/i,
+    );
     expect(paragraph).toBeInTheDocument();
   });
 });

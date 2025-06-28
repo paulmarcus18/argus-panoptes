@@ -469,11 +469,7 @@ describe('BlackDuckSemaphoreDialog', () => {
 
       render(
         <Wrapper>
-          <BlackDuckSemaphoreDialog
-            open
-            onClose={mockOnClose}
-            entities={[]}
-          />
+          <BlackDuckSemaphoreDialog open onClose={mockOnClose} entities={[]} />
         </Wrapper>,
       );
 

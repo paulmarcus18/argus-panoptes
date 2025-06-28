@@ -74,13 +74,19 @@ export class SonarCloudUtils {
         code_smells: Number(facts.code_smells ?? 0) || 0,
         vulnerabilities: Number(facts.vulnerabilities ?? 0) || 0,
         code_coverage: Number(facts.code_coverage ?? 0) || 0,
-        quality_gate: typeof facts.quality_gate === 'string' ||
+        quality_gate:
+          typeof facts.quality_gate === 'string' ||
           typeof facts.quality_gate === 'number'
-          ? String(facts.quality_gate)
-          : 'NONE',
+            ? String(facts.quality_gate)
+            : 'NONE',
       };
     } catch (error) {
-      console.error(`Failed to fetch SonarQube facts for entity '${stringifyEntityRef(entity,)}'.`, error,);
+      console.error(
+        `Failed to fetch SonarQube facts for entity '${stringifyEntityRef(
+          entity,
+        )}'.`,
+        error,
+      );
 
       return { ...DEFAULT_METRICS };
     }
@@ -113,7 +119,11 @@ export class SonarCloudUtils {
         };
       } catch (err) {
         console.error(
-          `Failed to process SonarCloud summary for entity '${stringifyEntityRef(entityRef,)}'.`, err,);
+          `Failed to process SonarCloud summary for entity '${stringifyEntityRef(
+            entityRef,
+          )}'.`,
+          err,
+        );
 
         return {
           entity: entityRef,
