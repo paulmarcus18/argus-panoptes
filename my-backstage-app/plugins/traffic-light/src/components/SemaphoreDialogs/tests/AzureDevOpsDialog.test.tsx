@@ -91,7 +91,7 @@ const mockSystemEntity = {
 
 describe('AzureDevOpsSemaphoreDialog', () => {
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation((msg, ...args) => {
+    jest.spyOn(console, 'error').mockImplementation((msg) => {
       if (
         typeof msg === 'string' &&
         msg.includes('Warning: findDOMNode is deprecated')

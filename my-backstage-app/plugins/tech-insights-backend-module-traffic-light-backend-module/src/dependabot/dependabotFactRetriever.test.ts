@@ -33,11 +33,6 @@ jest.mock('./octokitLoader', () => ({
     })),
   ),
 }));
-// jest.mock('@octokit/rest', () => ({
-//   Octokit: jest.fn().mockImplementation(() => ({
-//     request: requestMock,
-//   })),
-// }));
 
 describe('createDependabotFactRetriever', () => {
   const mockLogger = {

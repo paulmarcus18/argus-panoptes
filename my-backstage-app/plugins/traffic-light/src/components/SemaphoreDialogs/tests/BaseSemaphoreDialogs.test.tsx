@@ -46,7 +46,7 @@ describe('BaseSemaphoreDialog', () => {
   it('renders the dialog with title and summary', () => {
     render(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={mockData}
@@ -60,7 +60,7 @@ describe('BaseSemaphoreDialog', () => {
   it('calls onClose when close button is clicked', () => {
     render(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={mockData}
@@ -76,7 +76,7 @@ describe('BaseSemaphoreDialog', () => {
   it('shows loading state when isLoading is true', () => {
     render(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={mockData}
@@ -93,7 +93,7 @@ describe('BaseSemaphoreDialog', () => {
   it('renders custom metrics when provided', () => {
     render(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={mockData}
@@ -108,7 +108,7 @@ describe('BaseSemaphoreDialog', () => {
   it('renders the correct status icon based on color', () => {
     const { rerender } = render(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={{ ...mockData, color: 'red' }}
@@ -120,7 +120,7 @@ describe('BaseSemaphoreDialog', () => {
 
     rerender(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={{ ...mockData, color: 'yellow' }}
@@ -132,7 +132,7 @@ describe('BaseSemaphoreDialog', () => {
 
     rerender(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={{ ...mockData, color: 'green' }}
@@ -144,7 +144,7 @@ describe('BaseSemaphoreDialog', () => {
 
     rerender(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={{ ...mockData, color: 'gray' }}
@@ -158,7 +158,7 @@ describe('BaseSemaphoreDialog', () => {
   it('renders issues with correct severity colors', () => {
     render(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={mockData}
@@ -188,7 +188,7 @@ describe('BaseSemaphoreDialog', () => {
   it('renders issue with links when URL is provided', () => {
     render(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={mockData}
@@ -214,7 +214,7 @@ describe('BaseSemaphoreDialog', () => {
   it('does not render issues section when no details are provided', () => {
     render(
       <BaseSemaphoreDialog
-        open={true}
+        open
         onClose={mockOnClose}
         title="Security"
         data={{ ...mockData, details: [] }}

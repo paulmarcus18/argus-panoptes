@@ -81,7 +81,7 @@ describe('SonarQubeSemaphoreDialog', () => {
           ]}
         >
           <SonarQubeSemaphoreDialog
-            open={true}
+            open
             onClose={() => {}}
             entities={mockEntities}
           />
@@ -126,7 +126,7 @@ describe('SonarQubeSemaphoreDialog', () => {
           ]}
         >
           <SonarQubeSemaphoreDialog
-            open={true}
+            open
             onClose={() => {}}
             entities={mockEntities}
           />
@@ -154,7 +154,7 @@ describe('SonarQubeSemaphoreDialog', () => {
           ]}
         >
           <SonarQubeSemaphoreDialog
-            open={true}
+            open
             onClose={() => {}}
             entities={mockEntities}
           />
@@ -191,7 +191,7 @@ describe('SonarQubeSemaphoreDialog', () => {
           ]}
         >
           <SonarQubeSemaphoreDialog
-            open={true}
+            open
             onClose={() => {}}
             entities={disabledEntities}
           />

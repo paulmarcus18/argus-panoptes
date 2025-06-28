@@ -1,6 +1,5 @@
 import {
   CompoundEntityRef,
-  stringifyEntityRef,
 } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
