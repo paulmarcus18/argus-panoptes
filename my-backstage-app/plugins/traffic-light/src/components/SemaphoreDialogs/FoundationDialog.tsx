@@ -1,4 +1,3 @@
-import React from 'react';
 import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -10,6 +9,7 @@ import { FoundationUtils } from '../../utils/foundationUtils';
 import type { GridSize } from '@material-ui/core';
 import { SemaphoreData } from './types';
 import { determineSemaphoreColor } from '../utils';
+import { useEffect, useMemo, useState } from 'react';
 
 /**
  * Styles for the dialog components
@@ -47,7 +47,7 @@ interface SystemConfig {
 /**
  * Fetches system-level configuration like thresholds and repository lists
  * from the catalog entity for the system.
- * 
+ *
  * @param catalogApi - Backstage catalog API client
  * @param entities - List of entities to derive the system from
  * @returns Configuration object with thresholds and included repositories
@@ -66,42 +66,35 @@ async function getSystemConfig(
     return defaultConfig;
   }
 
-  try {
-    const namespace = entities[0].metadata.namespace ?? 'default';
-    const systemEntity = await catalogApi.getEntityByRef({
-      kind: 'System',
-      namespace,
-      name: systemName,
-    });
+  const namespace = entities[0].metadata.namespace ?? 'default';
+  const systemEntity = await catalogApi.getEntityByRef({
+    kind: 'System',
+    namespace,
+    name: systemName,
+  });
 
-    // Get red threshold from system annotation or use default
-    const thresholdAnnotation =
-      systemEntity?.metadata.annotations?.['foundation-check-threshold-red'];
-    if (thresholdAnnotation) {
-      defaultConfig.redThreshold = parseFloat(thresholdAnnotation);
-    }
-
-    // Get list of configured repositories from system annotation
-    const configuredReposAnnotation =
-      systemEntity?.metadata.annotations?.[
-      'foundation-configured-repositories'
-      ];
-    if (configuredReposAnnotation) {
-      defaultConfig.configuredRepoNames = configuredReposAnnotation
-        .split(',')
-        .map(name => name.trim())
-        .filter(name => name.length > 0);
-    }
-  } catch (err) {
-    console.warn('Could not fetch system configuration; using defaults', err);
+  // Get red threshold from system annotation or use default
+  const thresholdAnnotation =
+    systemEntity?.metadata.annotations?.['foundation-check-threshold-red'];
+  if (thresholdAnnotation) {
+    defaultConfig.redThreshold = parseFloat(thresholdAnnotation);
   }
 
+  // Get list of configured repositories from system annotation
+  const configuredReposAnnotation =
+    systemEntity?.metadata.annotations?.['foundation-configured-repositories'];
+  if (configuredReposAnnotation) {
+    defaultConfig.configuredRepoNames = configuredReposAnnotation
+      .split(',')
+      .map(name => name.trim())
+      .filter(name => name.length > 0);
+  }
   return defaultConfig;
 }
 
 /**
  * Main component for displaying Foundation Pipeline metrics in a dialog.
- * 
+ *
  * Shows workflow run success/failure statistics across repositories and displays
  * a traffic light indicator based on the system's health status.
  */
@@ -111,11 +104,11 @@ export const FoundationSemaphoreDialog: React.FC<
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const foundationUtils = React.useMemo(() => new FoundationUtils(), []);
+  const foundationUtils = useMemo(() => new FoundationUtils(), []);
 
   // Component state
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [metrics, setMetrics] = React.useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [metrics, setMetrics] = useState({
     totalSuccess: 0,
     totalFailure: 0,
     totalRuns: 0,
@@ -123,12 +116,12 @@ export const FoundationSemaphoreDialog: React.FC<
   });
 
   // Repositories with lowest success rates for display
-  const [lowestSuccessRepos, setLowestSuccessRepos] = React.useState<
+  const [lowestSuccessRepos, setLowestSuccessRepos] = useState<
     { name: string; url: string; successRate: number }[]
   >([]);
 
   // Semaphore data containing color and summary
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
@@ -138,7 +131,7 @@ export const FoundationSemaphoreDialog: React.FC<
   /**
    * Effect hook to fetch metrics data when the dialog opens
    */
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
 
     const fetchMetrics = async () => {
@@ -154,8 +147,8 @@ export const FoundationSemaphoreDialog: React.FC<
         const filteredEntities =
           configuredRepoNames.length > 0
             ? entities.filter(entity =>
-              configuredRepoNames.includes(entity.metadata.name),
-            )
+                configuredRepoNames.includes(entity.metadata.name),
+              )
             : entities;
 
         if (filteredEntities.length === 0) {
@@ -182,14 +175,16 @@ export const FoundationSemaphoreDialog: React.FC<
               foundationUtils.getFoundationPipelineFacts(techInsightsApi, ref),
               foundationUtils.getFoundationPipelineChecks(techInsightsApi, ref),
             ]);
-            const totalRuns = facts.successWorkflowRunsCount + facts.failureWorkflowRunsCount;
+            const totalRuns =
+              facts.successWorkflowRunsCount + facts.failureWorkflowRunsCount;
             // Calculate success rate as a percentage
             const successRate =
               totalRuns > 0
                 ? (facts.successWorkflowRunsCount / totalRuns) * 100
                 : 0;
             // Get GitHub actions URL from entity annotations
-            const projectSlug = entity.metadata.annotations?.['github.com/project-slug'];
+            const projectSlug =
+              entity.metadata.annotations?.['github.com/project-slug'];
 
             const url = projectSlug
               ? `https://github.com/${projectSlug}/actions`
@@ -207,16 +202,27 @@ export const FoundationSemaphoreDialog: React.FC<
         );
 
         // Calculate aggregate metrics across all repositories
-        const totalSuccess = results.reduce((sum, r) => sum + r.successWorkflowRunsCount, 0);
-        const totalFailure = results.reduce((sum, r) => sum + r.failureWorkflowRunsCount, 0);
+        const totalSuccess = results.reduce(
+          (sum, r) => sum + r.successWorkflowRunsCount,
+          0,
+        );
+        const totalFailure = results.reduce(
+          (sum, r) => sum + r.failureWorkflowRunsCount,
+          0,
+        );
         const totalRuns = totalSuccess + totalFailure;
-        const successRate = totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
-        
+        const successRate =
+          totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
+
         // Count repositories that failed their success rate check
         const failures = results.filter(r => r.failedCheck).length;
-        
+
         // Determine traffic light color based on failure percentage
-        const { color, reason } = determineSemaphoreColor(failures, filteredEntities.length, redThreshold);
+        const { color, reason } = determineSemaphoreColor(
+          failures,
+          filteredEntities.length,
+          redThreshold,
+        );
 
         // Generate a human-readable summary based on the status
         let summary = reason;
@@ -236,11 +242,30 @@ export const FoundationSemaphoreDialog: React.FC<
         const lowest = [...results]
           .sort((a, b) => a.successRate - b.successRate)
           .slice(0, 5)
-          .map(({ name, url, successRate: itemSuccessRate }) => ({ name, url, successRate: itemSuccessRate }));
+          .map(({ name, url, successRate: itemSuccessRate }) => ({
+            name,
+            url,
+            successRate: itemSuccessRate,
+          }));
         // Update state with calculated metrics
-        setMetrics({ totalSuccess, totalFailure, totalRuns, successRate: parseFloat(successRate.toFixed(2)) });
+        setMetrics({
+          totalSuccess,
+          totalFailure,
+          totalRuns,
+          successRate: parseFloat(successRate.toFixed(2)),
+        });
         setLowestSuccessRepos(lowest);
-        setData({ color, summary, metrics: { totalSuccess, totalFailure, totalRuns, successRate: parseFloat(successRate.toFixed(2)) }, details: [] });
+        setData({
+          color,
+          summary,
+          metrics: {
+            totalSuccess,
+            totalFailure,
+            totalRuns,
+            successRate: parseFloat(successRate.toFixed(2)),
+          },
+          details: [],
+        });
       } catch (e) {
         console.error('Failed to fetch Foundation pipeline data:', e);
         setData({

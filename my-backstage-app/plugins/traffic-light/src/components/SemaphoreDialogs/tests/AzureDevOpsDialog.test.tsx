@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
 import { ApiProvider } from '@backstage/core-app-api';
@@ -91,7 +91,7 @@ const mockSystemEntity = {
 
 describe('AzureDevOpsSemaphoreDialog', () => {
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation((msg, ...args) => {
+    jest.spyOn(console, 'error').mockImplementation((msg) => {
       if (
         typeof msg === 'string' &&
         msg.includes('Warning: findDOMNode is deprecated')
@@ -127,18 +127,16 @@ describe('AzureDevOpsSemaphoreDialog', () => {
     );
   });
 
-  it('fetches, displays metrics and computes color when opened', async () => {
-    await act(async () => {
-      render(
-        <Wrapper>
-          <AzureDevOpsSemaphoreDialog
-            open
-            onClose={jest.fn()}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+  it('fetches, displays metrics & computes color when opened', async () => {
+    render(
+      <Wrapper>
+        <AzureDevOpsSemaphoreDialog
+          open
+          onClose={jest.fn()}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(mockAzureUtils.getAzureDevOpsBugFacts).toHaveBeenCalled();
@@ -158,11 +156,7 @@ describe('AzureDevOpsSemaphoreDialog', () => {
   it('handles no entities case', () => {
     render(
       <Wrapper>
-        <AzureDevOpsSemaphoreDialog
-          open
-          onClose={jest.fn()}
-          entities={[]}
-        />
+        <AzureDevOpsSemaphoreDialog open onClose={jest.fn()} entities={[]} />
       </Wrapper>,
     );
     expect(mockAzureUtils.getAzureDevOpsBugFacts).not.toHaveBeenCalled();
@@ -176,17 +170,15 @@ describe('AzureDevOpsSemaphoreDialog', () => {
 
     mockAzureUtils.getAzureDevOpsBugFacts.mockRejectedValue(new Error('fail'));
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <AzureDevOpsSemaphoreDialog
-            open
-            onClose={jest.fn()}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <AzureDevOpsSemaphoreDialog
+          open
+          onClose={jest.fn()}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -201,17 +193,15 @@ describe('AzureDevOpsSemaphoreDialog', () => {
   it('invokes onClose when the close button is clicked', async () => {
     const onClose = jest.fn();
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <AzureDevOpsSemaphoreDialog
-            open
-            onClose={onClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <AzureDevOpsSemaphoreDialog
+          open
+          onClose={onClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     expect(screen.getByTestId('close-button')).toBeInTheDocument();
     screen.getByTestId('close-button').click();

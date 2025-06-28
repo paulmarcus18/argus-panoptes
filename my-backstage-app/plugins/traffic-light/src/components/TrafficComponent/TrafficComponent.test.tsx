@@ -5,7 +5,7 @@ import { Entity } from '@backstage/catalog-model';
 import { ThemeProvider } from '@material-ui/core/styles';
 import { lightTheme } from '@backstage/theme';
 import { useApi } from '@backstage/core-plugin-api';
-import {Component} from 'react';
+import { Component } from 'react';
 
 // Mock the entire core-plugin-api module
 jest.mock('@backstage/core-plugin-api', () => ({
@@ -13,16 +13,26 @@ jest.mock('@backstage/core-plugin-api', () => ({
   identityApiRef: { id: 'identity-api' },
 }));
 
-// Mock the catalog react module  
+// Mock the catalog react module
 jest.mock('@backstage/plugin-catalog-react', () => ({
   catalogApiRef: { id: 'catalog-api' },
 }));
 
 // Mock core components
 jest.mock('@backstage/core-components', () => ({
-  Page: ({ children }: { children: React.ReactNode }) => <div data-testid="page">{children}</div>,
-  Content: ({ children }: { children: React.ReactNode }) => <div data-testid="content">{children}</div>,
-  InfoCard: ({ title, children }: { title: string; children: React.ReactNode }) => (
+  Page: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="page">{children}</div>
+  ),
+  Content: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="content">{children}</div>
+  ),
+  InfoCard: ({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) => (
     <div data-testid="info-card">
       <h3>{title}</h3>
       {children}
@@ -39,7 +49,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="dependabot-traffic-light"
       onClick={onClick}
     >
-      Dependabot Traffic Light ({entities?.length || 0} entities)
+      Dependabot Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   GitHubSecurityTrafficLight: ({ entities, onClick }: any) => (
@@ -48,7 +58,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="github-security-traffic-light"
       onClick={onClick}
     >
-      GitHub Security Traffic Light ({entities?.length || 0} entities)
+      GitHub Security Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   SonarQubeTrafficLight: ({ entities, onClick }: any) => (
@@ -57,7 +67,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="sonarqube-traffic-light"
       onClick={onClick}
     >
-      SonarQube Traffic Light ({entities?.length || 0} entities)
+      SonarQube Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   PreproductionTrafficLight: ({ entities, onClick }: any) => (
@@ -66,7 +76,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="preproduction-traffic-light"
       onClick={onClick}
     >
-      Preproduction Traffic Light ({entities?.length || 0} entities)
+      Preproduction Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   FoundationTrafficLight: ({ entities, onClick }: any) => (
@@ -75,7 +85,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="foundation-traffic-light"
       onClick={onClick}
     >
-      Foundation Traffic Light ({entities?.length || 0} entities)
+      Foundation Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   AzureDevOpsBugsTrafficLight: ({ entities, onClick }: any) => (
@@ -84,7 +94,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="azure-devops-bugs-traffic-light"
       onClick={onClick}
     >
-      Azure DevOps Bugs Traffic Light ({entities?.length || 0} entities)
+      Azure DevOps Bugs Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   BlackDuckTrafficLight: ({ entities, onClick }: any) => (
@@ -93,7 +103,7 @@ jest.mock('../Semaphores', () => ({
       data-testid="blackduck-traffic-light"
       onClick={onClick}
     >
-      BlackDuck Traffic Light ({entities?.length || 0} entities)
+      BlackDuck Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
@@ -117,20 +127,22 @@ jest.mock('../Semaphores/ReportingTrafficLight', () => ({
       data-testid="reporting-traffic-light"
       onClick={onClick}
     >
-      Reporting Traffic Light ({entities?.length || 0} entities)
+      Reporting Traffic Light ({entities?.length ?? 0} entities)
     </button>
   ),
 }));
 
 // Mock all dialog components
 jest.mock('../SemaphoreDialogs/BlackDuckSemaphoreDialog', () => ({
-  BlackDuckSemaphoreDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+  BlackDuckSemaphoreDialog: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
     open ? (
-      <dialog
-        open
-        aria-label="BlackDuck Dialog"
-        data-testid="blackduck-dialog"
-      >
+      <dialog open aria-label="BlackDuck Dialog" data-testid="blackduck-dialog">
         <h2>BlackDuck Dialog</h2>
         <button type="button" onClick={onClose}>
           Close BlackDuck Dialog
@@ -140,7 +152,13 @@ jest.mock('../SemaphoreDialogs/BlackDuckSemaphoreDialog', () => ({
 }));
 
 jest.mock('../SemaphoreDialogs/GitHubAdvancedSecurityDialog', () => ({
-  GitHubSemaphoreDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+  GitHubSemaphoreDialog: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
     open ? (
       <dialog
         open
@@ -156,7 +174,13 @@ jest.mock('../SemaphoreDialogs/GitHubAdvancedSecurityDialog', () => ({
 }));
 
 jest.mock('../SemaphoreDialogs/AzureDevOpsDialog', () => ({
-  AzureDevOpsSemaphoreDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+  AzureDevOpsSemaphoreDialog: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
     open ? (
       <dialog
         open
@@ -172,13 +196,15 @@ jest.mock('../SemaphoreDialogs/AzureDevOpsDialog', () => ({
 }));
 
 jest.mock('../SemaphoreDialogs/SonarQubeDialog', () => ({
-  SonarQubeSemaphoreDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+  SonarQubeSemaphoreDialog: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
     open ? (
-      <dialog
-        open
-        aria-label="SonarQube Dialog"
-        data-testid="sonarqube-dialog"
-      >
+      <dialog open aria-label="SonarQube Dialog" data-testid="sonarqube-dialog">
         <h2>SonarQube Dialog</h2>
         <button type="button" onClick={onClose}>
           Close SonarQube Dialog
@@ -188,7 +214,13 @@ jest.mock('../SemaphoreDialogs/SonarQubeDialog', () => ({
 }));
 
 jest.mock('../SemaphoreDialogs/PreProductionDialog', () => ({
-  PreproductionSemaphoreDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+  PreproductionSemaphoreDialog: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
     open ? (
       <dialog
         open
@@ -204,7 +236,13 @@ jest.mock('../SemaphoreDialogs/PreProductionDialog', () => ({
 }));
 
 jest.mock('../SemaphoreDialogs/FoundationDialog', () => ({
-  FoundationSemaphoreDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+  FoundationSemaphoreDialog: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
     open ? (
       <dialog
         open
@@ -220,13 +258,15 @@ jest.mock('../SemaphoreDialogs/FoundationDialog', () => ({
 }));
 
 jest.mock('../SemaphoreDialogs/ReportingDialog', () => ({
-  ReportingSemaphoreDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+  ReportingSemaphoreDialog: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
     open ? (
-      <dialog
-        open
-        aria-label="Reporting Dialog"
-        data-testid="reporting-dialog"
-      >
+      <dialog open aria-label="Reporting Dialog" data-testid="reporting-dialog">
         <h2>Reporting Dialog</h2>
         <button type="button" onClick={onClose}>
           Close Reporting Dialog
@@ -236,7 +276,13 @@ jest.mock('../SemaphoreDialogs/ReportingDialog', () => ({
 }));
 
 jest.mock('../SemaphoreDialogs/DependabotSemaphoreDialog', () => ({
-  DependabotSemaphoreDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+  DependabotSemaphoreDialog: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
     open ? (
       <dialog
         open
@@ -265,10 +311,6 @@ class ErrorBoundary extends Component<
     this.state = { hasError: false };
   }
 
-  componentDidCatch(error: Error) {
-    // Suppress the error in tests
-  }
-
   render() {
     if (this.state.hasError) {
       return <div data-testid="error-fallback">Something went wrong</div>;
@@ -279,9 +321,7 @@ class ErrorBoundary extends Component<
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <ThemeProvider theme={lightTheme}>
-    <ErrorBoundary>
-      {children}
-    </ErrorBoundary>
+    <ErrorBoundary>{children}</ErrorBoundary>
   </ThemeProvider>
 );
 
@@ -416,11 +456,11 @@ describe('TrafficComponent', () => {
       if (apiRef?.id === 'identity-api') {
         return mockIdentityApi;
       }
-      
+
       if (apiRef?.id === 'catalog-api') {
         return mockCatalogApi;
       }
-      
+
       return {};
     });
 
@@ -445,37 +485,51 @@ describe('TrafficComponent', () => {
   it('renders without crashing', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('page')).toBeInTheDocument();
-      expect(screen.getByTestId('content')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('page')).toBeInTheDocument();
+        expect(screen.getByTestId('content')).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('loads and displays filter controls', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByLabelText('My repositories')).toBeInTheDocument();
-      expect(screen.getByLabelText('Critical')).toBeInTheDocument();
-      expect(screen.getByText('Select System')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText('My repositories')).toBeInTheDocument();
+        expect(screen.getByLabelText('Critical')).toBeInTheDocument();
+        expect(screen.getByText('Select System')).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('loads and displays repositories after initial fetch', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      // Should show repositories that match filters (philips-labs + critical + from user's systems)
-      expect(screen.getByText(/Selected Repositories \(\d+\)/)).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        // Should show repositories that match filters (philips-labs + critical + from user's systems)
+        expect(
+          screen.getByText(/Selected Repositories \(\d+\)/),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('filters repositories based on "My repositories" checkbox', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByLabelText('My repositories')).toBeChecked();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText('My repositories')).toBeChecked();
+      },
+      { timeout: 10000 },
+    );
 
     // Uncheck "My repositories"
     const myReposCheckbox = screen.getByLabelText('My repositories');
@@ -489,9 +543,12 @@ describe('TrafficComponent', () => {
   it('filters repositories based on "Critical" checkbox', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByLabelText('Critical')).toBeChecked();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText('Critical')).toBeChecked();
+      },
+      { timeout: 10000 },
+    );
 
     // Uncheck "Critical"
     const criticalCheckbox = screen.getByLabelText('Critical');
@@ -505,26 +562,34 @@ describe('TrafficComponent', () => {
   it('displays system selector with available systems', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      const systemButton = screen.getByText('test-system-1');
-      expect(systemButton).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        const systemButton = screen.getByText('test-system-1');
+        expect(systemButton).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('opens system selector popover when clicked', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      const systemButton = screen.getByText('test-system-1');
-      expect(systemButton).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        const systemButton = screen.getByText('test-system-1');
+        expect(systemButton).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     // Click system selector
     const systemButton = screen.getByText('test-system-1');
     await userEvent.click(systemButton);
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search systems...')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Search systems...'),
+      ).toBeInTheDocument();
       expect(screen.getByText('test-system-2')).toBeInTheDocument();
     });
   });
@@ -532,10 +597,13 @@ describe('TrafficComponent', () => {
   it('filters systems in the popover search', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      const systemButton = screen.getByText('test-system-1');
-      expect(systemButton).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        const systemButton = screen.getByText('test-system-1');
+        expect(systemButton).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     // Open system selector
     const systemButton = screen.getByText('test-system-1');
@@ -543,7 +611,9 @@ describe('TrafficComponent', () => {
 
     // Wait for popover to open
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search systems...')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Search systems...'),
+      ).toBeInTheDocument();
     });
 
     // Search for system-2 specifically
@@ -566,10 +636,13 @@ describe('TrafficComponent', () => {
   it('displays "No systems found" when search yields no results', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      const systemButton = screen.getByText('test-system-1');
-      expect(systemButton).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        const systemButton = screen.getByText('test-system-1');
+        expect(systemButton).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     // Open system selector
     const systemButton = screen.getByText('test-system-1');
@@ -577,7 +650,9 @@ describe('TrafficComponent', () => {
 
     // Wait for popover to open
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search systems...')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Search systems...'),
+      ).toBeInTheDocument();
     });
 
     // Search for non-existent system
@@ -599,10 +674,13 @@ describe('TrafficComponent', () => {
   it('filters systems correctly by search term', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      const systemButton = screen.getByText('test-system-1');
-      expect(systemButton).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        const systemButton = screen.getByText('test-system-1');
+        expect(systemButton).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     // Open system selector
     const systemButton = screen.getByText('test-system-1');
@@ -610,7 +688,9 @@ describe('TrafficComponent', () => {
 
     // Wait for popover to open
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search systems...')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Search systems...'),
+      ).toBeInTheDocument();
     });
 
     // Search for a specific system by number
@@ -635,10 +715,13 @@ describe('TrafficComponent', () => {
   it('selects a different system from the popover', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      const systemButton = screen.getByText('test-system-1');
-      expect(systemButton).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        const systemButton = screen.getByText('test-system-1');
+        expect(systemButton).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     // Open system selector
     const systemButton = screen.getByText('test-system-1');
@@ -655,36 +738,63 @@ describe('TrafficComponent', () => {
   it('displays all traffic light components', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('dependabot-traffic-light')).toBeInTheDocument();
-      expect(screen.getByTestId('blackduck-traffic-light')).toBeInTheDocument();
-      expect(screen.getByTestId('github-security-traffic-light')).toBeInTheDocument();
-      expect(screen.getByTestId('reporting-traffic-light')).toBeInTheDocument();
-      expect(screen.getByTestId('preproduction-traffic-light')).toBeInTheDocument();
-      expect(screen.getByTestId('foundation-traffic-light')).toBeInTheDocument();
-      expect(screen.getByTestId('sonarqube-traffic-light')).toBeInTheDocument();
-      expect(screen.getByTestId('base-traffic-light')).toBeInTheDocument();
-      expect(screen.getByTestId('azure-devops-bugs-traffic-light')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId('dependabot-traffic-light'),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByTestId('blackduck-traffic-light'),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByTestId('github-security-traffic-light'),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByTestId('reporting-traffic-light'),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByTestId('preproduction-traffic-light'),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByTestId('foundation-traffic-light'),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByTestId('sonarqube-traffic-light'),
+        ).toBeInTheDocument();
+        expect(screen.getByTestId('base-traffic-light')).toBeInTheDocument();
+        expect(
+          screen.getByTestId('azure-devops-bugs-traffic-light'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('displays info cards with correct titles', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Security Checks')).toBeInTheDocument();
-      expect(screen.getByText('Pipelines')).toBeInTheDocument();
-      expect(screen.getByText('Software Quality')).toBeInTheDocument();
-      expect(screen.getByText('Azure DevOps')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Security Checks')).toBeInTheDocument();
+        expect(screen.getByText('Pipelines')).toBeInTheDocument();
+        expect(screen.getByText('Software Quality')).toBeInTheDocument();
+        expect(screen.getByText('Azure DevOps')).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('opens BlackDuck dialog when BlackDuck traffic light is clicked', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('blackduck-traffic-light')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId('blackduck-traffic-light'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     await userEvent.click(screen.getByTestId('blackduck-traffic-light'));
 
@@ -694,9 +804,14 @@ describe('TrafficComponent', () => {
   it('opens GitHub Security dialog when GitHub traffic light is clicked', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('github-security-traffic-light')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId('github-security-traffic-light'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     await userEvent.click(screen.getByTestId('github-security-traffic-light'));
 
@@ -706,9 +821,14 @@ describe('TrafficComponent', () => {
   it('opens Dependabot dialog when Dependabot traffic light is clicked', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('dependabot-traffic-light')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId('dependabot-traffic-light'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     await userEvent.click(screen.getByTestId('dependabot-traffic-light'));
 
@@ -718,9 +838,14 @@ describe('TrafficComponent', () => {
   it('opens SonarQube dialog when SonarQube traffic light is clicked', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('sonarqube-traffic-light')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId('sonarqube-traffic-light'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     await userEvent.click(screen.getByTestId('sonarqube-traffic-light'));
 
@@ -730,11 +855,18 @@ describe('TrafficComponent', () => {
   it('opens Azure DevOps dialog when Azure DevOps traffic light is clicked', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('azure-devops-bugs-traffic-light')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId('azure-devops-bugs-traffic-light'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
-    await userEvent.click(screen.getByTestId('azure-devops-bugs-traffic-light'));
+    await userEvent.click(
+      screen.getByTestId('azure-devops-bugs-traffic-light'),
+    );
 
     expect(screen.getByTestId('azure-devops-dialog')).toBeInTheDocument();
   });
@@ -742,9 +874,14 @@ describe('TrafficComponent', () => {
   it('opens Preproduction dialog when Preproduction traffic light is clicked', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('preproduction-traffic-light')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId('preproduction-traffic-light'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     await userEvent.click(screen.getByTestId('preproduction-traffic-light'));
 
@@ -754,9 +891,14 @@ describe('TrafficComponent', () => {
   it('opens Foundation dialog when Foundation traffic light is clicked', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('foundation-traffic-light')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId('foundation-traffic-light'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     await userEvent.click(screen.getByTestId('foundation-traffic-light'));
 
@@ -766,9 +908,14 @@ describe('TrafficComponent', () => {
   it('opens Reporting dialog when Reporting traffic light is clicked', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('reporting-traffic-light')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId('reporting-traffic-light'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     await userEvent.click(screen.getByTestId('reporting-traffic-light'));
 
@@ -778,9 +925,14 @@ describe('TrafficComponent', () => {
   it('closes dialogs when close handler is called', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('blackduck-traffic-light')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId('blackduck-traffic-light'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     // Open dialog
     await userEvent.click(screen.getByTestId('blackduck-traffic-light'));
@@ -794,27 +946,41 @@ describe('TrafficComponent', () => {
   it('passes filtered entities to traffic light components', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      // Traffic lights should show entity counts
-      expect(screen.getByText(/Dependabot Traffic Light \(\d+ entities\)/)).toBeInTheDocument();
-      expect(screen.getByText(/GitHub Security Traffic Light \(\d+ entities\)/)).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        // Traffic lights should show entity counts
+        expect(
+          screen.getByText(/Dependabot Traffic Light \(\d+ entities\)/),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/GitHub Security Traffic Light \(\d+ entities\)/),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('displays component subtitles correctly', async () => {
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Dependabot')).toBeInTheDocument();
-      expect(screen.getByText('BlackDuck')).toBeInTheDocument();
-      expect(screen.getByText('Github Advanced Security')).toBeInTheDocument();
-      expect(screen.getByText('Reporting Pipelines')).toBeInTheDocument();
-      expect(screen.getByText('Pre-production Pipelines')).toBeInTheDocument();
-      expect(screen.getByText('Foundation Pipelines')).toBeInTheDocument();
-      expect(screen.getByText('SonarQube')).toBeInTheDocument();
-      expect(screen.getByText('CodeScene')).toBeInTheDocument();
-      expect(screen.getByText('Bugs')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Dependabot')).toBeInTheDocument();
+        expect(screen.getByText('BlackDuck')).toBeInTheDocument();
+        expect(
+          screen.getByText('Github Advanced Security'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Reporting Pipelines')).toBeInTheDocument();
+        expect(
+          screen.getByText('Pre-production Pipelines'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Foundation Pipelines')).toBeInTheDocument();
+        expect(screen.getByText('SonarQube')).toBeInTheDocument();
+        expect(screen.getByText('CodeScene')).toBeInTheDocument();
+        expect(screen.getByText('Bugs')).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('handles complete API failure scenario with empty data', async () => {
@@ -822,7 +988,7 @@ describe('TrafficComponent', () => {
     // This simulates the component handling "no data" scenarios
     mockCatalogApi.getEntities.mockResolvedValue({ items: [] });
     mockCatalogApi.getEntityByRef.mockResolvedValue(null);
-    
+
     // Mock identity to return a basic identity without throwing
     mockIdentityApi.getBackstageIdentity.mockResolvedValue({
       userEntityRef: 'user:default/unknown-user',
@@ -831,14 +997,17 @@ describe('TrafficComponent', () => {
     renderWithTheme(<TrafficComponent />);
 
     // Component should handle empty data gracefully
-    await waitFor(() => {
-      // The component should still render basic structure
-      expect(screen.getByTestId('page')).toBeInTheDocument();
-      
-      // Filter controls should still be present
-      expect(screen.getByLabelText('My repositories')).toBeInTheDocument();
-      expect(screen.getByLabelText('Critical')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        // The component should still render basic structure
+        expect(screen.getByTestId('page')).toBeInTheDocument();
+
+        // Filter controls should still be present
+        expect(screen.getByLabelText('My repositories')).toBeInTheDocument();
+        expect(screen.getByLabelText('Critical')).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     // With no systems and no user, it should show the default "Select System" text
     // We don't expect any specific system to be selected
@@ -862,12 +1031,15 @@ describe('TrafficComponent', () => {
 
     renderWithTheme(<TrafficComponent />);
 
-    await waitFor(() => {
-      // Basic structure should render
-      expect(screen.getByTestId('page')).toBeInTheDocument();
-      expect(screen.getByLabelText('My repositories')).toBeInTheDocument();
-      expect(screen.getByLabelText('Critical')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        // Basic structure should render
+        expect(screen.getByTestId('page')).toBeInTheDocument();
+        expect(screen.getByLabelText('My repositories')).toBeInTheDocument();
+        expect(screen.getByLabelText('Critical')).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
 
     // Without user team memberships, component might show all systems or none
     // Let's just verify the system selector is present
@@ -884,7 +1056,7 @@ describe('TrafficComponent', () => {
     render(
       <TestWrapper>
         <ThrowingComponent />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {

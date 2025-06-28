@@ -29,8 +29,12 @@ jest.mock('../BaseSemaphoreDialogs', () => ({
       <div data-testid="dialog-color">{data.color}</div>
       <div data-testid="dialog-summary">{data.summary}</div>
       <div data-testid="dialog-details-count">{data.details.length}</div>
-      {renderMetrics && <div data-testid="rendered-metrics">{renderMetrics()}</div>}
-      <button data-testid="close-button" onClick={onClose}>Close</button>
+      {renderMetrics && (
+        <div data-testid="rendered-metrics">{renderMetrics()}</div>
+      )}
+      <button data-testid="close-button" onClick={onClose}>
+        Close
+      </button>
     </div>
   ),
 }));
@@ -39,8 +43,13 @@ const mockTechInsightsApi = { getFacts: jest.fn() };
 const mockCatalogApi = { getEntityByRef: jest.fn() };
 const mockGithubUtils = { getGitHubSecurityData: jest.fn() };
 
-const MockedGithubUtils = GithubAdvancedSecurityUtils as jest.MockedClass<typeof GithubAdvancedSecurityUtils>;
-const mockedTrafficLight = calculateGitHubSecurityTrafficLight as jest.MockedFunction<typeof calculateGitHubSecurityTrafficLight>;
+const MockedGithubUtils = GithubAdvancedSecurityUtils as jest.MockedClass<
+  typeof GithubAdvancedSecurityUtils
+>;
+const mockedTrafficLight =
+  calculateGitHubSecurityTrafficLight as jest.MockedFunction<
+    typeof calculateGitHubSecurityTrafficLight
+  >;
 
 const entity: Entity = {
   apiVersion: 'backstage.io/v1alpha1',
@@ -53,7 +62,7 @@ const theme = createTheme();
 const createWrapper = () => {
   const apis = TestApiRegistry.from(
     [techInsightsApiRef, mockTechInsightsApi],
-    [catalogApiRef, mockCatalogApi]
+    [catalogApiRef, mockCatalogApi],
   );
 
   return ({ children }: { children: React.ReactNode }) => (

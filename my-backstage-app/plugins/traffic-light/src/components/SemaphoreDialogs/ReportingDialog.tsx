@@ -68,29 +68,30 @@ export const ReportingSemaphoreDialog: React.FC<
 
   useEffect(() => {
     if (!open || entities.length === 0) return;
-  
+
     setIsLoading(true);
-  
+
     const fetchPipelineMetrics = async () => {
       // 1. Get threshold from system annotations
       let redThreshold = 0.33;
       const systemName = entities[0].spec?.system;
       const namespace = entities[0].metadata.namespace ?? 'default';
-  
+
       if (systemName) {
         const systemEntity = await catalogApi.getEntityByRef({
           kind: 'System',
           namespace,
-          name: typeof systemName === 'string' ? systemName : String(systemName),
+          name:
+            typeof systemName === 'string' ? systemName : String(systemName),
         });
-  
+
         const thresholdAnnotation =
           systemEntity?.metadata.annotations?.['reporting-check-threshold-red'];
         if (thresholdAnnotation) {
           redThreshold = parseFloat(thresholdAnnotation);
         }
       }
-  
+
       // 2. Gather facts + checks in parallel
       const results = await Promise.all(
         entities.map(async entity => {
@@ -99,20 +100,25 @@ export const ReportingSemaphoreDialog: React.FC<
             namespace: entity.metadata.namespace || 'default',
             name: entity.metadata.name,
           };
-  
+
           const [facts, check] = await Promise.all([
             reportingUtils.getReportingPipelineFacts(techInsightsApi, ref),
             reportingUtils.getReportingPipelineChecks(techInsightsApi, ref),
           ]);
-  
+
           const successRate =
             facts.successfulRuns + facts.failedRuns > 0
-              ? (facts.successfulRuns / (facts.successfulRuns + facts.failedRuns)) * 100
+              ? (facts.successfulRuns /
+                  (facts.successfulRuns + facts.failedRuns)) *
+                100
               : 0;
-  
-          const projectSlug = entity.metadata.annotations?.['github.com/project-slug'];
-          const url = projectSlug ? `https://github.com/${projectSlug}/actions` : '#';
-  
+
+          const projectSlug =
+            entity.metadata.annotations?.['github.com/project-slug'];
+          const url = projectSlug
+            ? `https://github.com/${projectSlug}/actions`
+            : '#';
+
           return {
             name: entity.metadata.name,
             url,
@@ -123,18 +129,28 @@ export const ReportingSemaphoreDialog: React.FC<
           };
         }),
       );
-  
+
       // 3. Metrics aggregation
-      const totalSuccess = results.reduce((sum, r) => sum + r.successWorkflowRunsCount, 0);
-      const totalFailure = results.reduce((sum, r) => sum + r.failureWorkflowRunsCount, 0);
+      const totalSuccess = results.reduce(
+        (sum, r) => sum + r.successWorkflowRunsCount,
+        0,
+      );
+      const totalFailure = results.reduce(
+        (sum, r) => sum + r.failureWorkflowRunsCount,
+        0,
+      );
       const totalRuns = totalSuccess + totalFailure;
       const successRate = totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
-  
+
       const failures = results.filter(r => r.failedCheck).length;
-  
+
       // 4. Determine traffic light color
-      const { color, reason } = determineSemaphoreColor(failures, entities.length, redThreshold);
-  
+      const { color, reason } = determineSemaphoreColor(
+        failures,
+        entities.length,
+        redThreshold,
+      );
+
       // Prepare summary message
       let summary = reason;
       if (color === 'red') {
@@ -144,7 +160,7 @@ export const ReportingSemaphoreDialog: React.FC<
       } else {
         summary += ' Code quality is good.';
       }
-  
+
       // 5. Bottom 5 repos by success rate
       const lowest = [...results]
         .sort((a, b) => a.successRate - b.successRate)
@@ -154,7 +170,7 @@ export const ReportingSemaphoreDialog: React.FC<
           url,
           successRate: repoSuccessRate,
         }));
-  
+
       // Set all state at once
       setMetrics({
         totalSuccess,
@@ -162,9 +178,9 @@ export const ReportingSemaphoreDialog: React.FC<
         totalRuns,
         successRate: parseFloat(successRate.toFixed(2)),
       });
-  
+
       setLowestSuccessRepos(lowest);
-  
+
       setData({
         color,
         summary,
@@ -177,7 +193,7 @@ export const ReportingSemaphoreDialog: React.FC<
         details: [],
       });
     };
-  
+
     // Handle success and error cases using promise chain
     fetchPipelineMetrics()
       .then(() => {

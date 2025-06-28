@@ -8,7 +8,7 @@ import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 import { SemaphoreData, IssueDetail } from './types';
 import { Entity } from '@backstage/catalog-model';
 import { determineSonarQubeColor } from '../Semaphores/SonarQubeTrafficLight';
-import {useEffect, useMemo, useState} from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -175,21 +175,25 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
       } catch (err) {
         // Report to error tracking service (if available)
         // errorReporter?.captureException(err);
-        
+
         // Provide meaningful user feedback based on error type
-        const errorMessage = err instanceof Error 
-          ? `Failed to load SonarQube data: ${err.message}` 
-          : 'Failed to load SonarQube data due to an unknown error.';
-          
+        const errorMessage =
+          err instanceof Error
+            ? `Failed to load SonarQube data: ${err.message}`
+            : 'Failed to load SonarQube data due to an unknown error.';
+
         setData({
           color: 'gray',
           metrics: {},
           summary: errorMessage,
-          details: [{
-            severity: 'critical',
-            description: 'Unable to retrieve code quality metrics. Please try again later.',
-            url: '',
-          }],
+          details: [
+            {
+              severity: 'critical',
+              description:
+                'Unable to retrieve code quality metrics. Please try again later.',
+              url: '',
+            },
+          ],
         });
       } finally {
         setIsLoading(false);

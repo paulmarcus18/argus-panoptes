@@ -50,7 +50,7 @@ metadata:
 
     tech-insights.io/azure-bugs-threshold: '1'
     tech-insights.io/azure-bugs-operator: 'lessThanInclusive'
-    
+
 spec:
   owner: finance-team
   members: [finance-team-member, both-teams-member]

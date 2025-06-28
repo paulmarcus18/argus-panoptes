@@ -30,9 +30,7 @@ describe('Azure Bugs Checks Configuration', () => {
       expect(check.annotationKeyThreshold).toMatch(
         /^tech-insights\.io\/azure-/,
       );
-      expect(check.annotationKeyOperator).toMatch(
-        /^tech-insights\.io\/azure-/,
-      );
+      expect(check.annotationKeyOperator).toMatch(/^tech-insights\.io\/azure-/);
 
       // Check that all factIds arrays start with the correct retriever
       expect(check.factIds[0]).toBe('azure-devops-bugs-retriever');
@@ -45,9 +43,7 @@ describe('Azure Bugs Checks Configuration', () => {
     const expectedMetrics = ['azure_bug_count'];
 
     // Extract second factId (the actual metric being checked)
-    const coveredMetrics = azureBugsChecks.map(
-      check => check.factIds[1],
-    );
+    const coveredMetrics = azureBugsChecks.map(check => check.factIds[1]);
 
     // Ensure all expected metrics are covered
     expectedMetrics.forEach(metric => {
@@ -115,7 +111,7 @@ describe('Azure Bugs Checks Configuration', () => {
     azureBugsChecks.forEach(check => {
       // Ensure the retriever ID matches what's expected
       expect(check.factIds[0]).toBe('azure-devops-bugs-retriever');
-      
+
       // Ensure the fact key matches the schema from the retriever
       expect(check.factIds[1]).toBe('azure_bug_count');
     });
@@ -143,7 +139,7 @@ describe('Azure Bugs Checks Configuration', () => {
   test('all check IDs are unique', () => {
     const ids = azureBugsChecks.map(check => check.id);
     const uniqueIds = [...new Set(ids)];
-    
+
     expect(ids.length).toBe(uniqueIds.length);
   });
 

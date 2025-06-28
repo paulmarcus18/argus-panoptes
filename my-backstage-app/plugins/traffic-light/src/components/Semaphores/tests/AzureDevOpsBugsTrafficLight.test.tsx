@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Entity } from '@backstage/catalog-model';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -7,30 +7,66 @@ import { catalogApiRef } from '@backstage/plugin-catalog-react';
 // Create a comprehensive mock setup before importing the component
 jest.mock('@material-ui/core', () => {
   const React = require('react');
+  
   return {
-    Box: React.forwardRef(({ children, onClick, bgcolor, ...props }: any, ref: any) => (
-      <div
-        ref={ref}
-        data-testid="traffic-light-box"
-        onClick={onClick}
-        data-color={bgcolor}
-        style={{
+    Box: React.forwardRef(
+      ({ children, onClick, bgcolor, ...props }: any, ref: any) => {
+        const commonStyle = {
           width: props.width,
           height: props.height,
           borderRadius: props.borderRadius,
           backgroundColor: bgcolor,
-          cursor: onClick ? 'pointer' : 'default',
           margin: props.my,
-        }}
+        };
+
+        const isInteractive = !!onClick;
+
+        if (isInteractive) {
+          return (
+            <button
+              ref={ref}
+              data-testid="traffic-light-box"
+              onClick={onClick}
+              data-color={bgcolor}
+              style={{
+                ...commonStyle,
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                display: 'block',
+              }}
+            >
+              {children}
+            </button>
+          );
+        }
+
+        return (
+          <div
+            ref={ref}
+            data-testid="traffic-light-box"
+            data-color={bgcolor}
+            style={{
+              ...commonStyle,
+              cursor: 'default',
+            }}
+          >
+            {children}
+          </div>
+        );
+      }
+    ),
+    
+    Tooltip: ({ children, title, placement }: any) => (
+      <div 
+        data-testid="tooltip" 
+        data-title={title} 
+        data-placement={placement}
       >
         {children}
       </div>
-    )),
-    Tooltip: ({ children, title, placement }: any) => (
-      <div data-testid="tooltip" data-title={title} data-placement={placement}>
-        {children}
-      </div>
     ),
+    
     withTheme: (Component: any) => Component,
     createTheme: jest.fn(() => ({})),
     ThemeProvider: ({ children }: any) => children,
@@ -190,7 +226,7 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
 
     const tooltip = screen.getByTestId('tooltip');
     const trafficLight = screen.getByTestId('traffic-light-box');
-    
+
     expect(tooltip).toHaveAttribute(
       'data-title',
       'Loading Azure DevOps bug data...',
@@ -199,28 +235,23 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
   });
 
   it('should update to gray when no entities are provided', async () => {
-    await act(async () => {
-      renderComponent([]);
-    });
-
+    renderComponent([]);
+    
     await waitFor(() => {
       const tooltip = screen.getByTestId('tooltip');
       const trafficLight = screen.getByTestId('traffic-light-box');
-      
       expect(trafficLight).toHaveAttribute('data-color', 'gray');
       expect(tooltip).toHaveAttribute('data-title', 'No entities selected');
     });
   });
 
   it('should update to green when all checks pass', async () => {
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       const tooltip = screen.getByTestId('tooltip');
       const trafficLight = screen.getByTestId('traffic-light-box');
-      
+
       expect(trafficLight).toHaveAttribute('data-color', 'green');
       expect(tooltip).toHaveAttribute(
         'data-title',
@@ -230,9 +261,7 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
   });
 
   it('should fetch system entity with correct parameters', async () => {
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -251,9 +280,7 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
       },
     };
 
-    await act(async () => {
-      renderComponent([entityWithStringSystem]);
-    });
+    renderComponent([entityWithStringSystem]);
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -272,9 +299,7 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
       },
     };
 
-    await act(async () => {
-      renderComponent([entityWithNonStringSystem]);
-    });
+    renderComponent([entityWithNonStringSystem]);
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -296,9 +321,7 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
       bugCountCheck: false,
     });
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(2, 3, 0.33);
@@ -306,16 +329,15 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
   });
 
   it('should use custom threshold from system annotation', async () => {
-    mockSystemEntity.metadata.annotations['azure-bugs-check-threshold-red'] = '0.75';
+    mockSystemEntity.metadata.annotations['azure-bugs-check-threshold-red'] =
+      '0.75';
     mockCatalogApi.getEntityByRef.mockResolvedValue(mockSystemEntity);
 
     mockAzureUtilsInstance.getAzureDevOpsBugChecks.mockResolvedValue({
       bugCountCheck: false,
     });
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(2, 3, 0.75);
@@ -337,38 +359,40 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
       },
     ];
 
-    await act(async () => {
-      renderComponent(entitiesWithoutProject);
-    });
+    renderComponent(entitiesWithoutProject);
 
     await waitFor(() => {
       // Should not call Azure APIs for entities with 'unknown' project
-      expect(mockAzureUtilsInstance.getAzureDevOpsBugFacts).not.toHaveBeenCalled();
-      expect(mockAzureUtilsInstance.getAzureDevOpsBugChecks).not.toHaveBeenCalled();
+      expect(
+        mockAzureUtilsInstance.getAzureDevOpsBugFacts,
+      ).not.toHaveBeenCalled();
+      expect(
+        mockAzureUtilsInstance.getAzureDevOpsBugChecks,
+      ).not.toHaveBeenCalled();
     });
   });
 
   it('should deduplicate projects and only fetch once per unique project', async () => {
     // mockEntities[0] and mockEntities[2] have the same project
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       // Should only call twice: once for test-project-1, once for test-project-2
-      expect(mockAzureUtilsInstance.getAzureDevOpsBugFacts).toHaveBeenCalledTimes(2);
-      expect(mockAzureUtilsInstance.getAzureDevOpsBugChecks).toHaveBeenCalledTimes(2);
+      expect(
+        mockAzureUtilsInstance.getAzureDevOpsBugFacts,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        mockAzureUtilsInstance.getAzureDevOpsBugChecks,
+      ).toHaveBeenCalledTimes(2);
     });
   });
 
   it('should count failures correctly', async () => {
     mockAzureUtilsInstance.getAzureDevOpsBugChecks
       .mockResolvedValueOnce({ bugCountCheck: false }) // test-project-1 fails
-      .mockResolvedValueOnce({ bugCountCheck: true });  // test-project-2 passes
+      .mockResolvedValueOnce({ bugCountCheck: true }); // test-project-2 passes
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       // 1 failure out of 2 unique projects, with threshold 0.5
@@ -378,17 +402,15 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
 
   it('should handle API errors gracefully', async () => {
     mockAzureUtilsInstance.getAzureDevOpsBugFacts.mockRejectedValue(
-      new Error('API Error')
+      new Error('API Error'),
     );
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       const tooltip = screen.getByTestId('tooltip');
       const trafficLight = screen.getByTestId('traffic-light-box');
-      
+
       expect(trafficLight).toHaveAttribute('data-color', 'gray');
       expect(tooltip).toHaveAttribute(
         'data-title',
@@ -399,10 +421,8 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
 
   it('should call onClick handler when provided', async () => {
     const mockOnClick = jest.fn();
-    
-    await act(async () => {
-      renderComponent(mockEntities, mockOnClick);
-    });
+
+    renderComponent(mockEntities, mockOnClick);
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('traffic-light-box');
@@ -410,18 +430,13 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
     });
 
     const trafficLight = screen.getByTestId('traffic-light-box');
-
-    await act(async () => {
-      trafficLight.click();
-    });
+    trafficLight.click();
 
     expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
 
   it('should create AzureUtils instance with memoization', async () => {
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     expect(AzureUtils).toHaveBeenCalledTimes(1);
   });
@@ -442,9 +457,7 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
       },
     };
 
-    await act(async () => {
-      renderComponent([entityWithoutNamespace]);
-    });
+    renderComponent([entityWithoutNamespace]);
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -452,14 +465,13 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
         namespace: 'default',
         name: 'test-system',
       });
-      expect(mockAzureUtilsInstance.getAzureDevOpsBugFacts).toHaveBeenCalledWith(
-        mockTechInsightsApi,
-        {
-          kind: 'Component',
-          namespace: 'default',
-          name: 'test-component-1',
-        }
-      );
+      expect(
+        mockAzureUtilsInstance.getAzureDevOpsBugFacts,
+      ).toHaveBeenCalledWith(mockTechInsightsApi, {
+        kind: 'Component',
+        namespace: 'default',
+        name: 'test-component-1',
+      });
     });
   });
 
@@ -469,12 +481,12 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
       spec: {},
     };
 
-    await act(async () => {
-      renderComponent([entityWithoutSystem]);
-    });
+    renderComponent([entityWithoutSystem]);
 
     await waitFor(() => {
-      expect(mockAzureUtilsInstance.getAzureDevOpsBugFacts).toHaveBeenCalledTimes(1);
+      expect(
+        mockAzureUtilsInstance.getAzureDevOpsBugFacts,
+      ).toHaveBeenCalledTimes(1);
       expect(determineSemaphoreColor).toHaveBeenCalledWith(0, 1, 0.33);
     });
   });
@@ -492,24 +504,23 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
       },
     };
 
-    await act(async () => {
-      renderComponent([entityWithCustomOrg]);
-    });
+    renderComponent([entityWithCustomOrg]);
 
     await waitFor(() => {
-      expect(mockAzureUtilsInstance.getAzureDevOpsBugFacts).toHaveBeenCalledWith(
-        mockTechInsightsApi,
-        {
-          kind: 'Component',
-          namespace: 'default',
-          name: 'test-component-1',
-        }
-      );
+      expect(
+        mockAzureUtilsInstance.getAzureDevOpsBugFacts,
+      ).toHaveBeenCalledWith(mockTechInsightsApi, {
+        kind: 'Component',
+        namespace: 'default',
+        name: 'test-component-1',
+      });
     });
 
     // The URL generation is internal to the component, but we can verify
     // the component processes the annotations correctly
-    expect(mockAzureUtilsInstance.getAzureDevOpsBugFacts).toHaveBeenCalledTimes(1);
+    expect(mockAzureUtilsInstance.getAzureDevOpsBugFacts).toHaveBeenCalledTimes(
+      1,
+    );
   });
 
   it('should handle missing organization annotation with default values', async () => {
@@ -525,12 +536,12 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
       },
     };
 
-    await act(async () => {
-      renderComponent([entityWithoutOrg]);
-    });
+    renderComponent([entityWithoutOrg]);
 
     await waitFor(() => {
-      expect(mockAzureUtilsInstance.getAzureDevOpsBugFacts).toHaveBeenCalledTimes(1);
+      expect(
+        mockAzureUtilsInstance.getAzureDevOpsBugFacts,
+      ).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -541,18 +552,16 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
     });
 
     mockAzureUtilsInstance.getAzureDevOpsBugChecks
-      .mockResolvedValueOnce({ bugCountCheck: true })  // test-project-1 passes
+      .mockResolvedValueOnce({ bugCountCheck: true }) // test-project-1 passes
       .mockResolvedValueOnce({ bugCountCheck: false }); // test-project-2 fails
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(1, 3, 0.5);
       const tooltip = screen.getByTestId('tooltip');
       const trafficLight = screen.getByTestId('traffic-light-box');
-      
+
       expect(trafficLight).toHaveAttribute('data-color', 'yellow');
       expect(tooltip).toHaveAttribute(
         'data-title',
@@ -575,14 +584,13 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
       bugCountCheck: true,
     });
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
-      expect(mockAzureUtilsInstance.getAzureDevOpsBugFacts).toHaveBeenCalledTimes(2);
+      expect(
+        mockAzureUtilsInstance.getAzureDevOpsBugFacts,
+      ).toHaveBeenCalledTimes(2);
       expect(determineSemaphoreColor).toHaveBeenCalledWith(0, 3, 0.5);
     });
   });
 });
-

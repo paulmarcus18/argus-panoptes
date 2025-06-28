@@ -2,6 +2,7 @@ import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
 import { LoggerService } from '@backstage/backend-plugin-api';
 import { Config } from '@backstage/config';
 import { CatalogClient } from '@backstage/catalog-client';
+import { loadOctokit } from './octokitLoader';
 
 export const createDependabotFactRetriever = (
   config: Config,
@@ -46,7 +47,7 @@ export const createDependabotFactRetriever = (
         { token: catalogToken },
       );
 
-      const Octokit = (await import('@octokit/rest')).Octokit;
+      const Octokit = await loadOctokit();
       const octokit = new Octokit({ auth: githubToken });
 
       const results = await Promise.all(
@@ -63,7 +64,7 @@ export const createDependabotFactRetriever = (
             );
 
             const openAlerts = alertsResponse.data.filter(
-              a => a.state === 'open',
+              (a: { state: string }) => a.state === 'open',
             );
 
             let critical = 0;

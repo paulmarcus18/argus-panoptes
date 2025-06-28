@@ -1,4 +1,3 @@
-
 import { FactRetriever } from '@backstage-community/plugin-tech-insights-node';
 import { Entity } from '@backstage/catalog-model';
 import { CatalogClient } from '@backstage/catalog-client';
@@ -7,7 +6,7 @@ import { Config } from '@backstage/config';
 
 /**
  * Extracts a GitHub API token from Backstage configuration.
- * 
+ *
  * @param config - The Backstage configuration object
  * @returns The GitHub API token if found, otherwise undefined
  */
@@ -33,12 +32,15 @@ export const getGitHubTokenFromConfig = (
 
 /**
  * Fetches Component entities from the Backstage catalog.
- * 
+ *
  * @param client - Catalog API client instance
  * @param token - Authentication token for the catalog API
  * @returns Array of Component entities or empty array if fetch fails
  */
-async function fetchEntities(client: CatalogClient, token: string): Promise<Entity[]> {
+async function fetchEntities(
+  client: CatalogClient,
+  token: string,
+): Promise<Entity[]> {
   try {
     // Query only for Component kind entities
     const response = await client.getEntities(
@@ -54,7 +56,7 @@ async function fetchEntities(client: CatalogClient, token: string): Promise<Enti
 
 /**
  * Fetches recent closed pull requests for a specific GitHub repository.
- * 
+ *
  * @param slug - GitHub repository identifier in 'owner/repo' format
  * @param gitHubToken - GitHub API authentication token
  * @returns Array of pull request objects or empty array if fetch fails
@@ -85,7 +87,7 @@ async function fetchPullRequests(
 
 /**
  * Extracts commit data from a set of pull requests.
- * 
+ *
  * @param prs - Array of pull request objects
  * @param gitHubToken - GitHub API authentication token
  * @returns Object containing commit messages and total count
@@ -124,7 +126,7 @@ async function getCommitData(
 /**
  * Filters pull requests to only include those merged within the last week
  * and excludes dependency bump PRs (which typically don't represent feature work).
- * 
+ *
  * @param prs - Array of pull request objects
  * @returns Filtered array of relevant pull requests
  */
@@ -134,17 +136,17 @@ function filterRecentPRs(prs: GitHubPR[]): GitHubPR[] {
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
   return prs.filter(pr => {
-    if (!pr.merged_at) return false;  // Skip unmerged PRs
+    if (!pr.merged_at) return false; // Skip unmerged PRs
     const mergedAt = new Date(pr.merged_at);
-    const isRecent = mergedAt >= oneWeekAgo;  // Only include PRs from last week
-    const isNotBump = !pr.title.toLowerCase().startsWith('bump');  // Filter out dependency bumps
+    const isRecent = mergedAt >= oneWeekAgo; // Only include PRs from last week
+    const isNotBump = !pr.title.toLowerCase().startsWith('bump'); // Filter out dependency bumps
     return isRecent && isNotBump;
   });
 }
 
 /**
  * Processes a single entity to extract GitHub commit data.
- * 
+ *
  * @param entity - Backstage catalog entity to process
  * @param gitHubToken - GitHub API authentication token
  * @returns Object with entity reference and commit facts, or null if data not available
@@ -168,7 +170,7 @@ async function processEntity(entity: Entity, gitHubToken: string) {
     if (!recentPRs.length) return null;
 
     const { messages, count } = await getCommitData(recentPRs, gitHubToken);
-    const lastPr = recentPRs[0];  // Most recent PR
+    const lastPr = recentPRs[0]; // Most recent PR
 
     // Return structured facts about the entity
     return {
@@ -178,9 +180,9 @@ async function processEntity(entity: Entity, gitHubToken: string) {
         kind: entity.kind,
       },
       facts: {
-        last_commit_message: lastPr.title,             // Most recent PR title
-        recent_commit_messages: messages.join('\n'),   // All commit messages
-        commit_count_last_week: count,                 // Total commit count
+        last_commit_message: lastPr.title, // Most recent PR title
+        recent_commit_messages: messages.join('\n'), // All commit messages
+        commit_count_last_week: count, // Total commit count
       },
     };
   } catch (err) {
@@ -199,13 +201,13 @@ async function processEntity(entity: Entity, gitHubToken: string) {
 export const createGitHubCommitMessageRetriever: FactRetriever = {
   // Unique identifier for this fact retriever
   id: 'github-commit-message-retriever',
-  
+
   // Semantic version for the retriever implementation
   version: '1.0',
-  
+
   // Only process entities of kind 'component'
   entityFilter: [{ kind: 'component' }],
-  
+
   // Define the schema of facts this retriever produces
   schema: {
     last_commit_message: {
@@ -221,7 +223,7 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
       description: 'Number of commits in the last week',
     },
   },
-  
+
   // Main handler function that produces facts
   handler: async ctx => {
     // Get authentication token for catalog access
@@ -242,13 +244,15 @@ export const createGitHubCommitMessageRetriever: FactRetriever = {
       );
       return [];
     }
-    
+
     // Process all entities in parallel for better performance
     const results = await Promise.all(
       entities.map(entity => processEntity(entity, gitHubToken)),
     );
 
     // Filter out null results and return valid facts
-    return results.filter((result): result is NonNullable<typeof result> => !!result);
+    return results.filter(
+      (result): result is NonNullable<typeof result> => !!result,
+    );
   },
 };

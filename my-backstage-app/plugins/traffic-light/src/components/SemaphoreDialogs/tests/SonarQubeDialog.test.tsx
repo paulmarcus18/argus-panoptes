@@ -21,14 +21,20 @@ jest.mock('../../Semaphores/SonarQubeTrafficLight', () => ({
 
 jest.mock('../BaseSemaphoreDialogs', () => ({
   BaseSemaphoreDialog: ({ data }: any) => (
-    <div data-testid="base-dialog" data-color={data.color} data-summary={data.summary} />
+    <div
+      data-testid="base-dialog"
+      data-color={data.color}
+      data-summary={data.summary}
+    />
   ),
 }));
 
 describe('SonarQubeSemaphoreDialog', () => {
   const mockCatalogApi = {
     getEntityByRef: jest.fn().mockResolvedValue({
-      metadata: { annotations: { 'sonarcloud.io/project-key': 'my-service-key' } },
+      metadata: {
+        annotations: { 'sonarcloud.io/project-key': 'my-service-key' },
+      },
     }),
   };
 
@@ -62,14 +68,23 @@ describe('SonarQubeSemaphoreDialog', () => {
       quality_gate: 'OK',
     });
     mockSonarUtils.getTop5CriticalSonarCloudRepos.mockResolvedValue([]);
-    (determineSonarQubeColor as jest.Mock).mockResolvedValueOnce({ color: 'green' });
+    (determineSonarQubeColor as jest.Mock).mockResolvedValueOnce({
+      color: 'green',
+    });
 
     await act(async () => {
       render(
         <TestApiProvider
-          apis={[[catalogApiRef, mockCatalogApi], [techInsightsApiRef, mockTechInsightsApi]]}
+          apis={[
+            [catalogApiRef, mockCatalogApi],
+            [techInsightsApiRef, mockTechInsightsApi],
+          ]}
         >
-          <SonarQubeSemaphoreDialog open={true} onClose={() => {}} entities={mockEntities} />
+          <SonarQubeSemaphoreDialog
+            open
+            onClose={() => {}}
+            entities={mockEntities}
+          />
         </TestApiProvider>,
       );
     });
@@ -98,14 +113,23 @@ describe('SonarQubeSemaphoreDialog', () => {
         code_coverage: 90,
       },
     ]);
-    (determineSonarQubeColor as jest.Mock).mockResolvedValueOnce({ color: 'red' });
+    (determineSonarQubeColor as jest.Mock).mockResolvedValueOnce({
+      color: 'red',
+    });
 
     await act(async () => {
       render(
         <TestApiProvider
-          apis={[[catalogApiRef, mockCatalogApi], [techInsightsApiRef, mockTechInsightsApi]]}
+          apis={[
+            [catalogApiRef, mockCatalogApi],
+            [techInsightsApiRef, mockTechInsightsApi],
+          ]}
         >
-          <SonarQubeSemaphoreDialog open={true} onClose={() => {}} entities={mockEntities} />
+          <SonarQubeSemaphoreDialog
+            open
+            onClose={() => {}}
+            entities={mockEntities}
+          />
         </TestApiProvider>,
       );
     });
@@ -117,14 +141,23 @@ describe('SonarQubeSemaphoreDialog', () => {
   });
 
   it('renders gray and error summary on fetch error', async () => {
-    mockSonarUtils.getSonarQubeFacts.mockRejectedValue(new Error('fetch failed'));
+    mockSonarUtils.getSonarQubeFacts.mockRejectedValue(
+      new Error('fetch failed'),
+    );
 
     await act(async () => {
       render(
         <TestApiProvider
-          apis={[[catalogApiRef, mockCatalogApi], [techInsightsApiRef, mockTechInsightsApi]]}
+          apis={[
+            [catalogApiRef, mockCatalogApi],
+            [techInsightsApiRef, mockTechInsightsApi],
+          ]}
         >
-          <SonarQubeSemaphoreDialog open={true} onClose={() => {}} entities={mockEntities} />
+          <SonarQubeSemaphoreDialog
+            open
+            onClose={() => {}}
+            entities={mockEntities}
+          />
         </TestApiProvider>,
       );
     });
@@ -132,7 +165,9 @@ describe('SonarQubeSemaphoreDialog', () => {
     await waitFor(() => {
       const dialog = screen.getByTestId('base-dialog');
       expect(dialog).toHaveAttribute('data-color', 'gray');
-      expect(dialog.getAttribute('data-summary')).toMatch(/Failed to load SonarQube data/);
+      expect(dialog.getAttribute('data-summary')).toMatch(
+        /Failed to load SonarQube data/,
+      );
     });
   });
 
@@ -150,9 +185,16 @@ describe('SonarQubeSemaphoreDialog', () => {
     await act(async () => {
       render(
         <TestApiProvider
-          apis={[[catalogApiRef, mockCatalogApi], [techInsightsApiRef, mockTechInsightsApi]]}
+          apis={[
+            [catalogApiRef, mockCatalogApi],
+            [techInsightsApiRef, mockTechInsightsApi],
+          ]}
         >
-          <SonarQubeSemaphoreDialog open={true} onClose={() => {}} entities={disabledEntities} />
+          <SonarQubeSemaphoreDialog
+            open
+            onClose={() => {}}
+            entities={disabledEntities}
+          />
         </TestApiProvider>,
       );
     });
@@ -172,9 +214,16 @@ describe('SonarQubeSemaphoreDialog', () => {
     await act(async () => {
       render(
         <TestApiProvider
-          apis={[[catalogApiRef, mockCatalogApi], [techInsightsApiRef, mockTechInsightsApi]]}
+          apis={[
+            [catalogApiRef, mockCatalogApi],
+            [techInsightsApiRef, mockTechInsightsApi],
+          ]}
         >
-          <SonarQubeSemaphoreDialog open={false} onClose={() => {}} entities={mockEntities} />
+          <SonarQubeSemaphoreDialog
+            open={false}
+            onClose={() => {}}
+            entities={mockEntities}
+          />
         </TestApiProvider>,
       );
     });

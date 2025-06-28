@@ -2,7 +2,6 @@ import {
   CompoundEntityRef,
   Entity,
   getCompoundEntityRef,
-  stringifyEntityRef,
 } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
@@ -52,38 +51,35 @@ export class SonarCloudUtils {
    * @param entity – The entity reference whose SonarCloud metrics should be retrieved.
    * @returns A {@link SonarQubeMetrics} object with the parsed results.
    */
-  async getSonarQubeFacts(
+  getSonarQubeFacts(
     techInsightsApi: TechInsightsApi,
     entity: CompoundEntityRef,
   ): Promise<SonarQubeMetrics> {
-    try {
-      // fetch SonarCloud facts for the given entity
-      const response = await techInsightsApi.getFacts(entity, [
-        'sonarcloud-fact-retriever',
-      ]);
-
-      const facts = response?.['sonarcloud-fact-retriever']?.facts;
-
-      // If no facts are found, return default metrics
-      if (!facts) {
+    return techInsightsApi.getFacts(entity, ['sonarcloud-fact-retriever'])
+      .then(response => {
+        const facts = response?.['sonarcloud-fact-retriever']?.facts;
+        
+        // If no facts are found, return default metrics
+        if (!facts) {
+          return { ...DEFAULT_METRICS };
+        }
+        
+        return {
+          bugs: Number(facts.bugs ?? 0) || 0,
+          code_smells: Number(facts.code_smells ?? 0) || 0,
+          vulnerabilities: Number(facts.vulnerabilities ?? 0) || 0,
+          code_coverage: Number(facts.code_coverage ?? 0) || 0,
+          quality_gate:
+            typeof facts.quality_gate === 'string' ||
+            typeof facts.quality_gate === 'number'
+              ? String(facts.quality_gate)
+              : 'NONE',
+        };
+      })
+      .catch(() => {
+        // Failed to fetch SonarQube facts for entity
         return { ...DEFAULT_METRICS };
-      }
-
-      return {
-        bugs: Number(facts.bugs ?? 0) || 0,
-        code_smells: Number(facts.code_smells ?? 0) || 0,
-        vulnerabilities: Number(facts.vulnerabilities ?? 0) || 0,
-        code_coverage: Number(facts.code_coverage ?? 0) || 0,
-        quality_gate: typeof facts.quality_gate === 'string' ||
-          typeof facts.quality_gate === 'number'
-          ? String(facts.quality_gate)
-          : 'NONE',
-      };
-    } catch (error) {
-      console.error(`Failed to fetch SonarQube facts for entity '${stringifyEntityRef(entity,)}'.`, error,);
-
-      return { ...DEFAULT_METRICS };
-    }
+      });
   }
 
   /**
@@ -95,89 +91,89 @@ export class SonarCloudUtils {
    * @returns A promise that resolves to an array of SonarCloudSummary objects,
    *          containing the top 5 critical repositories based on the defined criteria.
    */
-  async getTop5CriticalSonarCloudRepos(
+  getTop5CriticalSonarCloudRepos(
     techInsightsApi: TechInsightsApi,
     entities: Entity[],
   ): Promise<SonarCloudSummary[]> {
-    const summaryPromises = entities.map(async entity => {
+    const summaryPromises = entities.map(entity => {
       const entityRef = getCompoundEntityRef(entity);
-      try {
-        const facts = await this.getSonarQubeFacts(techInsightsApi, entityRef);
-        return {
+      
+      return this.getSonarQubeFacts(techInsightsApi, entityRef)
+        .then(facts => ({
           entity: entityRef,
           quality_gate: facts.quality_gate === 'OK' ? 0 : 1,
           vulnerabilities: facts.vulnerabilities,
           code_coverage: facts.code_coverage,
           bugs: facts.bugs,
           code_smells: facts.code_smells,
-        };
-      } catch (err) {
-        console.error(
-          `Failed to process SonarCloud summary for entity '${stringifyEntityRef(entityRef,)}'.`, err,);
-
-        return {
-          entity: entityRef,
-          quality_gate: 1, // Assume failed quality gate if we can't fetch facts
-          vulnerabilities: 0,
-          code_coverage: 0,
-          bugs: 0,
-          code_smells: 0,
-        };
-      }
+        }))
+        .catch(() => {
+          // Failed to process SonarCloud summary for entity
+          return {
+            entity: entityRef,
+            quality_gate: 1, // Assume failed quality gate if we can't fetch facts
+            vulnerabilities: 0,
+            code_coverage: 0,
+            bugs: 0,
+            code_smells: 0,
+          };
+        });
     });
-
-    const allSummaries = await Promise.all(summaryPromises);
-    // Sort results by quality gate status, then by vulnerabilities, bugs, code smells, and code coverage
-    const selected: SonarCloudSummary[] = [];
-    const MAX_REPOS = 5;
-
-    const addCandidates = (
-      filterFn: (summary: SonarCloudSummary) => boolean,
-      sortFn?: (a: SonarCloudSummary, b: SonarCloudSummary) => number,
-    ) => {
-      if (selected.length >= MAX_REPOS) return;
-
-      const candidates = allSummaries.filter(
-        summary => !selected.includes(summary) && filterFn(summary),
-      );
-
-      if (sortFn) {
-        candidates.sort(sortFn);
-      }
-
-      selected.push(...candidates.slice(0, MAX_REPOS - selected.length));
-    };
-
-    // 1. Failed quality gate
-    addCandidates(s => s.quality_gate === 1);
-
-    // 2. Vulnerabilities (descending)
-    addCandidates(
-      s => s.vulnerabilities > 0,
-      (a, b) => b.vulnerabilities - a.vulnerabilities,
-    );
-
-    // 3. Bugs (descending)
-    addCandidates(
-      s => s.bugs > 0,
-      (a, b) => b.bugs - a.bugs,
-    );
-
-    // 4. Code Smells (descending)
-    addCandidates(
-      s => s.code_smells > 0,
-      (a, b) => b.code_smells - a.code_smells,
-    );
-
-    // 5. Low code coverage (ascending)
-    addCandidates(
-      s => s.code_coverage < 80,
-      (a, b) => a.code_coverage - b.code_coverage,
-    );
-
-    // 6. Fallback for any remaining repos
-    addCandidates(() => true);
-
-    return selected;
+  
+    return Promise.all(summaryPromises)
+      .then(allSummaries => {
+        // Sort results by quality gate status, then by vulnerabilities, bugs, code smells, and code coverage
+        const selected: SonarCloudSummary[] = [];
+        const MAX_REPOS = 5;
+        
+        const addCandidates = (
+          filterFn: (summary: SonarCloudSummary) => boolean,
+          sortFn?: (a: SonarCloudSummary, b: SonarCloudSummary) => number,
+        ) => {
+          if (selected.length >= MAX_REPOS) return;
+          
+          const candidates = allSummaries.filter(
+            summary => !selected.includes(summary) && filterFn(summary),
+          );
+          
+          if (sortFn) {
+            candidates.sort(sortFn);
+          }
+          
+          selected.push(...candidates.slice(0, MAX_REPOS - selected.length));
+        };
+  
+        // 1. Failed quality gate
+        addCandidates(s => s.quality_gate === 1);
+  
+        // 2. Vulnerabilities (descending)
+        addCandidates(
+          s => s.vulnerabilities > 0,
+          (a, b) => b.vulnerabilities - a.vulnerabilities,
+        );
+  
+        // 3. Bugs (descending)
+        addCandidates(
+          s => s.bugs > 0,
+          (a, b) => b.bugs - a.bugs,
+        );
+  
+        // 4. Code Smells (descending)
+        addCandidates(
+          s => s.code_smells > 0,
+          (a, b) => b.code_smells - a.code_smells,
+        );
+  
+        // 5. Low code coverage (ascending)
+        addCandidates(
+          s => s.code_coverage < 80,
+          (a, b) => a.code_coverage - b.code_coverage,
+        );
+  
+        // 6. Fallback for any remaining repos
+        addCandidates(() => true);
+  
+        return selected;
+      });
   }
 }

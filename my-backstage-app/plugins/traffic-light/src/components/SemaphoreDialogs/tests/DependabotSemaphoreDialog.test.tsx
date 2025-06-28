@@ -14,8 +14,8 @@ const mockGetDependabotFacts = jest.fn();
   getDependabotFacts: mockGetDependabotFacts,
 }));
 
-const mockDetermineDependabotColor = dependabotColor
-  .determineDependabotColor as jest.Mock;
+const mockDetermineDependabotColor =
+  dependabotColor.determineDependabotColor as jest.Mock;
 
 const mockEntity: Entity = {
   apiVersion: '1',
@@ -51,19 +51,18 @@ describe('DependabotSemaphoreDialog', () => {
           entities={[mockEntity]}
           system="my-system"
         />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
 
     await waitFor(() => {
       expect(screen.getByText(/Total Issues/i)).toBeInTheDocument();
-      expect(screen.getByText(/Total Repositories/i)).toBeInTheDocument(); 
-      expect(screen.getAllByText(/Critical/i)[0]).toBeInTheDocument(); 
+      expect(screen.getByText(/Total Repositories/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Critical/i)[0]).toBeInTheDocument();
     });
 
     expect(
       screen.getByText(/Top 5 Repositories by Priority/i),
     ).toBeInTheDocument();
-
   });
 
   it('shows summary when no issues are found', async () => {
@@ -85,7 +84,7 @@ describe('DependabotSemaphoreDialog', () => {
           entities={[mockEntity]}
           system="my-system"
         />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
 
     await waitFor(() =>
@@ -110,7 +109,7 @@ describe('DependabotSemaphoreDialog', () => {
           entities={[mockEntity]}
           system="my-system"
         />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
 
     await waitFor(() =>

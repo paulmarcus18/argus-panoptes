@@ -4,7 +4,7 @@ import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { SonarCloudUtils } from '../../utils/sonarCloudUtils';
 import { BaseTrafficLight } from './BaseTrafficLight';
-import {useState, useMemo, useEffect} from 'react';
+import { useState, useMemo, useEffect } from 'react';
 /**
  * The component fetches SonarQube quality gate status for each provided entity using the Tech Insights API,
  * aggregates the results, and determines the appropriate traffic light color:

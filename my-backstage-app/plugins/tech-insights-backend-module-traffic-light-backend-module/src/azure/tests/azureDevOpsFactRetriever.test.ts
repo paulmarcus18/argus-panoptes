@@ -44,7 +44,7 @@ describe('Azure DevOps Bugs Fact Retriever', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetEntitiesImpl.mockReset();
-    
+
     // Setup mock context
     mockContext = {
       auth: mockAuth,
@@ -58,17 +58,23 @@ describe('Azure DevOps Bugs Fact Retriever', () => {
   // Test: Basic fact retriever configuration
   describe('Configuration', () => {
     test('has correct basic properties', () => {
-      expect(createAzureDevOpsBugsRetriever.id).toBe('azure-devops-bugs-retriever');
+      expect(createAzureDevOpsBugsRetriever.id).toBe(
+        'azure-devops-bugs-retriever',
+      );
       expect(createAzureDevOpsBugsRetriever.version).toBe('1.0');
-      expect(createAzureDevOpsBugsRetriever.entityFilter).toEqual([{ kind: 'component' }]);
+      expect(createAzureDevOpsBugsRetriever.entityFilter).toEqual([
+        { kind: 'component' },
+      ]);
     });
 
     test('has correct schema definition', () => {
       const schema = createAzureDevOpsBugsRetriever.schema;
-      
+
       expect(schema).toHaveProperty('azure_bug_count');
       expect(schema.azure_bug_count.type).toBe('integer');
-      expect(schema.azure_bug_count.description).toBe('Number of Azure DevOps bugs from WIQL query');
+      expect(schema.azure_bug_count.description).toBe(
+        'Number of Azure DevOps bugs from WIQL query',
+      );
     });
 
     test('handler is a function', () => {
@@ -148,8 +154,10 @@ describe('Azure DevOps Bugs Fact Retriever', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].facts.azure_bug_count).toBeNull();
-      expect(consoleSpy).toHaveBeenCalledWith('Azure DevOps token is not defined.');
-      
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Azure DevOps token is not defined.',
+      );
+
       consoleSpy.mockRestore();
     });
 
@@ -190,9 +198,9 @@ describe('Azure DevOps Bugs Fact Retriever', () => {
 
       expect(result).toHaveLength(0); // Should continue without adding result
       expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to fetch WIQL results for test-component: Unauthorized'
+        'Failed to fetch WIQL results for test-component: Unauthorized',
       );
-      
+
       consoleSpy.mockRestore();
     });
 
@@ -206,9 +214,9 @@ describe('Azure DevOps Bugs Fact Retriever', () => {
 
       expect(result).toHaveLength(0);
       expect(consoleSpy).toHaveBeenCalledWith(
-        'Error retrieving bugs for test-component: Error: Network error'
+        'Error retrieving bugs for test-component: Error: Network error',
       );
-      
+
       consoleSpy.mockRestore();
     });
 
@@ -248,8 +256,10 @@ describe('Azure DevOps Bugs Fact Retriever', () => {
       const result = await createAzureDevOpsBugsRetriever.handler(mockContext);
 
       expect(result).toEqual([]);
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch entities: Error: Catalog error');
-      
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to fetch entities: Error: Catalog error',
+      );
+
       consoleSpy.mockRestore();
     });
 
@@ -266,10 +276,12 @@ describe('Azure DevOps Bugs Fact Retriever', () => {
         {
           method: 'GET',
           headers: {
-            Authorization: `Basic ${Buffer.from(':test-pat-token').toString('base64')}`,
+            Authorization: `Basic ${Buffer.from(':test-pat-token').toString(
+              'base64',
+            )}`,
             Accept: 'application/json',
           },
-        }
+        },
       );
     });
 
@@ -343,8 +355,10 @@ describe('Azure DevOps Bugs Fact Retriever', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].facts.azure_bug_count).toBeNull();
-      expect(consoleSpy).toHaveBeenCalledWith('Azure DevOps token is not defined.');
-      
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Azure DevOps token is not defined.',
+      );
+
       consoleSpy.mockRestore();
     });
 
@@ -357,8 +371,10 @@ describe('Azure DevOps Bugs Fact Retriever', () => {
       await createAzureDevOpsBugsRetriever.handler(mockContext);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('https://dev.azure.com/test-org/test-project/_apis/wit/wiql/test-query-id?api-version=7.0'),
-        expect.any(Object)
+        expect.stringContaining(
+          'https://dev.azure.com/test-org/test-project/_apis/wit/wiql/test-query-id?api-version=7.0',
+        ),
+        expect.any(Object),
       );
     });
   });

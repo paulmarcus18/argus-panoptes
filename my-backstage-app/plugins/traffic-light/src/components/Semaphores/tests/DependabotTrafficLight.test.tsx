@@ -34,7 +34,7 @@ const mockEntities: Entity[] = [
 describe('TrafficLightDependabot', () => {
   beforeAll(() => {
     // Suppress findDOMNode deprecation warning from Material-UI Tooltip
-    jest.spyOn(console, 'error').mockImplementation((msg, ...args) => {
+    jest.spyOn(console, 'error').mockImplementation((msg) => {
       if (typeof msg === 'string' && msg.includes('findDOMNode')) return;
     });
   });

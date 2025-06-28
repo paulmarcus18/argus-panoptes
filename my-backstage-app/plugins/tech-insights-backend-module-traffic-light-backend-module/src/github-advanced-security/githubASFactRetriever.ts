@@ -8,6 +8,8 @@ import {
 } from '@backstage-community/plugin-tech-insights-node';
 import { CatalogClient } from '@backstage/catalog-client';
 import { JsonObject } from '@backstage/types';
+import {loadOctokit} from '../dependabot/octokitLoader'; // Adjust the import path as needed
+
 
 // Define interfaces for the security findings as JSON-compatible types
 interface CodeScanningFinding extends JsonObject {
@@ -18,7 +20,6 @@ interface CodeScanningFinding extends JsonObject {
 }
 
 // Dictionary structure for security findings where the key is the alert number/id
-// Must be JsonObject compatible
 // This way we store all the issues per repository
 interface CodeScanningFindingsDict extends JsonObject {
   [alertId: string]: CodeScanningFinding;
@@ -110,11 +111,15 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
       return entity.metadata.annotations?.['github.com/project-slug'];
     });
 
-    // Use dynamic import for Octokit
-    const { Octokit } = await import('@octokit/rest');
+    // // Use dynamic import for Octokit
+    // const { Octokit } = await import('@octokit/rest');
 
-    // Initialize GitHub API client with token
+    // // Initialize GitHub API client with token
+    // const octokit = new Octokit({ auth: token });
+
+    const Octokit = await loadOctokit();
     const octokit = new Octokit({ auth: token });
+    
 
     // Process each entity with GitHub integration
     const results = await Promise.all(
@@ -150,7 +155,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
           // Process code scanning alerts to extract only the required information
           const codeScanningAlerts: CodeScanningFindingsDict = {};
 
-          codeScanningResponse.data.forEach(alert => {
+          codeScanningResponse.data.forEach((alert: { number: number; rule?: { security_severity_level?: string; description?: string; name?: string }; created_at?: string; most_recent_instance?: { location?: { path?: string; start_line?: number }; commit_sha?: string } }) => {
             // Extract necessary information for code scanning alerts
             const alertId = `code-${alert.number}`;
             const instance = alert.most_recent_instance;
@@ -175,7 +180,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
           // Process secret scanning alerts to create a dictionary with only the requested fields
           const secretScanningAlerts: CodeScanningFindingsDict = {};
 
-          secretScanningResponse.data.forEach(alert => {
+          secretScanningResponse.data.forEach((alert: { number: number; secret_type?: string; created_at?: string; html_url?: string }) => {
             const alertId = `secret-${alert.number}`;
 
             // Create a simplified finding with just basic information

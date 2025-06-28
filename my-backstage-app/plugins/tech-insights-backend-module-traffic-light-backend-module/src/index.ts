@@ -8,6 +8,6 @@
 export { default } from './module';
 
 export type {
-    DynamicThresholdResult,
-    DynamicThresholdCheck,
-  } from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
+  DynamicThresholdResult,
+  DynamicThresholdCheck,
+} from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
