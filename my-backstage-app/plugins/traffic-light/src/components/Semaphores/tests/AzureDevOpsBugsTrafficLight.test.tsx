@@ -534,7 +534,7 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
     });
   });
 
-  it('should pass correct determineSemaphoreColor parameters for different scenarios', async () => {
+  it('should pass correct determineSemaphoreColor parameters', async () => {
     (determineSemaphoreColor as jest.Mock).mockReturnValue({
       color: 'yellow',
       reason: 'Some Azure DevOps bug checks failing',

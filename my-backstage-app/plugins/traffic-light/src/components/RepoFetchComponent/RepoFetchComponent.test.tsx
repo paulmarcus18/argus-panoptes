@@ -10,7 +10,7 @@ describe('RepoFetchComponent', () => {
     jest.clearAllMocks();
   });
 
-  it('should fetch repos and call onData with simplified results', async () => {
+  it('should fetch repos and call onData', async () => {
     // Arrange
     const mockReposData = [
       { name: 'repo1', description: 'Description for repo1' },
@@ -131,7 +131,7 @@ describe('RepoFetchComponent', () => {
     });
   });
 
-  it('should render nothing (return null)', () => {
+  it('should render nothing', () => {
     // Arrange
     const mockResponse = {
       ok: true,

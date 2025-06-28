@@ -127,7 +127,7 @@ describe('AzureDevOpsSemaphoreDialog', () => {
     );
   });
 
-  it('fetches, displays metrics & computes color when opened', async () => {
+  it('fetches, displays metrics and computes color when opened', async () => {
     await act(async () => {
       render(
         <Wrapper>
@@ -155,7 +155,7 @@ describe('AzureDevOpsSemaphoreDialog', () => {
     });
   });
 
-  it('handles no entities gracefully', () => {
+  it('handles no entities case', () => {
     render(
       <Wrapper>
         <AzureDevOpsSemaphoreDialog
@@ -169,7 +169,7 @@ describe('AzureDevOpsSemaphoreDialog', () => {
     expect(mockAzureUtils.getAzureDevOpsBugChecks).not.toHaveBeenCalled();
   });
 
-  it('handles API failure gracefully', async () => {
+  it('handles API failure case', async () => {
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});

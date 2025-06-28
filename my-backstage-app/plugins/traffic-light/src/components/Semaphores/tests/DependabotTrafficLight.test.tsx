@@ -87,7 +87,7 @@ describe('TrafficLightDependabot', () => {
     });
   });
 
-  it('pretends to use fallback system name by explicitly passing the fallback value', async () => {
+  it('pretends to use fallback system name by explicitly passing the fallback', async () => {
     const fallbackEntities: Entity[] = [
       {
         apiVersion: 'backstage.io/v1alpha1',
