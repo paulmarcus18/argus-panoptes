@@ -278,8 +278,7 @@ export const AzureDevOpsSemaphoreDialog: React.FC<
           metrics: { totalBugCount },
           details: [],
         });
-      } catch (e) {
-        console.error('Failed to fetch Azure DevOps bug data:', e);
+      } catch {
         setProjectBugs([]);
         setData({
           color: 'gray',
