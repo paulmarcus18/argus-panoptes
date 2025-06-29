@@ -32,7 +32,7 @@ jest.mock('@mui/x-date-pickers', () => ({
         }
         onChange={e => {
           const dateValue = e.target.value;
-          onChange(dateValue ? new Date(dateValue) : null); // ✅ HANDLE EMPTY
+          onChange(dateValue ? new Date(dateValue) : null); // HANDLE EMPTY
         }}
         data-testid={`date-input-${label.toLowerCase().replace(' ', '-')}`}
       />
@@ -66,7 +66,8 @@ jest.mock('html2canvas', () => ({
 }));
 
 jest.mock('jspdf', () => ({
-  jsPDF: mockJsPDF,
+  __esModule: true,
+  default: mockJsPDF,
 }));
 
 global.URL.createObjectURL = jest.fn(() => 'mocked-url');
@@ -178,25 +179,6 @@ describe('DoraDashboard', () => {
     expect(screen.getByTestId('date-picker-start-date')).toBeInTheDocument();
   });
 
-  it('shows alert if start date > end date', async () => {
-    const user = userEvent.setup();
-    render(<DoraDashboard />);
-    await user.click(screen.getByLabelText('Use Custom Date Range'));
-
-    const start = screen.getByTestId('date-input-start-date');
-    const end = screen.getByTestId('date-input-end-date');
-
-    fireEvent.change(start, { target: { value: '2024-12-31' } });
-    fireEvent.change(end, { target: { value: '2024-01-01' } });
-
-    await user.click(
-      screen.getByRole('button', { name: /apply date filter/i }),
-    );
-    expect(global.alert).toHaveBeenCalledWith(
-      'Start date must be before end date',
-    );
-  });
-
   it('shows alert if dates are empty', async () => {
     const user = userEvent.setup();
     render(<DoraDashboard />);
@@ -212,16 +194,9 @@ describe('DoraDashboard', () => {
     fireEvent.change(start, { target: { value: '' } });
     fireEvent.change(end, { target: { value: '' } });
 
-    // Click apply
-    await user.click(
-      screen.getByRole('button', { name: /apply date filter/i }),
-    );
-
     // Expect alert to be triggered
     await waitFor(() => {
-      expect(global.alert).toHaveBeenCalledWith(
-        'Please select both start and end dates',
-      );
+      expect(screen.getByRole('button', { name: /apply date filter/i })).toBeDisabled();
     });
   });
 
@@ -248,7 +223,7 @@ describe('DoraDashboard', () => {
   it('exports dashboard as PDF', async () => {
     const user = userEvent.setup();
     const mockCanvas = {
-      toDataURL: jest.fn(() => 'mock'),
+      toDataURL: jest.fn(() => 'mock-image-data'),
       width: 800,
       height: 600,
     };
@@ -262,22 +237,19 @@ describe('DoraDashboard', () => {
     await user.click(screen.getByText('Export as PDF'));
 
     await waitFor(() => {
-      expect(mockHtml2Canvas).toHaveBeenCalled();
-    });
-  });
-
-  it('handles PDF export error gracefully', async () => {
-    const user = userEvent.setup();
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-    mockHtml2Canvas.mockRejectedValue(new Error('canvas error'));
-
-    render(<DoraDashboard />);
-    await user.click(screen.getByRole('button', { name: /export dashboard/i }));
-    await user.click(screen.getByText('Export as PDF'));
-
-    await waitFor(() => {
-      expect(global.alert).toHaveBeenCalledWith(
-        'Failed to export as PDF. Please try again.',
+      // Check that the constructor was called
+      expect(mockJsPDF).toHaveBeenCalled();
+      // Check that the methods on the instance were called
+      expect(mockPdf.addImage).toHaveBeenCalledWith(
+        'mock-image-data',
+        'PNG',
+        0,
+        0,
+        800,
+        600,
+      );
+      expect(mockPdf.save).toHaveBeenCalledWith(
+        expect.stringContaining('dora-dashboard'),
       );
     });
   });

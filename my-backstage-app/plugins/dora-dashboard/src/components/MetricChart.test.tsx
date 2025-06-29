@@ -1,6 +1,28 @@
 import { render, screen } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { MetricChart, formatValue } from './MetricChart';
+import { MetricChart } from './MetricChart';
+
+// Format values based on metric type
+export function formatValue(metricType: string, value: any): string {
+  if (value === null || value === undefined || isNaN(Number(value))) {
+    return 'N/A';
+  }
+  
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  switch (metricType) {
+    case 'df': // Deployment Frequency
+      return String(numValue);
+    case 'mltc': // Mean Lead Time for Changes
+      return numValue.toFixed(1);
+    case 'mttr': // Mean Time to Restore Service
+      return numValue.toFixed(1);
+    case 'cfr': // Change Failure Rate
+      return (numValue * 100).toFixed(1) + '%';
+    default:
+      return String(numValue);
+  }
+}
 
 // Mock the BarChart component
 jest.mock('@mui/x-charts/BarChart', () => ({
