@@ -11,6 +11,9 @@ import { SemaphoreData } from './types';
 import { determineSemaphoreColor } from '../utils';
 import { useState, useMemo, useEffect } from 'react';
 
+/**
+ * Styles for the preproduction dialog components
+ */
 const useStyles = makeStyles(theme => ({
   metricBox: {
     padding: theme.spacing(2),
@@ -33,20 +36,35 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
+/**
+ * Props for the PreproductionSemaphoreDialog component
+ * 
+ * @property {boolean} open - Whether the dialog is open or closed
+ * @property {() => void} onClose - Callback function when dialog is closed
+ * @property {Entity[]} [entities] - Array of Backstage entities to evaluate
+ */
 interface PreproductionSemaphoreDialogProps {
   open: boolean;
   onClose: () => void;
   entities?: Entity[];
 }
 
+/**
+ * Dialog component that displays detailed metrics about preproduction pipeline runs
+ * 
+ * Shows aggregated success rates, failed runs, and repositories with the lowest success rates.
+ * Uses system annotations to determine thresholds and which repositories to include in the analysis.
+ */
 export const PreproductionSemaphoreDialog: React.FC<
   PreproductionSemaphoreDialogProps
 > = ({ open, onClose, entities = [] }) => {
   const classes = useStyles();
+  // APIs for retrieving data
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
   const preprodUtils = useMemo(() => new PreproductionUtils(), []);
 
+  // Component state
   const [isLoading, setIsLoading] = useState(false);
   const [metrics, setMetrics] = useState({
     totalSuccess: 0,
@@ -55,10 +73,12 @@ export const PreproductionSemaphoreDialog: React.FC<
     successRate: 0,
   });
 
+  // State for tracking repositories with lowest success rates
   const [lowestSuccessRepos, setLowestSuccessRepos] = useState<
     { name: string; url: string; successRate: number }[]
   >([]);
 
+  // Main data for the semaphore display
   const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
@@ -66,20 +86,30 @@ export const PreproductionSemaphoreDialog: React.FC<
     details: [],
   });
 
+  /**
+   * Effect that loads pipeline metrics when the dialog opens
+   * or when entities change
+   */
   useEffect(() => {
+    // Skip if dialog is closed or there are no entities
     if (!open || entities.length === 0) return;
 
     setIsLoading(true);
 
+    /**
+     * Fetches pipeline metrics and evaluates them against thresholds
+     * to determine the traffic light color and summary
+     */
     const fetchPipelineMetrics = async () => {
       try {
         // 1. Get threshold and configured repositories from system annotations
-        let redThreshold = 0.33;
+        let redThreshold = 0.33; // Default threshold if not specified in annotations
         let configuredRepoNames: string[] = [];
 
         const systemName = entities[0].spec?.system;
         const namespace = entities[0].metadata.namespace?? 'default';
 
+        // If we have a system, get its configuration from the catalog
         if (systemName) {
           const systemEntity = await catalogApi.getEntityByRef({
             kind: 'System',
@@ -88,6 +118,7 @@ export const PreproductionSemaphoreDialog: React.FC<
               typeof systemName === 'string' ? systemName : String(systemName),
           });
 
+          // Extract threshold for red traffic light from system annotation
           const thresholdAnnotation =
             systemEntity?.metadata.annotations?.[
               'preproduction-check-threshold-red'
@@ -110,6 +141,7 @@ export const PreproductionSemaphoreDialog: React.FC<
         }
 
         // 2. Filter entities to only include configured repositories
+        // If no repositories are configured, include all entities
         const filteredEntities =
           configuredRepoNames.length > 0
             ? entities.filter(entity =>
@@ -117,6 +149,7 @@ export const PreproductionSemaphoreDialog: React.FC<
               )
             : entities; // Fallback to all entities if no configuration found
 
+        // Handle case where no entities are left after filtering
         if (filteredEntities.length === 0) {
           setMetrics({
             totalSuccess: 0,
@@ -138,17 +171,20 @@ export const PreproductionSemaphoreDialog: React.FC<
         // 3. Gather facts + checks in parallel for filtered entities
         const results = await Promise.all(
           filteredEntities.map(async entity => {
+            // Create a reference to the entity for API calls
             const ref = {
               kind: entity.kind,
               namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             };
 
+            // Get both facts and check results in parallel
             const [facts, check] = await Promise.all([
               preprodUtils.getPreproductionPipelineFacts(techInsightsApi, ref),
               preprodUtils.getPreproductionPipelineChecks(techInsightsApi, ref),
             ]);
 
+            // Calculate the success rate for this specific entity
             const successRate =
               facts.successWorkflowRunsCount + facts.failureWorkflowRunsCount >
               0
@@ -158,12 +194,14 @@ export const PreproductionSemaphoreDialog: React.FC<
                   100
                 : 0;
 
+            // Get the GitHub URL for this repository's actions page
             const projectSlug =
               entity.metadata.annotations?.['github.com/project-slug'];
             const url = projectSlug
               ? `https://github.com/${projectSlug}/actions`
               : '#';
 
+            // Return combined data for this entity
             return {
               name: entity.metadata.name,
               url,
@@ -176,6 +214,7 @@ export const PreproductionSemaphoreDialog: React.FC<
         );
 
         // 4. Metrics aggregation
+        // Calculate totals across all repositories
         const totalSuccess = results.reduce(
           (sum, r) => sum + r.successWorkflowRunsCount,
           0,
@@ -188,6 +227,7 @@ export const PreproductionSemaphoreDialog: React.FC<
         const successRate =
           totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
 
+        // Count how many entities failed their checks
         const failures = results.filter(r => r.failedCheck).length;
 
         // 5. Determine traffic light color based on filtered entities
@@ -213,6 +253,7 @@ export const PreproductionSemaphoreDialog: React.FC<
         }
 
         // 6. Bottom 5 repos by success rate
+        // Sort by success rate ascending and take the 5 worst performing repos
         const lowest = [...results]
           .sort((a, b) => a.successRate - b.successRate)
           .slice(0, 5)
@@ -222,6 +263,7 @@ export const PreproductionSemaphoreDialog: React.FC<
             successRate: itemSuccessRate,
           }));
 
+        // Update component state with all the calculated metrics
         setMetrics({
           totalSuccess,
           totalFailure,
@@ -243,6 +285,7 @@ export const PreproductionSemaphoreDialog: React.FC<
           details: [],
         });
       } catch (e) {
+        // Handle errors gracefully
         console.error('Failed to fetch pipeline data:', e);
         setMetrics({
           totalSuccess: 0,
@@ -265,8 +308,13 @@ export const PreproductionSemaphoreDialog: React.FC<
     fetchPipelineMetrics();
   }, [open, entities, techInsightsApi, catalogApi, preprodUtils]);
 
+  /**
+   * Renders the metrics grid and lowest success rate repositories
+   * @returns JSX.Element containing the metrics visualization
+   */
   const renderMetrics = () => (
     <>
+      {/* Grid of key metrics with colored values */}
       <Grid container spacing={2}>
         {[
           ['Successful Runs', metrics.totalSuccess, 4, '#4caf50'],
@@ -288,6 +336,7 @@ export const PreproductionSemaphoreDialog: React.FC<
         ))}
       </Grid>
 
+      {/* List of repositories with lowest success rates */}
       {lowestSuccessRepos.length > 0 && (
         <div className={classes.repoList}>
           <Typography variant="h6">Lowest Success Rate Repositories</Typography>

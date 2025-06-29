@@ -1,3 +1,7 @@
+/**
+ * AI Plugin Definition
+ * Plugin for AI-generated commit summaries and release notes
+ */
 import {
   createPlugin,
   createRoutableExtension,
@@ -5,10 +9,12 @@ import {
 } from '@backstage/core-plugin-api';
 import { rootRouteRef } from './routes';
 
+// Route reference for commit message analysis page
 export const commitMessagesRouteRef = createRouteRef({
   id: 'commit-messages-test',
 });
 
+// Create the plugin instance with routing configuration
 export const aiPluginPlugin = createPlugin({
   id: 'ai-plugin',
   routes: {
@@ -16,6 +22,7 @@ export const aiPluginPlugin = createPlugin({
   },
 });
 
+// Create the main page component with lazy loading
 export const AiPluginPage = aiPluginPlugin.provide(
   createRoutableExtension({
     name: 'AiPluginPage',

@@ -19,6 +19,7 @@ import InfoIcon from '@material-ui/icons/Info';
 import { SemaphoreData } from './types';
 import { makeStyles } from '@material-ui/core/styles';
 
+// Styles for dialog and content elements
 const useStyles = makeStyles(theme => ({
   dialogPaper: {
     minWidth: '500px',
@@ -34,6 +35,7 @@ const useStyles = makeStyles(theme => ({
     borderRadius: '50%',
     marginRight: theme.spacing(1),
   },
+  // Style definitions for metrics display
   metricBox: {
     padding: theme.spacing(2),
     marginBottom: theme.spacing(2),
@@ -47,6 +49,7 @@ const useStyles = makeStyles(theme => ({
   metricLabel: {
     color: theme.palette.text.secondary,
   },
+  // Status icon styling
   warningIcon: {
     color: theme.palette.warning.main,
     marginRight: theme.spacing(1),
@@ -63,10 +66,11 @@ const useStyles = makeStyles(theme => ({
     color: theme.palette.info.main,
     marginRight: theme.spacing(1),
   },
+  // Issue item styling
   issueItem: {
     padding: theme.spacing(1, 1, 1, 2),
     marginBottom: theme.spacing(1),
-    borderLeft: '4px solid', // We'll set the color dynamically
+    borderLeft: '4px solid', // Color set dynamically based on severity
   },
   issueTitle: {
     fontWeight: 'bold',
@@ -94,6 +98,9 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
+/**
+ * Props for configuring the base semaphore dialog
+ */
 export interface BaseSemaphoreDialogProps {
   open: boolean;
   onClose: () => void;
@@ -103,6 +110,10 @@ export interface BaseSemaphoreDialogProps {
   renderMetrics?: () => React.ReactNode;
 }
 
+/**
+ * Base dialog component for displaying semaphore status information
+ * Provides consistent layout and styling for different metric dialogs
+ */
 export const BaseSemaphoreDialog: React.FC<BaseSemaphoreDialogProps> = ({
   open,
   onClose,
@@ -113,6 +124,7 @@ export const BaseSemaphoreDialog: React.FC<BaseSemaphoreDialogProps> = ({
 }) => {
   const classes = useStyles();
 
+  // Select appropriate icon based on status color
   const getStatusIcon = (color: string) => {
     switch (color) {
       case 'red':
@@ -126,6 +138,7 @@ export const BaseSemaphoreDialog: React.FC<BaseSemaphoreDialogProps> = ({
     }
   };
 
+  // Map severity levels to color hex codes
   const getSeverityColorHex = (severity: string) => {
     switch (severity) {
       case 'critical':
@@ -160,6 +173,7 @@ export const BaseSemaphoreDialog: React.FC<BaseSemaphoreDialogProps> = ({
           <Typography>Loading data...</Typography>
         ) : (
           <>
+            {/* Summary section with status icon */}
             <Paper variant="outlined" className={classes.summarySection}>
               <Box display="flex" alignItems="center">
                 {getStatusIcon(data.color)}
@@ -167,8 +181,10 @@ export const BaseSemaphoreDialog: React.FC<BaseSemaphoreDialogProps> = ({
               </Box>
             </Paper>
 
+            {/* Custom metrics section provided by parent component */}
             {renderMetrics && renderMetrics()}
 
+            {/* Issues list - only shown if details are provided */}
             {data.details?.length > 0 && (
               <>
                 <Box mt={3} mb={1}>

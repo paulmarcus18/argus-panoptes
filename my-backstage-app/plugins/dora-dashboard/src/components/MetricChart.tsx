@@ -3,11 +3,14 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 
+/**
+ * Props for the MetricChart component
+ */
 type MetricChartProps = {
-  title: string;
-  description?: string;
-  data: { label: string; value: number }[];
-  color?: string;
+  title: string;        // Chart title (also determines formatting)
+  description?: string; // Optional explanatory text
+  data: { label: string; value: number }[]; // Chart data points
+  color?: string;       // Bar color
 };
 
 export const MetricChart = ({
@@ -39,7 +42,7 @@ export const MetricChart = ({
         return {
           label: '',
           tickLabelStyle: { fontSize: 10 },
-          valueFormatter: (value: number) => `${(value * 100).toFixed(0)}%`,
+          valueFormatter: (value: number) => `${(value * 100).toFixed(0)}%`, // Convert to percentage
         };
       default:
         return {
@@ -50,16 +53,16 @@ export const MetricChart = ({
     }
   };
 
-  // Format data labels on bars
+  // Format data labels on bars based on metric type
   const formatDataLabel = (value: number) => {
     switch (title) {
       case 'Deployment Frequency':
         return value.toString();
       case 'Lead Time for Changes':
       case 'Time to Restore Service':
-        return value.toFixed(1);
+        return value.toFixed(1); // 1 decimal place for time metrics
       case 'Change Failure Rate':
-        return `${(value * 100).toFixed(1)}%`;
+        return `${(value * 100).toFixed(1)}%`; // Format as percentage with 1 decimal
       default:
         return value.toFixed(1);
     }
@@ -79,6 +82,7 @@ export const MetricChart = ({
         flexDirection: 'column',
       }}
     >
+      {/* Chart header with title and optional description */}
       <Typography variant="h6" color="primary" sx={{ mb: 1 }}>
         {title}
       </Typography>
@@ -89,6 +93,7 @@ export const MetricChart = ({
         </Typography>
       )}
 
+      {/* Chart container with responsive sizing */}
       <Box sx={{ flex: 1, height: '100%', px: 0.5, pt: 0.5 }}>
         <BarChart
           height={240}

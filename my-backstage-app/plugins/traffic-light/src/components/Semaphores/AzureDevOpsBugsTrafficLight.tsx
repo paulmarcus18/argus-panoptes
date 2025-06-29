@@ -1,3 +1,7 @@
+/**
+ * Azure DevOps Bugs Traffic Light
+ * Visualizes bug count status across Azure DevOps projects
+ */
 import { useMemo, useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
@@ -7,6 +11,9 @@ import { AzureUtils } from '../../utils/azureUtils';
 import { Box, Tooltip } from '@material-ui/core';
 import { determineSemaphoreColor } from '../utils';
 
+/**
+ * Traffic light component showing Azure DevOps bug counts
+ */
 export const AzureDevOpsBugsTrafficLight = ({
   entities,
   onClick,
@@ -56,12 +63,13 @@ export const AzureDevOpsBugsTrafficLight = ({
           }
         }
 
-        // 2. Fetch facts + checks, and skip entities with null bug counts
+        // 2. Map Azure DevOps projects to their bug counts and check status
         const projectBugMap = new Map<
           string,
           { bugCount: number; url: string; failedCheck: boolean }
         >();
 
+        // 3. Process each entity to get its Azure DevOps bug metrics
         for (const entity of entities) {
           const ref = {
             kind: entity.kind,
@@ -88,6 +96,7 @@ export const AzureDevOpsBugsTrafficLight = ({
               entity.metadata.annotations?.['azure.com/bugs-query-id'] ??
               'unknown-query-id';
 
+            // Build URL to Azure DevOps bug query
             const projectUrl = `https://dev.azure.com/${orgName}/${projectName}/_queries/query/${queryId}/`;
 
             projectBugMap.set(projectName, {
@@ -97,10 +106,13 @@ export const AzureDevOpsBugsTrafficLight = ({
             });
           }
         }
+        
+        // 4. Count projects that failed their bug threshold checks
         const failures = Array.from(projectBugMap.values()).filter(
           r => r.failedCheck,
         ).length;
 
+        // 5. Determine traffic light color based on failure ratio
         const { color: computedColor, reason: computedReason } =
           determineSemaphoreColor(failures, entities.length, redThreshold);
 
@@ -115,6 +127,7 @@ export const AzureDevOpsBugsTrafficLight = ({
     fetchAzureData();
   }, [entities, techInsightsApi, catalogApi, azureUtils]);
 
+  // Render traffic light with tooltip showing status reason
   return (
     <Tooltip title={reason} placement="right">
       <Box

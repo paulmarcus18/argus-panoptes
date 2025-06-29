@@ -7,6 +7,9 @@ import {
   Button,
 } from '@material-ui/core';
 
+/**
+ * Props for configuring threshold settings dialog
+ */
 interface ThresholdDialogProps {
   open: boolean;
   onClose: () => void;
@@ -26,6 +29,7 @@ export const ThresholdDialog: React.FC<ThresholdDialogProps> = ({
   thresholds,
   setThresholds,
 }) => {
+  // Available metrics for each monitoring tool
   const itemMetrics: { [key: string]: string[] } = {
     Dependabot: ['Number of repos'],
     BlackDuck: ['Critical security risks', 'High security risks'],
@@ -37,6 +41,7 @@ export const ThresholdDialog: React.FC<ThresholdDialogProps> = ({
     'Foundation Pipelines': ['Build Success Rate'],
   };
 
+  // Default threshold values for common tools
   const defaultThresholds: { [key: string]: { [metric: string]: string } } = {
     SonarQube: {
       Bugs: '0',
@@ -54,8 +59,10 @@ export const ThresholdDialog: React.FC<ThresholdDialogProps> = ({
     },
   };
 
+  // Get metrics for the currently selected tool
   const currentMetrics = itemMetrics[activeItem] || [];
 
+  // Update threshold values in parent component state
   const handleThresholdChange = (metric: string, value: string) => {
     setThresholds(prev => ({
       ...prev,

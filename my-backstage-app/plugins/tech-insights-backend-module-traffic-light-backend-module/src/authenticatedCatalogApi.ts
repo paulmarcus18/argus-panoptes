@@ -19,12 +19,17 @@ import {
 } from '@backstage/catalog-client';
 import { CompoundEntityRef, Entity } from '@backstage/catalog-model';
 
+/**
+ * Decorator that wraps a CatalogApi and injects authentication token
+ * into all requests automatically
+ */
 export class AuthenticatedCatalogApi implements CatalogApi {
   constructor(
     private readonly catalogApi: CatalogApi,
     private readonly token: string,
   ) {}
 
+  // Entity removal operations
   async removeEntityByUid(
     uid: string,
     options?: CatalogRequestOptions,
@@ -35,6 +40,7 @@ export class AuthenticatedCatalogApi implements CatalogApi {
     });
   }
 
+  // Entity refresh operations
   async refreshEntity(
     entityRef: string,
     options?: CatalogRequestOptions,
@@ -45,6 +51,7 @@ export class AuthenticatedCatalogApi implements CatalogApi {
     });
   }
 
+  // Entity facet operations
   async getEntityFacets(
     request: GetEntityFacetsRequest,
     options?: CatalogRequestOptions,
@@ -55,6 +62,7 @@ export class AuthenticatedCatalogApi implements CatalogApi {
     });
   }
 
+  // Location management operations
   async addLocation(
     location: AddLocationRequest,
     options?: CatalogRequestOptions,
@@ -75,6 +83,7 @@ export class AuthenticatedCatalogApi implements CatalogApi {
     });
   }
 
+  // Location retrieval operations
   async getLocationByEntity(
     entityRef: string | CompoundEntityRef,
     options?: CatalogRequestOptions,
@@ -85,6 +94,7 @@ export class AuthenticatedCatalogApi implements CatalogApi {
     });
   }
 
+  // Validation operations
   async validateEntity(
     entity: Entity,
     locationRef: string,
@@ -96,6 +106,7 @@ export class AuthenticatedCatalogApi implements CatalogApi {
     });
   }
 
+  // Entity retrieval operations
   async getEntityByRef(
     ref: string,
     options?: CatalogRequestOptions,
@@ -136,6 +147,7 @@ export class AuthenticatedCatalogApi implements CatalogApi {
     });
   }
 
+  // Relationship operations
   async getEntityAncestors(
     request: GetEntityAncestorsRequest,
     options?: CatalogRequestOptions,
@@ -146,6 +158,7 @@ export class AuthenticatedCatalogApi implements CatalogApi {
     });
   }
 
+  // Additional location operations
   async getLocationById(
     locationId: string,
     options?: CatalogRequestOptions,
@@ -166,7 +179,6 @@ export class AuthenticatedCatalogApi implements CatalogApi {
     });
   }
 
-  // Missing method that was causing the TypeScript error
   async getLocations(
     request?: {},
     options?: CatalogRequestOptions,

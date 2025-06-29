@@ -97,7 +97,7 @@ export const ReportingSemaphoreDialog: React.FC<
         entities.map(async entity => {
           const ref = {
             kind: entity.kind,
-            namespace: entity.metadata.namespace || 'default',
+            namespace: entity.metadata.namespace ?? 'default',
             name: entity.metadata.name,
           };
 

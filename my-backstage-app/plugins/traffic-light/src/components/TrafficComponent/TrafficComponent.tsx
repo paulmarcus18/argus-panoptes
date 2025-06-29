@@ -1,3 +1,7 @@
+/**
+ * Traffic Light Dashboard Component
+ * Provides visualization of system health across multiple metrics
+ */
 import { useState, useEffect, useRef } from 'react';
 import {
   Typography,
@@ -39,33 +43,37 @@ import { ReportingSemaphoreDialog } from '../SemaphoreDialogs/ReportingDialog';
 import { DependabotSemaphoreDialog } from '../SemaphoreDialogs/DependabotSemaphoreDialog';
 
 export const TrafficComponent = () => {
+  // API and refs
   const catalogApi = useApi(catalogApiRef);
   const identityApi = useApi(identityApiRef);
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
+  
+  // Repository and filtering state
   const [repos, setRepos] = useState<any[]>([]);
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
   const [onlyCritical, setOnlyCritical] = useState(true);
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
   const [selectedEntities, setSelectedEntities] = useState<Entity[]>([]);
+  
+  // System selection state
   const [availableSystems, setAvailableSystems] = useState<string[]>([]);
   const [selectedSystem, setSelectedSystem] = useState<string>('');
   const [systemSearchTerm, setSystemSearchTerm] = useState<string>('');
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
 
-  // New state for specific semaphore dialogs
+  // Dialog visibility state
   const [preproductionDialogOpen, setPreproductionDialogOpen] = useState(false);
   const [foundationDialogOpen, setFoundationDialogOpen] = useState(false);
   const [reportingDialogOpen, setReportingDialogOpen] = useState(false);
-
   const [azureDevOpsDialogOpen, setAzureDevOpsDialogOpen] = useState(false);
   const [sonarQubeDialogOpen, setSonarQubeDialogOpen] = useState(false);
-
-  // New state for specific semaphore dialogs
   const [blackDuckDialogOpen, setBlackDuckDialogOpen] = useState(false);
-  const [githubSecurityDialogOpen, setGithubSecurityDialogOpen] =
-    useState(false);
+  const [githubSecurityDialogOpen, setGithubSecurityDialogOpen] = useState(false);
   const [DependabotDialogOpen, setDependabotDialogOpen] = useState(false);
 
+  /**
+   * Opens the appropriate dialog based on which traffic light was clicked
+   */
   const handleSemaphoreClick = (semaphoreType: string) => {
     switch (semaphoreType) {
       case 'BlackDuck':
@@ -74,7 +82,6 @@ export const TrafficComponent = () => {
       case 'Github Advanced Security':
         setGithubSecurityDialogOpen(true);
         break;
-
       case 'Azure DevOps Bugs':
         setAzureDevOpsDialogOpen(true);
         break;
@@ -101,6 +108,7 @@ export const TrafficComponent = () => {
     }
   };
 
+  // Dialog close handlers
   const handleCloseBlackDuckDialog = () => {
     setBlackDuckDialogOpen(false);
   };
@@ -133,6 +141,10 @@ export const TrafficComponent = () => {
     setDependabotDialogOpen(false);
   };
 
+  /**
+   * Load repositories and systems on component mount
+   * Fetches user's identity to filter systems they have access to
+   */
   useEffect(() => {
     const fetchCatalogRepos = async () => {
       // Get current user identity
@@ -201,6 +213,9 @@ export const TrafficComponent = () => {
     fetchCatalogRepos();
   }, [catalogApi.getEntities, identityApi, catalogApi]);
 
+  /**
+   * Update selected repositories when filters change
+   */
   useEffect(() => {
     const filtered = repos.filter(repo => {
       const isMine = !onlyMyRepos || repo.owner === 'philips-labs';
@@ -214,6 +229,7 @@ export const TrafficComponent = () => {
     setSelectedEntities(filtered.map(r => r.entity));
   }, [onlyMyRepos, onlyCritical, repos, selectedSystem]);
 
+  // Filter systems list based on search term
   const filteredSystems = availableSystems.filter(system =>
     system.toLowerCase().includes(systemSearchTerm.toLowerCase()),
   );
@@ -221,6 +237,7 @@ export const TrafficComponent = () => {
   return (
     <Page themeId="tool">
       <Content>
+        {/* Filter controls - repository filters and system selector */}
         <Box display="flex" mb={3} alignItems="center" flexWrap="wrap">
           <FormControlLabel
             control={
@@ -306,6 +323,7 @@ export const TrafficComponent = () => {
           </Box>
         </Box>
 
+        {/* Selected repositories display */}
         {selectedRepos.length > 0 && (
           <Box mb={4}>
             <InfoCard title={`Selected Repositories (${selectedRepos.length})`}>
@@ -334,7 +352,9 @@ export const TrafficComponent = () => {
           </Box>
         )}
 
+        {/* Traffic light panels - organized by category */}
         <Grid container spacing={3}>
+          {/* Security checks panel */}
           <Grid item xs={12} md={6}>
             <InfoCard title="Security Checks">
               <Typography variant="subtitle1">Dependabot</Typography>
@@ -360,6 +380,7 @@ export const TrafficComponent = () => {
             </InfoCard>
           </Grid>
 
+          {/* Pipelines panel */}
           <Grid item xs={12} md={6}>
             <InfoCard title="Pipelines">
               <Typography variant="subtitle1">Reporting Pipelines</Typography>
@@ -384,6 +405,7 @@ export const TrafficComponent = () => {
             </InfoCard>
           </Grid>
 
+          {/* Software quality panel */}
           <Grid item xs={12} md={6}>
             <InfoCard title="Software Quality">
               <Typography variant="subtitle1">SonarQube</Typography>
@@ -401,6 +423,7 @@ export const TrafficComponent = () => {
             </InfoCard>
           </Grid>
 
+          {/* Azure DevOps panel */}
           <Grid item xs={12} md={6}>
             <InfoCard title="Azure DevOps">
               <Typography variant="subtitle1">Bugs</Typography>
@@ -412,6 +435,7 @@ export const TrafficComponent = () => {
           </Grid>
         </Grid>
 
+        {/* Dialog components for detailed metric views */}
         <GitHubSemaphoreDialog
           open={githubSecurityDialogOpen}
           onClose={handleCloseGithubSecurityDialog}

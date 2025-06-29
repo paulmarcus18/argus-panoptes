@@ -5,6 +5,12 @@ import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { Entity } from '@backstage/catalog-model';
 import { DependabotUtils } from '../../utils/dependabotUtils';
 
+/**
+ * Determines traffic light color based on Dependabot security alerts
+ * Green: No critical or high alerts
+ * Yellow: Some high alerts but no critical
+ * Red: At least one critical alert
+ */
 export const determineDependabotColor = async (
   systemName: string,
   entities: Entity[],
@@ -13,6 +19,7 @@ export const determineDependabotColor = async (
 ): Promise<{ color: 'green' | 'red' | 'yellow' | 'gray'; reason: string }> => {
   const filteredEntities = entities.filter(e => e.spec?.system === systemName);
 
+  // Validate inputs and handle edge cases
   if (
     !systemName ||
     !Array.isArray(entities) ||
@@ -34,6 +41,7 @@ export const determineDependabotColor = async (
   }
 
   try {
+    // Fetch Dependabot status for all entities in parallel
     const result = await Promise.all(
       filteredEntities.map(entity =>
         dependabotUtils.getDependabotChecks(techInsightsApi, {
@@ -43,6 +51,8 @@ export const determineDependabotColor = async (
         }),
       ),
     );
+    
+    // Count checks that failed by severity level
     const totalChecks = result.reduce(
       (acc, res) => {
         acc.critical += res.criticalAlertCheck === false ? 1 : 0;
@@ -56,25 +66,28 @@ export const determineDependabotColor = async (
         medium: 0,
       },
     );
-    // no high repo and no critical repo -> green
+    
+    // Apply traffic light rules based on alert counts
     if (totalChecks.high === 0 && totalChecks.critical === 0) {
       return { color: 'green', reason: 'All dependabot checks passed' };
     } else if (totalChecks.critical > 0) {
-      // if atleast 1 critical repo -> red
       return {
         color: 'red',
-        reason: `Critical alerts exceed threshold (${totalChecks.critical} >  0)`,
+        reason: `Critical alerts exceed threshold (${totalChecks.critical} > 0)`,
       };
     }
     return {
       color: 'yellow',
-      reason: `${totalChecks.critical} minor critical issues in dependabot alerts`,
+      reason: `High severity alerts exceed threshold (${totalChecks.high} > 0)`,
     };
   } catch (err) {
     return { color: 'gray', reason: 'Error fetching dependabot data' };
   }
 };
 
+/**
+ * Component that displays a traffic light for Dependabot security status
+ */
 export const TrafficLightDependabot = ({
   entities,
   systemName,
@@ -84,14 +97,13 @@ export const TrafficLightDependabot = ({
   systemName: string;
   onClick?: () => void;
 }) => {
-  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray'>(
-    'gray',
-  );
+  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray'>('gray');
   const [reason, setReason] = useState('Fetching Dependabot status...');
 
   const techInsightsApi = useApi(techInsightsApiRef);
   const dependabotUtils = useMemo(() => new DependabotUtils(), []);
 
+  // Fetch and update status when dependencies change
   useEffect(() => {
     if (!entities.length) {
       setColor('gray');
