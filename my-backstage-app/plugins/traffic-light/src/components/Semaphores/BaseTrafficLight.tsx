@@ -5,7 +5,6 @@
  * Used as the foundation for building various status indicators throughout the application.
  */
 import { Box, Tooltip } from '@material-ui/core';
-import React from 'react';
 
 /**
  * Valid colors for the traffic light
