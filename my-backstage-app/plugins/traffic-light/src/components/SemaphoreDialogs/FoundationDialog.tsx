@@ -266,8 +266,7 @@ export const FoundationSemaphoreDialog: React.FC<
           },
           details: [],
         });
-      } catch (e) {
-        console.error('Failed to fetch Foundation pipeline data:', e);
+      } catch {
         setData({
           color: 'gray',
           metrics: {},
