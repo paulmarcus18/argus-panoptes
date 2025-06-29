@@ -71,7 +71,7 @@ export const AISummaries = () => {
 
       await postSummaries(result, today, apiBaseUrl, fetchApi.fetch);
       setMessagesBySystem(result);
-    } catch (err) {
+    } catch {
       setError('Failed to generate AI summaries. Please try again.');
     } finally {
       setLoading(false);
@@ -112,7 +112,7 @@ export const AISummaries = () => {
           `Failed to fetch summaries: ${res.status} ${res.statusText}`,
         );
       }
-    } catch (err) {
+    } catch {
       setError('Failed to fetch summaries. Generating new ones...');
       await callAI(); // fallback in case of failure
     } finally {
