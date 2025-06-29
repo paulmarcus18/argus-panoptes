@@ -115,7 +115,7 @@ export const PreproductionSemaphoreDialog: React.FC<
             kind: 'System',
             namespace,
             name:
-              typeof systemName === 'string' ? systemName : String(systemName),
+              typeof systemName === 'string' ? systemName : (JSON.stringify(systemName) ?? ''),
           });
 
           // Extract threshold for red traffic light from system annotation
@@ -284,9 +284,8 @@ export const PreproductionSemaphoreDialog: React.FC<
           },
           details: [],
         });
-      } catch (e) {
+      } catch {
         // Handle errors gracefully
-        console.error('Failed to fetch pipeline data:', e);
         setMetrics({
           totalSuccess: 0,
           totalFailure: 0,
@@ -320,8 +319,8 @@ export const PreproductionSemaphoreDialog: React.FC<
           ['Successful Runs', metrics.totalSuccess, 4, '#4caf50'],
           ['Failed Runs', metrics.totalFailure, 4, '#f44336'],
           ['Success Rate (%)', metrics.successRate, 4, '#2196f3'],
-        ].map(([label, value, size, color], index) => (
-          <Grid item xs={size as GridSize} key={index}>
+        ].map(([label, value, size, color]) => (
+          <Grid item xs={size as GridSize} key={label}>
             <Paper className={classes.metricBox} elevation={1}>
               <Typography
                 variant="h4"
