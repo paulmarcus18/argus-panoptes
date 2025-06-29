@@ -14,6 +14,7 @@ type MessagesBySystem = Record<string, SummaryPerRepo[]>;
  */
 interface SummaryGridProps {
   filteredMessages: MessagesBySystem;
+  fullMessages: MessagesBySystem; // Can be remover if unused
   repoSearch: string;
   handleDownload: (system: string) => void;
 }
