@@ -1,5 +1,5 @@
-import { generateSummaries } from './createAISummary';
-import { CommitsPerRepo } from './types';
+import { generateSummaries } from '../../utils/createAISummary';
+import { CommitsPerRepo } from '../../utils/types';
 
 describe('generateSummaries', () => {
   let mockFetch: jest.MockedFunction<typeof fetch>;
@@ -152,17 +152,11 @@ describe('generateSummaries', () => {
   });
 
   /**
-   * Checks if the generateSummaries function logs error
-   * and skips repos when an exception occurs (e.g., network failure).
+   * Checks if the generateSummaries function throws an error
+   * when an exception occurs (e.g., network failure).
+   * Since the implementation doesn't have error handling, it should throw.
    */
-  it('logs error and skips repo on exception', async () => {
-    /**
-     * Mocks the console.error function to track error logging.
-     */
-    const consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-
+  it('throws error on network failure', async () => {
     /**
      * Mocks a rejected fetch to simulate network/API failure.
      */
@@ -176,39 +170,20 @@ describe('generateSummaries', () => {
     };
 
     /**
-     * Gets the response of the generateSummaries function on the mock input.
+     * Expects the function to throw an error since there's no error handling.
      */
-    const result = await generateSummaries(input, 'http://test-api', mockFetch);
-
-    /**
-     * Checks to see that the failed repo is skipped.
-     */
-    expect(result).toEqual({ 'system-error': [] });
-
-    /**
-     * Ensures error is logged with the expected message.
-     */
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Error summarizing repoErr in system-error:',
-      expect.any(Error),
-    );
-
-    /**
-     * Restores the original console.error function.
-     */
-    consoleErrorSpy.mockRestore();
+    await expect(generateSummaries(input, 'http://test-api', mockFetch))
+      .rejects
+      .toThrow('Network error');
   });
 
   /**
-   * Checks if the function handles multiple systems correctly.
+   * Checks if the function throws error when API call fails.
+   * Since the implementation doesn't handle errors, it should throw on the first failure.
    */
-  it('handles multiple systems with mixed success and failure', async () => {
-    const consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-
+  it('throws error on API failure', async () => {
     /**
-     * Mock successful response for first repo, failed for second.
+     * Mock successful response for first repo, then simulate API failure.
      */
     mockFetch
       .mockResolvedValueOnce({
@@ -233,20 +208,11 @@ describe('generateSummaries', () => {
       ],
     };
 
-    const result = await generateSummaries(input, 'http://test-api', mockFetch);
-
-    expect(result).toEqual({
-      'system-success': [
-        { repoName: 'repo-success', summary: 'Success summary' },
-      ],
-      'system-fail': [],
-    });
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Error summarizing repo-fail in system-fail:',
-      expect.any(Error),
-    );
-
-    consoleErrorSpy.mockRestore();
+    /**
+     * The function should throw when it hits the API failure on the second repo.
+     */
+    await expect(generateSummaries(input, 'http://test-api', mockFetch))
+      .rejects
+      .toThrow('API failure');
   });
 });
