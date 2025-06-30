@@ -62,7 +62,7 @@ export function useProjects() {
 
       const projects = await response.json();
       return Array.isArray(projects) ? projects : [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }, []);
@@ -136,7 +136,7 @@ export function useMetricsData(
             const json = await response.json();
 
             // Transform API response to DataPoint format
-            const dataPoints: DataPoint[] = (json || []).map((dp: any) => {
+            const dataPoints: DataPoint[] = (json ?? []).map((dp: any) => {
               let date: Date | undefined;
 
               if (dp.data_key) {
@@ -166,7 +166,7 @@ export function useMetricsData(
               id: metric.id,
               dataPoints,
             };
-          } catch (error) {
+          } catch {
             return {
               id: metric.id,
               dataPoints: [],
@@ -176,7 +176,7 @@ export function useMetricsData(
       );
 
       return results;
-    } catch (error) {
+    } catch {
       return [];
     }
   }, [

@@ -35,14 +35,21 @@ const discoveryApi = {
 
 const fetchApi: Partial<FetchApi> = {
   fetch: jest.fn(async (input: RequestInfo | URL) => {
-    const url = typeof input === 'string' ? input : input.toString();
+    let url: string;
+    if (typeof input === 'string') {
+      url = input;
+    } else if (input instanceof URL) {
+      url = input.href;
+    } else {
+      throw new Error('Unsupported input type for fetch');
+    }
 
     if (url.endsWith('/projects')) {
       return new Response(JSON.stringify(mockProjects), { status: 200 });
     }
 
     if (url.includes('/metrics/')) {
-      const metricId = url.match(/metrics\/(.*?)\//)?.[1];
+      const metricId = /metrics\/(.*?)\//.exec(url)?.[1];
       const metric = mockMetrics.find(m => m.id === metricId);
       const data = (metric?.dataPoints || []).map(dp => ({
         data_key: dp.key,

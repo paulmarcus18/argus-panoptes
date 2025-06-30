@@ -386,8 +386,10 @@ export const DoraDashboard = () => {
             anchorEl={exportMenuAnchor}
             open={Boolean(exportMenuAnchor)}
             onClose={handleExportClose}
-            PaperProps={{
-              sx: { mt: 1 },
+            slotProps={{
+              paper: {
+                sx: { mt: 1 },
+              },
             }}
           >
             <MenuItem onClick={exportAsPDF} disabled={isExporting}>
