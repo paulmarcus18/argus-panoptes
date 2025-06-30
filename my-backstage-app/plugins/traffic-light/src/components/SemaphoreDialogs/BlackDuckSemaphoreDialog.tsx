@@ -108,7 +108,7 @@ export const BlackDuckSemaphoreDialog: React.FC<
 
         for (const repo of displayedRepos) {
           // Create a description and determine severity based on the repo's issues
-          let description = ``;
+          let description;
           let severity = '';
 
           if (repo.security_risks_critical > 0) {
@@ -139,7 +139,7 @@ export const BlackDuckSemaphoreDialog: React.FC<
           techInsightsApi,
           blackDuckUtils,
         );
-        let color: 'green' | 'red' | 'yellow' | 'gray' = 'green';
+        let color: 'green' | 'red' | 'yellow' | 'gray';
         color = trafficLightcolor.color;
 
         // Create the summary
@@ -152,7 +152,7 @@ export const BlackDuckSemaphoreDialog: React.FC<
 
         // Set the real data
         setData({ color, metrics: totals, summary, details });
-      } catch (err) {
+      } catch {
         // Set default data in case of error
         setData({
           color: 'gray',

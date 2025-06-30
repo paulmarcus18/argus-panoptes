@@ -179,7 +179,7 @@ export const DependabotSemaphoreDialog: React.FC<
           techInsightsApi,
           dependabotUtils,
         );
-        let color: 'green' | 'red' | 'yellow' | 'gray' = 'gray';
+        let color: 'green' | 'red' | 'yellow' | 'gray';
         color = trafficLightcolor.color;
 
         // Update the component's state with the processed data.
@@ -197,7 +197,7 @@ export const DependabotSemaphoreDialog: React.FC<
         });
 
         setTopRepos(top5Repos);
-      } catch (error) {
+      } catch {
         // In case of an error, set a failure state.
         setData({
           color: 'gray',
@@ -233,8 +233,8 @@ export const DependabotSemaphoreDialog: React.FC<
           ['Critical', data.metrics.criticalIssues, 4, '#d32f2f'],
           ['High', data.metrics.highIssues, 4, '#f44336'],
           ['Medium', data.metrics.mediumIssues, 4, '#ff9800'],
-        ].map(([label, value, size, color], i) => (
-          <Grid item xs={size as GridSize} key={i}>
+        ].map(([label, value, size, color]) => (
+          <Grid item xs={size as GridSize} key={label}>
             <Paper className={classes.metricBox} elevation={1}>
               <Typography
                 variant="h4"
