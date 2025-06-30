@@ -73,7 +73,7 @@ export class FoundationUtils {
         failureWorkflowRunsCount: Number(facts.failureWorkflowRunsCount ?? 0),
         successRate: Number(facts.successRate ?? 0),
       };
-    } catch (error) {
+    } catch {
       return { ...DEFAULT_METRICS };
     }
   }
@@ -105,7 +105,7 @@ export class FoundationUtils {
       return {
         successRateCheck: successRateCheck?.result === true,
       };
-    } catch (error) {
+    } catch {
       return { ...DEFAULT_CHECKS };
     }
   }

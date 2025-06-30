@@ -81,7 +81,7 @@ export class BlackDuckUtils {
         security_risks_high: Number(facts.security_risks_high ?? 0) || 0,
         security_risks_medium: Number(facts.security_risks_medium ?? 0) || 0,
       };
-    } catch (error) {
+    } catch {
       return { ...DEFAULT_METRICS };
     }
   }
@@ -122,7 +122,7 @@ export class BlackDuckUtils {
         highSecurityCheck: highSecurityCheck?.result === true,
         mediumSecurityCheck: mediumSecurityCheck?.result === true,
       };
-    } catch (error) {
+    } catch {
       // Return default values if an error occurs
       return { ...DEFAULT_CHECKS };
     }
@@ -162,7 +162,7 @@ export class BlackDuckUtils {
               ? facts.security_risks_medium
               : 0,
         });
-      } catch (err) {
+      } catch {
         results.push({
           entity: entityRef,
           security_risks_critical: 0,

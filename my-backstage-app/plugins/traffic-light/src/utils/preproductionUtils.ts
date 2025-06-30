@@ -85,7 +85,7 @@ export class PreproductionUtils {
         failureWorkflowRunsCount: Number(facts.failureWorkflowRunsCount ?? 0),
         successRate: Number(facts.successRate ?? 0),
       };
-    } catch (error) {
+    } catch {
       // Return default values if an error occurs
       return { ...DEFAULT_METRICS };
     }
@@ -121,7 +121,7 @@ export class PreproductionUtils {
       return {
         successRateCheck: successRateCheck?.result === true,
       };
-    } catch (error) {
+    } catch {
       // Return default values if an error occurs
       return { ...DEFAULT_CHECKS };
     }

@@ -49,7 +49,7 @@ export class AzureUtils {
       const bugCount = Number(facts.azure_bug_count ?? 0);
 
       return { azureBugCount: bugCount };
-    } catch (error) {
+    } catch {
       return { ...DEFAULT_METRICS };
     }
   }
@@ -69,7 +69,7 @@ export class AzureUtils {
       return {
         bugCountCheck: bugCheck?.result === true,
       };
-    } catch (error) {
+    } catch {
       return { ...DEFAULT_CHECKS };
     }
   }

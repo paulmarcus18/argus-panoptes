@@ -46,7 +46,7 @@ export class DependabotUtils {
         high: Number(facts.high ?? 0),
         medium: Number(facts.medium ?? 0),
       };
-    } catch (error) {
+    } catch {
       return { critical: 0, high: 0, medium: 0 };
     }
   }
@@ -84,7 +84,7 @@ export class DependabotUtils {
         highAlertCheck: highCheck?.result === true,
         mediumAlertCheck: mediumCheck?.result === true,
       };
-    } catch (error) {
+    } catch {
       return {
         criticalAlertCheck: false,
         highAlertCheck: false,
