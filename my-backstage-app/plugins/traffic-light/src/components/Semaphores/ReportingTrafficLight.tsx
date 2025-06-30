@@ -51,7 +51,7 @@ export const ReportingTrafficLight = ({
       const systemEntityRef = {
         kind: 'System',
         namespace,
-        name: typeof systemName === 'string' ? systemName : String(systemName),
+        name: typeof systemName === 'string' ? systemName : JSON.stringify(systemName),
       };
 
       const systemEntity = await catalogApi.getEntityByRef(systemEntityRef);
@@ -105,7 +105,7 @@ export const ReportingTrafficLight = ({
       // Default values for resilient operation
       let redThreshold = 0.33;
       let failures = 0;
-      let total = entities.length;
+      let total;
 
       // Attempt to fetch threshold - if it fails, use default
       const thresholdPromise = fetchRedThreshold(entities);

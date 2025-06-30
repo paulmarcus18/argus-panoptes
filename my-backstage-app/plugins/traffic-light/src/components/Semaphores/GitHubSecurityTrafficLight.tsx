@@ -301,7 +301,7 @@ export const GitHubSecurityTrafficLight = ({
           kind: 'System',
           namespace: entities[0].metadata.namespace ?? 'default',
           name:
-            typeof systemName === 'string' ? systemName : String(systemName),
+            typeof systemName === 'string' ? systemName : JSON.stringify(systemName),
         });
 
         const thresholds = extractSecurityThresholds(
@@ -314,7 +314,7 @@ export const GitHubSecurityTrafficLight = ({
           entities.map(entity =>
             githubASUtils.getGitHubSecurityData(techInsightsApi, {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             }),
           ),
@@ -328,7 +328,7 @@ export const GitHubSecurityTrafficLight = ({
         );
         setColor(result.color);
         setReason(result.reason);
-      } catch (err) {
+      } catch {
         setColor('gray');
         setReason('Failed to retrieve GitHub Security data');
       }

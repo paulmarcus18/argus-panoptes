@@ -52,7 +52,7 @@ export const determineBlackDuckColor = async (
   const systemEntity = await catalogApi.getEntityByRef({
     kind: 'system',
     namespace: 'default',
-    name: typeof systemName === 'string' ? systemName : String(systemName),
+    name: typeof systemName === 'string' ? systemName : JSON.stringify(systemName),
   });
 
   // Get thresholds for traffic light colour from system annotations
@@ -68,7 +68,7 @@ export const determineBlackDuckColor = async (
       enabledEntities.map(entity =>
         blackDuckUtils.getBlackDuckChecks(techInsightsApi, {
           kind: entity.kind,
-          namespace: entity.metadata.namespace || 'default',
+          namespace: entity.metadata.namespace ?? 'default',
           name: entity.metadata.name,
         }),
       ),
@@ -116,7 +116,7 @@ export const determineBlackDuckColor = async (
       color: 'yellow',
       reason: `Some security issues detected: ${counts.highSecurityCheckFails} entities failed the high security risks check, ${counts.mediumSecurityCheckFails} entities failed the medium security risks check.`,
     };
-  } catch (err) {
+  } catch {
     return { color: 'gray', reason: 'Error fetching BlackDuck data' };
   }
 };
