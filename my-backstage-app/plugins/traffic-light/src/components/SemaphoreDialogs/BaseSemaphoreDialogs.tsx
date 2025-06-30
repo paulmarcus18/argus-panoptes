@@ -182,7 +182,7 @@ export const BaseSemaphoreDialog: React.FC<BaseSemaphoreDialogProps> = ({
             </Paper>
 
             {/* Custom metrics section provided by parent component */}
-            {renderMetrics && renderMetrics()}
+            {renderMetrics?.()}
 
             {/* Issues list - only shown if details are provided */}
             {data.details?.length > 0 && (
@@ -194,7 +194,7 @@ export const BaseSemaphoreDialog: React.FC<BaseSemaphoreDialogProps> = ({
                 <List>
                   {data.details.map((issue, index) => (
                     <Paper
-                      key={index}
+                      key={issue.description || index}
                       className={classes.issueItem}
                       elevation={0}
                       style={{
@@ -206,7 +206,7 @@ export const BaseSemaphoreDialog: React.FC<BaseSemaphoreDialogProps> = ({
                       <Typography variant="subtitle1">
                         {issue.url ? (
                           <Link
-                            href={issue.directLink || issue.url}
+                            href={issue.directLink ?? issue.url}
                             target="_blank"
                             rel="noopener noreferrer"
                           >

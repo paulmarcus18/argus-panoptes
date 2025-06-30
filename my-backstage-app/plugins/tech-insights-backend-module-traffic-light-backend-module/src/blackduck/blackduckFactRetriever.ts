@@ -230,7 +230,7 @@ export const createBlackDuckFactRetriever = (config: Config): FactRetriever => {
               },
               facts,
             };
-          } catch (error) {
+          } catch {
             return null;
           }
         }),

@@ -261,7 +261,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
       );
       const githubConfig = githubConfigs?.[0];
       token = githubConfig?.getOptionalString('token');
-    } catch (e) {
+    } catch {
       return [];
     }
 
@@ -340,7 +340,7 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
             },
             facts: pipelineSummary,
           } as TechInsightFact;
-        } catch (error: any) {
+        } catch {
           return null;
         }
       }),
