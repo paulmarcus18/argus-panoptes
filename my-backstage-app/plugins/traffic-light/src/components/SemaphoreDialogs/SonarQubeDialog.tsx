@@ -76,7 +76,7 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
           enabledEntities.map(entity =>
             sonarUtils.getSonarQubeFacts(techInsightsApi, {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             }),
           ),
@@ -159,7 +159,7 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
           techInsightsApi,
           sonarUtils,
         );
-        let color: 'green' | 'red' | 'yellow' | 'gray' = 'green';
+        let color: 'green' | 'red' | 'yellow' | 'gray';
         color = trafficLightcolor.color;
 
         // Create the summary

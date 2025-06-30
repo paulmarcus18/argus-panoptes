@@ -82,7 +82,7 @@ export const ReportingSemaphoreDialog: React.FC<
           kind: 'System',
           namespace,
           name:
-            typeof systemName === 'string' ? systemName : String(systemName),
+            typeof systemName === 'string' ? systemName : JSON.stringify(systemName),
         });
 
         const thresholdAnnotation =
@@ -228,7 +228,7 @@ export const ReportingSemaphoreDialog: React.FC<
           ['Failed Runs', metrics.totalFailure, 4, '#f44336'],
           ['Success Rate (%)', metrics.successRate, 4, '#2196f3'],
         ].map(([label, value, size, color], index) => (
-          <Grid item xs={size as GridSize} key={index}>
+          <Grid item xs={size as GridSize} key={`${label}-${index}`}>
             <Paper className={classes.metricBox} elevation={1}>
               <Typography
                 variant="h4"

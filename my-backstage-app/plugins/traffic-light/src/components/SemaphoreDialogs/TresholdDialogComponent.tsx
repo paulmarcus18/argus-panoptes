@@ -77,7 +77,9 @@ export const ThresholdDialog: React.FC<ThresholdDialogProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      onExited={onExited}
+      TransitionProps={{
+        onExited: onExited,
+      }}
       maxWidth="xs"
       fullWidth
     >
