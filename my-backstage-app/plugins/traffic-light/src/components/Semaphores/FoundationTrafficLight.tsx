@@ -34,7 +34,7 @@ export const FoundationTrafficLight = ({
       try {
         // Step 1: Determine system entity and get configuration
         const systemName = entities[0].spec?.system;
-        const namespace = entities[0].metadata.namespace || 'default';
+        const namespace = entities[0].metadata.namespace ?? 'default';
 
         const systemEntity = systemName
           ? await catalogApi.getEntityByRef({
@@ -86,7 +86,7 @@ export const FoundationTrafficLight = ({
           filteredEntities.map(entity =>
             foundationUtils.getFoundationPipelineChecks(techInsightsApi, {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             }),
           ),
@@ -105,7 +105,7 @@ export const FoundationTrafficLight = ({
 
         setColor(newColor);
         setReason(newReason);
-      } catch (err) {
+      } catch {
         setColor('gray');
         setReason('Error fetching foundation pipeline data');
       }

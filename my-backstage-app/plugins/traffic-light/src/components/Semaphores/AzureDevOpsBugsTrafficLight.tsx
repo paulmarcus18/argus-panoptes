@@ -44,7 +44,7 @@ export const AzureDevOpsBugsTrafficLight = ({
         // 1. Get red threshold from system annotation
         let redThreshold = 0.33;
         const systemName = entities[0].spec?.system;
-        const namespace = entities[0].metadata.namespace || 'default';
+        const namespace = entities[0].metadata.namespace ?? 'default';
 
         if (systemName) {
           const systemEntity = await catalogApi.getEntityByRef({
@@ -118,7 +118,7 @@ export const AzureDevOpsBugsTrafficLight = ({
 
         setColor(computedColor);
         setReason(computedReason);
-      } catch (err) {
+      } catch {
         setColor('gray');
         setReason('Failed to retrieve Azure DevOps bug data');
       }
