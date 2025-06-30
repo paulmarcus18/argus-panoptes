@@ -3,7 +3,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { MetricChart } from './MetricChart';
 
 // Format values based on metric type
-export function formatValue(metricType: string, value: any): string {
+function formatValue(metricType: string, value: any): string {
   if (value === null || value === undefined || isNaN(Number(value))) {
     return 'N/A';
   }
@@ -18,7 +18,7 @@ export function formatValue(metricType: string, value: any): string {
     case 'mttr': // Mean Time to Restore Service
       return numValue.toFixed(1);
     case 'cfr': // Change Failure Rate
-      return (numValue * 100).toFixed(1) + '%';
+      return `${(numValue * 100).toFixed(1)}%`;
     default:
       return String(numValue);
   }
