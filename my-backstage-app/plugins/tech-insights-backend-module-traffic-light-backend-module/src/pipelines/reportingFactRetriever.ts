@@ -98,7 +98,7 @@ async function fetchWorkflowDefinitions(
     }
     const data = await response.json();
     return data.workflows ?? [];
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -208,7 +208,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
       );
       const githubConfig = githubConfigs?.[0];
       token = githubConfig?.getOptionalString('token');
-    } catch (e) {
+    } catch {
       return [];
     }
 
@@ -328,7 +328,7 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
             },
             facts: reportingSummary,
           } as TechInsightFact;
-        } catch (error: any) {
+        } catch {
           return null;
         }
       }),
