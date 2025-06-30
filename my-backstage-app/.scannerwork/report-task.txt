@@ -2,5 +2,5 @@ projectKey=sonar_code_quality_testvam
 serverUrl=http://localhost:9000
 serverVersion=25.6.0.109173
 dashboardUrl=http://localhost:9000/dashboard?id=sonar_code_quality_testvam
-ceTaskId=d896132a-8a02-4396-942f-ce945b8bf41e
-ceTaskUrl=http://localhost:9000/api/ce/task?id=d896132a-8a02-4396-942f-ce945b8bf41e
+ceTaskId=4bdbd735-55d3-4a28-8ecd-1f2a4da771dd
+ceTaskUrl=http://localhost:9000/api/ce/task?id=4bdbd735-55d3-4a28-8ecd-1f2a4da771dd
