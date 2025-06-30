@@ -192,7 +192,6 @@ export const AISummaries = () => {
     return (
       <SummaryGrid
         filteredMessages={filteredMessages}
-        fullMessages={messagesBySystem}
         repoSearch={repoSearch}
         handleDownload={handleDownload}
       />
