@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -101,24 +101,25 @@ describe('ReportingSemaphoreDialog', () => {
 
   it('loads and displays metrics', async () => {
     const onClose = jest.fn();
-    await act(async () => {
-      render(
-        <Wrapper>
-          <ReportingSemaphoreDialog
-            open
-            onClose={onClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <ReportingSemaphoreDialog
+          open
+          onClose={onClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(mockReportingUtils.getReportingPipelineFacts).toHaveBeenCalled();
       expect(mockReportingUtils.getReportingPipelineChecks).toHaveBeenCalled();
     });
 
-    expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
+    await waitFor(() => {
+      expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
+    });
+
     expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
       'Too many failures',
     );
@@ -130,17 +131,15 @@ describe('ReportingSemaphoreDialog', () => {
       new Error('API error'),
     );
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <ReportingSemaphoreDialog
-            open
-            onClose={jest.fn()}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <ReportingSemaphoreDialog
+          open
+          onClose={jest.fn()}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
@@ -165,17 +164,15 @@ describe('ReportingSemaphoreDialog', () => {
   it('invokes onClose when close button is clicked', async () => {
     const onClose = jest.fn();
 
-    await act(async () => {
-      render(
-        <Wrapper>
-          <ReportingSemaphoreDialog
-            open
-            onClose={onClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
-    });
+    render(
+      <Wrapper>
+        <ReportingSemaphoreDialog
+          open
+          onClose={onClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     screen.getByTestId('close-button').click();
     expect(onClose).toHaveBeenCalled();
