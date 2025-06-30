@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Entity } from '@backstage/catalog-model';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -123,9 +123,7 @@ describe('FoundationTrafficLight', () => {
   });
 
   it('handles empty entities', async () => {
-    await act(async () => {
       renderComponent([]);
-    });
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'gray');
@@ -134,9 +132,7 @@ describe('FoundationTrafficLight', () => {
   });
 
   it('uses system annotation threshold and configured repos', async () => {
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -161,10 +157,7 @@ describe('FoundationTrafficLight', () => {
     mockCatalogApi.getEntityByRef.mockResolvedValueOnce({
       metadata: { annotations: {} },
     });
-
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(0, 1, 0.33);
@@ -177,9 +170,7 @@ describe('FoundationTrafficLight', () => {
       metadata: { name: 'not-configured', namespace: 'default' },
     });
 
-    await act(async () => {
       renderComponent(mockEntities);
-    });
 
     await waitFor(() => {
       expect(
@@ -199,9 +190,7 @@ describe('FoundationTrafficLight', () => {
       'foundation-configured-repositories'
     ];
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(
@@ -215,10 +204,7 @@ describe('FoundationTrafficLight', () => {
       'foundation-configured-repositories'
     ] = 'nonexistent';
 
-    await act(async () => {
       renderComponent();
-    });
-
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'gray');
@@ -234,9 +220,7 @@ describe('FoundationTrafficLight', () => {
       new Error('Failure'),
     );
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
@@ -251,16 +235,11 @@ describe('FoundationTrafficLight', () => {
   it('handles click event if onClick is provided', async () => {
     const onClick = jest.fn();
 
-    await act(async () => {
       renderComponent(mockEntities, onClick);
-    });
 
     const light = await screen.findByTestId('base-traffic-light');
 
-    await act(async () => {
       light.click();
-    });
-
     expect(onClick).toHaveBeenCalled();
   });
 
@@ -273,9 +252,7 @@ describe('FoundationTrafficLight', () => {
       reason: 'Many failures',
     });
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(1, 1, 0.5);

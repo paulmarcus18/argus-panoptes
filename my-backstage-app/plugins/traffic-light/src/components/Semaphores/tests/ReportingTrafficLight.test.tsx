@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Entity } from '@backstage/catalog-model';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -126,9 +126,7 @@ describe('ReportingTrafficLight Component', () => {
   });
 
   it('sets gray when no entities are passed', async () => {
-    await act(async () => {
       renderComponent([]);
-    });
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'gray');
@@ -137,9 +135,7 @@ describe('ReportingTrafficLight Component', () => {
   });
 
   it('fetches system entity and passes custom threshold', async () => {
-    await act(async () => {
       renderComponent();
-    });
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
         kind: 'System',
@@ -152,9 +148,7 @@ describe('ReportingTrafficLight Component', () => {
 
   it('uses default threshold when annotation is missing', async () => {
     mockCatalogApi.getEntityByRef.mockResolvedValueOnce({ metadata: {} });
-    await act(async () => {
       renderComponent();
-    });
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(0, 1, 0.33);
     });
@@ -169,9 +163,7 @@ describe('ReportingTrafficLight Component', () => {
       reason: 'Reporting failures detected',
     });
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
@@ -185,14 +177,10 @@ describe('ReportingTrafficLight Component', () => {
 
   it('calls onClick when traffic light is clicked', async () => {
     const onClick = jest.fn();
-    await act(async () => {
       renderComponent(mockEntities, onClick);
-    });
 
     const light = await screen.findByTestId('base-traffic-light');
-    await act(async () => {
       light.click();
-    });
 
     expect(onClick).toHaveBeenCalled();
   });

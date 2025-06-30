@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Entity } from '@backstage/catalog-model';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -230,9 +230,7 @@ describe('SonarQubeTrafficLight component', () => {
   };
 
   it('renders green traffic light when quality gates pass', async () => {
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(screen.getByTestId('base-traffic-light')).toHaveAttribute(
@@ -243,9 +241,7 @@ describe('SonarQubeTrafficLight component', () => {
   });
 
   it('renders gray for empty entity list', async () => {
-    await act(async () => {
       renderComponent([]);
-    });
 
     await waitFor(() => {
       expect(screen.getByTestId('base-traffic-light')).toHaveAttribute(
@@ -258,14 +254,10 @@ describe('SonarQubeTrafficLight component', () => {
   it('calls onClick when clicked', async () => {
     const onClick = jest.fn();
 
-    await act(async () => {
       renderComponent(mockEntities, onClick);
-    });
 
     const light = await screen.findByTestId('base-traffic-light');
-    await act(async () => {
       light.click();
-    });
 
     expect(onClick).toHaveBeenCalledTimes(1);
   });
@@ -296,7 +288,6 @@ describe('SonarQubeTrafficLight component', () => {
       },
     ];
 
-    await act(async () => {
       rerender(
         <TestApiProvider
           apis={[
@@ -307,8 +298,7 @@ describe('SonarQubeTrafficLight component', () => {
           <SonarQubeTrafficLight entities={newEntities} />
         </TestApiProvider>,
       );
-    });
-
+      
     await waitFor(() => {
       expect(screen.getByTestId('base-traffic-light')).toBeInTheDocument();
     });

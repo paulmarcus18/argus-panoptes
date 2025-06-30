@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Entity } from '@backstage/catalog-model';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -153,9 +153,7 @@ describe('PreproductionTrafficLight Component', () => {
   });
 
   it('should update to gray when no entities are provided', async () => {
-    await act(async () => {
       renderComponent([]);
-    });
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -168,9 +166,7 @@ describe('PreproductionTrafficLight Component', () => {
   });
 
   it('should update to green when all checks pass', async () => {
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -183,9 +179,7 @@ describe('PreproductionTrafficLight Component', () => {
   });
 
   it('should fetch system entity with correct parameters', async () => {
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -204,9 +198,7 @@ describe('PreproductionTrafficLight Component', () => {
       },
     };
 
-    await act(async () => {
       renderComponent([entityWithStringSystem]);
-    });
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -225,9 +217,7 @@ describe('PreproductionTrafficLight Component', () => {
       },
     };
 
-    await act(async () => {
       renderComponent([entityWithNonStringSystem]);
-    });
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -256,10 +246,7 @@ describe('PreproductionTrafficLight Component', () => {
     (PreproductionUtils as jest.Mock).mockImplementation(
       () => mockPreproductionUtilsInstance,
     );
-
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(3, 3, 0.33);
@@ -280,10 +267,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent();
-    });
-
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(3, 3, 0.5);
     });
@@ -304,9 +288,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(
@@ -344,9 +326,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(
@@ -370,9 +350,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(
@@ -387,9 +365,7 @@ describe('PreproductionTrafficLight Component', () => {
     ] = 'non-existent-repo-1,non-existent-repo-2';
     mockCatalogApi.getEntityByRef.mockResolvedValue(mockSystemEntity);
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -415,9 +391,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(
@@ -444,10 +418,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent(entitiesWithoutSystem);
-    });
-
     await waitFor(() => {
       expect(
         mockPreproductionUtilsInstance.getPreproductionPipelineChecks,
@@ -478,9 +449,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent(entitiesWithoutNamespace);
-    });
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -510,9 +479,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(2, 3, 0.33);
@@ -529,9 +496,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -545,9 +510,7 @@ describe('PreproductionTrafficLight Component', () => {
 
   it('should call onClick handler when provided', async () => {
     const mockOnClick = jest.fn();
-    await act(async () => {
       renderComponent(mockEntities, mockOnClick);
-    });
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -556,17 +519,13 @@ describe('PreproductionTrafficLight Component', () => {
 
     const trafficLight = screen.getByTestId('base-traffic-light');
 
-    await act(async () => {
       trafficLight.click();
-    });
 
     expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
 
   it('should create PreproductionUtils instance with memoization', async () => {
-    await act(async () => {
       renderComponent();
-    });
 
     expect(PreproductionUtils).toHaveBeenCalledTimes(1);
   });
@@ -586,9 +545,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(
@@ -614,9 +571,7 @@ describe('PreproductionTrafficLight Component', () => {
       () => mockPreproductionUtilsInstance,
     );
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(1, 3, 0.33);

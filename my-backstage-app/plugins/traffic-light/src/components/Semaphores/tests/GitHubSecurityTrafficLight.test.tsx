@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
@@ -100,10 +100,7 @@ describe('GitHubSecurityTrafficLight', () => {
   });
 
   it('renders green traffic light when all security checks pass', async () => {
-    await act(async () => {
       renderComponent();
-    });
-
     await waitFor(() => {
       const greenIndicator = screen.getByTitle(
         'All GitHub security checks passed for all entities',
@@ -121,9 +118,7 @@ describe('GitHubSecurityTrafficLight', () => {
       secretCheck: false,
     });
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       const redIndicator = screen.getByTitle(
@@ -142,9 +137,7 @@ describe('GitHubSecurityTrafficLight', () => {
       secretCheck: false,
     });
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       const yellowIndicator = screen.getByTitle(
@@ -163,9 +156,7 @@ describe('GitHubSecurityTrafficLight', () => {
       secretCheck: true,
     });
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       const redSecret = screen.getByTitle(
@@ -178,9 +169,7 @@ describe('GitHubSecurityTrafficLight', () => {
   it('shows error state when API call fails', async () => {
     mockCatalogApi.getEntityByRef.mockRejectedValue(new Error('API Error'));
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       const errorDiv = screen.getByTitle(
@@ -195,9 +184,7 @@ describe('GitHubSecurityTrafficLight', () => {
       new Error('GitHub API Error'),
     );
 
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       const errorDiv = screen.getByTitle(
@@ -210,9 +197,7 @@ describe('GitHubSecurityTrafficLight', () => {
   it('calls onClick when clicked', async () => {
     const handleClick = jest.fn();
 
-    await act(async () => {
       renderComponent(mockEntities, handleClick);
-    });
 
     await waitFor(() => {
       const clickable = screen.getByTitle(
@@ -225,9 +210,7 @@ describe('GitHubSecurityTrafficLight', () => {
   });
 
   it('fetches system entity with correct parameters', async () => {
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -244,9 +227,7 @@ describe('GitHubSecurityTrafficLight', () => {
       spec: { system: 'string-system-name' },
     };
 
-    await act(async () => {
       renderComponent([entityWithStringSystem]);
-    });
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -258,9 +239,7 @@ describe('GitHubSecurityTrafficLight', () => {
   });
 
   it('calls GitHub utils with correct entity reference', async () => {
-    await act(async () => {
       renderComponent();
-    });
 
     await waitFor(() => {
       expect(mockGitHubUtils.getGitHubSecurityData).toHaveBeenCalledWith(
@@ -283,9 +262,7 @@ describe('GitHubSecurityTrafficLight', () => {
       },
     ];
 
-    await act(async () => {
       renderComponent(entitiesWithoutNamespace);
-    });
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -305,9 +282,7 @@ describe('GitHubSecurityTrafficLight', () => {
   });
 
   it('creates GithubAdvancedSecurityUtils instance correctly', async () => {
-    await act(async () => {
       renderComponent();
-    });
     expect(GithubAdvancedSecurityUtils).toHaveBeenCalledTimes(1);
   });
 });
