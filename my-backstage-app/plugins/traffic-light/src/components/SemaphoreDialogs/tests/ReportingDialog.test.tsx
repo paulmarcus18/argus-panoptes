@@ -8,9 +8,29 @@ import { ReportingSemaphoreDialog } from '../ReportingDialog';
 import { ReportingUtils } from '../../../utils/reportingUtils';
 import { determineSemaphoreColor } from '../../utils';
 import { Entity } from '@backstage/catalog-model';
+import React, { act } from 'react';
 
+// Mock dependencies
 jest.mock('../../../utils/reportingUtils');
 jest.mock('../../utils');
+
+// Create a mocked version of the PipelineMetricsUtils with functions that can be customized per test
+const mockProcessEntities = jest.fn();
+const mockGetSystemConfig = jest.fn();
+const mockAggregateMetrics = jest.fn();
+const mockBuildSemaphoreData = jest.fn();
+const mockGetLowestSuccessRepos = jest.fn();
+const mockRenderPipelineMetrics = jest.fn();
+
+jest.mock('../../../utils/PipelineMetricsUtils', () => ({
+  getSystemConfig: (...args: any[]) => mockGetSystemConfig(...args),
+  processEntities: (...args: any[]) => mockProcessEntities(...args),
+  aggregateMetrics: (...args: any[]) => mockAggregateMetrics(...args),
+  buildSemaphoreData: (...args: any[]) => mockBuildSemaphoreData(...args),
+  getLowestSuccessRepos: (...args: any[]) => mockGetLowestSuccessRepos(...args),
+  renderPipelineMetrics: (...args: any[]) => mockRenderPipelineMetrics(...args),
+}));
+
 jest.mock('../BaseSemaphoreDialogs', () => ({
   BaseSemaphoreDialog: ({
     open,
@@ -39,8 +59,13 @@ jest.mock('../BaseSemaphoreDialogs', () => ({
 const mockTechInsightsApi = { getFacts: jest.fn(), getChecks: jest.fn() };
 const mockCatalogApi = { getEntityByRef: jest.fn() };
 const mockReportingUtils = {
-  getReportingPipelineFacts: jest.fn(),
-  getReportingPipelineChecks: jest.fn(),
+  getReportingPipelineFacts: jest.fn().mockResolvedValue({
+    successfulRuns: 5,
+    failedRuns: 5,
+  }),
+  getReportingPipelineChecks: jest.fn().mockResolvedValue({
+    successRateCheck: false,
+  }),
 };
 
 const MockedReportingUtils = ReportingUtils as jest.MockedClass<
@@ -54,7 +79,7 @@ const mockEntity: Entity = {
   apiVersion: 'backstage.io/v1alpha1',
   kind: 'Component',
   metadata: { name: 'test-service', namespace: 'default' },
-  spec: { type: 'service' },
+  spec: { type: 'service', system: 'test-system' },
 };
 
 const theme = createTheme();
@@ -74,17 +99,44 @@ describe('ReportingSemaphoreDialog', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     MockedReportingUtils.mockImplementation(() => mockReportingUtils as any);
-    mockReportingUtils.getReportingPipelineFacts.mockResolvedValue({
-      successfulRuns: 5,
-      failedRuns: 5,
-    });
-    mockReportingUtils.getReportingPipelineChecks.mockResolvedValue({
-      successRateCheck: false,
-    });
     mockedDetermineColor.mockReturnValue({
       color: 'red',
       reason: 'Too many failures',
     });
+
+    // Default mock implementations for the successful case
+    mockGetSystemConfig.mockResolvedValue({ redThreshold: 0.33, configuredRepoNames: [] });
+    mockProcessEntities.mockResolvedValue([{
+      name: 'test-service',
+      url: 'https://github.com/test/test-service/actions',
+      successRate: 50,
+      successWorkflowRunsCount: 5,
+      failureWorkflowRunsCount: 5,
+      failedCheck: true,
+    }]);
+    mockAggregateMetrics.mockReturnValue({
+      totalSuccess: 5,
+      totalFailure: 5,
+      totalRuns: 10,
+      successRate: 50,
+    });
+    mockBuildSemaphoreData.mockReturnValue({
+      color: 'red',
+      summary: 'Too many failures. Critical attention required.',
+      metrics: {
+        totalSuccess: 5,
+        totalFailure: 5,
+        totalRuns: 10,
+        successRate: 50,
+      },
+      details: [],
+    });
+    mockGetLowestSuccessRepos.mockReturnValue([{
+      name: 'test-service',
+      url: 'https://github.com/test/test-service/actions',
+      successRate: 50,
+    }]);
+    mockRenderPipelineMetrics.mockReturnValue(<div>Mocked metrics</div>);
   });
 
   it('renders closed dialog correctly', () => {
@@ -101,36 +153,40 @@ describe('ReportingSemaphoreDialog', () => {
 
   it('loads and displays metrics', async () => {
     const onClose = jest.fn();
-    render(
-      <Wrapper>
-        <ReportingSemaphoreDialog
-          open
-          onClose={onClose}
-          entities={[mockEntity]}
-        />
-      </Wrapper>,
-    );
-
-    await waitFor(() => {
-      expect(mockReportingUtils.getReportingPipelineFacts).toHaveBeenCalled();
-      expect(mockReportingUtils.getReportingPipelineChecks).toHaveBeenCalled();
+    await act(async () => {
+      render(
+        <Wrapper>
+          <ReportingSemaphoreDialog
+            open
+            onClose={onClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
+      expect(mockGetSystemConfig).toHaveBeenCalled();
+      expect(mockProcessEntities).toHaveBeenCalled();
     });
 
+    expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
     expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
-      'Too many failures',
+      'Too many failures. Critical attention required.',
     );
     expect(screen.getByTestId('dialog-loading')).toHaveTextContent('false');
+    expect(screen.getByTestId('rendered-metrics')).toBeInTheDocument();
   });
 
   it('handles API error gracefully', async () => {
-    mockReportingUtils.getReportingPipelineFacts.mockRejectedValue(
-      new Error('API error'),
-    );
+  // Set up the utility to throw an error for this specific test
+  mockProcessEntities.mockRejectedValueOnce(new Error('API error'));
+  
+  // Reset the buildSemaphoreData mock to prevent it from being called
+  // if there's an error, it shouldn't reach this function
+  mockBuildSemaphoreData.mockClear();
 
+  await act(async () => {
     render(
       <Wrapper>
         <ReportingSemaphoreDialog
@@ -140,13 +196,22 @@ describe('ReportingSemaphoreDialog', () => {
         />
       </Wrapper>,
     );
-
-    await waitFor(() => {
-      expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
-        'Failed to load metrics.',
-      );
-    });
   });
+
+  // Wait for the error message to appear
+  await waitFor(() => {
+    expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
+    // Use a partial text match instead of exact match
+    expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
+      /Failed to load metrics/,
+    );
+  });
+  
+  // Verify processEntities was called but threw an error
+  expect(mockProcessEntities).toHaveBeenCalled();
+  // Verify buildSemaphoreData was not called after the error
+  expect(mockBuildSemaphoreData).not.toHaveBeenCalled();
+});
 
   it('does not fetch if dialog is closed', () => {
     render(
@@ -158,7 +223,8 @@ describe('ReportingSemaphoreDialog', () => {
         />
       </Wrapper>,
     );
-    expect(mockReportingUtils.getReportingPipelineFacts).not.toHaveBeenCalled();
+    expect(mockGetSystemConfig).not.toHaveBeenCalled();
+    expect(mockProcessEntities).not.toHaveBeenCalled();
   });
 
   it('invokes onClose when close button is clicked', async () => {

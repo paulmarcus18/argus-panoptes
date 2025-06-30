@@ -1,5 +1,8 @@
+/**
+ * Reporting Pipeline Dialog Component
+ * Shows detailed metrics for reporting pipeline success rates across repositories
+ */
 import { useEffect, useState, useMemo } from 'react';
-import { Grid, Paper, Typography, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -7,10 +10,19 @@ import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { ReportingUtils } from '../../utils/reportingUtils';
-import type { GridSize } from '@material-ui/core';
 import { SemaphoreData } from './types';
-import { determineSemaphoreColor } from '../utils';
+import { 
+  commonStyles, 
+  PipelineMetrics,
+  processEntities,
+  aggregateMetrics,
+  buildSemaphoreData,
+  getLowestSuccessRepos,
+  renderPipelineMetrics,
+  getSystemConfig,
+} from '../../utils/PipelineMetricsUtils';
 
+// Create styles using the common pipeline styles
 const useStyles = makeStyles(theme => ({
   metricBox: {
     padding: theme.spacing(2),
@@ -33,6 +45,9 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
+/**
+ * Props for configuring the Reporting Pipeline dialog
+ */
 interface ReportingSemaphoreDialogProps {
   open: boolean;
   onClose: () => void;
@@ -47,18 +62,21 @@ export const ReportingSemaphoreDialog: React.FC<
   const catalogApi = useApi(catalogApiRef);
   const reportingUtils = useMemo(() => new ReportingUtils(), []);
 
+  // Component state for loading and metrics data
   const [isLoading, setIsLoading] = useState(false);
-  const [metrics, setMetrics] = useState({
+  const [metrics, setMetrics] = useState<PipelineMetrics>({
     totalSuccess: 0,
     totalFailure: 0,
     totalRuns: 0,
     successRate: 0,
   });
 
+  // Track repositories with lowest success rates
   const [lowestSuccessRepos, setLowestSuccessRepos] = useState<
     { name: string; url: string; successRate: number }[]
   >([]);
 
+  // Traffic light status data for display
   const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
@@ -66,141 +84,53 @@ export const ReportingSemaphoreDialog: React.FC<
     details: [],
   });
 
+  // Fetch pipeline metrics when dialog opens
   useEffect(() => {
     if (!open || entities.length === 0) return;
 
     setIsLoading(true);
 
     const fetchPipelineMetrics = async () => {
-      // 1. Get threshold from system annotations
-      let redThreshold = 0.33;
-      const systemName = entities[0].spec?.system;
-      const namespace = entities[0].metadata.namespace ?? 'default';
+      try {
+        // Get threshold from system annotations
+        const { redThreshold } = await getSystemConfig(
+          catalogApi,
+          entities,
+          'reporting-check-threshold-red'
+        );
 
-      if (systemName) {
-        const systemEntity = await catalogApi.getEntityByRef({
-          kind: 'System',
-          namespace,
-          name:
-            typeof systemName === 'string' ? systemName : JSON.stringify(systemName),
-        });
+        // Process entities to get metrics data
+        const results = await processEntities(
+          entities,
+          techInsightsApi,
+          reportingUtils.getReportingPipelineFacts,
+          reportingUtils.getReportingPipelineChecks
+        );
 
-        const thresholdAnnotation =
-          systemEntity?.metadata.annotations?.['reporting-check-threshold-red'];
-        if (thresholdAnnotation) {
-          redThreshold = parseFloat(thresholdAnnotation);
-        }
-      }
+        // Calculate aggregate metrics
+        const aggregated = aggregateMetrics(results);
+        
+        // Count failures
+        const failures = results.filter(r => r.failedCheck).length;
+        
+        // Build semaphore data
+        const semaphoreData = buildSemaphoreData(
+          aggregated, 
+          failures, 
+          entities.length, 
+          redThreshold
+        );
+        
+        // Get repositories with lowest success rates
+        const lowest = getLowestSuccessRepos(results);
 
-      // 2. Gather facts + checks in parallel
-      const results = await Promise.all(
-        entities.map(async entity => {
-          const ref = {
-            kind: entity.kind,
-            namespace: entity.metadata.namespace ?? 'default',
-            name: entity.metadata.name,
-          };
-
-          const [facts, check] = await Promise.all([
-            reportingUtils.getReportingPipelineFacts(techInsightsApi, ref),
-            reportingUtils.getReportingPipelineChecks(techInsightsApi, ref),
-          ]);
-
-          const successRate =
-            facts.successfulRuns + facts.failedRuns > 0
-              ? (facts.successfulRuns /
-                  (facts.successfulRuns + facts.failedRuns)) *
-                100
-              : 0;
-
-          const projectSlug =
-            entity.metadata.annotations?.['github.com/project-slug'];
-          const url = projectSlug
-            ? `https://github.com/${projectSlug}/actions`
-            : '#';
-
-          return {
-            name: entity.metadata.name,
-            url,
-            successRate: parseFloat(successRate.toFixed(2)),
-            successWorkflowRunsCount: facts.successfulRuns,
-            failureWorkflowRunsCount: facts.failedRuns,
-            failedCheck: check.successRateCheck === false,
-          };
-        }),
-      );
-
-      // 3. Metrics aggregation
-      const totalSuccess = results.reduce(
-        (sum, r) => sum + r.successWorkflowRunsCount,
-        0,
-      );
-      const totalFailure = results.reduce(
-        (sum, r) => sum + r.failureWorkflowRunsCount,
-        0,
-      );
-      const totalRuns = totalSuccess + totalFailure;
-      const successRate = totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
-
-      const failures = results.filter(r => r.failedCheck).length;
-
-      // 4. Determine traffic light color
-      const { color, reason } = determineSemaphoreColor(
-        failures,
-        entities.length,
-        redThreshold,
-      );
-
-      // Prepare summary message
-      let summary = reason;
-      if (color === 'red') {
-        summary += ' Critical attention required.';
-      } else if (color === 'yellow') {
-        summary += ' Issues should be addressed before release.';
-      } else {
-        summary += ' Code quality is good.';
-      }
-
-      // 5. Bottom 5 repos by success rate
-      const lowest = [...results]
-        .sort((a, b) => a.successRate - b.successRate)
-        .slice(0, 5)
-        .map(({ name, url, successRate: repoSuccessRate }) => ({
-          name,
-          url,
-          successRate: repoSuccessRate,
-        }));
-
-      // Set all state at once
-      setMetrics({
-        totalSuccess,
-        totalFailure,
-        totalRuns,
-        successRate: parseFloat(successRate.toFixed(2)),
-      });
-
-      setLowestSuccessRepos(lowest);
-
-      setData({
-        color,
-        summary,
-        metrics: {
-          totalSuccess,
-          totalFailure,
-          totalRuns,
-          successRate: parseFloat(successRate.toFixed(2)),
-        },
-        details: [],
-      });
-    };
-
-    // Handle success and error cases using promise chain
-    fetchPipelineMetrics()
-      .then(() => {
-        // Success case - nothing additional needed
-      })
-      .catch(() => {
-        // Error fallback without logging
+        // Update state
+        setMetrics(aggregated);
+        setLowestSuccessRepos(lowest);
+        setData(semaphoreData);
+      } catch (error) {
+        // Error fallback
+        console.error('Error fetching pipeline metrics:', error);
         setMetrics({
           totalSuccess: 0,
           totalFailure: 0,
@@ -211,64 +141,19 @@ export const ReportingSemaphoreDialog: React.FC<
         setData({
           color: 'gray',
           metrics: {},
-          summary: 'Failed to load metrics.',
+          summary: `Failed to load metrics: ${error instanceof Error ? error.message : 'Unknown error'}`,
           details: [],
         });
-      })
-      .finally(() => {
+      } finally {
         setIsLoading(false);
-      });
+      }
+    };
+
+    fetchPipelineMetrics();
   }, [open, entities, techInsightsApi, catalogApi, reportingUtils]);
 
-  const renderMetrics = () => (
-    <>
-      <Grid container spacing={2}>
-        {[
-          ['Successful Runs', metrics.totalSuccess, 4, '#4caf50'],
-          ['Failed Runs', metrics.totalFailure, 4, '#f44336'],
-          ['Success Rate (%)', metrics.successRate, 4, '#2196f3'],
-        ].map(([label, value, size, color], index) => (
-          <Grid item xs={size as GridSize} key={`${label}-${index}`}>
-            <Paper className={classes.metricBox} elevation={1}>
-              <Typography
-                variant="h4"
-                className={classes.metricValue}
-                style={{ color: color as string }}
-              >
-                {value}
-              </Typography>
-              <Typography className={classes.metricLabel}>{label}</Typography>
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
-
-      {lowestSuccessRepos.length > 0 && (
-        <div className={classes.repoList}>
-          <Typography variant="h6">Lowest Success Rate Repositories</Typography>
-          <Grid container spacing={2} className={classes.repoList}>
-            {lowestSuccessRepos.map(repo => (
-              <Grid item xs={12} key={repo.name}>
-                <Paper className={classes.metricBox} elevation={1}>
-                  <Link
-                    href={repo.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={classes.metricValue}
-                  >
-                    {repo.name}
-                  </Link>
-                  <Typography className={classes.metricLabel}>
-                    Success Rate: {repo.successRate}%
-                  </Typography>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
-        </div>
-      )}
-    </>
-  );
+  // Render metrics display using the shared utility
+  const renderMetrics = () => renderPipelineMetrics(metrics, lowestSuccessRepos, classes);
 
   return (
     <BaseSemaphoreDialog
