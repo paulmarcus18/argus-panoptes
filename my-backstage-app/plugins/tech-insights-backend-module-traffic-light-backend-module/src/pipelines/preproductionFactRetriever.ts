@@ -52,7 +52,7 @@ function shouldExcludeWorkflow(
     try {
       const regex = new RegExp(pattern, 'i'); // case-insensitive matching
       return regex.test(workflowName);
-    } catch (error) {
+    } catch {
       return workflowName.toLowerCase().includes(pattern.toLowerCase());
     }
   });
@@ -72,7 +72,7 @@ function parseWorkflowConfig(entity: Entity): WorkflowConfig {
       if (Array.isArray(excludeList)) {
         workflowConfig.excludePatterns = excludeList as string[];
       }
-    } catch (error) {
+    } catch {
       // Malformed JSON is ignored, proceed with no exclusions.
     }
   }
