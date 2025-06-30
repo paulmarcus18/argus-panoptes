@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -115,7 +115,6 @@ describe('PreproductionSemaphoreDialog', () => {
     const Wrapper = createWrapper();
     const mockOnClose = jest.fn();
 
-    await act(async () => {
       render(
         <Wrapper>
           <PreproductionSemaphoreDialog
@@ -125,7 +124,6 @@ describe('PreproductionSemaphoreDialog', () => {
           />
         </Wrapper>,
       );
-    });
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -144,7 +142,6 @@ describe('PreproductionSemaphoreDialog', () => {
       metadata: { annotations: {} },
     });
 
-    await act(async () => {
       render(
         <Wrapper>
           <PreproductionSemaphoreDialog
@@ -154,7 +151,6 @@ describe('PreproductionSemaphoreDialog', () => {
           />
         </Wrapper>,
       );
-    });
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -168,7 +164,6 @@ describe('PreproductionSemaphoreDialog', () => {
       new Error('API failure'),
     );
 
-    await act(async () => {
       render(
         <Wrapper>
           <PreproductionSemaphoreDialog
@@ -178,7 +173,6 @@ describe('PreproductionSemaphoreDialog', () => {
           />
         </Wrapper>,
       );
-    });
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -211,7 +205,6 @@ describe('PreproductionSemaphoreDialog', () => {
     const Wrapper = createWrapper();
     const mockOnClose = jest.fn();
 
-    await act(async () => {
       render(
         <Wrapper>
           <PreproductionSemaphoreDialog
@@ -221,7 +214,6 @@ describe('PreproductionSemaphoreDialog', () => {
           />
         </Wrapper>,
       );
-    });
 
     const closeBtn = screen.getByTestId('close-button');
     closeBtn.click();

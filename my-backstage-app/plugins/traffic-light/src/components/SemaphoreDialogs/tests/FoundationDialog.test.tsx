@@ -393,7 +393,7 @@ describe('FoundationSemaphoreDialog', () => {
     );
 
     await waitFor(() => {
-      const link = screen.getByText('mock-service') as HTMLAnchorElement;
+      const link = screen.getByText('mock-service');
       expect(link.getAttribute('href')).toBe('#');
     });
   });

@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -168,17 +168,15 @@ describe('BlackDuckSemaphoreDialog', () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(mockBlackDuckUtils.getBlackDuckFacts).toHaveBeenCalledWith(
@@ -197,17 +195,15 @@ describe('BlackDuckSemaphoreDialog', () => {
       const mockOnClose = jest.fn();
       const entities = [mockEntity, mockEntityWithoutBlackDuck];
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={entities}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={entities}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(mockBlackDuckUtils.getBlackDuckFacts).toHaveBeenCalledTimes(1);
@@ -222,17 +218,15 @@ describe('BlackDuckSemaphoreDialog', () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntityWithoutBlackDuck]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntityWithoutBlackDuck]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -247,17 +241,15 @@ describe('BlackDuckSemaphoreDialog', () => {
         new Error('API Error'),
       );
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -285,17 +277,15 @@ describe('BlackDuckSemaphoreDialog', () => {
           security_risks_medium: 12,
         });
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={multipleEntities}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={multipleEntities}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-loading')).toHaveTextContent('false');
@@ -312,17 +302,15 @@ describe('BlackDuckSemaphoreDialog', () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
@@ -340,17 +328,15 @@ describe('BlackDuckSemaphoreDialog', () => {
         reason: 'Critical security risks found.',
       });
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -366,17 +352,15 @@ describe('BlackDuckSemaphoreDialog', () => {
         reason: 'Security risks need to be addressed before release.',
       });
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
@@ -392,17 +376,15 @@ describe('BlackDuckSemaphoreDialog', () => {
         reason: 'No critical security risks were found.',
       });
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('green');
@@ -415,17 +397,15 @@ describe('BlackDuckSemaphoreDialog', () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         const metricsContainer = screen.getByTestId('rendered-metrics');
@@ -440,17 +420,15 @@ describe('BlackDuckSemaphoreDialog', () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
 
       expect(screen.getByTestId('dialog-title')).toHaveTextContent('BlackDuck');
       expect(screen.getByTestId('dialog-open')).toHaveTextContent('true');
@@ -488,17 +466,15 @@ describe('BlackDuckSemaphoreDialog', () => {
         },
       };
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[entityWithoutNamespace]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[entityWithoutNamespace]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(mockBlackDuckUtils.getBlackDuckFacts).toHaveBeenCalledWith(
@@ -518,17 +494,15 @@ describe('BlackDuckSemaphoreDialog', () => {
         security_risks_medium: 0,
       });
 
-      await act(async () => {
-        render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         const metricsContainer = screen.getByTestId('rendered-metrics');
@@ -559,17 +533,15 @@ describe('BlackDuckSemaphoreDialog', () => {
       const Wrapper = createWrapper();
       const mockOnClose = jest.fn();
 
-      const { rerender } = await act(async () => {
-        return render(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[mockEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      const { rerender } = render(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(mockBlackDuckUtils.getBlackDuckFacts).toHaveBeenCalledTimes(1);
@@ -580,17 +552,15 @@ describe('BlackDuckSemaphoreDialog', () => {
         metadata: { ...mockEntity.metadata, name: 'new-entity' },
       };
 
-      await act(async () => {
-        rerender(
-          <Wrapper>
-            <BlackDuckSemaphoreDialog
-              open
-              onClose={mockOnClose}
-              entities={[newEntity]}
-            />
-          </Wrapper>,
-        );
-      });
+      rerender(
+        <Wrapper>
+          <BlackDuckSemaphoreDialog
+            open
+            onClose={mockOnClose}
+            entities={[newEntity]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(mockBlackDuckUtils.getBlackDuckFacts).toHaveBeenCalledTimes(2);

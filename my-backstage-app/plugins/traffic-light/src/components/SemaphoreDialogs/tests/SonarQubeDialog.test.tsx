@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { TestApiProvider } from '@backstage/test-utils';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -72,7 +72,6 @@ describe('SonarQubeSemaphoreDialog', () => {
       color: 'green',
     });
 
-    await act(async () => {
       render(
         <TestApiProvider
           apis={[
@@ -87,7 +86,6 @@ describe('SonarQubeSemaphoreDialog', () => {
           />
         </TestApiProvider>,
       );
-    });
 
     await waitFor(() => {
       const dialog = screen.getByTestId('base-dialog');
@@ -117,7 +115,6 @@ describe('SonarQubeSemaphoreDialog', () => {
       color: 'red',
     });
 
-    await act(async () => {
       render(
         <TestApiProvider
           apis={[
@@ -132,7 +129,6 @@ describe('SonarQubeSemaphoreDialog', () => {
           />
         </TestApiProvider>,
       );
-    });
 
     await waitFor(() => {
       const dialog = screen.getByTestId('base-dialog');
@@ -145,7 +141,6 @@ describe('SonarQubeSemaphoreDialog', () => {
       new Error('fetch failed'),
     );
 
-    await act(async () => {
       render(
         <TestApiProvider
           apis={[
@@ -160,7 +155,6 @@ describe('SonarQubeSemaphoreDialog', () => {
           />
         </TestApiProvider>,
       );
-    });
 
     await waitFor(() => {
       const dialog = screen.getByTestId('base-dialog');
@@ -182,7 +176,6 @@ describe('SonarQubeSemaphoreDialog', () => {
       },
     ];
 
-    await act(async () => {
       render(
         <TestApiProvider
           apis={[
@@ -197,7 +190,6 @@ describe('SonarQubeSemaphoreDialog', () => {
           />
         </TestApiProvider>,
       );
-    });
 
     await waitFor(() => {
       const dialog = screen.getByTestId('base-dialog');
@@ -211,7 +203,6 @@ describe('SonarQubeSemaphoreDialog', () => {
   it('does not fetch data when closed', async () => {
     mockSonarUtils.getSonarQubeFacts.mockClear();
 
-    await act(async () => {
       render(
         <TestApiProvider
           apis={[
@@ -226,7 +217,6 @@ describe('SonarQubeSemaphoreDialog', () => {
           />
         </TestApiProvider>,
       );
-    });
 
     expect(mockSonarUtils.getSonarQubeFacts).not.toHaveBeenCalled();
   });

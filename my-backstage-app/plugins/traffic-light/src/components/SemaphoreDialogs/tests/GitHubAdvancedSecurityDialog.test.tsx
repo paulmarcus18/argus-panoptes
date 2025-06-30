@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { TestApiRegistry } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -104,13 +104,11 @@ describe('GitHubSemaphoreDialog', () => {
         secretScanningAlerts: {},
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} />
           </Wrapper>,
         );
-      });
 
       const closeButton = screen.getByTestId('close-button');
       closeButton.click();
@@ -126,7 +124,6 @@ describe('GitHubSemaphoreDialog', () => {
 
       mockGithubUtils.getGitHubSecurityData.mockReturnValue(delayedPromise);
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -136,20 +133,17 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       // Should show loading state
       expect(screen.getByTestId('dialog-loading')).toHaveTextContent('true');
 
       // Resolve the promise
-      await act(async () => {
         resolvePromise!({
           openCodeScanningAlertCount: 0,
           openSecretScanningAlertCount: 0,
           codeScanningAlerts: {},
           secretScanningAlerts: {},
         });
-      });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-loading')).toHaveTextContent('false');
@@ -194,13 +188,11 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'Critical security issues require immediate attention.',
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -228,7 +220,6 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'No security issues found.',
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -238,7 +229,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('green');
@@ -278,7 +268,6 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'Security issues found.',
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -288,7 +277,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
@@ -336,7 +324,6 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'Critical issues found.',
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -346,7 +333,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         // Verify that details are sorted by severity (critical, high, medium, low)
@@ -370,7 +356,6 @@ describe('GitHubSemaphoreDialog', () => {
         secretScanningAlerts: {},
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -380,7 +365,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
@@ -407,7 +391,6 @@ describe('GitHubSemaphoreDialog', () => {
         secretScanningAlerts: {},
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -417,7 +400,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
@@ -449,7 +431,6 @@ describe('GitHubSemaphoreDialog', () => {
         new Error('No system entity'),
       );
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -459,7 +440,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -506,7 +486,6 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'Medium severity issues within threshold.',
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -516,7 +495,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -553,7 +531,6 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'No issues found.',
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -563,7 +540,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -592,7 +568,6 @@ describe('GitHubSemaphoreDialog', () => {
         metadata: { annotations: {} },
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -602,7 +577,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -622,7 +596,6 @@ describe('GitHubSemaphoreDialog', () => {
         new Error('API failure'),
       );
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -632,7 +605,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -672,7 +644,6 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'Critical issues found.',
       });
 
-      await act(async () => {
         render(
           <Wrapper>
             <GitHubSemaphoreDialog
@@ -682,7 +653,6 @@ describe('GitHubSemaphoreDialog', () => {
             />
           </Wrapper>,
         );
-      });
 
       await waitFor(() => {
         expect(screen.getByTestId('rendered-metrics')).toBeInTheDocument();
