@@ -11,8 +11,7 @@ import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { ReportingUtils } from '../../utils/reportingUtils';
 import { SemaphoreData } from './types';
-import { 
-  commonStyles, 
+import {
   PipelineMetrics,
   processEntities,
   aggregateMetrics,
