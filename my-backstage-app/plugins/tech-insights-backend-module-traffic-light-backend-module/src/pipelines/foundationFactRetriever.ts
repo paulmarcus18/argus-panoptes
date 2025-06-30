@@ -168,8 +168,8 @@ function calculateWorkflowMetrics(
   // Calculate metrics for each workflow
   runsByWorkflowId.forEach((runs, workflowId) => {
     const workflowName =
-      workflowIdToName.get(workflowId) ||
-      runs[0]?.name ||
+      workflowIdToName.get(workflowId) ??
+      runs[0]?.name ??
       `workflow-${workflowId}`;
 
     const totalRuns = runs.length;
@@ -267,7 +267,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
       );
       const githubConfig = githubConfigs?.[0];
       token = githubConfig?.getOptionalString('token');
-    } catch (e) {
+    } catch {
       return [];
     }
 
@@ -345,7 +345,7 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
             },
             facts: pipelineSummary,
           } as TechInsightFact;
-        } catch (error: any) {
+        } catch {
           return null;
         }
       }),
