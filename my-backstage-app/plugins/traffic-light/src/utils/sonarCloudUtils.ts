@@ -55,15 +55,16 @@ export class SonarCloudUtils {
     techInsightsApi: TechInsightsApi,
     entity: CompoundEntityRef,
   ): Promise<SonarQubeMetrics> {
-    return techInsightsApi.getFacts(entity, ['sonarcloud-fact-retriever'])
+    return techInsightsApi
+      .getFacts(entity, ['sonarcloud-fact-retriever'])
       .then(response => {
         const facts = response?.['sonarcloud-fact-retriever']?.facts;
-        
+
         // If no facts are found, return default metrics
         if (!facts) {
           return { ...DEFAULT_METRICS };
         }
-        
+
         return {
           bugs: Number(facts.bugs ?? 0) || 0,
           code_smells: Number(facts.code_smells ?? 0) || 0,
@@ -97,7 +98,7 @@ export class SonarCloudUtils {
   ): Promise<SonarCloudSummary[]> {
     const summaryPromises = entities.map(entity => {
       const entityRef = getCompoundEntityRef(entity);
-      
+
       return this.getSonarQubeFacts(techInsightsApi, entityRef)
         .then(facts => ({
           entity: entityRef,
@@ -119,61 +120,60 @@ export class SonarCloudUtils {
           };
         });
     });
-  
-    return Promise.all(summaryPromises)
-      .then(allSummaries => {
-        // Sort results by quality gate status, then by vulnerabilities, bugs, code smells, and code coverage
-        const selected: SonarCloudSummary[] = [];
-        const MAX_REPOS = 5;
-        
-        const addCandidates = (
-          filterFn: (summary: SonarCloudSummary) => boolean,
-          sortFn?: (a: SonarCloudSummary, b: SonarCloudSummary) => number,
-        ) => {
-          if (selected.length >= MAX_REPOS) return;
-          
-          const candidates = allSummaries.filter(
-            summary => !selected.includes(summary) && filterFn(summary),
-          );
-          
-          if (sortFn) {
-            candidates.sort(sortFn);
-          }
-          
-          selected.push(...candidates.slice(0, MAX_REPOS - selected.length));
-        };
-  
-        // 1. Failed quality gate
-        addCandidates(s => s.quality_gate === 1);
-  
-        // 2. Vulnerabilities (descending)
-        addCandidates(
-          s => s.vulnerabilities > 0,
-          (a, b) => b.vulnerabilities - a.vulnerabilities,
+
+    return Promise.all(summaryPromises).then(allSummaries => {
+      // Sort results by quality gate status, then by vulnerabilities, bugs, code smells, and code coverage
+      const selected: SonarCloudSummary[] = [];
+      const MAX_REPOS = 5;
+
+      const addCandidates = (
+        filterFn: (summary: SonarCloudSummary) => boolean,
+        sortFn?: (a: SonarCloudSummary, b: SonarCloudSummary) => number,
+      ) => {
+        if (selected.length >= MAX_REPOS) return;
+
+        const candidates = allSummaries.filter(
+          summary => !selected.includes(summary) && filterFn(summary),
         );
-  
-        // 3. Bugs (descending)
-        addCandidates(
-          s => s.bugs > 0,
-          (a, b) => b.bugs - a.bugs,
-        );
-  
-        // 4. Code Smells (descending)
-        addCandidates(
-          s => s.code_smells > 0,
-          (a, b) => b.code_smells - a.code_smells,
-        );
-  
-        // 5. Low code coverage (ascending)
-        addCandidates(
-          s => s.code_coverage < 80,
-          (a, b) => a.code_coverage - b.code_coverage,
-        );
-  
-        // 6. Fallback for any remaining repos
-        addCandidates(() => true);
-  
-        return selected;
-      });
+
+        if (sortFn) {
+          candidates.sort(sortFn);
+        }
+
+        selected.push(...candidates.slice(0, MAX_REPOS - selected.length));
+      };
+
+      // 1. Failed quality gate
+      addCandidates(s => s.quality_gate === 1);
+
+      // 2. Vulnerabilities (descending)
+      addCandidates(
+        s => s.vulnerabilities > 0,
+        (a, b) => b.vulnerabilities - a.vulnerabilities,
+      );
+
+      // 3. Bugs (descending)
+      addCandidates(
+        s => s.bugs > 0,
+        (a, b) => b.bugs - a.bugs,
+      );
+
+      // 4. Code Smells (descending)
+      addCandidates(
+        s => s.code_smells > 0,
+        (a, b) => b.code_smells - a.code_smells,
+      );
+
+      // 5. Low code coverage (ascending)
+      addCandidates(
+        s => s.code_coverage < 80,
+        (a, b) => a.code_coverage - b.code_coverage,
+      );
+
+      // 6. Fallback for any remaining repos
+      addCandidates(() => true);
+
+      return selected;
+    });
   }
 }

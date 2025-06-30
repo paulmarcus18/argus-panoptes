@@ -8,10 +8,10 @@ import { DynamicThresholdCheck } from '../argusPanoptesFactChecker/service/dynam
 export const foundationPipelineChecks: DynamicThresholdCheck[] = [
   /**
    * Foundation Pipeline Success Rate Check
-   * 
+   *
    * Evaluates if the pipeline success rate meets the minimum required threshold.
    * A high success rate indicates reliable build processes and stable foundation components.
-   * 
+   *
    * @property {string} id - Unique identifier for this check
    * @property {string} name - Display name for this check
    * @property {string} type - Data type for comparison (percentage)
@@ -31,13 +31,13 @@ export const foundationPipelineChecks: DynamicThresholdCheck[] = [
     description:
       'Minimum pipeline success rate required for foundation components',
   },
-  
+
   /**
    * Foundation Pipeline Maximum Failures Check
-   * 
+   *
    * Evaluates if the number of failed pipeline runs is below the maximum allowed threshold.
    * Keeping failure counts low ensures foundation components remain reliable and stable.
-   * 
+   *
    * @property {string} id - Unique identifier for this check
    * @property {string} name - Display name for this check
    * @property {string} type - Data type for comparison (number)

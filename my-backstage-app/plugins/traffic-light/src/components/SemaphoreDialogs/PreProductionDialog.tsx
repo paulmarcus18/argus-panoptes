@@ -38,7 +38,7 @@ const useStyles = makeStyles(theme => ({
 
 /**
  * Props for the PreproductionSemaphoreDialog component
- * 
+ *
  * @property {boolean} open - Whether the dialog is open or closed
  * @property {() => void} onClose - Callback function when dialog is closed
  * @property {Entity[]} [entities] - Array of Backstage entities to evaluate
@@ -51,7 +51,7 @@ interface PreproductionSemaphoreDialogProps {
 
 /**
  * Dialog component that displays detailed metrics about preproduction pipeline runs
- * 
+ *
  * Shows aggregated success rates, failed runs, and repositories with the lowest success rates.
  * Uses system annotations to determine thresholds and which repositories to include in the analysis.
  */
@@ -107,7 +107,7 @@ export const PreproductionSemaphoreDialog: React.FC<
         let configuredRepoNames: string[] = [];
 
         const systemName = entities[0].spec?.system;
-        const namespace = entities[0].metadata.namespace?? 'default';
+        const namespace = entities[0].metadata.namespace ?? 'default';
 
         // If we have a system, get its configuration from the catalog
         if (systemName) {
@@ -115,7 +115,9 @@ export const PreproductionSemaphoreDialog: React.FC<
             kind: 'System',
             namespace,
             name:
-              typeof systemName === 'string' ? systemName : (JSON.stringify(systemName) ?? ''),
+              typeof systemName === 'string'
+                ? systemName
+                : JSON.stringify(systemName) ?? '',
           });
 
           // Extract threshold for red traffic light from system annotation

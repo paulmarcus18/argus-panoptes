@@ -5,8 +5,8 @@
 
 // Primary classes for creating and using threshold-based fact checkers
 export {
-  DynamicThresholdFactCheckerFactory,  // Factory for creating checkers with specific configurations
-  DynamicThresholdFactChecker,         // Implementation that evaluates facts against thresholds
+  DynamicThresholdFactCheckerFactory, // Factory for creating checkers with specific configurations
+  DynamicThresholdFactChecker, // Implementation that evaluates facts against thresholds
 } from './dynamicThresholdFactChecker';
 
 // Type exports for configuration options

@@ -6,7 +6,7 @@ import { loadOctokit } from './octokitLoader';
 
 /**
  * Creates a fact retriever that fetches Dependabot security alert counts
- * 
+ *
  * @param config - Backstage application configuration
  * @param logger - Logging service
  * @returns A configured FactRetriever for Dependabot security alerts

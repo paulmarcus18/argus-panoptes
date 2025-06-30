@@ -70,34 +70,35 @@ function getSystemThreshold(
   entities: Entity[],
 ): Promise<number> {
   const defaultThreshold = 0.33;
-  
+
   if (!entities.length) {
     return Promise.resolve(defaultThreshold);
   }
-  
+
   const systemName = entities[0].spec?.system;
   const namespace = entities[0].metadata.namespace ?? 'default';
-  
+
   if (typeof systemName !== 'string' || !systemName) {
     return Promise.resolve(defaultThreshold);
   }
-  
-  return catalogApi.getEntityByRef({
-    kind: 'System',
-    namespace,
-    name: String(systemName),
-  })
-  .then(systemEntity => {
-    const thresholdAnnotation =
-      systemEntity?.metadata.annotations?.['azure-bugs-check-threshold-red'];
-    return thresholdAnnotation
-      ? parseFloat(thresholdAnnotation)
-      : defaultThreshold;
-  })
-  .catch(() => {
-    // Could not fetch system threshold annotation; using default 0.33
-    return defaultThreshold;
-  });
+
+  return catalogApi
+    .getEntityByRef({
+      kind: 'System',
+      namespace,
+      name: String(systemName),
+    })
+    .then(systemEntity => {
+      const thresholdAnnotation =
+        systemEntity?.metadata.annotations?.['azure-bugs-check-threshold-red'];
+      return thresholdAnnotation
+        ? parseFloat(thresholdAnnotation)
+        : defaultThreshold;
+    })
+    .catch(() => {
+      // Could not fetch system threshold annotation; using default 0.33
+      return defaultThreshold;
+    });
 }
 
 /**

@@ -9,8 +9,8 @@ export { default } from './module';
 
 // Public type exports for configuration
 export type {
-  DynamicThresholdResult,  // Result of a threshold check evaluation
-  DynamicThresholdCheck,   // Configuration for a threshold-based check
+  DynamicThresholdResult, // Result of a threshold check evaluation
+  DynamicThresholdCheck, // Configuration for a threshold-based check
 } from './argusPanoptesFactChecker/service/dynamicThresholdFactChecker';
 
 // Pre-configured checkers for common metrics

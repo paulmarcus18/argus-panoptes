@@ -7,10 +7,10 @@ import Paper from '@mui/material/Paper';
  * Props for the MetricChart component
  */
 type MetricChartProps = {
-  title: string;        // Chart title (also determines formatting)
+  title: string; // Chart title (also determines formatting)
   description?: string; // Optional explanatory text
   data: { label: string; value: number }[]; // Chart data points
-  color?: string;       // Bar color
+  color?: string; // Bar color
 };
 
 export const MetricChart = ({

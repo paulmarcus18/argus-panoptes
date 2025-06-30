@@ -8,7 +8,7 @@ import {
   configApiRef,
   createApiFactory,
   identityApiRef,
-  discoveryApiRef
+  discoveryApiRef,
 } from '@backstage/core-plugin-api';
 
 import {

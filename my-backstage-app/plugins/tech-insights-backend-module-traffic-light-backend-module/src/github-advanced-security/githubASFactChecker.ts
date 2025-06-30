@@ -13,7 +13,8 @@ const createSecurityCheck = (
   factId: string,
 ): DynamicThresholdCheck => {
   // Capitalize the first letter of the severity for the 'name' field.
-  const capitalizedSeverity = severity.charAt(0).toUpperCase() + severity.slice(1);
+  const capitalizedSeverity =
+    severity.charAt(0).toUpperCase() + severity.slice(1);
   return {
     id: `${severity}-count`,
     name: `${capitalizedSeverity} Scans Count`,

@@ -81,10 +81,16 @@ describe('GitHubSemaphoreDialog', () => {
   describe('Dialog State Management', () => {
     it('renders closed state initially', () => {
       const Wrapper = createWrapper();
-      render(<Wrapper><GitHubSemaphoreDialog open={false} onClose={jest.fn()} /></Wrapper>);
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open={false} onClose={jest.fn()} />
+        </Wrapper>,
+      );
 
       expect(screen.getByTestId('dialog-open')).toHaveTextContent('false');
-      expect(screen.getByTestId('dialog-title')).toHaveTextContent('GitHub Advanced Security');
+      expect(screen.getByTestId('dialog-title')).toHaveTextContent(
+        'GitHub Advanced Security',
+      );
     });
 
     it('calls onClose when close button is clicked', async () => {
@@ -99,7 +105,11 @@ describe('GitHubSemaphoreDialog', () => {
       });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} />
+          </Wrapper>,
+        );
       });
 
       const closeButton = screen.getByTestId('close-button');
@@ -117,7 +127,15 @@ describe('GitHubSemaphoreDialog', () => {
       mockGithubUtils.getGitHubSecurityData.mockReturnValue(delayedPromise);
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entity]}
+            />
+          </Wrapper>,
+        );
       });
 
       // Should show loading state
@@ -148,11 +166,22 @@ describe('GitHubSemaphoreDialog', () => {
         openCodeScanningAlertCount: 3,
         openSecretScanningAlertCount: 2,
         codeScanningAlerts: {
-          a1: { severity: 'high', description: 'Issue A', html_url: 'https://github.com/org/repo/a1' },
-          a2: { severity: 'low', description: 'Issue B', html_url: 'https://github.com/org/repo/a2' },
+          a1: {
+            severity: 'high',
+            description: 'Issue A',
+            html_url: 'https://github.com/org/repo/a1',
+          },
+          a2: {
+            severity: 'low',
+            description: 'Issue B',
+            html_url: 'https://github.com/org/repo/a2',
+          },
         },
         secretScanningAlerts: {
-          s1: { description: 'Secret A', html_url: 'https://github.com/org/repo/s1' },
+          s1: {
+            description: 'Secret A',
+            html_url: 'https://github.com/org/repo/s1',
+          },
         },
       });
 
@@ -166,13 +195,21 @@ describe('GitHubSemaphoreDialog', () => {
       });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
-        expect(screen.getByTestId('dialog-summary')).toHaveTextContent('Critical security issues require immediate attention.');
-        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('3');
+        expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
+          'Critical security issues require immediate attention.',
+        );
+        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
+          '3',
+        );
       });
     });
 
@@ -186,15 +223,28 @@ describe('GitHubSemaphoreDialog', () => {
         secretScanningAlerts: {},
       });
 
-      mockedTrafficLight.mockReturnValue({ color: 'green', reason: 'No security issues found.' });
+      mockedTrafficLight.mockReturnValue({
+        color: 'green',
+        reason: 'No security issues found.',
+      });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entity]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('green');
-        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('0');
+        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
+          '0',
+        );
       });
     });
 
@@ -205,29 +255,45 @@ describe('GitHubSemaphoreDialog', () => {
         openCodeScanningAlertCount: 2,
         openSecretScanningAlertCount: 1,
         codeScanningAlerts: {
-          a1: { 
-            severity: 'high', 
-            description: 'Issue with repo name', 
-            html_url: 'https://github.com/myorg/myrepo/security/code-scanning/1',
-            direct_link: 'https://github.com/myorg/myrepo/blob/main/file.js#L10'
+          a1: {
+            severity: 'high',
+            description: 'Issue with repo name',
+            html_url:
+              'https://github.com/myorg/myrepo/security/code-scanning/1',
+            direct_link:
+              'https://github.com/myorg/myrepo/blob/main/file.js#L10',
           },
         },
         secretScanningAlerts: {
-          s1: { 
-            description: 'Secret detected', 
-            html_url: 'https://github.com/myorg/myrepo/security/secret-scanning/1'
+          s1: {
+            description: 'Secret detected',
+            html_url:
+              'https://github.com/myorg/myrepo/security/secret-scanning/1',
           },
         },
       });
 
-      mockedTrafficLight.mockReturnValue({ color: 'red', reason: 'Security issues found.' });
+      mockedTrafficLight.mockReturnValue({
+        color: 'red',
+        reason: 'Security issues found.',
+      });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entity]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('2');
+        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
+          '2',
+        );
         // Repository names should be extracted and prepended to descriptions
       });
     });
@@ -241,25 +307,54 @@ describe('GitHubSemaphoreDialog', () => {
         openCodeScanningAlertCount: 4,
         openSecretScanningAlertCount: 0,
         codeScanningAlerts: {
-          a1: { severity: 'low', description: 'Low Issue', html_url: 'https://github.com/org/repo/a1' },
-          a2: { severity: 'critical', description: 'Critical Issue', html_url: 'https://github.com/org/repo/a2' },
-          a3: { severity: 'medium', description: 'Medium Issue', html_url: 'https://github.com/org/repo/a3' },
-          a4: { severity: 'high', description: 'High Issue', html_url: 'https://github.com/org/repo/a4' },
+          a1: {
+            severity: 'low',
+            description: 'Low Issue',
+            html_url: 'https://github.com/org/repo/a1',
+          },
+          a2: {
+            severity: 'critical',
+            description: 'Critical Issue',
+            html_url: 'https://github.com/org/repo/a2',
+          },
+          a3: {
+            severity: 'medium',
+            description: 'Medium Issue',
+            html_url: 'https://github.com/org/repo/a3',
+          },
+          a4: {
+            severity: 'high',
+            description: 'High Issue',
+            html_url: 'https://github.com/org/repo/a4',
+          },
         },
         secretScanningAlerts: {},
       });
 
-      mockedTrafficLight.mockReturnValue({ color: 'red', reason: 'Critical issues found.' });
+      mockedTrafficLight.mockReturnValue({
+        color: 'red',
+        reason: 'Critical issues found.',
+      });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entity]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
         // Verify that details are sorted by severity (critical, high, medium, low)
         const component = screen.getByTestId('base-semaphore-dialog');
         expect(component).toBeInTheDocument();
-        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('4');
+        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
+          '4',
+        );
       });
     });
 
@@ -276,12 +371,22 @@ describe('GitHubSemaphoreDialog', () => {
       });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entity]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
-        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('1');
+        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
+          '1',
+        );
       });
     });
 
@@ -292,22 +397,32 @@ describe('GitHubSemaphoreDialog', () => {
         openCodeScanningAlertCount: 1,
         openSecretScanningAlertCount: 0,
         codeScanningAlerts: {
-          a1: { 
-            severity: 'high', 
-            description: 'Issue with path', 
+          a1: {
+            severity: 'high',
+            description: 'Issue with path',
             html_url: 'https://github.com/org/repo/a1',
-            location: { path: 'src/components/Component.tsx' }
+            location: { path: 'src/components/Component.tsx' },
           },
         },
         secretScanningAlerts: {},
       });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entity]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('1');
+        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
+          '1',
+        );
         // Component path should be included in the details
       });
     });
@@ -321,37 +436,53 @@ describe('GitHubSemaphoreDialog', () => {
         openCodeScanningAlertCount: 1,
         openSecretScanningAlertCount: 0,
         codeScanningAlerts: {
-          a1: { severity: 'critical', description: 'Critical Alert', html_url: '' },
+          a1: {
+            severity: 'critical',
+            description: 'Critical Alert',
+            html_url: '',
+          },
         },
         secretScanningAlerts: {},
       });
 
-      mockCatalogApi.getEntityByRef.mockRejectedValue(new Error('No system entity'));
+      mockCatalogApi.getEntityByRef.mockRejectedValue(
+        new Error('No system entity'),
+      );
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entity]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
-        expect(screen.getByTestId('dialog-summary')).toHaveTextContent('Critical security issues require immediate attention.');
+        expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
+          'Critical security issues require immediate attention.',
+        );
       });
     });
 
     it('uses custom thresholds from system entity', async () => {
       const Wrapper = createWrapper();
       const systemEntity = {
-        metadata: { 
-          annotations: { 
+        metadata: {
+          annotations: {
             'github/security.thresholds': JSON.stringify({
               critical_red: 1,
               high_red: 2,
               secrets_red: 1,
               medium_red: 5,
               medium_yellow: 3,
-              low_yellow: 10
-            })
-          }
+              low_yellow: 10,
+            }),
+          },
         },
       };
 
@@ -361,18 +492,30 @@ describe('GitHubSemaphoreDialog', () => {
         openSecretScanningAlertCount: 0,
         codeScanningAlerts: {
           a1: { severity: 'medium', description: 'Medium Issue', html_url: '' },
-          a2: { severity: 'medium', description: 'Another Medium Issue', html_url: '' },
+          a2: {
+            severity: 'medium',
+            description: 'Another Medium Issue',
+            html_url: '',
+          },
         },
         secretScanningAlerts: {},
       });
 
-      mockedTrafficLight.mockReturnValue({ 
-        color: 'yellow', 
-        reason: 'Medium severity issues within threshold.' 
+      mockedTrafficLight.mockReturnValue({
+        color: 'yellow',
+        reason: 'Medium severity issues within threshold.',
       });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entity]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
@@ -405,10 +548,21 @@ describe('GitHubSemaphoreDialog', () => {
         metadata: { annotations: {} },
       });
 
-      mockedTrafficLight.mockReturnValue({ color: 'green', reason: 'No issues found.' });
+      mockedTrafficLight.mockReturnValue({
+        color: 'green',
+        reason: 'No issues found.',
+      });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entityInCustomNamespace]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entityInCustomNamespace]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
@@ -439,7 +593,15 @@ describe('GitHubSemaphoreDialog', () => {
       });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entityWithStringSystem]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entityWithStringSystem]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
@@ -456,15 +618,27 @@ describe('GitHubSemaphoreDialog', () => {
     it('handles API error gracefully', async () => {
       const Wrapper = createWrapper();
 
-      mockGithubUtils.getGitHubSecurityData.mockRejectedValue(new Error('API failure'));
+      mockGithubUtils.getGitHubSecurityData.mockRejectedValue(
+        new Error('API failure'),
+      );
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entity]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
-        expect(screen.getByTestId('dialog-summary')).toHaveTextContent('Failed to load GitHub Security data.');
+        expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
+          'Failed to load GitHub Security data.',
+        );
       });
     });
 
@@ -493,15 +667,28 @@ describe('GitHubSemaphoreDialog', () => {
         },
       });
 
-      mockedTrafficLight.mockReturnValue({ color: 'red', reason: 'Critical issues found.' });
+      mockedTrafficLight.mockReturnValue({
+        color: 'red',
+        reason: 'Critical issues found.',
+      });
 
       await act(async () => {
-        render(<Wrapper><GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} /></Wrapper>);
+        render(
+          <Wrapper>
+            <GitHubSemaphoreDialog
+              open
+              onClose={jest.fn()}
+              entities={[entity]}
+            />
+          </Wrapper>,
+        );
       });
 
       await waitFor(() => {
         expect(screen.getByTestId('rendered-metrics')).toBeInTheDocument();
-        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent('13'); // 8 code + 5 secret
+        expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
+          '13',
+        ); // 8 code + 5 secret
       });
     });
   });

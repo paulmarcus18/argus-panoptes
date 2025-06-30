@@ -196,7 +196,9 @@ describe('DoraDashboard', () => {
 
     // Expect alert to be triggered
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /apply date filter/i })).toBeDisabled();
+      expect(
+        screen.getByRole('button', { name: /apply date filter/i }),
+      ).toBeDisabled();
     });
   });
 

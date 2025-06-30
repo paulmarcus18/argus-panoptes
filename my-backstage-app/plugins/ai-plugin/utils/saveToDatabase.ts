@@ -2,7 +2,7 @@ import { SummaryPerRepo } from './types';
 
 /**
  * Posts commit summaries to the database for each system
- * 
+ *
  * @param data - Object mapping system names to arrays of repository summaries
  * @param date - Date string for when the summaries were generated
  * @param apiBaseUrl - Base URL for the storage API

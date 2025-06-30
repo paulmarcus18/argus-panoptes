@@ -7,9 +7,9 @@ function formatValue(metricType: string, value: any): string {
   if (value === null || value === undefined || isNaN(Number(value))) {
     return 'N/A';
   }
-  
+
   const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  
+
   switch (metricType) {
     case 'df': // Deployment Frequency
       return String(numValue);

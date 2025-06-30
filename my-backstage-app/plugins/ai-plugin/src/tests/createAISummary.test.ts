@@ -172,9 +172,9 @@ describe('generateSummaries', () => {
     /**
      * Expects the function to throw an error since there's no error handling.
      */
-    await expect(generateSummaries(input, 'http://test-api', mockFetch))
-      .rejects
-      .toThrow('Network error');
+    await expect(
+      generateSummaries(input, 'http://test-api', mockFetch),
+    ).rejects.toThrow('Network error');
   });
 
   /**
@@ -211,8 +211,8 @@ describe('generateSummaries', () => {
     /**
      * The function should throw when it hits the API failure on the second repo.
      */
-    await expect(generateSummaries(input, 'http://test-api', mockFetch))
-      .rejects
-      .toThrow('API failure');
+    await expect(
+      generateSummaries(input, 'http://test-api', mockFetch),
+    ).rejects.toThrow('API failure');
   });
 });

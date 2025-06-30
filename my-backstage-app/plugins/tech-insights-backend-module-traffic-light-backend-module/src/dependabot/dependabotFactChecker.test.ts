@@ -111,7 +111,8 @@ describe('Dependabot Checks Configuration', () => {
     };
 
     DependabotChecks.forEach(check => {
-      const expectedAnnotation = expectedAnnotations[check.id as keyof typeof expectedAnnotations];
+      const expectedAnnotation =
+        expectedAnnotations[check.id as keyof typeof expectedAnnotations];
       expect(expectedAnnotation).toBeDefined();
       expect(check.annotationKeyThreshold).toBe(expectedAnnotation.threshold);
       expect(check.annotationKeyOperator).toBe(expectedAnnotation.operator);
@@ -121,7 +122,7 @@ describe('Dependabot Checks Configuration', () => {
   // Test: all checks use the same operator annotation key
   test('all checks use the same operator annotation key', () => {
     const expectedOperatorKey = 'tech-insights.io/dependabot-operator';
-    
+
     DependabotChecks.forEach(check => {
       expect(check.annotationKeyOperator).toBe(expectedOperatorKey);
     });
@@ -184,7 +185,11 @@ describe('Dependabot Checks Configuration', () => {
 
   // Test: severity levels coverage
   test('covers main security severity levels', () => {
-    const severityChecks = ['dependabot-critical-alerts', 'dependabot-high-alerts', 'dependabot-medium-alerts'];
+    const severityChecks = [
+      'dependabot-critical-alerts',
+      'dependabot-high-alerts',
+      'dependabot-medium-alerts',
+    ];
     const checkIds = DependabotChecks.map(check => check.id);
 
     severityChecks.forEach(severityCheck => {
@@ -201,7 +206,8 @@ describe('Dependabot Checks Configuration', () => {
     };
 
     DependabotChecks.forEach(check => {
-      const expectedMetric = severityMapping[check.id as keyof typeof severityMapping];
+      const expectedMetric =
+        severityMapping[check.id as keyof typeof severityMapping];
       expect(check.factIds[1]).toBe(expectedMetric);
     });
   });
@@ -216,7 +222,9 @@ describe('Dependabot Checks Configuration', () => {
   // Test: description consistency
   test('descriptions follow consistent pattern', () => {
     DependabotChecks.forEach(check => {
-      expect(check.description).toMatch(/^Maximum number of .+ Dependabot alerts allowed$/);
+      expect(check.description).toMatch(
+        /^Maximum number of .+ Dependabot alerts allowed$/,
+      );
     });
   });
 
@@ -229,7 +237,10 @@ describe('Dependabot Checks Configuration', () => {
     };
 
     DependabotChecks.forEach(check => {
-      const expectedPattern = expectedThresholdPatterns[check.id as keyof typeof expectedThresholdPatterns];
+      const expectedPattern =
+        expectedThresholdPatterns[
+          check.id as keyof typeof expectedThresholdPatterns
+        ];
       expect(check.annotationKeyThreshold).toMatch(expectedPattern);
     });
   });

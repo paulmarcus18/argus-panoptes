@@ -47,14 +47,14 @@ export const TrafficComponent = () => {
   const catalogApi = useApi(catalogApiRef);
   const identityApi = useApi(identityApiRef);
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
-  
+
   // Repository and filtering state
   const [repos, setRepos] = useState<any[]>([]);
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
   const [onlyCritical, setOnlyCritical] = useState(true);
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
   const [selectedEntities, setSelectedEntities] = useState<Entity[]>([]);
-  
+
   // System selection state
   const [availableSystems, setAvailableSystems] = useState<string[]>([]);
   const [selectedSystem, setSelectedSystem] = useState<string>('');
@@ -68,7 +68,8 @@ export const TrafficComponent = () => {
   const [azureDevOpsDialogOpen, setAzureDevOpsDialogOpen] = useState(false);
   const [sonarQubeDialogOpen, setSonarQubeDialogOpen] = useState(false);
   const [blackDuckDialogOpen, setBlackDuckDialogOpen] = useState(false);
-  const [githubSecurityDialogOpen, setGithubSecurityDialogOpen] = useState(false);
+  const [githubSecurityDialogOpen, setGithubSecurityDialogOpen] =
+    useState(false);
   const [DependabotDialogOpen, setDependabotDialogOpen] = useState(false);
 
   /**

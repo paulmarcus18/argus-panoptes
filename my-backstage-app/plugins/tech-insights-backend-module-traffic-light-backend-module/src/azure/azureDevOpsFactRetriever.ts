@@ -1,6 +1,6 @@
 /**
  * Azure DevOps Fact Retriever Module
- * 
+ *
  * This module provides functionality to retrieve bug counts from Azure DevOps for components
  * in the Backstage catalog. It uses the Azure DevOps REST API to query saved WIQL queries
  * that return work items representing bugs.
@@ -11,7 +11,7 @@ import { CatalogClient } from '@backstage/catalog-client';
 
 /**
  * Azure DevOps Bugs Fact Retriever
- * 
+ *
  * Retrieves bug count information from Azure DevOps for catalog components.
  * Components must have the following annotations to be included:
  *   - azure.com/organization: The Azure DevOps organization

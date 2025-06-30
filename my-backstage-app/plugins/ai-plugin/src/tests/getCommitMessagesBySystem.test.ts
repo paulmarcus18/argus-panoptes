@@ -149,8 +149,10 @@ describe('getCommitMessagesBySystem', () => {
      */
     await expect(
       getCommitMessagesBySystem(mockTechInsightsApi, {
-        'system-y': [{ name: 'repoY', namespace: 'default', kind: 'Component' }],
-      })
+        'system-y': [
+          { name: 'repoY', namespace: 'default', kind: 'Component' },
+        ],
+      }),
     ).rejects.toThrow('Failed to fetch facts');
   });
 
@@ -186,7 +188,9 @@ describe('getCommitMessagesBySystem', () => {
    * Checks if commits from yesterday are filtered out.
    */
   it('skips commits that are not from today', async () => {
-    const yesterdayTimestamp = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const yesterdayTimestamp = new Date(
+      Date.now() - 24 * 60 * 60 * 1000,
+    ).toISOString();
 
     /**
      * Uses the mock techInsightsApi to return commit messages with yesterday's timestamp.
@@ -199,7 +203,9 @@ describe('getCommitMessagesBySystem', () => {
     });
 
     const result = await getCommitMessagesBySystem(mockTechInsightsApi, {
-      'system-old': [{ name: 'repoOld', namespace: 'default', kind: 'Component' }],
+      'system-old': [
+        { name: 'repoOld', namespace: 'default', kind: 'Component' },
+      ],
     });
 
     /**
@@ -223,7 +229,9 @@ describe('getCommitMessagesBySystem', () => {
     });
 
     const result = await getCommitMessagesBySystem(mockTechInsightsApi, {
-      'system-no-time': [{ name: 'repoNoTime', namespace: 'default', kind: 'Component' }],
+      'system-no-time': [
+        { name: 'repoNoTime', namespace: 'default', kind: 'Component' },
+      ],
     });
 
     /**

@@ -106,7 +106,7 @@ export const AzureDevOpsBugsTrafficLight = ({
             });
           }
         }
-        
+
         // 4. Count projects that failed their bug threshold checks
         const failures = Array.from(projectBugMap.values()).filter(
           r => r.failedCheck,

@@ -54,14 +54,15 @@ export class ReportingUtils {
     api: TechInsightsApi,
     entity: CompoundEntityRef,
   ): Promise<ReportingPipelineMetrics> {
-    return api.getFacts(entity, ['reportingPipelineStatusFactRetriever'])
+    return api
+      .getFacts(entity, ['reportingPipelineStatusFactRetriever'])
       .then(response => {
         const facts = response?.reportingPipelineStatusFactRetriever?.facts;
-        
+
         if (!facts) {
           return { ...DEFAULT_METRICS };
         }
-        
+
         return {
           workflowMetrics: Object(facts.workflowMetrics ?? {}),
           totalIncludedWorkflows: Number(facts.totalIncludedWorkflows ?? 0),
@@ -88,16 +89,17 @@ export class ReportingUtils {
     api: TechInsightsApi,
     entity: CompoundEntityRef,
   ): Promise<ReportingPipelineChecks> {
-    return api.runChecks(entity)
+    return api
+      .runChecks(entity)
       .then(checkResults => {
         if (checkResults.length === 0) {
           return { ...DEFAULT_CHECKS };
         }
-  
+
         const successRateCheck = checkResults.find(
           r => r.check.id === 'reporting-success-rate',
         );
-  
+
         return {
           successRateCheck: successRateCheck?.result === true,
         };

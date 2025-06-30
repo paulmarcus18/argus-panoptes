@@ -7,7 +7,7 @@ import { catalogApiRef } from '@backstage/plugin-catalog-react';
 // Create a comprehensive mock setup before importing the component
 jest.mock('@material-ui/core', () => {
   const React = require('react');
-  
+
   return {
     Box: React.forwardRef(
       ({ children, onClick, bgcolor, ...props }: any, ref: any) => {
@@ -54,19 +54,15 @@ jest.mock('@material-ui/core', () => {
             {children}
           </div>
         );
-      }
+      },
     ),
-    
+
     Tooltip: ({ children, title, placement }: any) => (
-      <div 
-        data-testid="tooltip" 
-        data-title={title} 
-        data-placement={placement}
-      >
+      <div data-testid="tooltip" data-title={title} data-placement={placement}>
         {children}
       </div>
     ),
-    
+
     withTheme: (Component: any) => Component,
     createTheme: jest.fn(() => ({})),
     ThemeProvider: ({ children }: any) => children,
@@ -236,7 +232,7 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
 
   it('should update to gray when no entities are provided', async () => {
     renderComponent([]);
-    
+
     await waitFor(() => {
       const tooltip = screen.getByTestId('tooltip');
       const trafficLight = screen.getByTestId('traffic-light-box');

@@ -51,7 +51,7 @@ export const determineDependabotColor = async (
         }),
       ),
     );
-    
+
     // Count checks that failed by severity level
     const totalChecks = result.reduce(
       (acc, res) => {
@@ -66,7 +66,7 @@ export const determineDependabotColor = async (
         medium: 0,
       },
     );
-    
+
     // Apply traffic light rules based on alert counts
     if (totalChecks.high === 0 && totalChecks.critical === 0) {
       return { color: 'green', reason: 'All dependabot checks passed' };
@@ -97,7 +97,9 @@ export const TrafficLightDependabot = ({
   systemName: string;
   onClick?: () => void;
 }) => {
-  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray'>('gray');
+  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray'>(
+    'gray',
+  );
   const [reason, setReason] = useState('Fetching Dependabot status...');
 
   const techInsightsApi = useApi(techInsightsApiRef);

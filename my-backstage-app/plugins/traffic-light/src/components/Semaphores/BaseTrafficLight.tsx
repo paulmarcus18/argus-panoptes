@@ -1,6 +1,6 @@
 /**
  * BaseTrafficLight Component
- * 
+ *
  * A reusable traffic light component that displays a colored circle with a tooltip.
  * Used as the foundation for building various status indicators throughout the application.
  */
@@ -31,7 +31,7 @@ interface BaseTrafficLightProps {
 
 /**
  * BaseTrafficLight component renders a colored circle with a tooltip
- * 
+ *
  * @param {BaseTrafficLightProps} props - Component properties
  * @returns {JSX.Element} A traffic light indicator with tooltip
  */

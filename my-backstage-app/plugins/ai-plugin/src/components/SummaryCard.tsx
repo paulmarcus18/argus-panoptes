@@ -15,9 +15,9 @@ import { SummaryPerRepo } from '../../utils/types';
  * Props for configuring the Summary Card
  */
 interface SummaryCardProps {
-  system: string;           // System name to display
-  repos: SummaryPerRepo[];  // Repository data with summaries
-  repoSearch: string;       // Filter text for repositories
+  system: string; // System name to display
+  repos: SummaryPerRepo[]; // Repository data with summaries
+  repoSearch: string; // Filter text for repositories
   handleDownload: (system: string) => void; // Export handler
 }
 

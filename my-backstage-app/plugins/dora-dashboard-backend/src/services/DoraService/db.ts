@@ -24,8 +24,8 @@ export function createDbPool(config: DbConfig) {
     user: config.user,
     password: config.password,
     database: config.database,
-    waitForConnections: true,  // Queue queries when no connections available
-    connectionLimit: 10,       // Maximum number of connections in pool
-    queueLimit: 0,             // No limit on connection queue size
+    waitForConnections: true, // Queue queries when no connections available
+    connectionLimit: 10, // Maximum number of connections in pool
+    queueLimit: 0, // No limit on connection queue size
   });
 }

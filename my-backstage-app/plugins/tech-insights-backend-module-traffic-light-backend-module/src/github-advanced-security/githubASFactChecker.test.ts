@@ -138,29 +138,39 @@ describe('GitHub Advanced Security Checks Configuration', () => {
   test('annotation keys match expected patterns', () => {
     const expectedAnnotations = {
       'critical-count': {
-        threshold: 'tech-insights.io/github-advanced-security-critical-count-threshold',
-        operator: 'tech-insights.io/github-advanced-security-critical-count-operator',
+        threshold:
+          'tech-insights.io/github-advanced-security-critical-count-threshold',
+        operator:
+          'tech-insights.io/github-advanced-security-critical-count-operator',
       },
       'high-count': {
-        threshold: 'tech-insights.io/github-advanced-security-high-count-threshold',
-        operator: 'tech-insights.io/github-advanced-security-high-count-operator',
+        threshold:
+          'tech-insights.io/github-advanced-security-high-count-threshold',
+        operator:
+          'tech-insights.io/github-advanced-security-high-count-operator',
       },
       'medium-count': {
-        threshold: 'tech-insights.io/github-advanced-security-medium-count-threshold',
-        operator: 'tech-insights.io/github-advanced-security-medium-count-operator',
+        threshold:
+          'tech-insights.io/github-advanced-security-medium-count-threshold',
+        operator:
+          'tech-insights.io/github-advanced-security-medium-count-operator',
       },
       'low-count': {
-        threshold: 'tech-insights.io/github-advanced-security-low-count-threshold',
-        operator: 'tech-insights.io/github-advanced-security-low-count-operator',
+        threshold:
+          'tech-insights.io/github-advanced-security-low-count-threshold',
+        operator:
+          'tech-insights.io/github-advanced-security-low-count-operator',
       },
       'open-secret-scanning-alert-count': {
-        threshold: 'tech-insights.io/github-advanced-security-secrets-threshold',
+        threshold:
+          'tech-insights.io/github-advanced-security-secrets-threshold',
         operator: 'tech-insights.io/github-advanced-security-secrets-operator',
       },
     };
 
     githubAdvancedSecuritychecks.forEach(check => {
-      const expectedAnnotation = expectedAnnotations[check.id as keyof typeof expectedAnnotations];
+      const expectedAnnotation =
+        expectedAnnotations[check.id as keyof typeof expectedAnnotations];
       expect(expectedAnnotation).toBeDefined();
       expect(check.annotationKeyThreshold).toBe(expectedAnnotation.threshold);
       expect(check.annotationKeyOperator).toBe(expectedAnnotation.operator);
@@ -224,7 +234,12 @@ describe('GitHub Advanced Security Checks Configuration', () => {
 
   // Test: security severity levels coverage
   test('covers all security severity levels', () => {
-    const severityChecks = ['critical-count', 'high-count', 'medium-count', 'low-count'];
+    const severityChecks = [
+      'critical-count',
+      'high-count',
+      'medium-count',
+      'low-count',
+    ];
     const checkIds = githubAdvancedSecuritychecks.map(check => check.id);
 
     severityChecks.forEach(severityCheck => {
