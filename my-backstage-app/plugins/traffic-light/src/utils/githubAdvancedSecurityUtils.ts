@@ -115,7 +115,7 @@ export class GithubAdvancedSecurityUtils {
         secretScanningAlerts:
           secretScanningAlerts as GitHubSecurityFacts['secretScanningAlerts'],
       };
-    } catch (error) {
+    } catch {
       return { ...DEFAULT_FACTS };
     }
   }
@@ -150,7 +150,7 @@ export class GithubAdvancedSecurityUtils {
         lowCheck: Boolean(lowCheck?.result ?? false),
         secretCheck: Boolean(secretCheck?.result ?? false),
       };
-    } catch (error) {
+    } catch {
       return { ...DEFAULT_CHECKS };
     }
   }
