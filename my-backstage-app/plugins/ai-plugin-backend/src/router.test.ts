@@ -1,9 +1,8 @@
 import request from 'supertest';
 import express from 'express';
 import { createRouter } from './router';
-import { PluginDatabaseManager } from '@backstage/backend-common';
+import { DatabaseService, LoggerService } from '@backstage/backend-plugin-api';
 import { Config } from '@backstage/config';
-import { LoggerService } from '@backstage/backend-plugin-api';
 
 // Mocks
 const mockLogger: jest.Mocked<LoggerService> = {
@@ -26,7 +25,7 @@ const mockDbClient = {
 };
 
 // Mock database manager
-const mockDatabase: Partial<PluginDatabaseManager> = {
+const mockDatabase: Partial<DatabaseService> = {
   getClient: jest.fn().mockResolvedValue({
     // Mock AISummaryStore internals here
     ...mockDbClient,
@@ -59,7 +58,7 @@ describe('createRouter', () => {
     const router = await createRouter({
       logger: mockLogger,
       config: mockConfig as Config,
-      database: mockDatabase as PluginDatabaseManager,
+      database: mockDatabase as DatabaseService,
     });
 
     app = express();
