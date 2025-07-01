@@ -1,128 +1,31 @@
+/**
+ * Foundation Pipeline Fact Retriever
+ * Collects metrics about GitHub Actions workflows used for foundation builds
+ */
 import {
   FactRetriever,
   TechInsightFact,
 } from '@backstage-community/plugin-tech-insights-node';
-import { CatalogClient } from '@backstage/catalog-client';
-import { JsonObject } from '@backstage/types';
-import { LoggerService } from '@backstage/backend-plugin-api';
-// Represents a single workflow run from Github Actions API
-type WorkflowRun = {
-  name: string;
-  status: string;
-  conclusion: string | null;
-  created_at: string;
-  head_branch: string;
-  workflow_id: number;
-};
-
-// Represents a workflow definition from GitHub API
-type WorkflowDefinition = {
-  id: number;
-  name: string;
-  path: string;
-};
-
-// Metrics for each each workflow
-type WorkflowMetrics = {
-  name: string;
-  totalRuns: number;
-  successRuns: number;
-  failureRuns: number;
-  successRate: number;
-};
-
-// Defines an interface for foundation pipeline status metrics
-interface PipelineStatusSummary extends JsonObject {
-  totalWorkflowRunsCount: number;
-  uniqueWorkflowsCount: number;
-  successWorkflowRunsCount: number;
-  failureWorkflowRunsCount: number;
-  successRate: number;
-  workflowMetrics: Record<string, WorkflowMetrics>;
-}
+import { Entity } from '@backstage/catalog-model';
+import {
+  WorkflowRun,
+  WorkflowDefinition,
+  WorkflowMetrics,
+  FoundationPipelineStatusSummary,
+  fetchWorkflowDefinitions,
+  fetchAllWorkflowRuns,
+  createGitHubHeaders,
+  getRepositoryInfo,
+  createPipelineFactRetrieverHandler,
+} from './pipelineUtils';
 
 /**
- * Helper function to fetch all workflow definitions for a repository.
- */
-async function fetchWorkflowDefinitions(
-  owner: string,
-  repoName: string,
-  headers: Record<string, string>,
-  logger: LoggerService,
-): Promise<WorkflowDefinition[]> {
-  // API calls to get the workflow definitions first
-  const workflowsApiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/workflows`;
-  try {
-    const workflowsResponse = await fetch(workflowsApiUrl, { headers });
-    if (workflowsResponse.ok) {
-      const workflowsData = await workflowsResponse.json();
-      return workflowsData.workflows ?? [];
-    }
-  } catch (error) {
-    // Log the error for debugging purposes but allow the process to continue.
-    if (error instanceof Error) {
-      logger.warn(
-        `Failed to fetch workflow definitions for ${owner}/${repoName}:`,
-        error,
-      );
-    } else {
-      // Handle cases where a non-Error value was thrown
-      logger.warn(
-        `Failed to fetch workflow definitions for ${owner}/${repoName}: An unknown error occurred.`,
-      );
-    }
-  }
-  return [];
-}
-
-/**
- * Helper function to fetch all workflow runs using pagination.
- */
-async function fetchAllWorkflowRuns(
-  owner: string,
-  repoName: string,
-  headers: Record<string, string>,
-): Promise<WorkflowRun[]> {
-  const allRuns: WorkflowRun[] = [];
-
-  // Fetch all workflow runs from the main branch using pagination
-  const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/actions/runs?branch=main&per_page=100`;
-  let page = 1;
-  const maxPages = 30; // Limit to 30 pages to avoid excessive API calls
-
-  // Paginate through all workflow runs
-  while (page <= maxPages) {
-    const pageUrl = `${apiUrl}&page=${page}`;
-    const response = await fetch(pageUrl, { method: 'GET', headers });
-
-    if (!response.ok) break;
-
-    const data = await response.json();
-    const pageRuns = (data.workflow_runs ?? []) as WorkflowRun[];
-    allRuns.push(...pageRuns);
-
-    const linkHeader = response.headers.get('Link');
-
-    // To check if we need to fetch more pages
-    // ANd check for Link header with 'next' relation to confirm more pages
-    if (pageRuns.length < 100 || !linkHeader?.includes('rel="next"')) {
-      break;
-    }
-    page++;
-  }
-
-  // Filter for only main branch runs
-  return allRuns.filter(run => run.head_branch === 'main');
-}
-
-/**
- * Helper function to calculate all metrics from the fetched workflow data.
+ * Helper function to calculate workflow metrics from the fetched workflow data
  */
 function calculateWorkflowMetrics(
   allRuns: WorkflowRun[],
-  // Workflow definition to get accurate unique workflow counts
   workflowDefinitions: WorkflowDefinition[],
-): PipelineStatusSummary {
+): FoundationPipelineStatusSummary {
   // Count all workflow runs on main branch
   const totalWorkflowRunsCount = allRuns.length;
 
@@ -208,11 +111,53 @@ function calculateWorkflowMetrics(
 }
 
 /**
- * Creates a fact retriever for Foundation pipeline metrics from Github Actions.
- *
- * This retriever queries GitHub Actions workflow data for specified entity of type 'component'.
- *
- * @returns A FactRetriever that collects pipeline status metrics
+ * Process a single entity and extract foundation pipeline metrics
+ */
+async function processFoundationEntity(
+  entity: Entity, 
+  token?: string
+): Promise<FoundationPipelineStatusSummary | null> {
+  const repoInfo = getRepositoryInfo(entity);
+  if (!repoInfo) {
+    return null;
+  }
+  
+  const { owner, repoName } = repoInfo;
+  const headers = createGitHubHeaders(token);
+
+  try {
+    // Create a logger adapter that implements LoggerService interface
+    const loggerAdapter = {
+      ...console,
+      child: () => loggerAdapter,
+    };
+    
+    const [workflowDefinitions, allRuns] = await Promise.all([
+      fetchWorkflowDefinitions(owner, repoName, headers, loggerAdapter),
+      fetchAllWorkflowRuns(owner, repoName, headers),
+    ]);
+
+    if (allRuns.length === 0) {
+      return {
+        totalWorkflowRunsCount: 0,
+        uniqueWorkflowsCount: workflowDefinitions.length,
+        successWorkflowRunsCount: 0,
+        failureWorkflowRunsCount: 0,
+        successRate: 0,
+        workflowMetrics: {},
+      };
+    }
+
+    // Construct pipelines status summary object
+    return calculateWorkflowMetrics(allRuns, workflowDefinitions);
+  } catch (error) {
+    console.error(`Error processing foundation entity ${entity.metadata.name}: ${error instanceof Error ? error.message : String(error)}`);
+    return null;
+  }
+}
+
+/**
+ * Creates a fact retriever for Foundation pipeline metrics from Github Actions
  */
 export const foundationPipelineStatusFactRetriever: FactRetriever = {
   id: 'foundationPipelineStatusFactRetriever',
@@ -247,114 +192,14 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
   },
 
   /**
-   * Handler function that retrieves pipeline status metrics for relevant entities.
-   *
-   * @param ctx - Context object containing configuration, logger, and other services
-   * @returns Array of entity facts with pipeline status metrics
+   * Handler function that retrieves pipeline status metrics for relevant entities
    */
-  async handler({
-    config,
-    entityFilter,
-    auth,
-    discovery,
-    logger,
-  }): Promise<TechInsightFact[]> {
-    // Retrieve GitHub token from config
-    let token: string | undefined;
-    try {
-      const githubConfigs = config.getOptionalConfigArray(
-        'integrations.github',
-      );
-      const githubConfig = githubConfigs?.[0];
-      token = githubConfig?.getOptionalString('token');
-    } catch {
-      return [];
-    }
-
-    // Get catalog access token for fetching entities
-    const { token: catalogToken } = await auth.getPluginRequestToken({
-      onBehalfOf: await auth.getOwnServiceCredentials(),
-      targetPluginId: 'catalog',
-    });
-
-    const catalogClient = new CatalogClient({ discoveryApi: discovery });
-
-    // Fetch entities matching the provided filter
-    const { items: entities } = await catalogClient.getEntities(
-      { filter: entityFilter },
-      { token: catalogToken },
-    );
-
-    // Filter entities that have GitHub repositories
-    const githubEntities = entities.filter(entity => {
-      const slug = entity.metadata.annotations?.['github.com/project-slug'];
-      return !!slug;
-    });
-
-    // Process each Github-enabled component
-    const results = await Promise.all(
-      githubEntities.map(async entity => {
-        try {
-          // Parse the github repo information from entity annotations
-          const projectSlug =
-            entity.metadata.annotations?.['github.com/project-slug'] ?? '';
-          const [owner, repoName] = projectSlug.split('/');
-
-          if (!owner || !repoName) {
-            return null;
-          }
-
-          const headers: Record<string, string> = {
-            Accept: 'application/vnd.github.v3+json',
-          };
-          if (token) {
-            headers.Authorization = `token ${token}`;
-          }
-
-          const [workflowDefinitions, allRuns] = await Promise.all([
-            fetchWorkflowDefinitions(owner, repoName, headers, logger),
-            fetchAllWorkflowRuns(owner, repoName, headers),
-          ]);
-
-          if (allRuns.length === 0) {
-            return {
-              entity,
-              facts: {
-                totalWorkflowRunsCount: 0,
-                uniqueWorkflowsCount: workflowDefinitions.length,
-                successWorkflowRunsCount: 0,
-                failureWorkflowRunsCount: 0,
-                successRate: 0,
-                workflowMetrics: {},
-              },
-            };
-          }
-
-          // Construct pipelines status summary object
-          const pipelineSummary = calculateWorkflowMetrics(
-            allRuns,
-            workflowDefinitions,
-          );
-
-          // Return the fact result object for this repo
-          return {
-            entity: {
-              kind: entity.kind,
-              namespace: entity.metadata.namespace ?? 'default',
-              name: entity.metadata.name,
-            },
-            facts: pipelineSummary,
-          } as TechInsightFact;
-        } catch {
-          return null;
-        }
-      }),
-    );
-
-    // Filter out null results and return valid pipeline metrics
-    const validResults = results.filter(
-      (r): r is TechInsightFact => r !== null,
-    );
-    return validResults;
+  async handler(ctx): Promise<TechInsightFact[]> {
+    // Create a context with properly typed entityFilter
+    const pipelineContext = {
+      ...ctx,
+      entityFilter: foundationPipelineStatusFactRetriever.entityFilter as Record<string, string>[],
+    };
+    return createPipelineFactRetrieverHandler(pipelineContext, processFoundationEntity);
   },
 };
