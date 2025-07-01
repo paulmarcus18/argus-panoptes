@@ -91,7 +91,7 @@ function calculateReportingMetrics(
  */
 async function processReportingEntity(
   entity: Entity,
-  token?: string
+  token?: string,
 ): Promise<ReportingPipelineStatusSummary | null> {
   const repoInfo = getRepositoryInfo(entity);
   if (!repoInfo) {
@@ -111,7 +111,12 @@ async function processReportingEntity(
       ...console,
       child: () => loggerAdapter,
     };
-    const workflowDefinitions = await fetchWorkflowDefinitions(owner, repoName, headers, loggerAdapter);
+    const workflowDefinitions = await fetchWorkflowDefinitions(
+      owner,
+      repoName,
+      headers,
+      loggerAdapter,
+    );
     if (!workflowDefinitions || workflowDefinitions.length === 0) {
       return null;
     }
@@ -132,32 +137,48 @@ async function processReportingEntity(
     }
 
     // Fetch the target branch from the entity annotations file
-    const targetBranch = entity.metadata.annotations?.['reporting/target-branch'] ?? 'main';
+    const targetBranch =
+      entity.metadata.annotations?.['reporting/target-branch'] ?? 'main';
 
-    const workflowMetricsPromises = includedWorkflowIds.map(async workflowId => {
-      const lastRun = await fetchLastRun(owner, repoName, workflowId, targetBranch, headers);
-      if (!lastRun) return null;
+    const workflowMetricsPromises = includedWorkflowIds.map(
+      async workflowId => {
+        const lastRun = await fetchLastRun(
+          owner,
+          repoName,
+          workflowId,
+          targetBranch,
+          headers,
+        );
+        if (!lastRun) return null;
 
-      const workflowName =
-        workflowDefinitions.find(w => w.id === workflowId)?.name ?? `Workflow ID ${workflowId}`;
-      let lastRunStatus: 'success' | 'failure' | 'unknown' = 'unknown';
-      if (lastRun.status === 'completed') {
-        lastRunStatus = lastRun.conclusion === 'success' ? 'success' : 'failure';
-      }
+        const workflowName =
+          workflowDefinitions.find(w => w.id === workflowId)?.name ??
+          `Workflow ID ${workflowId}`;
+        let lastRunStatus: 'success' | 'failure' | 'unknown' = 'unknown';
+        if (lastRun.status === 'completed') {
+          lastRunStatus =
+            lastRun.conclusion === 'success' ? 'success' : 'failure';
+        }
 
-      return {
-        workflowName,
-        lastRunStatus,
-        lastRunDate: lastRun.created_at,
-      };
-    });
+        return {
+          workflowName,
+          lastRunStatus,
+          lastRunDate: lastRun.created_at,
+        };
+      },
+    );
 
-    const workflowMetrics = (await Promise.all(workflowMetricsPromises))
-      .filter((m): m is WorkflowLastRunMetrics => m !== null);
+    const workflowMetrics = (await Promise.all(workflowMetricsPromises)).filter(
+      (m): m is WorkflowLastRunMetrics => m !== null,
+    );
 
     return calculateReportingMetrics(workflowMetrics);
   } catch (error) {
-    console.error(`Error processing reporting entity ${stringifyEntityRef(entity)}: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error processing reporting entity ${stringifyEntityRef(entity)}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
     return null;
   }
 }
@@ -172,7 +193,8 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
   schema: {
     workflowMetrics: {
       type: 'object',
-      description: 'Last run metrics for each reporting workflow as JSON object',
+      description:
+        'Last run metrics for each reporting workflow as JSON object',
     },
     totalIncludedWorkflows: {
       type: 'integer',
@@ -199,8 +221,14 @@ export const reportingPipelineStatusFactRetriever: FactRetriever = {
     // Create a context with properly typed entityFilter
     const pipelineContext = {
       ...ctx,
-      entityFilter: reportingPipelineStatusFactRetriever.entityFilter as Record<string, string>[],
+      entityFilter: reportingPipelineStatusFactRetriever.entityFilter as Record<
+        string,
+        string
+      >[],
     };
-    return createPipelineFactRetrieverHandler(pipelineContext, processReportingEntity);
+    return createPipelineFactRetrieverHandler(
+      pipelineContext,
+      processReportingEntity,
+    );
   },
 };

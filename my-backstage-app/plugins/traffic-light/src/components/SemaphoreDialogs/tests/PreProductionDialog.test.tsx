@@ -115,15 +115,15 @@ describe('PreproductionSemaphoreDialog', () => {
     const Wrapper = createWrapper();
     const mockOnClose = jest.fn();
 
-      render(
-        <Wrapper>
-          <PreproductionSemaphoreDialog
-            open
-            onClose={mockOnClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
+    render(
+      <Wrapper>
+        <PreproductionSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -142,15 +142,15 @@ describe('PreproductionSemaphoreDialog', () => {
       metadata: { annotations: {} },
     });
 
-      render(
-        <Wrapper>
-          <PreproductionSemaphoreDialog
-            open
-            onClose={mockOnClose}
-            entities={[]}
-          />
-        </Wrapper>,
-      );
+    render(
+      <Wrapper>
+        <PreproductionSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -164,15 +164,15 @@ describe('PreproductionSemaphoreDialog', () => {
       new Error('API failure'),
     );
 
-      render(
-        <Wrapper>
-          <PreproductionSemaphoreDialog
-            open
-            onClose={mockOnClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
+    render(
+      <Wrapper>
+        <PreproductionSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -205,15 +205,15 @@ describe('PreproductionSemaphoreDialog', () => {
     const Wrapper = createWrapper();
     const mockOnClose = jest.fn();
 
-      render(
-        <Wrapper>
-          <PreproductionSemaphoreDialog
-            open
-            onClose={mockOnClose}
-            entities={[mockEntity]}
-          />
-        </Wrapper>,
-      );
+    render(
+      <Wrapper>
+        <PreproductionSemaphoreDialog
+          open
+          onClose={mockOnClose}
+          entities={[mockEntity]}
+        />
+      </Wrapper>,
+    );
 
     const closeBtn = screen.getByTestId('close-button');
     closeBtn.click();

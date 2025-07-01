@@ -123,7 +123,7 @@ describe('FoundationTrafficLight', () => {
   });
 
   it('handles empty entities', async () => {
-      renderComponent([]);
+    renderComponent([]);
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'gray');
@@ -132,7 +132,7 @@ describe('FoundationTrafficLight', () => {
   });
 
   it('uses system annotation threshold and configured repos', async () => {
-      renderComponent();
+    renderComponent();
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -157,7 +157,7 @@ describe('FoundationTrafficLight', () => {
     mockCatalogApi.getEntityByRef.mockResolvedValueOnce({
       metadata: { annotations: {} },
     });
-      renderComponent();
+    renderComponent();
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(0, 1, 0.33);
@@ -170,7 +170,7 @@ describe('FoundationTrafficLight', () => {
       metadata: { name: 'not-configured', namespace: 'default' },
     });
 
-      renderComponent(mockEntities);
+    renderComponent(mockEntities);
 
     await waitFor(() => {
       expect(
@@ -190,7 +190,7 @@ describe('FoundationTrafficLight', () => {
       'foundation-configured-repositories'
     ];
 
-      renderComponent();
+    renderComponent();
 
     await waitFor(() => {
       expect(
@@ -204,7 +204,7 @@ describe('FoundationTrafficLight', () => {
       'foundation-configured-repositories'
     ] = 'nonexistent';
 
-      renderComponent();
+    renderComponent();
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'gray');
@@ -220,7 +220,7 @@ describe('FoundationTrafficLight', () => {
       new Error('Failure'),
     );
 
-      renderComponent();
+    renderComponent();
 
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
@@ -235,11 +235,11 @@ describe('FoundationTrafficLight', () => {
   it('handles click event if onClick is provided', async () => {
     const onClick = jest.fn();
 
-      renderComponent(mockEntities, onClick);
+    renderComponent(mockEntities, onClick);
 
     const light = await screen.findByTestId('base-traffic-light');
 
-      light.click();
+    light.click();
     expect(onClick).toHaveBeenCalled();
   });
 
@@ -252,7 +252,7 @@ describe('FoundationTrafficLight', () => {
       reason: 'Many failures',
     });
 
-      renderComponent();
+    renderComponent();
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(1, 1, 0.5);

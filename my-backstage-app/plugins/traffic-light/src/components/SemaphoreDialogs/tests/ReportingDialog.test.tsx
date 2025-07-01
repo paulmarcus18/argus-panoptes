@@ -105,15 +105,20 @@ describe('ReportingSemaphoreDialog', () => {
     });
 
     // Default mock implementations for the successful case
-    mockGetSystemConfig.mockResolvedValue({ redThreshold: 0.33, configuredRepoNames: [] });
-    mockProcessEntities.mockResolvedValue([{
-      name: 'test-service',
-      url: 'https://github.com/test/test-service/actions',
-      successRate: 50,
-      successWorkflowRunsCount: 5,
-      failureWorkflowRunsCount: 5,
-      failedCheck: true,
-    }]);
+    mockGetSystemConfig.mockResolvedValue({
+      redThreshold: 0.33,
+      configuredRepoNames: [],
+    });
+    mockProcessEntities.mockResolvedValue([
+      {
+        name: 'test-service',
+        url: 'https://github.com/test/test-service/actions',
+        successRate: 50,
+        successWorkflowRunsCount: 5,
+        failureWorkflowRunsCount: 5,
+        failedCheck: true,
+      },
+    ]);
     mockAggregateMetrics.mockReturnValue({
       totalSuccess: 5,
       totalFailure: 5,
@@ -131,11 +136,13 @@ describe('ReportingSemaphoreDialog', () => {
       },
       details: [],
     });
-    mockGetLowestSuccessRepos.mockReturnValue([{
-      name: 'test-service',
-      url: 'https://github.com/test/test-service/actions',
-      successRate: 50,
-    }]);
+    mockGetLowestSuccessRepos.mockReturnValue([
+      {
+        name: 'test-service',
+        url: 'https://github.com/test/test-service/actions',
+        successRate: 50,
+      },
+    ]);
     mockRenderPipelineMetrics.mockReturnValue(<div>Mocked metrics</div>);
   });
 
@@ -179,39 +186,39 @@ describe('ReportingSemaphoreDialog', () => {
   });
 
   it('handles API error gracefully', async () => {
-  // Set up the utility to throw an error for this specific test
-  mockProcessEntities.mockRejectedValueOnce(new Error('API error'));
-  
-  // Reset the buildSemaphoreData mock to prevent it from being called
-  // if there's an error, it shouldn't reach this function
-  mockBuildSemaphoreData.mockClear();
+    // Set up the utility to throw an error for this specific test
+    mockProcessEntities.mockRejectedValueOnce(new Error('API error'));
 
-  await act(async () => {
-    render(
-      <Wrapper>
-        <ReportingSemaphoreDialog
-          open
-          onClose={jest.fn()}
-          entities={[mockEntity]}
-        />
-      </Wrapper>,
-    );
-  });
+    // Reset the buildSemaphoreData mock to prevent it from being called
+    // if there's an error, it shouldn't reach this function
+    mockBuildSemaphoreData.mockClear();
 
-  // Wait for the error message to appear
-  await waitFor(() => {
-    expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
-    // Use a partial text match instead of exact match
-    expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
-      /Failed to load metrics/,
-    );
+    await act(async () => {
+      render(
+        <Wrapper>
+          <ReportingSemaphoreDialog
+            open
+            onClose={jest.fn()}
+            entities={[mockEntity]}
+          />
+        </Wrapper>,
+      );
+    });
+
+    // Wait for the error message to appear
+    await waitFor(() => {
+      expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
+      // Use a partial text match instead of exact match
+      expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
+        /Failed to load metrics/,
+      );
+    });
+
+    // Verify processEntities was called but threw an error
+    expect(mockProcessEntities).toHaveBeenCalled();
+    // Verify buildSemaphoreData was not called after the error
+    expect(mockBuildSemaphoreData).not.toHaveBeenCalled();
   });
-  
-  // Verify processEntities was called but threw an error
-  expect(mockProcessEntities).toHaveBeenCalled();
-  // Verify buildSemaphoreData was not called after the error
-  expect(mockBuildSemaphoreData).not.toHaveBeenCalled();
-});
 
   it('does not fetch if dialog is closed', () => {
     render(

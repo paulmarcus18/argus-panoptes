@@ -523,8 +523,7 @@ describe('BlackDuckTrafficLight Component', () => {
   };
 
   it('should update to green when all checks pass', async () => {
-
-      renderComponent();
+    renderComponent();
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -544,7 +543,7 @@ describe('BlackDuckTrafficLight Component', () => {
       () => mockBlackDuckUtilsInstance,
     );
 
-      renderComponent();
+    renderComponent();
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
       expect(trafficLight).toHaveAttribute('data-color', 'red');
@@ -552,8 +551,7 @@ describe('BlackDuckTrafficLight Component', () => {
   });
 
   it('should handle empty entities array', async () => {
-      renderComponent([]);
-
+    renderComponent([]);
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -572,7 +570,7 @@ describe('BlackDuckTrafficLight Component', () => {
       },
     ];
 
-      renderComponent(entitiesWithoutBlackDuck);
+    renderComponent(entitiesWithoutBlackDuck);
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -588,7 +586,7 @@ describe('BlackDuckTrafficLight Component', () => {
       () => mockBlackDuckUtilsInstance,
     );
 
-      renderComponent();
+    renderComponent();
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -598,7 +596,7 @@ describe('BlackDuckTrafficLight Component', () => {
 
   it('should call onClick handler when provided', async () => {
     const mockOnClick = jest.fn();
-      renderComponent(mockEntities, mockOnClick);
+    renderComponent(mockEntities, mockOnClick);
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -607,7 +605,7 @@ describe('BlackDuckTrafficLight Component', () => {
 
     const trafficLight = screen.getByTestId('base-traffic-light');
 
-      trafficLight.click();
+    trafficLight.click();
 
     expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
@@ -631,16 +629,16 @@ describe('BlackDuckTrafficLight Component', () => {
       },
     ];
 
-      component.rerender(
-        <TestApiProvider
-          apis={[
-            [catalogApiRef, mockCatalogApi],
-            [techInsightsApiRef, mockTechInsightsApi],
-          ]}
-        >
-          <BlackDuckTrafficLight entities={newEntities} />
-        </TestApiProvider>,
-      );
+    component.rerender(
+      <TestApiProvider
+        apis={[
+          [catalogApiRef, mockCatalogApi],
+          [techInsightsApiRef, mockTechInsightsApi],
+        ]}
+      >
+        <BlackDuckTrafficLight entities={newEntities} />
+      </TestApiProvider>,
+    );
 
     // Should update with new data
     await waitFor(() => {
@@ -650,7 +648,7 @@ describe('BlackDuckTrafficLight Component', () => {
   });
 
   it('should create BlackDuckUtils instance with memoization', async () => {
-      renderComponent();
+    renderComponent();
 
     expect(BlackDuckUtils).toHaveBeenCalledTimes(1);
   });
@@ -662,7 +660,7 @@ describe('BlackDuckTrafficLight Component', () => {
         spec: {},
       },
     ];
-      renderComponent(entitiesWithoutSystem);
+    renderComponent(entitiesWithoutSystem);
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');

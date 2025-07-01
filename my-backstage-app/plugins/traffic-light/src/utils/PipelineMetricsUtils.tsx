@@ -117,13 +117,11 @@ export async function getSystemConfig(
 
 /**
  * Aggregates repository metrics to calculate overall system metrics
- * 
+ *
  * @param results - Array of repository metrics results
  * @returns Object containing aggregated metrics
  */
-export function aggregateMetrics(
-  results: RepositoryResult[],
-): PipelineMetrics {
+export function aggregateMetrics(results: RepositoryResult[]): PipelineMetrics {
   const totalSuccess = results.reduce(
     (sum, r) => sum + r.successWorkflowRunsCount,
     0,
@@ -145,7 +143,7 @@ export function aggregateMetrics(
 
 /**
  * Determines semaphore data based on metrics and failure threshold
- * 
+ *
  * @param metrics - Aggregated pipeline metrics
  * @param failures - Count of failed checks
  * @param totalEntities - Total number of entities being evaluated
@@ -192,7 +190,7 @@ export function buildSemaphoreData(
 
 /**
  * Gets the lowest performing repositories by success rate
- * 
+ *
  * @param results - Array of repository results
  * @param limit - Maximum number of repositories to return
  * @returns Array of repositories sorted by success rate ascending
@@ -213,7 +211,7 @@ export function getLowestSuccessRepos(
 
 /**
  * Renders a standardized metrics grid for pipeline metrics
- * 
+ *
  * @param metrics - Pipeline metrics to display
  * @param classes - Material UI classes for styling
  * @returns React component for metrics display
@@ -245,7 +243,7 @@ export function renderMetricsGrid(metrics: PipelineMetrics, classes: any) {
 
 /**
  * Renders a list of repositories with lowest success rates
- * 
+ *
  * @param repos - Array of repositories with success rates
  * @param classes - Material UI classes for styling
  * @returns React component for repository list
@@ -257,7 +255,7 @@ export function renderLowestSuccessRepos(
   if (repos.length === 0) {
     return null;
   }
-  
+
   return (
     <div className={classes.repoList}>
       <Typography variant="h6">Lowest Success Rate Repositories</Typography>
@@ -286,7 +284,7 @@ export function renderLowestSuccessRepos(
 
 /**
  * Processes pipeline entities and generates repository results
- * 
+ *
  * @param entities - Array of entities to process
  * @param getFactsFn - Function to fetch facts for an entity
  * @param getChecksFn - Function to fetch check results for an entity
@@ -313,25 +311,28 @@ export async function processEntities(
       ]);
 
       // Calculate success rate as a percentage
-      const totalRuns = 
+      const totalRuns =
         facts.successfulRuns !== undefined
           ? facts.successfulRuns + facts.failedRuns
           : facts.successWorkflowRunsCount + facts.failureWorkflowRunsCount;
-          
-      const successCount = 
+
+      const successCount =
         facts.successfulRuns !== undefined
           ? facts.successfulRuns
           : facts.successWorkflowRunsCount;
-          
+
       const successRate = totalRuns > 0 ? (successCount / totalRuns) * 100 : 0;
-      
+
       // Get GitHub actions URL from entity annotations
-      const projectSlug = entity.metadata.annotations?.['github.com/project-slug'];
-      const url = projectSlug ? `https://github.com/${projectSlug}/actions` : '#';
+      const projectSlug =
+        entity.metadata.annotations?.['github.com/project-slug'];
+      const url = projectSlug
+        ? `https://github.com/${projectSlug}/actions`
+        : '#';
 
       // Normalize the check field name
-      const failedCheck = 
-        check.successRateCheck === false || 
+      const failedCheck =
+        check.successRateCheck === false ||
         check.pipelineSuccessRateCheck === false;
 
       return {
@@ -348,7 +349,7 @@ export async function processEntities(
 
 /**
  * Renders standard pipeline metrics display
- * 
+ *
  * @param metrics - Pipeline metrics to display
  * @param lowestSuccessRepos - Repositories with lowest success rates
  * @param classes - Material UI classes for styling

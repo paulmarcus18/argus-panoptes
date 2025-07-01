@@ -51,7 +51,10 @@ export const ReportingTrafficLight = ({
       const systemEntityRef = {
         kind: 'System',
         namespace,
-        name: typeof systemName === 'string' ? systemName : JSON.stringify(systemName),
+        name:
+          typeof systemName === 'string'
+            ? systemName
+            : JSON.stringify(systemName),
       };
 
       const systemEntity = await catalogApi.getEntityByRef(systemEntityRef);

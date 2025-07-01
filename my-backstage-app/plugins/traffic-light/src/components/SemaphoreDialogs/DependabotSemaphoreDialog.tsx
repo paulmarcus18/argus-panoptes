@@ -179,7 +179,8 @@ export const DependabotSemaphoreDialog: React.FC<
           techInsightsApi,
           dependabotUtils,
         );
-        const color: 'green' | 'red' | 'yellow' | 'gray' = trafficLightcolor.color;
+        const color: 'green' | 'red' | 'yellow' | 'gray' =
+          trafficLightcolor.color;
 
         // Update the component's state with the processed data.
         setData({

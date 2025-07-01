@@ -46,7 +46,8 @@ function shouldExcludeWorkflow(
 function parseWorkflowConfig(entity: Entity): WorkflowConfig {
   const workflowConfig: WorkflowConfig = { excludePatterns: [] };
   // Check annotations for workflow patterns to exclude
-  const excludeAnnotation = entity.metadata.annotations?.['preproduction/exclude'];
+  const excludeAnnotation =
+    entity.metadata.annotations?.['preproduction/exclude'];
   if (excludeAnnotation) {
     try {
       const excludeList = JSON.parse(excludeAnnotation);
@@ -89,10 +90,13 @@ function calculatePreproductionMetrics(
   ).length;
 
   // Calculate success rate as percentage
-  const totalCompletedRuns = successWorkflowRunsCount + failureWorkflowRunsCount;
+  const totalCompletedRuns =
+    successWorkflowRunsCount + failureWorkflowRunsCount;
   const successRate =
     totalCompletedRuns > 0
-      ? parseFloat(((successWorkflowRunsCount / totalCompletedRuns) * 100).toFixed(2))
+      ? parseFloat(
+          ((successWorkflowRunsCount / totalCompletedRuns) * 100).toFixed(2),
+        )
       : 0;
 
   return {
@@ -111,14 +115,14 @@ function calculatePreproductionMetrics(
  * Process a single entity and extract preproduction pipeline metrics
  */
 async function processPreproductionEntity(
-  entity: Entity, 
-  token?: string
+  entity: Entity,
+  token?: string,
 ): Promise<PipelineStatusSummary | null> {
   const repoInfo = getRepositoryInfo(entity);
   if (!repoInfo) {
     return null;
   }
-  
+
   const { owner, repoName } = repoInfo;
   const workflowConfig = parseWorkflowConfig(entity);
   const headers = createGitHubHeaders(token);
@@ -128,7 +132,7 @@ async function processPreproductionEntity(
       ...console,
       child: () => loggerAdapter,
     };
-    
+
     const [workflowDefinitions, allRuns] = await Promise.all([
       fetchWorkflowDefinitions(owner, repoName, headers, loggerAdapter),
       fetchAllWorkflowRuns(owner, repoName, headers),
@@ -144,9 +148,17 @@ async function processPreproductionEntity(
       };
     }
 
-    return calculatePreproductionMetrics(allRuns, workflowDefinitions, workflowConfig);
+    return calculatePreproductionMetrics(
+      allRuns,
+      workflowDefinitions,
+      workflowConfig,
+    );
   } catch (error) {
-    console.error(`Error processing preproduction entity ${entity.metadata.name}: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error processing preproduction entity ${entity.metadata.name}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
     return null;
   }
 }
@@ -161,11 +173,13 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
   schema: {
     totalWorkflowRunsCount: {
       type: 'integer',
-      description: 'Total number of workflow runs on main branch (including excluded)',
+      description:
+        'Total number of workflow runs on main branch (including excluded)',
     },
     uniqueWorkflowsCount: {
       type: 'integer',
-      description: 'Number of unique workflows that have runs (matching GitHub UI)',
+      description:
+        'Number of unique workflows that have runs (matching GitHub UI)',
     },
     successWorkflowRunsCount: {
       type: 'integer',
@@ -190,8 +204,14 @@ export const githubPipelineStatusFactRetriever: FactRetriever = {
   async handler(ctx): Promise<TechInsightFact[]> {
     const pipelineContext = {
       ...ctx,
-      entityFilter: githubPipelineStatusFactRetriever.entityFilter as Record<string, string>[],
+      entityFilter: githubPipelineStatusFactRetriever.entityFilter as Record<
+        string,
+        string
+      >[],
     };
-    return createPipelineFactRetrieverHandler(pipelineContext, processPreproductionEntity);
+    return createPipelineFactRetrieverHandler(
+      pipelineContext,
+      processPreproductionEntity,
+    );
   },
 };

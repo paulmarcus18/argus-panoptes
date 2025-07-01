@@ -114,14 +114,14 @@ function calculateWorkflowMetrics(
  * Process a single entity and extract foundation pipeline metrics
  */
 async function processFoundationEntity(
-  entity: Entity, 
-  token?: string
+  entity: Entity,
+  token?: string,
 ): Promise<FoundationPipelineStatusSummary | null> {
   const repoInfo = getRepositoryInfo(entity);
   if (!repoInfo) {
     return null;
   }
-  
+
   const { owner, repoName } = repoInfo;
   const headers = createGitHubHeaders(token);
 
@@ -130,7 +130,7 @@ async function processFoundationEntity(
       ...console,
       child: () => loggerAdapter,
     };
-    
+
     const [workflowDefinitions, allRuns] = await Promise.all([
       fetchWorkflowDefinitions(owner, repoName, headers, loggerAdapter),
       fetchAllWorkflowRuns(owner, repoName, headers),
@@ -151,7 +151,11 @@ async function processFoundationEntity(
     return calculateWorkflowMetrics(allRuns, workflowDefinitions);
   } catch (error) {
     // Log the error before returning null
-    console.error(`Error processing foundation entity ${entity.metadata.name}: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error processing foundation entity ${entity.metadata.name}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
     return null;
   }
 }
@@ -198,8 +202,15 @@ export const foundationPipelineStatusFactRetriever: FactRetriever = {
     // Create a context with properly typed entityFilter
     const pipelineContext = {
       ...ctx,
-      entityFilter: foundationPipelineStatusFactRetriever.entityFilter as Record<string, string>[],
+      entityFilter:
+        foundationPipelineStatusFactRetriever.entityFilter as Record<
+          string,
+          string
+        >[],
     };
-    return createPipelineFactRetrieverHandler(pipelineContext, processFoundationEntity);
+    return createPipelineFactRetrieverHandler(
+      pipelineContext,
+      processFoundationEntity,
+    );
   },
 };

@@ -178,19 +178,22 @@ export function createGitHubHeaders(token?: string): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
   };
-  
+
   if (token) {
     headers.Authorization = `token ${token}`;
   }
-  
+
   return headers;
 }
 
 /**
  * Extracts GitHub repository information from entity annotations
  */
-export function getRepositoryInfo(entity: Entity): { owner: string; repoName: string } | null {
-  const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] ?? '';
+export function getRepositoryInfo(
+  entity: Entity,
+): { owner: string; repoName: string } | null {
+  const projectSlug =
+    entity.metadata.annotations?.['github.com/project-slug'] ?? '';
   const [owner, repoName] = projectSlug.split('/');
 
   if (!owner || !repoName) {
@@ -219,7 +222,7 @@ export async function createPipelineFactRetrieverHandler<T extends JsonObject>(
   processEntity: (entity: Entity, token?: string) => Promise<T | null>,
 ): Promise<TechInsightFact[]> {
   const token = getGitHubToken(ctx.config);
-  
+
   // Get catalog access token for fetching entities
   const { token: catalogToken } = await ctx.auth.getPluginRequestToken({
     onBehalfOf: await ctx.auth.getOwnServiceCredentials(),
@@ -242,7 +245,7 @@ export async function createPipelineFactRetrieverHandler<T extends JsonObject>(
     githubEntities.map(async entity => {
       try {
         const facts = await processEntity(entity, token);
-        
+
         if (!facts) {
           return null;
         }

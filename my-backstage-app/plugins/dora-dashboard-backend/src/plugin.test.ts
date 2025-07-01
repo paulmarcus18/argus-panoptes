@@ -13,7 +13,9 @@ jest.mock('./services/DoraService', () => ({
 }));
 
 jest.mock('./router', () => ({
-  createRouter: jest.fn().mockImplementation(() => Promise.resolve(express.Router())),
+  createRouter: jest
+    .fn()
+    .mockImplementation(() => Promise.resolve(express.Router())),
 }));
 
 describe('plugin.ts coverage (indirect)', () => {

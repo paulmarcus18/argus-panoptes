@@ -104,11 +104,11 @@ describe('GitHubSemaphoreDialog', () => {
         secretScanningAlerts: {},
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} />
+        </Wrapper>,
+      );
 
       const closeButton = screen.getByTestId('close-button');
       closeButton.click();
@@ -124,26 +124,22 @@ describe('GitHubSemaphoreDialog', () => {
 
       mockGithubUtils.getGitHubSecurityData.mockReturnValue(delayedPromise);
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entity]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
 
       // Should show loading state
       expect(screen.getByTestId('dialog-loading')).toHaveTextContent('true');
 
       // Resolve the promise
-        resolvePromise!({
-          openCodeScanningAlertCount: 0,
-          openSecretScanningAlertCount: 0,
-          codeScanningAlerts: {},
-          secretScanningAlerts: {},
-        });
+      resolvePromise!({
+        openCodeScanningAlertCount: 0,
+        openSecretScanningAlertCount: 0,
+        codeScanningAlerts: {},
+        secretScanningAlerts: {},
+      });
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-loading')).toHaveTextContent('false');
@@ -188,11 +184,11 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'Critical security issues require immediate attention.',
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={onClose} entities={[entity]} />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -220,15 +216,11 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'No security issues found.',
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entity]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('green');
@@ -268,15 +260,11 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'Security issues found.',
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entity]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
@@ -324,15 +312,11 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'Critical issues found.',
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entity]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         // Verify that details are sorted by severity (critical, high, medium, low)
@@ -356,15 +340,11 @@ describe('GitHubSemaphoreDialog', () => {
         secretScanningAlerts: {},
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entity]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('yellow');
@@ -391,15 +371,11 @@ describe('GitHubSemaphoreDialog', () => {
         secretScanningAlerts: {},
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entity]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-details-count')).toHaveTextContent(
@@ -431,15 +407,11 @@ describe('GitHubSemaphoreDialog', () => {
         new Error('No system entity'),
       );
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entity]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('red');
@@ -486,15 +458,11 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'Medium severity issues within threshold.',
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entity]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -531,15 +499,15 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'No issues found.',
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entityInCustomNamespace]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog
+            open
+            onClose={jest.fn()}
+            entities={[entityInCustomNamespace]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -568,15 +536,15 @@ describe('GitHubSemaphoreDialog', () => {
         metadata: { annotations: {} },
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entityWithStringSystem]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog
+            open
+            onClose={jest.fn()}
+            entities={[entityWithStringSystem]}
+          />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -596,15 +564,11 @@ describe('GitHubSemaphoreDialog', () => {
         new Error('API failure'),
       );
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entity]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
@@ -644,15 +608,11 @@ describe('GitHubSemaphoreDialog', () => {
         reason: 'Critical issues found.',
       });
 
-        render(
-          <Wrapper>
-            <GitHubSemaphoreDialog
-              open
-              onClose={jest.fn()}
-              entities={[entity]}
-            />
-          </Wrapper>,
-        );
+      render(
+        <Wrapper>
+          <GitHubSemaphoreDialog open onClose={jest.fn()} entities={[entity]} />
+        </Wrapper>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('rendered-metrics')).toBeInTheDocument();

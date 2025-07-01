@@ -52,7 +52,8 @@ export const determineBlackDuckColor = async (
   const systemEntity = await catalogApi.getEntityByRef({
     kind: 'system',
     namespace: 'default',
-    name: typeof systemName === 'string' ? systemName : JSON.stringify(systemName),
+    name:
+      typeof systemName === 'string' ? systemName : JSON.stringify(systemName),
   });
 
   // Get thresholds for traffic light colour from system annotations

@@ -301,7 +301,9 @@ export const GitHubSecurityTrafficLight = ({
           kind: 'System',
           namespace: entities[0].metadata.namespace ?? 'default',
           name:
-            typeof systemName === 'string' ? systemName : JSON.stringify(systemName),
+            typeof systemName === 'string'
+              ? systemName
+              : JSON.stringify(systemName),
         });
 
         const thresholds = extractSecurityThresholds(

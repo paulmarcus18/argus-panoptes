@@ -568,19 +568,21 @@ describe('AzureDevOpsBugsTrafficLight Component', () => {
 
   it('should handle concurrent API calls correctly', async () => {
     let resolveCount = 0;
-    
-    mockAzureUtilsInstance.getAzureDevOpsBugFacts.mockImplementation(async () => {
-      // Small delay to simulate async behavior without deep nesting
-      await new Promise(resolve => setTimeout(resolve, 10));
-      return { azureBugCount: ++resolveCount };
-    });
-    
+
+    mockAzureUtilsInstance.getAzureDevOpsBugFacts.mockImplementation(
+      async () => {
+        // Small delay to simulate async behavior without deep nesting
+        await new Promise(resolve => setTimeout(resolve, 10));
+        return { azureBugCount: ++resolveCount };
+      },
+    );
+
     mockAzureUtilsInstance.getAzureDevOpsBugChecks.mockResolvedValue({
       bugCountCheck: true,
     });
-    
+
     renderComponent();
-    
+
     await waitFor(() => {
       expect(
         mockAzureUtilsInstance.getAzureDevOpsBugFacts,

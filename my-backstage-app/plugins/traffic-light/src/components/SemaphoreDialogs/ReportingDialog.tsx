@@ -95,7 +95,7 @@ export const ReportingSemaphoreDialog: React.FC<
         const { redThreshold } = await getSystemConfig(
           catalogApi,
           entities,
-          'reporting-check-threshold-red'
+          'reporting-check-threshold-red',
         );
 
         // Process entities to get metrics data
@@ -103,23 +103,23 @@ export const ReportingSemaphoreDialog: React.FC<
           entities,
           techInsightsApi,
           reportingUtils.getReportingPipelineFacts,
-          reportingUtils.getReportingPipelineChecks
+          reportingUtils.getReportingPipelineChecks,
         );
 
         // Calculate aggregate metrics
         const aggregated = aggregateMetrics(results);
-        
+
         // Count failures
         const failures = results.filter(r => r.failedCheck).length;
-        
+
         // Build semaphore data
         const semaphoreData = buildSemaphoreData(
-          aggregated, 
-          failures, 
-          entities.length, 
-          redThreshold
+          aggregated,
+          failures,
+          entities.length,
+          redThreshold,
         );
-        
+
         // Get repositories with lowest success rates
         const lowest = getLowestSuccessRepos(results);
 
@@ -139,7 +139,9 @@ export const ReportingSemaphoreDialog: React.FC<
         setData({
           color: 'gray',
           metrics: {},
-          summary: `Failed to load metrics: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          summary: `Failed to load metrics: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`,
           details: [],
         });
       } finally {
@@ -151,7 +153,8 @@ export const ReportingSemaphoreDialog: React.FC<
   }, [open, entities, techInsightsApi, catalogApi, reportingUtils]);
 
   // Render metrics display using the shared utility
-  const renderMetrics = () => renderPipelineMetrics(metrics, lowestSuccessRepos, classes);
+  const renderMetrics = () =>
+    renderPipelineMetrics(metrics, lowestSuccessRepos, classes);
 
   return (
     <BaseSemaphoreDialog

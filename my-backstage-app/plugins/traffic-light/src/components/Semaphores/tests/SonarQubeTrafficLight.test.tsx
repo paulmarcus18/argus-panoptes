@@ -230,7 +230,7 @@ describe('SonarQubeTrafficLight component', () => {
   };
 
   it('renders green traffic light when quality gates pass', async () => {
-      renderComponent();
+    renderComponent();
 
     await waitFor(() => {
       expect(screen.getByTestId('base-traffic-light')).toHaveAttribute(
@@ -241,7 +241,7 @@ describe('SonarQubeTrafficLight component', () => {
   });
 
   it('renders gray for empty entity list', async () => {
-      renderComponent([]);
+    renderComponent([]);
 
     await waitFor(() => {
       expect(screen.getByTestId('base-traffic-light')).toHaveAttribute(
@@ -254,10 +254,10 @@ describe('SonarQubeTrafficLight component', () => {
   it('calls onClick when clicked', async () => {
     const onClick = jest.fn();
 
-      renderComponent(mockEntities, onClick);
+    renderComponent(mockEntities, onClick);
 
     const light = await screen.findByTestId('base-traffic-light');
-      light.click();
+    light.click();
 
     expect(onClick).toHaveBeenCalledTimes(1);
   });
@@ -288,17 +288,17 @@ describe('SonarQubeTrafficLight component', () => {
       },
     ];
 
-      rerender(
-        <TestApiProvider
-          apis={[
-            [catalogApiRef, mockCatalogApi],
-            [techInsightsApiRef, mockTechInsightsApi],
-          ]}
-        >
-          <SonarQubeTrafficLight entities={newEntities} />
-        </TestApiProvider>,
-      );
-      
+    rerender(
+      <TestApiProvider
+        apis={[
+          [catalogApiRef, mockCatalogApi],
+          [techInsightsApiRef, mockTechInsightsApi],
+        ]}
+      >
+        <SonarQubeTrafficLight entities={newEntities} />
+      </TestApiProvider>,
+    );
+
     await waitFor(() => {
       expect(screen.getByTestId('base-traffic-light')).toBeInTheDocument();
     });

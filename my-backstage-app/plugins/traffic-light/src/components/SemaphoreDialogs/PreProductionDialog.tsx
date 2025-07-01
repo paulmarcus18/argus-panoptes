@@ -11,7 +11,7 @@ import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { PreproductionUtils } from '../../utils/preproductionUtils';
 import { SemaphoreData } from './types';
-import { 
+import {
   PipelineMetrics,
   processEntities,
   aggregateMetrics,
@@ -48,7 +48,7 @@ const useStyles = makeStyles(theme => ({
 
 /**
  * Props for the PreproductionSemaphoreDialog component
- * 
+ *
  * @property {boolean} open - Whether the dialog is open or closed
  * @property {() => void} onClose - Callback function when dialog is closed
  * @property {Entity[]} [entities] - Array of Backstage entities to evaluate
@@ -61,7 +61,7 @@ interface PreproductionSemaphoreDialogProps {
 
 /**
  * Dialog component that displays detailed metrics about preproduction pipeline runs
- * 
+ *
  * Shows aggregated success rates, failed runs, and repositories with the lowest success rates.
  * Uses system annotations to determine thresholds and which repositories to include in the analysis.
  */
@@ -113,7 +113,7 @@ export const PreproductionSemaphoreDialog: React.FC<
           catalogApi,
           entities,
           'preproduction-check-threshold-red',
-          'preproduction-configured-repositories'
+          'preproduction-configured-repositories',
         );
 
         // Filter entities based on configured repository names if provided
@@ -135,7 +135,8 @@ export const PreproductionSemaphoreDialog: React.FC<
           setData({
             color: 'gray',
             metrics: {},
-            summary: 'No configured repositories found for preproduction checks.',
+            summary:
+              'No configured repositories found for preproduction checks.',
             details: [],
           });
           return;
@@ -146,24 +147,24 @@ export const PreproductionSemaphoreDialog: React.FC<
           filteredEntities,
           techInsightsApi,
           preprodUtils.getPreproductionPipelineFacts,
-          preprodUtils.getPreproductionPipelineChecks
+          preprodUtils.getPreproductionPipelineChecks,
         );
 
         // Calculate aggregate metrics
         const aggregated = aggregateMetrics(results);
-        
+
         // Count failures
         const failures = results.filter(r => r.failedCheck).length;
-        
+
         // Build semaphore data with configured repo count
         const semaphoreData = buildSemaphoreData(
-          aggregated, 
-          failures, 
-          filteredEntities.length, 
+          aggregated,
+          failures,
+          filteredEntities.length,
           redThreshold,
-          configuredRepoNames.length > 0 ? filteredEntities.length : undefined
+          configuredRepoNames.length > 0 ? filteredEntities.length : undefined,
         );
-        
+
         // Get repositories with lowest success rates
         const lowest = getLowestSuccessRepos(results);
 
@@ -183,7 +184,9 @@ export const PreproductionSemaphoreDialog: React.FC<
         setData({
           color: 'gray',
           metrics: {},
-          summary: `Failed to load metrics: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          summary: `Failed to load metrics: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`,
           details: [],
         });
       } finally {
@@ -195,7 +198,8 @@ export const PreproductionSemaphoreDialog: React.FC<
   }, [open, entities, techInsightsApi, catalogApi, preprodUtils]);
 
   // Render metrics display using the shared utility
-  const renderMetrics = () => renderPipelineMetrics(metrics, lowestSuccessRepos, classes);
+  const renderMetrics = () =>
+    renderPipelineMetrics(metrics, lowestSuccessRepos, classes);
 
   return (
     <BaseSemaphoreDialog

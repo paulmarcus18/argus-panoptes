@@ -72,20 +72,20 @@ describe('SonarQubeSemaphoreDialog', () => {
       color: 'green',
     });
 
-      render(
-        <TestApiProvider
-          apis={[
-            [catalogApiRef, mockCatalogApi],
-            [techInsightsApiRef, mockTechInsightsApi],
-          ]}
-        >
-          <SonarQubeSemaphoreDialog
-            open
-            onClose={() => {}}
-            entities={mockEntities}
-          />
-        </TestApiProvider>,
-      );
+    render(
+      <TestApiProvider
+        apis={[
+          [catalogApiRef, mockCatalogApi],
+          [techInsightsApiRef, mockTechInsightsApi],
+        ]}
+      >
+        <SonarQubeSemaphoreDialog
+          open
+          onClose={() => {}}
+          entities={mockEntities}
+        />
+      </TestApiProvider>,
+    );
 
     await waitFor(() => {
       const dialog = screen.getByTestId('base-dialog');
@@ -115,20 +115,20 @@ describe('SonarQubeSemaphoreDialog', () => {
       color: 'red',
     });
 
-      render(
-        <TestApiProvider
-          apis={[
-            [catalogApiRef, mockCatalogApi],
-            [techInsightsApiRef, mockTechInsightsApi],
-          ]}
-        >
-          <SonarQubeSemaphoreDialog
-            open
-            onClose={() => {}}
-            entities={mockEntities}
-          />
-        </TestApiProvider>,
-      );
+    render(
+      <TestApiProvider
+        apis={[
+          [catalogApiRef, mockCatalogApi],
+          [techInsightsApiRef, mockTechInsightsApi],
+        ]}
+      >
+        <SonarQubeSemaphoreDialog
+          open
+          onClose={() => {}}
+          entities={mockEntities}
+        />
+      </TestApiProvider>,
+    );
 
     await waitFor(() => {
       const dialog = screen.getByTestId('base-dialog');
@@ -141,20 +141,20 @@ describe('SonarQubeSemaphoreDialog', () => {
       new Error('fetch failed'),
     );
 
-      render(
-        <TestApiProvider
-          apis={[
-            [catalogApiRef, mockCatalogApi],
-            [techInsightsApiRef, mockTechInsightsApi],
-          ]}
-        >
-          <SonarQubeSemaphoreDialog
-            open
-            onClose={() => {}}
-            entities={mockEntities}
-          />
-        </TestApiProvider>,
-      );
+    render(
+      <TestApiProvider
+        apis={[
+          [catalogApiRef, mockCatalogApi],
+          [techInsightsApiRef, mockTechInsightsApi],
+        ]}
+      >
+        <SonarQubeSemaphoreDialog
+          open
+          onClose={() => {}}
+          entities={mockEntities}
+        />
+      </TestApiProvider>,
+    );
 
     await waitFor(() => {
       const dialog = screen.getByTestId('base-dialog');
@@ -176,20 +176,20 @@ describe('SonarQubeSemaphoreDialog', () => {
       },
     ];
 
-      render(
-        <TestApiProvider
-          apis={[
-            [catalogApiRef, mockCatalogApi],
-            [techInsightsApiRef, mockTechInsightsApi],
-          ]}
-        >
-          <SonarQubeSemaphoreDialog
-            open
-            onClose={() => {}}
-            entities={disabledEntities}
-          />
-        </TestApiProvider>,
-      );
+    render(
+      <TestApiProvider
+        apis={[
+          [catalogApiRef, mockCatalogApi],
+          [techInsightsApiRef, mockTechInsightsApi],
+        ]}
+      >
+        <SonarQubeSemaphoreDialog
+          open
+          onClose={() => {}}
+          entities={disabledEntities}
+        />
+      </TestApiProvider>,
+    );
 
     await waitFor(() => {
       const dialog = screen.getByTestId('base-dialog');
@@ -203,20 +203,20 @@ describe('SonarQubeSemaphoreDialog', () => {
   it('does not fetch data when closed', async () => {
     mockSonarUtils.getSonarQubeFacts.mockClear();
 
-      render(
-        <TestApiProvider
-          apis={[
-            [catalogApiRef, mockCatalogApi],
-            [techInsightsApiRef, mockTechInsightsApi],
-          ]}
-        >
-          <SonarQubeSemaphoreDialog
-            open={false}
-            onClose={() => {}}
-            entities={mockEntities}
-          />
-        </TestApiProvider>,
-      );
+    render(
+      <TestApiProvider
+        apis={[
+          [catalogApiRef, mockCatalogApi],
+          [techInsightsApiRef, mockTechInsightsApi],
+        ]}
+      >
+        <SonarQubeSemaphoreDialog
+          open={false}
+          onClose={() => {}}
+          entities={mockEntities}
+        />
+      </TestApiProvider>,
+    );
 
     expect(mockSonarUtils.getSonarQubeFacts).not.toHaveBeenCalled();
   });

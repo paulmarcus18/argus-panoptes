@@ -11,7 +11,7 @@ import { Entity } from '@backstage/catalog-model';
 import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { FoundationUtils } from '../../utils/foundationUtils';
 import { SemaphoreData } from './types';
-import { 
+import {
   PipelineMetrics,
   processEntities,
   aggregateMetrics,
@@ -100,7 +100,7 @@ export const FoundationSemaphoreDialog: React.FC<
           catalogApi,
           entities,
           'foundation-check-threshold-red',
-          'foundation-configured-repositories'
+          'foundation-configured-repositories',
         );
 
         // Filter entities based on configured repository names if provided
@@ -126,24 +126,24 @@ export const FoundationSemaphoreDialog: React.FC<
           filteredEntities,
           techInsightsApi,
           foundationUtils.getFoundationPipelineFacts,
-          foundationUtils.getFoundationPipelineChecks
+          foundationUtils.getFoundationPipelineChecks,
         );
 
         // Calculate aggregate metrics
         const aggregated = aggregateMetrics(results);
-        
+
         // Count failures
         const failures = results.filter(r => r.failedCheck).length;
-        
+
         // Build semaphore data with configured repo count
         const semaphoreData = buildSemaphoreData(
-          aggregated, 
-          failures, 
-          filteredEntities.length, 
+          aggregated,
+          failures,
+          filteredEntities.length,
           redThreshold,
-          configuredRepoNames.length > 0 ? filteredEntities.length : undefined
+          configuredRepoNames.length > 0 ? filteredEntities.length : undefined,
         );
-        
+
         // Get repositories with lowest success rates
         const lowest = getLowestSuccessRepos(results);
 
@@ -151,12 +151,14 @@ export const FoundationSemaphoreDialog: React.FC<
         setMetrics(aggregated);
         setLowestSuccessRepos(lowest);
         setData(semaphoreData);
-      } catch (error) {        
+      } catch (error) {
         // Error fallback with more details
         setData({
           color: 'gray',
           metrics: {},
-          summary: `Failed to load metrics: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          summary: `Failed to load metrics: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`,
           details: [],
         });
       } finally {
@@ -168,7 +170,8 @@ export const FoundationSemaphoreDialog: React.FC<
   }, [open, entities, techInsightsApi, catalogApi, foundationUtils]);
 
   // Render metrics display using the shared utility
-  const renderMetrics = () => renderPipelineMetrics(metrics, lowestSuccessRepos, classes);
+  const renderMetrics = () =>
+    renderPipelineMetrics(metrics, lowestSuccessRepos, classes);
 
   // Render the dialog with all metrics and status information
   return (
