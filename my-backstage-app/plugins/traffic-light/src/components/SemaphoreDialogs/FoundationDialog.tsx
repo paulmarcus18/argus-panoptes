@@ -12,7 +12,6 @@ import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { FoundationUtils } from '../../utils/foundationUtils';
 import { SemaphoreData } from './types';
 import { 
-  commonStyles, 
   PipelineMetrics,
   processEntities,
   aggregateMetrics,
@@ -152,10 +151,7 @@ export const FoundationSemaphoreDialog: React.FC<
         setMetrics(aggregated);
         setLowestSuccessRepos(lowest);
         setData(semaphoreData);
-      } catch (error) {
-        // Log the error for debugging
-        console.error('Error fetching foundation metrics:', error);
-        
+      } catch (error) {        
         // Error fallback with more details
         setData({
           color: 'gray',
