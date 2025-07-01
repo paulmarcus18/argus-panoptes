@@ -173,7 +173,7 @@ describe('FoundationSemaphoreDialog', () => {
     await waitFor(() => {
       expect(screen.getByTestId('dialog-color')).toHaveTextContent('gray');
       expect(screen.getByTestId('dialog-summary')).toHaveTextContent(
-        'Failed to load metrics.',
+        /Failed to load metrics/,
       );
     });
   });
