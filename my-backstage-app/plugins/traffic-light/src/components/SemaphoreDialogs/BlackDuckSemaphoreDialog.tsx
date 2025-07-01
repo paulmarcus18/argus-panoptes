@@ -139,8 +139,7 @@ export const BlackDuckSemaphoreDialog: React.FC<
           techInsightsApi,
           blackDuckUtils,
         );
-        let color: 'green' | 'red' | 'yellow' | 'gray';
-        color = trafficLightcolor.color;
+        const color: 'green' | 'red' | 'yellow' | 'gray' = trafficLightcolor.color;
 
         // Create the summary
         let summary = 'No critical security risks were found.';

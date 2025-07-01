@@ -613,9 +613,7 @@ describe('BlackDuckTrafficLight Component', () => {
   });
 
   it('should re-fetch data when entities prop changes', async () => {
-    let component: ReturnType<typeof render>;
-
-      component = renderComponent();
+    const component: ReturnType<typeof render> = renderComponent();
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
