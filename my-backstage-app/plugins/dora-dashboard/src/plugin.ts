@@ -22,7 +22,7 @@ export const DoraDashboardPage = doraDashboardPlugin.provide(
   createRoutableExtension({
     name: 'DoraDashboardPage',
     component: () =>
-      import('./components/ExampleComponent').then(m => m.ExampleComponent),
+      import('./components/DashboardComponent').then(m => m.DashboardComponent),
     mountPoint: rootRouteRef,
   }),
 );

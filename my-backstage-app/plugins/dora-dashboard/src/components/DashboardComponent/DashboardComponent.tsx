@@ -3,11 +3,11 @@ import { Header, Page, Content, HeaderLabel } from '@backstage/core-components';
 import { DoraDashboard } from '../DoraDashboard';
 
 /**
- * ExampleComponent is a Backstage page that serves as a container
+ * DashboardComponent is a Backstage page that serves as a container
  * for the DORA Metrics Dashboard. It sets up the overall page layout,
  * including the header and content area.
  */
-export const ExampleComponent = () => (
+export const DashboardComponent = () => (
   // The Page component is the root container for a Backstage page, providing a consistent theme.
   <Page themeId="tool">
     {/* The Header component displays the title, subtitle, and other metadata at the top of the page. */}

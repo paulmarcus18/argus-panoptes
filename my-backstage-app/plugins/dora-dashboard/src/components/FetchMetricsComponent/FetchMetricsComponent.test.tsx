@@ -1,5 +1,5 @@
 import { renderInTestApp, TestApiProvider } from '@backstage/test-utils';
-import { ExampleFetchComponent } from './ExampleFetchComponent';
+import { FetchMetricsComponent } from './FetchMetricsComponent';
 import {
   discoveryApiRef,
   fetchApiRef,
@@ -62,7 +62,7 @@ const fetchApi: Partial<FetchApi> = {
   }),
 };
 
-describe('ExampleFetchComponent', () => {
+describe('FetchMetricsComponent', () => {
   it('renders, loads projects, and fetches metrics on button click', async () => {
     await renderInTestApp(
       <TestApiProvider
@@ -71,7 +71,7 @@ describe('ExampleFetchComponent', () => {
           [fetchApiRef, fetchApi],
         ]}
       >
-        <ExampleFetchComponent />
+        <FetchMetricsComponent />
       </TestApiProvider>,
     );
 

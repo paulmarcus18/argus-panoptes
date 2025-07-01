@@ -4,11 +4,11 @@ import { DoraDashboard } from './DoraDashboard';
 import {
   useMetricsData,
   useProjects,
-} from './ExampleFetchComponent/ExampleFetchComponent';
+} from './FetchMetricsComponent/FetchMetricsComponent';
 
 // === MOCKS ===
 
-jest.mock('./ExampleFetchComponent/ExampleFetchComponent', () => ({
+jest.mock('./FetchMetricsComponent/FetchMetricsComponent', () => ({
   useMetricsData: jest.fn(),
   useProjects: jest.fn(),
 }));

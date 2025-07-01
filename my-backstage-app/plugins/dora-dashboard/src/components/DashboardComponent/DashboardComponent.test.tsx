@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react';
 import { renderInTestApp } from '@backstage/test-utils';
-import { ExampleComponent } from './ExampleComponent';
+import { DashboardComponent } from './DashboardComponent';
 
 // Mock the hooks used in DoraDashboard
-jest.mock('../ExampleFetchComponent/ExampleFetchComponent', () => ({
+jest.mock('../FetchMetricsComponent/FetchMetricsComponent', () => ({
   useProjects: () => ({
     loading: false,
     error: null,
@@ -21,9 +21,9 @@ jest.mock('../ExampleFetchComponent/ExampleFetchComponent', () => ({
   }),
 }));
 
-describe('ExampleComponent', () => {
+describe('DashboardComponent', () => {
   it('renders dashboard title and metric labels', async () => {
-    await renderInTestApp(<ExampleComponent />);
+    await renderInTestApp(<DashboardComponent />);
 
     const headings = await screen.findAllByText(/DORA Metrics Dashboard/i);
     expect(headings.length).toBeGreaterThanOrEqual(2);

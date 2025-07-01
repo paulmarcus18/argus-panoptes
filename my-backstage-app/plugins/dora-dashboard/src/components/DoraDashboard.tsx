@@ -25,7 +25,7 @@ import { Progress, ResponseErrorPanel } from '@backstage/core-components';
 import {
   useMetricsData,
   useProjects,
-} from './ExampleFetchComponent/ExampleFetchComponent';
+} from './FetchMetricsComponent/FetchMetricsComponent';
 import { MetricChart } from './MetricChart';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 
