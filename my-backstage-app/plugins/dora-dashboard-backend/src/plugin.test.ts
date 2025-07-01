@@ -1,7 +1,9 @@
+import express from 'express';
 import { doraDashboardPlugin } from './plugin';
 import { createDoraService } from './services/DoraService';
 import { createRouter } from './router';
 import { ConfigReader } from '@backstage/config';
+import { startTestBackend } from '@backstage/backend-test-utils';
 
 jest.mock('./services/DoraService', () => ({
   createDoraService: jest.fn().mockResolvedValue({
@@ -11,7 +13,7 @@ jest.mock('./services/DoraService', () => ({
 }));
 
 jest.mock('./router', () => ({
-  createRouter: jest.fn().mockResolvedValue('mockRouter'),
+  createRouter: jest.fn().mockImplementation(() => Promise.resolve(express.Router())),
 }));
 
 describe('plugin.ts coverage (indirect)', () => {
@@ -67,7 +69,7 @@ describe('plugin.ts coverage (indirect)', () => {
       doraService,
     });
 
-    expect(deps.httpRouter.use).toHaveBeenCalledWith('mockRouter');
+    expect(deps.httpRouter.use).toHaveBeenCalled();
   });
 
   it('handles createDoraService throwing an error', async () => {
@@ -114,5 +116,14 @@ describe('plugin.ts coverage (indirect)', () => {
 
   it('ensures plugin.ts is imported (to collect base coverage)', () => {
     expect(doraDashboardPlugin).toBeDefined();
+  });
+
+  it('indirectly invokes plugin register/init via startTestBackend to cover plugin.ts lines 18-32', async () => {
+    await startTestBackend({
+      features: [doraDashboardPlugin],
+    });
+
+    expect(createDoraService).toHaveBeenCalled();
+    expect(createRouter).toHaveBeenCalled();
   });
 });
