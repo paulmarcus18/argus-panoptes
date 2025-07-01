@@ -12,7 +12,6 @@ import { BaseSemaphoreDialog } from './BaseSemaphoreDialogs';
 import { PreproductionUtils } from '../../utils/preproductionUtils';
 import { SemaphoreData } from './types';
 import { 
-  commonStyles, 
   PipelineMetrics,
   processEntities,
   aggregateMetrics,
@@ -174,7 +173,6 @@ export const PreproductionSemaphoreDialog: React.FC<
         setData(semaphoreData);
       } catch (error) {
         // Error fallback
-        console.error('Failed to load preproduction pipeline metrics:', error);
         setMetrics({
           totalSuccess: 0,
           totalFailure: 0,
