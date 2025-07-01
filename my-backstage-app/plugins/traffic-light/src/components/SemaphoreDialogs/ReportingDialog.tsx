@@ -129,7 +129,6 @@ export const ReportingSemaphoreDialog: React.FC<
         setData(semaphoreData);
       } catch (error) {
         // Error fallback
-        console.error('Error fetching pipeline metrics:', error);
         setMetrics({
           totalSuccess: 0,
           totalFailure: 0,
