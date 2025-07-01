@@ -8,7 +8,7 @@ import { ReportingSemaphoreDialog } from '../ReportingDialog';
 import { ReportingUtils } from '../../../utils/reportingUtils';
 import { determineSemaphoreColor } from '../../utils';
 import { Entity } from '@backstage/catalog-model';
-import React, { act } from 'react';
+import { act } from 'react';
 
 // Mock dependencies
 jest.mock('../../../utils/reportingUtils');
