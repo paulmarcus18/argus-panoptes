@@ -126,7 +126,6 @@ async function processFoundationEntity(
   const headers = createGitHubHeaders(token);
 
   try {
-    // Create a logger adapter that implements LoggerService interface
     const loggerAdapter = {
       ...console,
       child: () => loggerAdapter,
@@ -151,6 +150,7 @@ async function processFoundationEntity(
     // Construct pipelines status summary object
     return calculateWorkflowMetrics(allRuns, workflowDefinitions);
   } catch (error) {
+    // Log the error before returning null
     console.error(`Error processing foundation entity ${entity.metadata.name}: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   }
