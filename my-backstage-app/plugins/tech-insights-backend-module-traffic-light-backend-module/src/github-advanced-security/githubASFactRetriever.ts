@@ -86,7 +86,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
       );
       const githubConfig = githubConfigs?.[0];
       token = githubConfig?.getOptionalString('token');
-    } catch (e) {
+    } catch {
       return [];
     }
 
@@ -110,12 +110,6 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
       return entity.metadata.annotations?.['github.com/project-slug'];
     });
 
-    // // Use dynamic import for Octokit
-    // const { Octokit } = await import('@octokit/rest');
-
-    // // Initialize GitHub API client with token
-    // const octokit = new Octokit({ auth: token });
-
     const Octokit = await loadOctokit();
     const octokit = new Octokit({ auth: token });
 
@@ -124,7 +118,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
       githubEntities.map(async entity => {
         // Extract owner and repo from the 'github.com/project-slug' annotation
         const projectSlug =
-          entity.metadata.annotations?.['github.com/project-slug'] || '';
+          entity.metadata.annotations?.['github.com/project-slug'] ?? '';
         const [owner, repo] = projectSlug.split('/');
 
         try {
@@ -171,16 +165,16 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
               const alertId = `code-${alert.number}`;
               const instance = alert.most_recent_instance;
               const location = instance?.location;
-              const start_line = location?.start_line || 1; // Default to line 1 if not provided
+              const start_line = location?.start_line ?? 1; // Default to line 1 if not provided
 
               // Create finding with only the requested fields
               const finding: CodeScanningFinding = {
-                severity: alert.rule?.security_severity_level || 'unknown',
+                severity: alert.rule?.security_severity_level ?? 'unknown',
                 description:
-                  alert.rule?.description ||
-                  alert.rule?.name ||
+                  alert.rule?.description ??
+                  alert.rule?.name ??
                   'No description available',
-                created_at: alert.created_at || '',
+                created_at: alert.created_at ?? '',
                 direct_link: `https://github.com/${owner}/${repo}/blob/${instance?.commit_sha}/${location?.path}#L${start_line}`,
               };
 
@@ -205,10 +199,10 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
               secretScanningAlerts[alertId] = {
                 severity: 'high', // Secret scanning alerts are typically high severity
                 description: `Secret of type ${
-                  alert.secret_type || 'unknown'
+                  alert.secret_type ?? 'unknown'
                 } found`,
-                created_at: alert.created_at || '',
-                direct_link: alert.html_url || '',
+                created_at: alert.created_at ?? '',
+                direct_link: alert.html_url ?? '',
               };
             },
           );
@@ -246,7 +240,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
           return {
             entity: {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             },
             facts: {
@@ -264,7 +258,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
               secretScanningAlerts: secretScanningAlerts as JsonObject,
             },
           } as TechInsightFact;
-        } catch (err: any) {
+        } catch {
           return null;
         }
       }),
