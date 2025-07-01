@@ -159,8 +159,7 @@ export const SonarQubeSemaphoreDialog: React.FC<SonarSemaphoreDialogProps> = ({
           techInsightsApi,
           sonarUtils,
         );
-        let color: 'green' | 'red' | 'yellow' | 'gray';
-        color = trafficLightcolor.color;
+        const color: 'green' | 'red' | 'yellow' | 'gray' = trafficLightcolor.color;
 
         // Create the summary
         let summary = 'No critical code quality issues were found.';
