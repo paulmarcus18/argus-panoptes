@@ -6,3 +6,65 @@ Argus is a many-eyed giant in Greek mythology. Known for his perpetual vigilance
 
 According to the [contribution policy](CONTRIBUTING.md), submissions to this
 project are deemed to be done under the MIT license.
+
+
+README
+
+## This README file enumerates the files and folders that need to be graded for SEP Group 1.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+### I. The following folders and files in the my-backstage-app folder need to be graded:
+    - app-config.yaml (file)
+    - catalog-info.yaml (file)
+    - package.json (file)
+    - catalogs (folder)
+
+### II. The following files in the my-backstage-app/packages/app folder need to be graded:
+     - App.tsx (file)
+     - src/compoents/Root/Root.tsx (file)
+    These two files were modified while adding plugins in the side bar. For clarification, when analyzing these files in Understand there will be 38 warnings visible in total, which are caused by the inability of Understand to deal with the import statements in some of the files. However, there are no warnings in Visual Studio Code and the application works as expected.
+
+### III. In the "my-backstage-app/plugins" folder see the following steps:
+     1. In the subfolder "my-backstage-app/plugins/ai-plugin" the following folders and files need to be graded:
+         - dev (folder)
+         - src (folder)
+         - utils (folder)
+         - package.json (file)
+        For clarification, when analyzing these subfolders/files in Understand there will be 26 warnings visible in total, which are caused by the inability of Understand to deal with the import statements in some of the files. However, there are no warnings in Visual Studio Code and the application works as expected.
+
+     2. In the subfolder "my-backstage-app/plugins/ai-plugin-backend" the following folders and files need to be graded:
+         - dev (folder)
+         - src (folder)
+         - package.json (file)
+        For clarification, when analyzing these subfolders/files in Understand there will be 9 warnings visible in total, which are caused by the inability of Understand to deal with the import statements in some of the files. However, there are no warnings in Visual Studio Code and the application works as expected.
+
+     3. In the subfolder "my-backstage-app/plugins/ai-plugin-backend-module-tech-insights-backend-module" the following folders and files need to be graded:
+         - src (folder)
+         - package.json (file)
+        For clarification, when analyzing these subfolders/files in Understand there will be 5 warnings visible in total, which are caused by the inability of Understand to deal with the import statements in some of the files. However, there are no warnings in Visual Studio Code and the application works as expected.
+
+     4. In the subfolder "my-backstage-app/plugins/dora-dashboard" the following folders and files need to be graded:
+         - dev (folder)
+         - src (folder)
+         - package.json (file)
+        For clarification, when analyzing these subfolders/files in Understand there will be 38 warnings visible in total, which are caused by the inability of Understand to deal with the import statements in some of the files. However, there are no warnings in Visual Studio Code and the application works as expected.
+
+     5. In the subfolder "my-backstage-app/plugins/dora-dashboard-backend" the following folders and files need to be graded:
+         - dev (folder)
+         - src (folder)
+         - package.json (file)
+        For clarification, when analyzing these subfolders/files in Understand there will be 11 warnings visible in total, which are caused by the inability of Understand to deal with the import statements in some of the files. However, there are no warnings in Visual Studio Code and the application works as expected.
+
+     6. In the subfolder "my-backstage-app/plugins/tech-insights-backend-module-traffic-light-backend-module" the following folders and files need to be graded:
+         - src (folder)
+         - package.json (file)
+        For clarification, when analyzing these subfolders/files in Understand there will be 12 warnings visible in total and 3 errors in total. The warnings are caused by the inability of Understand to deal with the import statements in some of the files, and the errors do not point to anything wrong in the file itself. Despite the errors and warnings in Understand, there are no warnings, nor errors in Visual Studio Code and the application works as expected.
+
+     7. In the subfolder "my-backstage-app/plugins/traffic-light" the following folders and files need to be graded:
+         - dev (folder)
+         - src (folder)
+         - package.json (file)
+        For clarification, when analyzing these subfolders/files in Understand there will be 23 warnings visible in total, which are caused by the inability of Understand to deal with the import statements in some of the files. However, there are no warnings in Visual Studio Code and the application works as expected.
+
+
