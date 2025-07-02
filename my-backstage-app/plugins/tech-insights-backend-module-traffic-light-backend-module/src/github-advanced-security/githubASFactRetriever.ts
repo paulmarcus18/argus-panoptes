@@ -2,9 +2,13 @@
  * This file reads a GitHub token from config, uses Octokit to fetch GitHub Advanced Security data
  * Returns security findings in a structured way that Tech Insights can consume
  */
-import { FactRetriever, TechInsightFact } from '@backstage-community/plugin-tech-insights-node';
+import {
+  FactRetriever,
+  TechInsightFact,
+} from '@backstage-community/plugin-tech-insights-node';
 import { CatalogClient } from '@backstage/catalog-client';
 import { JsonObject } from '@backstage/types';
+import { loadOctokit } from '../dependabot/octokitLoader'; // Adjust the import path as needed
 
 // Define interfaces for the security findings as JSON-compatible types
 interface CodeScanningFinding extends JsonObject {
@@ -15,7 +19,6 @@ interface CodeScanningFinding extends JsonObject {
 }
 
 // Dictionary structure for security findings where the key is the alert number/id
-// Must be JsonObject compatible
 // This way we store all the issues per repository
 interface CodeScanningFindingsDict extends JsonObject {
   [alertId: string]: CodeScanningFinding;
@@ -59,7 +62,8 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
     },
     secretScanningAlerts: {
       type: 'object',
-      description: 'Dictionary of basic secret scanning findings keyed by alert ID',
+      description:
+        'Dictionary of basic secret scanning findings keyed by alert ID',
     },
     codeScanningAlerts: {
       type: 'object',
@@ -67,16 +71,22 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
     },
   },
 
-  // Main logic of the retriever 
-  async handler({ config, entityFilter, auth, discovery }): Promise<TechInsightFact[]> {
+  // Main logic of the retriever
+  async handler({
+    config,
+    entityFilter,
+    auth,
+    discovery,
+  }): Promise<TechInsightFact[]> {
     // Retrieve GitHub token from config
     let token: string | undefined;
     try {
-      const githubConfigs = config.getOptionalConfigArray('integrations.github');
+      const githubConfigs = config.getOptionalConfigArray(
+        'integrations.github',
+      );
       const githubConfig = githubConfigs?.[0];
-      token = githubConfig?.getOptionalString('token'); 
-
-    } catch (e) {
+      token = githubConfig?.getOptionalString('token');
+    } catch {
       return [];
     }
 
@@ -100,19 +110,16 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
       return entity.metadata.annotations?.['github.com/project-slug'];
     });
 
-    // Use dynamic import for Octokit
-    const { Octokit } = await import('@octokit/rest');
-    
-    // Initialize GitHub API client with token
+    const Octokit = await loadOctokit();
     const octokit = new Octokit({ auth: token });
 
     // Process each entity with GitHub integration
     const results = await Promise.all(
       githubEntities.map(async entity => {
         // Extract owner and repo from the 'github.com/project-slug' annotation
-        const projectSlug = entity.metadata.annotations?.['github.com/project-slug'] || '';
+        const projectSlug =
+          entity.metadata.annotations?.['github.com/project-slug'] ?? '';
         const [owner, repo] = projectSlug.split('/');
-
 
         try {
           // Fetch Code Scanning alerts
@@ -125,7 +132,7 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
               per_page: 100,
             },
           );
-          
+
           // Also fetch Secret Scanning alerts (just for count and descriptions)
           const secretScanningResponse = await octokit.request(
             'GET /repos/{owner}/{repo}/secret-scanning/alerts',
@@ -139,40 +146,66 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
 
           // Process code scanning alerts to extract only the required information
           const codeScanningAlerts: CodeScanningFindingsDict = {};
-          
-          codeScanningResponse.data.forEach(alert => {
-            // Extract necessary information for code scanning alerts
-            const alertId = `code-${alert.number}`;
-            const instance = alert.most_recent_instance;
-            const location = instance?.location;
-            const start_line = location?.start_line || 1; // Default to line 1 if not provided
-            
-            // Create finding with only the requested fields
-            const finding: CodeScanningFinding = {
-              severity: alert.rule?.security_severity_level || 'unknown',
-              description: alert.rule?.description || alert.rule?.name || 'No description available',
-              created_at: alert.created_at || '',
-              direct_link: `https://github.com/${owner}/${repo}/blob/${instance?.commit_sha}/${location?.path}#L${start_line}`
-            };
-            
-            // Add to dictionary with alert number as the key
-            codeScanningAlerts[alertId] = finding;
-          });
+
+          codeScanningResponse.data.forEach(
+            (alert: {
+              number: number;
+              rule?: {
+                security_severity_level?: string;
+                description?: string;
+                name?: string;
+              };
+              created_at?: string;
+              most_recent_instance?: {
+                location?: { path?: string; start_line?: number };
+                commit_sha?: string;
+              };
+            }) => {
+              // Extract necessary information for code scanning alerts
+              const alertId = `code-${alert.number}`;
+              const instance = alert.most_recent_instance;
+              const location = instance?.location;
+              const start_line = location?.start_line ?? 1; // Default to line 1 if not provided
+
+              // Create finding with only the requested fields
+              const finding: CodeScanningFinding = {
+                severity: alert.rule?.security_severity_level ?? 'unknown',
+                description:
+                  alert.rule?.description ??
+                  alert.rule?.name ??
+                  'No description available',
+                created_at: alert.created_at ?? '',
+                direct_link: `https://github.com/${owner}/${repo}/blob/${instance?.commit_sha}/${location?.path}#L${start_line}`,
+              };
+
+              // Add to dictionary with alert number as the key
+              codeScanningAlerts[alertId] = finding;
+            },
+          );
 
           // Process secret scanning alerts to create a dictionary with only the requested fields
           const secretScanningAlerts: CodeScanningFindingsDict = {};
-          
-          secretScanningResponse.data.forEach(alert => {
-            const alertId = `secret-${alert.number}`;
-            
-            // Create a simplified finding with just basic information
-            secretScanningAlerts[alertId] = {
-              severity: 'high', // Secret scanning alerts are typically high severity
-              description: `Secret of type ${alert.secret_type || 'unknown'} found`,
-              created_at: alert.created_at || '',
-              direct_link: alert.html_url || ''
-            };
-          });
+
+          secretScanningResponse.data.forEach(
+            (alert: {
+              number: number;
+              secret_type?: string;
+              created_at?: string;
+              html_url?: string;
+            }) => {
+              const alertId = `secret-${alert.number}`;
+
+              // Create a simplified finding with just basic information
+              secretScanningAlerts[alertId] = {
+                severity: 'high', // Secret scanning alerts are typically high severity
+                description: `Secret of type ${
+                  alert.secret_type ?? 'unknown'
+                } found`,
+                created_at: alert.created_at ?? '',
+                direct_link: alert.html_url ?? '',
+              };
+            },
+          );
 
           const severityCounts = {
             critical: 0,
@@ -183,9 +216,9 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
 
           Object.values(codeScanningAlerts).forEach(alert => {
             const severityLower = alert.severity.toLowerCase();
-            
+
             // Count by severity
-            switch(severityLower) {
+            switch (severityLower) {
               case 'critical':
                 severityCounts.critical++;
                 break;
@@ -200,18 +233,21 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
                 break;
               default:
                 break;
-          }});
+            }
+          });
 
           // Return the fact result object for this repository as a TechInsightFact
           return {
             entity: {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             },
             facts: {
-              openCodeScanningAlertCount: Object.keys(codeScanningAlerts).length,
-              openSecretScanningAlertCount: Object.keys(secretScanningAlerts).length,
+              openCodeScanningAlertCount:
+                Object.keys(codeScanningAlerts).length,
+              openSecretScanningAlertCount:
+                Object.keys(secretScanningAlerts).length,
               // Store counts for each severity level
               criticalCount: severityCounts.critical,
               highCount: severityCounts.high,
@@ -219,10 +255,10 @@ export const githubAdvancedSecurityFactRetriever: FactRetriever = {
               lowCount: severityCounts.low,
               // Store alerts directly in the facts object
               codeScanningAlerts: codeScanningAlerts as JsonObject,
-              secretScanningAlerts: secretScanningAlerts as JsonObject
+              secretScanningAlerts: secretScanningAlerts as JsonObject,
             },
           } as TechInsightFact;
-        } catch (err: any) {
+        } catch {
           return null;
         }
       }),

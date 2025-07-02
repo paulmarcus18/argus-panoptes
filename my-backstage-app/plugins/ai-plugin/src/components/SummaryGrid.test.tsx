@@ -46,7 +46,6 @@ describe('SummaryGrid', () => {
     render(
       <SummaryGrid
         filteredMessages={sampleMessages}
-        fullMessages={{}}
         repoSearch="searchText"
         handleDownload={mockHandleDownload}
       />,
@@ -60,7 +59,6 @@ describe('SummaryGrid', () => {
     render(
       <SummaryGrid
         filteredMessages={sampleMessages}
-        fullMessages={{}}
         repoSearch="searchText"
         handleDownload={mockHandleDownload}
       />,
@@ -93,7 +91,6 @@ describe('SummaryGrid', () => {
     render(
       <SummaryGrid
         filteredMessages={sampleMessages}
-        fullMessages={{}}
         repoSearch=""
         handleDownload={mockHandleDownload}
       />,

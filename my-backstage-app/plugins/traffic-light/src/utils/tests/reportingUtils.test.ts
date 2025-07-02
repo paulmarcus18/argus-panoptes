@@ -1,4 +1,8 @@
-import { ReportingUtils, ReportingPipelineMetrics, ReportingPipelineChecks } from '../reportingUtils';
+import {
+  ReportingUtils,
+  ReportingPipelineMetrics,
+  ReportingPipelineChecks,
+} from '../reportingUtils';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef } from '@backstage/catalog-model';
 
@@ -22,7 +26,7 @@ const createMockCheckResult = (id: string, result: boolean) => ({
     description: `Check for ${id}`,
   },
   facts: {
-    'reportingPipelineStatusFactRetriever': {
+    reportingPipelineStatusFactRetriever: {
       id: 'reportingPipelineStatusFactRetriever',
       type: 'integer' as const,
       description: 'Reporting pipeline status facts',
@@ -84,16 +88,21 @@ describe('ReportingUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'reportingPipelineStatusFactRetriever': {
+        reportingPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await reportingUtils.getReportingPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
-      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, ['reportingPipelineStatusFactRetriever']);
+      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, [
+        'reportingPipelineStatusFactRetriever',
+      ]);
       expect(result).toEqual({
         workflowMetrics: mockFacts.workflowMetrics,
         totalIncludedWorkflows: 2,
@@ -120,14 +129,17 @@ describe('ReportingUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'reportingPipelineStatusFactRetriever': {
+        reportingPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await reportingUtils.getReportingPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         workflowMetrics: mockFacts.workflowMetrics,
@@ -140,14 +152,17 @@ describe('ReportingUtils', () => {
 
     it('should return default metrics when no facts are found', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'reportingPipelineStatusFactRetriever': {
+        reportingPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: {},
         },
       });
 
-      const result = await reportingUtils.getReportingPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -155,7 +170,10 @@ describe('ReportingUtils', () => {
     it('should return default metrics when response is undefined', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({});
 
-      const result = await reportingUtils.getReportingPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -163,7 +181,10 @@ describe('ReportingUtils', () => {
     it('should return default metrics when API throws an error', async () => {
       mockTechInsightsApi.getFacts.mockRejectedValue(new Error('API Error'));
 
-      const result = await reportingUtils.getReportingPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -178,14 +199,17 @@ describe('ReportingUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'reportingPipelineStatusFactRetriever': {
+        reportingPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await reportingUtils.getReportingPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         workflowMetrics: expect.any(String), // Object('invalid-object') creates a String object
@@ -206,14 +230,17 @@ describe('ReportingUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'reportingPipelineStatusFactRetriever': {
+        reportingPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await reportingUtils.getReportingPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         workflowMetrics: {},
@@ -233,7 +260,10 @@ describe('ReportingUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await reportingUtils.getReportingPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         successRateCheck: true,
@@ -248,7 +278,10 @@ describe('ReportingUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await reportingUtils.getReportingPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         successRateCheck: false,
@@ -264,7 +297,10 @@ describe('ReportingUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await reportingUtils.getReportingPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         successRateCheck: false,
@@ -275,7 +311,10 @@ describe('ReportingUtils', () => {
     it('should return default checks when no check results are found', async () => {
       mockTechInsightsApi.runChecks.mockResolvedValue([]);
 
-      const result = await reportingUtils.getReportingPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_CHECKS);
       expect(mockTechInsightsApi.runChecks).toHaveBeenCalledWith(mockEntityRef);
@@ -284,7 +323,10 @@ describe('ReportingUtils', () => {
     it('should return default checks when API throws an error', async () => {
       mockTechInsightsApi.runChecks.mockRejectedValue(new Error('API Error'));
 
-      const result = await reportingUtils.getReportingPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_CHECKS);
     });
@@ -298,7 +340,10 @@ describe('ReportingUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await reportingUtils.getReportingPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         successRateCheck: true,
@@ -317,14 +362,17 @@ describe('ReportingUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'reportingPipelineStatusFactRetriever': {
+        reportingPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await reportingUtils.getReportingPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         workflowMetrics: {},
@@ -352,14 +400,17 @@ describe('ReportingUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'reportingPipelineStatusFactRetriever': {
+        reportingPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await reportingUtils.getReportingPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         workflowMetrics: mockFacts.workflowMetrics,
@@ -380,14 +431,17 @@ describe('ReportingUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'reportingPipelineStatusFactRetriever': {
+        reportingPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await reportingUtils.getReportingPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await reportingUtils.getReportingPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result.successRate).toBe(67.0);
     });

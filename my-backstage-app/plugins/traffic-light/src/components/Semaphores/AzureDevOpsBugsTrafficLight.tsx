@@ -1,4 +1,8 @@
-import React, { useEffect, useState } from 'react';
+/**
+ * Azure DevOps Bugs Traffic Light
+ * Visualizes bug count status across Azure DevOps projects
+ */
+import { useMemo, useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -7,8 +11,10 @@ import { AzureUtils } from '../../utils/azureUtils';
 import { Box, Tooltip } from '@material-ui/core';
 import { determineSemaphoreColor } from '../utils';
 
+/**
+ * Traffic light component showing Azure DevOps bug counts
+ */
 export const AzureDevOpsBugsTrafficLight = ({
-
   entities,
   onClick,
 }: {
@@ -24,88 +30,106 @@ export const AzureDevOpsBugsTrafficLight = ({
 
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const azureUtils = React.useMemo(() => new AzureUtils(), []);
+  const azureUtils = useMemo(() => new AzureUtils(), []);
 
-useEffect(() => {
-  const fetchAzureData = async () => {
-    if (!entities || entities.length === 0) {
-      setColor('gray');
-      setReason('No entities selected');
-      return;
-    }
+  useEffect(() => {
+    const fetchAzureData = async () => {
+      if (!entities || entities.length === 0) {
+        setColor('gray');
+        setReason('No entities selected');
+        return;
+      }
 
-    try {
-      // 1. Get red threshold from system annotation
-      let redThreshold = 0.33;
       try {
+        // 1. Get red threshold from system annotation
+        let redThreshold = 0.33;
         const systemName = entities[0].spec?.system;
-        const namespace = entities[0].metadata.namespace || 'default';
+        const namespace = entities[0].metadata.namespace ?? 'default';
 
         if (systemName) {
           const systemEntity = await catalogApi.getEntityByRef({
             kind: 'System',
             namespace,
-            name: typeof systemName === 'string' ? systemName : String(systemName),
+            name:
+              typeof systemName === 'string' ? systemName : String(systemName),
           });
 
           const thresholdAnnotation =
-            systemEntity?.metadata.annotations?.['azure-bugs-check-threshold-red'];
+            systemEntity?.metadata.annotations?.[
+              'azure-bugs-check-threshold-red'
+            ];
           if (thresholdAnnotation) {
             redThreshold = parseFloat(thresholdAnnotation);
           }
         }
-      } catch (e) {
-        console.warn('Failed to read azure bugs red threshold, using default 0.33');
-      }
 
-      // 2. Fetch facts + checks, and skip entities with null bug counts
-      const validResults = await Promise.all(
-        entities.map(async entity => {
+        // 2. Map Azure DevOps projects to their bug counts and check status
+        const projectBugMap = new Map<
+          string,
+          { bugCount: number; url: string; failedCheck: boolean }
+        >();
+
+        // 3. Process each entity to get its Azure DevOps bug metrics
+        for (const entity of entities) {
           const ref = {
             kind: entity.kind,
-            namespace: entity.metadata.namespace || 'default',
+            namespace: entity.metadata.namespace ?? 'default',
             name: entity.metadata.name,
           };
 
-          const [, checks] = await Promise.all([
-            azureUtils.getAzureDevOpsBugFacts(techInsightsApi, ref),
-            azureUtils.getAzureDevOpsBugChecks(techInsightsApi, ref),
-          ]);
+          const projectName =
+            entity.metadata.annotations?.['azure.com/project'] ?? 'unknown';
 
-          if (!entity.metadata.annotations?.['azure.com/bugs-query-id']) return null;
+          if (!projectBugMap.has(projectName) && projectName !== 'unknown') {
+            const [metrics, checks] = await Promise.all([
+              azureUtils.getAzureDevOpsBugFacts(techInsightsApi, ref),
+              azureUtils.getAzureDevOpsBugChecks(techInsightsApi, ref),
+            ]);
 
-          return {
-            failedCheck: checks.bugCountCheck === false,
-          };
-        }),
-      );
+            if (!entity.metadata.annotations?.['azure.com/bugs-query-id'])
+              continue;
 
-      // 3. Filter out nulls (entities with no data)
-      const filteredResults = validResults.filter(Boolean) as { failedCheck: boolean }[];
+            const orgName =
+              entity.metadata.annotations?.['azure.com/organization'] ??
+              'unknown-org';
+            const queryId =
+              entity.metadata.annotations?.['azure.com/bugs-query-id'] ??
+              'unknown-query-id';
 
-      const failures = filteredResults.filter(r => r.failedCheck).length;
+            // Build URL to Azure DevOps bug query
+            const projectUrl = `https://dev.azure.com/${orgName}/${projectName}/_queries/query/${queryId}/`;
 
-      const { color: computedColor, reason: computedReason } = determineSemaphoreColor(
-        failures,
-        entities.length,
-        redThreshold,
-      );
+            projectBugMap.set(projectName, {
+              bugCount: metrics.azureBugCount,
+              url: projectUrl,
+              failedCheck: checks.bugCountCheck === false,
+            });
+          }
+        }
 
-      setColor(computedColor);
-      setReason(computedReason);
-    } catch (err) {
-      console.error('Error fetching Azure DevOps bug data:', err);
-      setColor('gray');
-      setReason('Failed to retrieve Azure DevOps bug data');
-    }
-  };
+        // 4. Count projects that failed their bug threshold checks
+        const failures = Array.from(projectBugMap.values()).filter(
+          r => r.failedCheck,
+        ).length;
 
-  fetchAzureData();
-}, [entities, techInsightsApi, catalogApi, azureUtils]);
+        // 5. Determine traffic light color based on failure ratio
+        const { color: computedColor, reason: computedReason } =
+          determineSemaphoreColor(failures, entities.length, redThreshold);
 
+        setColor(computedColor);
+        setReason(computedReason);
+      } catch {
+        setColor('gray');
+        setReason('Failed to retrieve Azure DevOps bug data');
+      }
+    };
 
+    fetchAzureData();
+  }, [entities, techInsightsApi, catalogApi, azureUtils]);
+
+  // Render traffic light with tooltip showing status reason
   return (
-    <Tooltip title={reason} placement='right'>
+    <Tooltip title={reason} placement="right">
       <Box
         my={1}
         width={50}

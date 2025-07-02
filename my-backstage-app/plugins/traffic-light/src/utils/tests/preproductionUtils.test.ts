@@ -1,4 +1,8 @@
-import { PreproductionUtils, PreproductionPipelineMetrics, PreproductionPipelineChecks } from '../preproductionUtils';
+import {
+  PreproductionUtils,
+  PreproductionPipelineMetrics,
+  PreproductionPipelineChecks,
+} from '../preproductionUtils';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef } from '@backstage/catalog-model';
 
@@ -22,7 +26,7 @@ const createMockCheckResult = (id: string, result: boolean) => ({
     description: `Check for ${id}`,
   },
   facts: {
-    'githubPipelineStatusFactRetriever': {
+    githubPipelineStatusFactRetriever: {
       id: 'githubPipelineStatusFactRetriever',
       type: 'integer' as const,
       description: 'GitHub pipeline status facts',
@@ -71,16 +75,21 @@ describe('PreproductionUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubPipelineStatusFactRetriever': {
+        githubPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
-      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, ['githubPipelineStatusFactRetriever']);
+      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, [
+        'githubPipelineStatusFactRetriever',
+      ]);
       expect(result).toEqual({
         totalWorkflowRunsCount: 150,
         uniqueWorkflowsCount: 8,
@@ -100,14 +109,17 @@ describe('PreproductionUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubPipelineStatusFactRetriever': {
+        githubPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         totalWorkflowRunsCount: 100,
@@ -120,14 +132,17 @@ describe('PreproductionUtils', () => {
 
     it('should return default metrics when no facts are found', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubPipelineStatusFactRetriever': {
+        githubPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: {},
         },
       });
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -135,7 +150,10 @@ describe('PreproductionUtils', () => {
     it('should return default metrics when response is undefined', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({});
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -143,7 +161,10 @@ describe('PreproductionUtils', () => {
     it('should return default metrics when API throws an error', async () => {
       mockTechInsightsApi.getFacts.mockRejectedValue(new Error('API Error'));
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_METRICS);
     });
@@ -158,14 +179,17 @@ describe('PreproductionUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubPipelineStatusFactRetriever': {
+        githubPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         totalWorkflowRunsCount: NaN, // Number('not-a-number') returns NaN
@@ -186,14 +210,17 @@ describe('PreproductionUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubPipelineStatusFactRetriever': {
+        githubPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         totalWorkflowRunsCount: 0,
@@ -214,14 +241,17 @@ describe('PreproductionUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubPipelineStatusFactRetriever': {
+        githubPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         totalWorkflowRunsCount: 50000,
@@ -242,14 +272,17 @@ describe('PreproductionUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubPipelineStatusFactRetriever': {
+        githubPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result.successRate).toBe(90.09);
     });
@@ -263,7 +296,10 @@ describe('PreproductionUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await preproductionUtils.getPreproductionPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         successRateCheck: true,
@@ -278,7 +314,10 @@ describe('PreproductionUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await preproductionUtils.getPreproductionPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         successRateCheck: false,
@@ -294,7 +333,10 @@ describe('PreproductionUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await preproductionUtils.getPreproductionPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         successRateCheck: false,
@@ -305,7 +347,10 @@ describe('PreproductionUtils', () => {
     it('should return default checks when no check results are found', async () => {
       mockTechInsightsApi.runChecks.mockResolvedValue([]);
 
-      const result = await preproductionUtils.getPreproductionPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_CHECKS);
       expect(mockTechInsightsApi.runChecks).toHaveBeenCalledWith(mockEntityRef);
@@ -314,7 +359,10 @@ describe('PreproductionUtils', () => {
     it('should return default checks when API throws an error', async () => {
       mockTechInsightsApi.runChecks.mockRejectedValue(new Error('API Error'));
 
-      const result = await preproductionUtils.getPreproductionPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_CHECKS);
     });
@@ -328,7 +376,10 @@ describe('PreproductionUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await preproductionUtils.getPreproductionPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         successRateCheck: true,
@@ -345,7 +396,10 @@ describe('PreproductionUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await preproductionUtils.getPreproductionPipelineChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         successRateCheck: false,
@@ -364,14 +418,17 @@ describe('PreproductionUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubPipelineStatusFactRetriever': {
+        githubPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         totalWorkflowRunsCount: 0,
@@ -392,14 +449,17 @@ describe('PreproductionUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubPipelineStatusFactRetriever': {
+        githubPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         totalWorkflowRunsCount: 100,
@@ -420,14 +480,17 @@ describe('PreproductionUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubPipelineStatusFactRetriever': {
+        githubPipelineStatusFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await preproductionUtils.getPreproductionPipelineFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await preproductionUtils.getPreproductionPipelineFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         totalWorkflowRunsCount: 50,

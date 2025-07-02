@@ -12,18 +12,16 @@ metadata:
     tech-insights.io/sonarcloud-quality-gate-yellow-threshold-percentage: '20'
     tech-insights.io/foundation-success-rate-threshold: '65'
     tech-insights.io/foundation-success-rate-operator: 'greaterThanInclusive'
-    tech-insights.io/foundation-max-failures-threshold: '2'
-    tech-insights.io/foundation-max-failures-operator: 'lessThanInclusive'
     tech-insights.io/preproduction-success-rate-threshold: '95'
     tech-insights.io/preproduction-success-rate-operator: 'greaterThanInclusive'
-    tech-insights.io/preproduction-max-failures-threshold: '35'
-    tech-insights.io/preproduction-max-failures-operator: 'lessThanInclusive'
+    tech-insights.io/reporting-success-rate-threshold: '80'
+    tech-insights.io/reporting-success-rate-operator: 'greaterThanInclusive'
     preproduction-configured-repositories: 'fatt,dct-notary-admin,slsa-provenance-action'
     foundation-configured-repositories: 'fatt,terraform-registry,argus-panoptes,tabia'
 
     # Github Advanced Security - fact checker thresholds
     tech-insights.io/github-advanced-security-secrets-threshold: '0'
-    tech-insights.io/github-advanced-security-secrets-operator: 'graterThan'
+    tech-insights.io/github-advanced-security-secrets-operator: 'greaterThan'
 
     tech-insights.io/github-advanced-security-critical-count-threshold: '0'
     tech-insights.io/github-advanced-security-critical-count-operator: 'greaterThan'
@@ -53,8 +51,6 @@ metadata:
     tech-insights.io/azure-bugs-threshold: '1'
     tech-insights.io/azure-bugs-operator: 'lessThanInclusive'
 
-    tech-insights.io/reporting-success-rate-threshold: '80'
-    tech-insights.io/reporting-success-rate-operator: 'greaterThanInclusive'
 spec:
   owner: finance-team
   members: [finance-team-member, both-teams-member]

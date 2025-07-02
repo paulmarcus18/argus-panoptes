@@ -1,67 +1,113 @@
-import {
-  mockCredentials,
-  mockErrorHandler,
-  mockServices,
-} from '@backstage/backend-test-utils';
 import express from 'express';
 import request from 'supertest';
-
 import { createRouter } from './router';
-import { TodoListService } from './services/DoraService/types';
+import { DoraService } from './services/DoraService/types';
 
-const mockTodoItem = {
-  title: 'Do the thing',
-  id: '123',
-  createdBy: mockCredentials.user().principal.userEntityRef,
-  createdAt: new Date().toISOString(),
+const mockGetMetric = jest.fn();
+const mockGetProjectNames = jest.fn();
+
+const mockDoraService: DoraService = {
+  getMetric: mockGetMetric,
+  getProjectNames: mockGetProjectNames,
 };
 
-// TEMPLATE NOTE:
-// Testing the router directly allows you to write a unit test that mocks the provided options.
-describe('createRouter', () => {
+const mockHttpAuth = {} as any;
+
+describe('router', () => {
   let app: express.Express;
-  let todoListService: jest.Mocked<TodoListService>;
 
   beforeEach(async () => {
-    todoListService = {
-      createTodo: jest.fn(),
-      listTodos: jest.fn(),
-      getTodo: jest.fn(),
-    };
-    const router = await createRouter({
-      httpAuth: mockServices.httpAuth(),
-      todoListService,
-    });
+    jest.clearAllMocks();
     app = express();
-    app.use(router);
-    app.use(mockErrorHandler());
-  });
 
-  it('should create a TODO', async () => {
-    todoListService.createTodo.mockResolvedValue(mockTodoItem);
-
-    const response = await request(app).post('/todos').send({
-      title: 'Do the thing',
+    const router = await createRouter({
+      httpAuth: mockHttpAuth,
+      doraService: mockDoraService,
     });
 
-    expect(response.status).toBe(201);
-    expect(response.body).toEqual(mockTodoItem);
+    app.use(router);
   });
 
-  it('should not allow unauthenticated requests to create a TODO', async () => {
-    todoListService.createTodo.mockResolvedValue(mockTodoItem);
+  it('responds with metrics data', async () => {
+    mockGetMetric.mockResolvedValue([{ date: '2024-01-01', value: 1 }]);
 
-    // TEMPLATE NOTE:
-    // The HttpAuth mock service considers all requests to be authenticated as a
-    // mock user by default. In order to test other cases we need to explicitly
-    // pass an authorization header with mock credentials.
-    const response = await request(app)
-      .post('/todos')
-      .set('Authorization', mockCredentials.none.header())
-      .send({
-        title: 'Do the thing',
-      });
+    const res = await request(app).get(
+      '/metrics/df/daily/1710000000/1711000000?projects=proj1,proj2',
+    );
 
-    expect(response.status).toBe(401);
+    expect(res.status).toBe(200);
+    expect(mockGetMetric).toHaveBeenCalledWith(
+      'df',
+      'daily',
+      ['proj1', 'proj2'],
+      1710000000,
+      1711000000,
+    );
+    expect(res.body).toEqual([{ date: '2024-01-01', value: 1 }]);
+  });
+
+  it('handles missing projects query by defaulting to empty array', async () => {
+    mockGetMetric.mockResolvedValue([{ date: '2024-01-01', value: 1 }]);
+
+    const res = await request(app).get(
+      '/metrics/df/daily/1710000000/1711000000',
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockGetMetric).toHaveBeenCalledWith(
+      'df',
+      'daily',
+      [],
+      1710000000,
+      1711000000,
+    );
+  });
+
+  it('handles non-string projects query gracefully', async () => {
+    mockGetMetric.mockResolvedValue([{ date: '2024-01-01', value: 1 }]);
+
+    const res = await request(app)
+      .get('/metrics/df/daily/1710000000/1711000000')
+      .query({ projects: ['proj1', 'proj2'] });
+
+    expect(res.status).toBe(200);
+    expect(mockGetMetric).toHaveBeenCalledWith(
+      'df',
+      'daily',
+      [],
+      1710000000,
+      1711000000,
+    );
+  });
+
+  it('returns 500 if getMetric throws', async () => {
+    mockGetMetric.mockRejectedValue(new Error('fail'));
+
+    const res = await request(app).get(
+      '/metrics/df/daily/1710000000/1711000000?projects=proj1,proj2',
+    );
+
+    // Since the router doesn’t handle this error, it may crash the request
+    // In Express default, this will send a 500 status anyway
+    expect(res.status).toBe(500);
+  });
+
+  it('responds with project names', async () => {
+    mockGetProjectNames.mockResolvedValue(['proj1', 'proj2']);
+
+    const res = await request(app).get('/projects');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(['proj1', 'proj2']);
+    expect(mockGetProjectNames).toHaveBeenCalled();
+  });
+
+  it('returns 500 if getProjectNames fails', async () => {
+    mockGetProjectNames.mockRejectedValue(new Error('fail'));
+
+    const res = await request(app).get('/projects');
+
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({ error: 'Failed to fetch project names' });
   });
 });

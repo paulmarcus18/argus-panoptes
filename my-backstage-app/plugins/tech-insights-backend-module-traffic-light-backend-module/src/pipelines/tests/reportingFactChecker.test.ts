@@ -2,13 +2,13 @@ import { reportingPipelineChecks } from '../reportingFactChecker';
 
 describe('Reporting Pipeline Checks Configuration', () => {
   const requiredFields = [
-    'id', 
-    'name', 
-    'type', 
-    'factIds', 
-    'annotationKeyThreshold', 
-    'annotationKeyOperator', 
-    'description'
+    'id',
+    'name',
+    'type',
+    'factIds',
+    'annotationKeyThreshold',
+    'annotationKeyOperator',
+    'description',
   ];
 
   // Test: each check should have the required fields
@@ -25,11 +25,15 @@ describe('Reporting Pipeline Checks Configuration', () => {
     reportingPipelineChecks.forEach(check => {
       // Check IDs follow the pattern 'reporting-*'
       expect(check.id).toMatch(/^reporting-/);
-      
+
       // Check that annotation keys follow convention
-      expect(check.annotationKeyThreshold).toMatch(/^tech-insights\.io\/reporting-/);
-      expect(check.annotationKeyOperator).toMatch(/^tech-insights\.io\/reporting-/);
-      
+      expect(check.annotationKeyThreshold).toMatch(
+        /^tech-insights\.io\/reporting-/,
+      );
+      expect(check.annotationKeyOperator).toMatch(
+        /^tech-insights\.io\/reporting-/,
+      );
+
       // Check that all factIds arrays start with the correct retriever
       expect(check.factIds[0]).toBe('reportingPipelineStatusFactRetriever');
     });
@@ -38,11 +42,13 @@ describe('Reporting Pipeline Checks Configuration', () => {
   // Test: check if all metrics are covered by the fact checkers
   test('checks cover expected metrics', () => {
     // Verify that important reporting pipeline metrics are covered
-    const expectedMetrics = ['overallSuccessRate'];
-    
+    const expectedMetrics = ['successRate'];
+
     // Extract second factId (the actual metric being checked)
-    const coveredMetrics = reportingPipelineChecks.map(check => check.factIds[1]);
-    
+    const coveredMetrics = reportingPipelineChecks.map(
+      check => check.factIds[1],
+    );
+
     // Ensure all expected metrics are covered
     expectedMetrics.forEach(metric => {
       expect(coveredMetrics).toContain(metric);
@@ -52,12 +58,15 @@ describe('Reporting Pipeline Checks Configuration', () => {
   // Test: verify specific check configurations
   test('reporting success rate check is properly configured', () => {
     const successRateCheck = reportingPipelineChecks.find(
-      check => check.id === 'reporting-success-rate'
+      check => check.id === 'reporting-success-rate',
     );
-    
+
     expect(successRateCheck).toBeDefined();
     expect(successRateCheck?.type).toBe('percentage');
-    expect(successRateCheck?.factIds).toEqual(['reportingPipelineStatusFactRetriever', 'successRate']);
+    expect(successRateCheck?.factIds).toEqual([
+      'reportingPipelineStatusFactRetriever',
+      'successRate',
+    ]);
     expect(successRateCheck?.name).toBe('Reporting Pipeline Success Rate');
     expect(successRateCheck?.description).toContain('pipeline success rate');
   });
@@ -67,7 +76,7 @@ describe('Reporting Pipeline Checks Configuration', () => {
     reportingPipelineChecks.forEach(check => {
       const expectedThresholdKey = `tech-insights.io/${check.id}-threshold`;
       const expectedOperatorKey = `tech-insights.io/${check.id}-operator`;
-      
+
       expect(check.annotationKeyThreshold).toBe(expectedThresholdKey);
       expect(check.annotationKeyOperator).toBe(expectedOperatorKey);
     });
@@ -86,7 +95,7 @@ describe('Reporting Pipeline Checks Configuration', () => {
   // Test: type field validation
   test('type field contains valid values', () => {
     const validTypes = ['percentage', 'number', 'boolean'];
-    
+
     reportingPipelineChecks.forEach(check => {
       expect(validTypes).toContain(check.type);
     });

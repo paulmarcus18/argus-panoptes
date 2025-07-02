@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -15,7 +15,7 @@ import { BaseTrafficLight } from './BaseTrafficLight';
  * - Gray: Entity or system cannot be retrieved or no entitis are selected.
  *
  * The component also displays a tooltip with a summary of the check results or error messages.
- * 
+ *
  * @param entities - An array of Backstage Entity objects to check BlackDuck status for.
  * @param techInsightsApi - The Backstage Tech Insights API to fetch BlackDuck facts.
  * @param blackDuckUtils - An instance of BlackDuckUtils to interact with BlackDuck data.
@@ -25,17 +25,17 @@ export const determineBlackDuckColor = async (
   entities: Entity[],
   catalogApi: any,
   techInsightsApi: any,
-  blackDuckUtils: BlackDuckUtils
+  blackDuckUtils: BlackDuckUtils,
 ): Promise<{ color: 'green' | 'red' | 'yellow' | 'gray'; reason: string }> => {
-
-  // If no entities are provided, return gray color 
+  // If no entities are provided, return gray color
   if (!entities.length) {
     return { color: 'gray', reason: 'No entities selected' };
   }
 
   // Filter entities to only those with BlackDuck enabled
   const enabledEntities = entities.filter(
-    e => e.metadata.annotations?.['tech-insights.io/blackduck-enabled'] === 'true'
+    e =>
+      e.metadata.annotations?.['tech-insights.io/blackduck-enabled'] === 'true',
   );
 
   if (!enabledEntities.length) {
@@ -52,56 +52,75 @@ export const determineBlackDuckColor = async (
   const systemEntity = await catalogApi.getEntityByRef({
     kind: 'system',
     namespace: 'default',
-    name: typeof systemName === 'string' ? systemName : String(systemName)
+    name:
+      typeof systemName === 'string' ? systemName : JSON.stringify(systemName),
   });
 
   // Get thresholds for traffic light colour from system annotations
   const proportion = parseFloat(
-    systemEntity?.metadata.annotations?.['tech-insights.io/blackduck-critical-check-percentage'] ?? '33'
+    systemEntity?.metadata.annotations?.[
+      'tech-insights.io/blackduck-critical-check-percentage'
+    ] ?? '33',
   );
 
   try {
     // Get the check results for each entity
     const results = await Promise.all(
-        enabledEntities.map(entity =>
-            blackDuckUtils.getBlackDuckChecks(techInsightsApi, {
-                kind: entity.kind,
-                namespace: entity.metadata.namespace || 'default',
-                name: entity.metadata.name,
-            }),
-        ),
+      enabledEntities.map(entity =>
+        blackDuckUtils.getBlackDuckChecks(techInsightsApi, {
+          kind: entity.kind,
+          namespace: entity.metadata.namespace ?? 'default',
+          name: entity.metadata.name,
+        }),
+      ),
     );
 
     // Aggregate the results
     const counts = results.reduce(
-    (acc, res) => {
-        acc.criticalSecurityCheckFails += res.criticalSecurityCheck === false ? 1 : 0;
+      (acc, res) => {
+        acc.criticalSecurityCheckFails +=
+          res.criticalSecurityCheck === false ? 1 : 0;
         acc.highSecurityCheckFails += res.highSecurityCheck === false ? 1 : 0;
-        acc.mediumSecurityCheckFails += res.mediumSecurityCheck === false ? 1 : 0;
+        acc.mediumSecurityCheckFails +=
+          res.mediumSecurityCheck === false ? 1 : 0;
         return acc;
-    },
-    { criticalSecurityCheckFails: 0, highSecurityCheckFails: 0, mediumSecurityCheckFails: 0 },
-    )
+      },
+      {
+        criticalSecurityCheckFails: 0,
+        highSecurityCheckFails: 0,
+        mediumSecurityCheckFails: 0,
+      },
+    );
 
     // Count the number of checks that failed for more than 1/3 of the entities
     const redCount = Object.values(counts).filter(
-    v => v > enabledEntities.length * proportion / 100,
+      v => v > (enabledEntities.length * proportion) / 100,
     ).length;
 
     if (Object.values(counts).every(v => v === 0)) {
       // All checks passed for all entities
       return { color: 'green', reason: 'All BlackDuck checks passed' };
-    } else if (counts.criticalSecurityCheckFails > 0 || redCount >= 1) {
-        // Critical security issues or at least one check failed for more than 1/3 of the entities
-        return { color: 'red', reason: `Critical security checks found or other severe security issues detected` };
-    } 
+    } else if (counts.criticalSecurityCheckFails > 0) {
+      // Critical security issues or at least one check failed for more than 1/3 of the entities
+      return {
+        color: 'red',
+        reason: `Critical security issues found: ${counts.criticalSecurityCheckFails} entities failed the critical security check.`,
+      };
+    } else if (redCount >= 1) {
+      return {
+        color: 'red',
+        reason: `Severe security issues detected: ${redCount} checks failed by at least ${proportion}% of the entities.`,
+      };
+    }
     // Some security issues, but no critical issues and no checks failed for more than 1/3 of the entities
-    return { color: 'yellow', reason: `Some security issues detected` };
-   
-  } catch (err) {
+    return {
+      color: 'yellow',
+      reason: `Some security issues detected: ${counts.highSecurityCheckFails} entities failed the high security risks check, ${counts.mediumSecurityCheckFails} entities failed the medium security risks check.`,
+    };
+  } catch {
     return { color: 'gray', reason: 'Error fetching BlackDuck data' };
   }
-}
+};
 
 /**
  * BlackDuckTrafficLight is a React component that displays a colored traffic light indicator
@@ -119,17 +138,14 @@ export const BlackDuckTrafficLight = ({
   entities: Entity[];
   onClick?: () => void;
 }) => {
-  const [color, setColor] = useState<
-    'green' | 'red' | 'yellow' | 'gray'
-  >('gray');
+  const [color, setColor] = useState<'green' | 'red' | 'yellow' | 'gray'>(
+    'gray',
+  );
   const [reason, setReason] = useState('Loading BlackDuck data...');
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
-  const blackDuckUtils = React.useMemo(
-    () => new BlackDuckUtils(),
-    [],
-  );
+  const blackDuckUtils = useMemo(() => new BlackDuckUtils(), []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -137,15 +153,15 @@ export const BlackDuckTrafficLight = ({
         entities,
         catalogApi,
         techInsightsApi,
-        blackDuckUtils
+        blackDuckUtils,
       );
-      
+
       setColor(blackDuckColorAndReason.color);
       setReason(blackDuckColorAndReason.reason);
     };
 
     fetchData();
-  }, [entities, techInsightsApi]);
+  }, [entities, techInsightsApi, catalogApi, blackDuckUtils]);
 
   return <BaseTrafficLight color={color} tooltip={reason} onClick={onClick} />;
 };

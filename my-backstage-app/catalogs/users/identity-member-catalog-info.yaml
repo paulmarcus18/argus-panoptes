@@ -6,5 +6,5 @@ spec:
   profile:
     displayName: Identity 1
     email: identity@example.com
-  memberOf: 
+  memberOf:
     - identity-team

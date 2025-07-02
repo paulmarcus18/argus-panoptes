@@ -1,4 +1,3 @@
--- Metric 4: Median time to restore service (MTTR)
 WITH _incidents AS (
   SELECT
     DISTINCT i.id,
@@ -9,7 +8,7 @@ WITH _incidents AS (
     ON i.scope_id = pm.row_id 
     AND pm.`table` = i.`table`
   WHERE
-    pm.project_name IN (?)  -- Dynamically replaced
+    pm.project_name IN (?) 
     AND i.lead_time_minutes IS NOT NULL
     AND i.resolution_date BETWEEN (?) AND (?)
 ),

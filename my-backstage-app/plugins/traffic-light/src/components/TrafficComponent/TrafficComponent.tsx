@@ -1,3 +1,7 @@
+/**
+ * Traffic Light Dashboard Component
+ * Provides visualization of system health across multiple metrics
+ */
 import { useState, useEffect, useRef } from 'react';
 import {
   Typography,
@@ -15,7 +19,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { Page, Content, InfoCard } from '@backstage/core-components';
 
-import { useApi } from '@backstage/core-plugin-api';
+import { identityApiRef, useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 import {
@@ -29,7 +33,6 @@ import {
   BaseTrafficLight,
 } from '../Semaphores';
 import { ReportingTrafficLight } from '../Semaphores/ReportingTrafficLight';
-// import { DialogComponent } from '../SemaphoreDialogs/DialogComponent';
 import { BlackDuckSemaphoreDialog } from '../SemaphoreDialogs/BlackDuckSemaphoreDialog';
 import { GitHubSemaphoreDialog } from '../SemaphoreDialogs/GitHubAdvancedSecurityDialog';
 import { AzureDevOpsSemaphoreDialog } from '../SemaphoreDialogs/AzureDevOpsDialog';
@@ -37,56 +40,49 @@ import { SonarQubeSemaphoreDialog } from '../SemaphoreDialogs/SonarQubeDialog';
 import { PreproductionSemaphoreDialog } from '../SemaphoreDialogs/PreProductionDialog';
 import { FoundationSemaphoreDialog } from '../SemaphoreDialogs/FoundationDialog';
 import { ReportingSemaphoreDialog } from '../SemaphoreDialogs/ReportingDialog';
-import {DependabotSemaphoreDialog}  from '../SemaphoreDialogs/DependabotSemaphoreDialog'
+import { DependabotSemaphoreDialog } from '../SemaphoreDialogs/DependabotSemaphoreDialog';
 
 export const TrafficComponent = () => {
+  // API and refs
   const catalogApi = useApi(catalogApiRef);
+  const identityApi = useApi(identityApiRef);
   const systemMenuButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Repository and filtering state
   const [repos, setRepos] = useState<any[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogTitle, setDialogTitle] = useState('');
-  const [dialogItems, setDialogItems] = useState<any[]>([]);
-  // const [setDetailedDialogOpen] = useState(false);
-  // const [currentSemaphoreType, setCurrentSemaphoreType] = useState('');
   const [onlyMyRepos, setOnlyMyRepos] = useState(true);
   const [onlyCritical, setOnlyCritical] = useState(true);
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
   const [selectedEntities, setSelectedEntities] = useState<Entity[]>([]);
+
+  // System selection state
   const [availableSystems, setAvailableSystems] = useState<string[]>([]);
   const [selectedSystem, setSelectedSystem] = useState<string>('');
   const [systemSearchTerm, setSystemSearchTerm] = useState<string>('');
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
 
-  // New state for specific semaphore dialogs
+  // Dialog visibility state
   const [preproductionDialogOpen, setPreproductionDialogOpen] = useState(false);
   const [foundationDialogOpen, setFoundationDialogOpen] = useState(false);
   const [reportingDialogOpen, setReportingDialogOpen] = useState(false);
-
   const [azureDevOpsDialogOpen, setAzureDevOpsDialogOpen] = useState(false);
   const [sonarQubeDialogOpen, setSonarQubeDialogOpen] = useState(false);
-
-  // New state for specific semaphore dialogs
   const [blackDuckDialogOpen, setBlackDuckDialogOpen] = useState(false);
   const [githubSecurityDialogOpen, setGithubSecurityDialogOpen] =
     useState(false);
   const [DependabotDialogOpen, setDependabotDialogOpen] = useState(false);
 
-  const handleClick = (title: string, items: any[]) => {
-    setDialogTitle(title);
-    setDialogItems(items);
-    setDialogOpen(true);
-  };
-
+  /**
+   * Opens the appropriate dialog based on which traffic light was clicked
+   */
   const handleSemaphoreClick = (semaphoreType: string) => {
     switch (semaphoreType) {
-       case 'BlackDuck':
+      case 'BlackDuck':
         setBlackDuckDialogOpen(true);
         break;
       case 'Github Advanced Security':
         setGithubSecurityDialogOpen(true);
         break;
-
       case 'Azure DevOps Bugs':
         setAzureDevOpsDialogOpen(true);
         break;
@@ -107,19 +103,13 @@ export const TrafficComponent = () => {
         break;
       case 'CodeScene':
         // For these, use the existing detailed dialog
-        // setCurrentSemaphoreType(semaphoreType);
-        handleClick('CodeScene Details', []);
-        // setDetailedDialogOpen(true);
         break;
       default:
-        console.warn(`No dialog handler for semaphore type: ${semaphoreType}`);
+        break;
     }
   };
 
-  // const handleCloseDetailedDialog = () => {
-  //   setDetailedDialogOpen(false);
-  // };
-
+  // Dialog close handlers
   const handleCloseBlackDuckDialog = () => {
     setBlackDuckDialogOpen(false);
   };
@@ -147,52 +137,86 @@ export const TrafficComponent = () => {
   const handleCloseSonarQubeDialog = () => {
     setSonarQubeDialogOpen(false);
   };
-  
+
   const handleCloseDependabotDialog = () => {
     setDependabotDialogOpen(false);
-  }
+  };
 
+  /**
+   * Load repositories and systems on component mount
+   * Fetches user's identity to filter systems they have access to
+   */
   useEffect(() => {
     const fetchCatalogRepos = async () => {
-      try {
-        const entities = await catalogApi.getEntities({
-          filter: { kind: 'Component' },
-        });
-        const simplified = entities.items.map((entity: Entity) => ({
-          name: entity.metadata.name,
-          description: entity.metadata.description ?? 'No description',
-          owner:
-            typeof entity.spec?.owner === 'string'
-              ? entity.spec.owner.toLowerCase()
-              : undefined,
-          system:
-            typeof entity.spec?.system === 'string'
-              ? entity.spec.system
-              : undefined,
-          tags: entity.metadata?.tags,
-          entity: entity,
-        }));
+      // Get current user identity
+      const { userEntityRef } = await identityApi.getBackstageIdentity();
+      const userName = userEntityRef.split('/').pop();
 
-        setRepos(simplified);
-        const systems = Array.from(
-          new Set(
-            simplified.map(repo => repo.system).filter(Boolean) as string[],
-          ),
-        ).sort();
-        setAvailableSystems(systems);
-        if (systems.length > 0) {
-          const initialSystem =
-            systems[0];
-          setSelectedSystem(initialSystem);
-        }
-      } catch (err) {
-        console.error('Failed to load catalog entities', err);
+      // Fetch user entity metadata from catalog
+      const userEntity = await catalogApi.getEntityByRef({
+        kind: 'User',
+        namespace: 'default',
+        name: typeof userName === 'string' ? userName : String(userName),
+      });
+
+      // Get user's teams from the entity
+      const userTeams: string[] =
+        (userEntity?.spec?.memberOf as string[]) || [];
+
+      // Fetch all entities (Components and Systems)
+      const [componentEntities, systemEntities] = await Promise.all([
+        catalogApi.getEntities({
+          filter: { kind: 'Component' },
+        }),
+        catalogApi.getEntities({
+          filter: { kind: 'System' },
+        }),
+      ]);
+
+      // Process components
+      const simplified = componentEntities.items.map((entity: Entity) => ({
+        name: entity.metadata.name,
+        description: entity.metadata.description ?? 'No description',
+        owner:
+          typeof entity.spec?.owner === 'string'
+            ? entity.spec.owner.toLowerCase()
+            : undefined,
+        system:
+          typeof entity.spec?.system === 'string'
+            ? entity.spec.system
+            : undefined,
+        tags: entity.metadata?.tags,
+        entity: entity,
+      }));
+
+      setRepos(simplified);
+
+      // Filter systems to only include those owned by user's teams
+      const userOwnedSystems = systemEntities.items
+        .filter((system: Entity) => {
+          const systemOwner = system.spec?.owner;
+          if (typeof systemOwner === 'string') {
+            return userTeams.includes(systemOwner);
+          }
+          return false;
+        })
+        .map((system: Entity) => system.metadata.name)
+        .sort((a, b) => a.localeCompare(b));
+      setAvailableSystems(userOwnedSystems);
+
+      // Set the initial selected system to the first owned system
+      if (userOwnedSystems.length > 0) {
+        const initialSystem = userOwnedSystems[0];
+        setSelectedSystem(initialSystem);
       }
     };
 
     fetchCatalogRepos();
-  }, [catalogApi]);
+  }, [catalogApi.getEntities, identityApi, catalogApi]);
 
+  /**
+   * Update selected repositories when filters change
+   */
   useEffect(() => {
     const filtered = repos.filter(repo => {
       const isMine = !onlyMyRepos || repo.owner === 'philips-labs';
@@ -206,6 +230,7 @@ export const TrafficComponent = () => {
     setSelectedEntities(filtered.map(r => r.entity));
   }, [onlyMyRepos, onlyCritical, repos, selectedSystem]);
 
+  // Filter systems list based on search term
   const filteredSystems = availableSystems.filter(system =>
     system.toLowerCase().includes(systemSearchTerm.toLowerCase()),
   );
@@ -213,6 +238,7 @@ export const TrafficComponent = () => {
   return (
     <Page themeId="tool">
       <Content>
+        {/* Filter controls - repository filters and system selector */}
         <Box display="flex" mb={3} alignItems="center" flexWrap="wrap">
           <FormControlLabel
             control={
@@ -264,7 +290,6 @@ export const TrafficComponent = () => {
                   onChange={e => setSystemSearchTerm(e.target.value)}
                   variant="outlined"
                   size="small"
-                  autoFocus
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -299,6 +324,7 @@ export const TrafficComponent = () => {
           </Box>
         </Box>
 
+        {/* Selected repositories display */}
         {selectedRepos.length > 0 && (
           <Box mb={4}>
             <InfoCard title={`Selected Repositories (${selectedRepos.length})`}>
@@ -327,11 +353,11 @@ export const TrafficComponent = () => {
           </Box>
         )}
 
+        {/* Traffic light panels - organized by category */}
         <Grid container spacing={3}>
+          {/* Security checks panel */}
           <Grid item xs={12} md={6}>
-            <InfoCard
-              title="Security Checks"
-            >
+            <InfoCard title="Security Checks">
               <Typography variant="subtitle1">Dependabot</Typography>
               <TrafficLightDependabot
                 entities={selectedEntities}
@@ -355,6 +381,7 @@ export const TrafficComponent = () => {
             </InfoCard>
           </Grid>
 
+          {/* Pipelines panel */}
           <Grid item xs={12} md={6}>
             <InfoCard title="Pipelines">
               <Typography variant="subtitle1">Reporting Pipelines</Typography>
@@ -379,10 +406,9 @@ export const TrafficComponent = () => {
             </InfoCard>
           </Grid>
 
+          {/* Software quality panel */}
           <Grid item xs={12} md={6}>
-            <InfoCard
-              title="Software Quality"
-            >
+            <InfoCard title="Software Quality">
               <Typography variant="subtitle1">SonarQube</Typography>
               <SonarQubeTrafficLight
                 entities={selectedEntities}
@@ -398,10 +424,9 @@ export const TrafficComponent = () => {
             </InfoCard>
           </Grid>
 
+          {/* Azure DevOps panel */}
           <Grid item xs={12} md={6}>
-            <InfoCard
-              title="Azure DevOps"
-            >
+            <InfoCard title="Azure DevOps">
               <Typography variant="subtitle1">Bugs</Typography>
               <AzureDevOpsBugsTrafficLight
                 entities={selectedEntities}
@@ -411,6 +436,7 @@ export const TrafficComponent = () => {
           </Grid>
         </Grid>
 
+        {/* Dialog components for detailed metric views */}
         <GitHubSemaphoreDialog
           open={githubSecurityDialogOpen}
           onClose={handleCloseGithubSecurityDialog}

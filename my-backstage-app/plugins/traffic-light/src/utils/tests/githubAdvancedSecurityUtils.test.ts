@@ -1,4 +1,8 @@
-import { GithubAdvancedSecurityUtils, GitHubSecurityFacts, GitHubSecurityChecks } from '../githubAdvancedSecurityUtils';
+import {
+  GithubAdvancedSecurityUtils,
+  GitHubSecurityFacts,
+  GitHubSecurityChecks,
+} from '../githubAdvancedSecurityUtils';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { CompoundEntityRef } from '@backstage/catalog-model';
 
@@ -22,7 +26,7 @@ const createMockCheckResult = (id: string, result: boolean) => ({
     description: `Check for ${id}`,
   },
   facts: {
-    'githubAdvancedSecurityFactRetriever': {
+    githubAdvancedSecurityFactRetriever: {
       id: 'githubAdvancedSecurityFactRetriever',
       type: 'integer' as const,
       description: 'GitHub Advanced Security facts',
@@ -80,7 +84,8 @@ describe('GithubAdvancedSecurityUtils', () => {
           'code-1': {
             severity: 'critical',
             description: 'SQL injection vulnerability',
-            direct_link: 'https://github.com/owner/repo/blob/abc123/src/app.js#L42',
+            direct_link:
+              'https://github.com/owner/repo/blob/abc123/src/app.js#L42',
             created_at: '2023-01-01T00:00:00Z',
           },
         },
@@ -88,23 +93,29 @@ describe('GithubAdvancedSecurityUtils', () => {
           'secret-1': {
             severity: 'high',
             description: 'GitHub token exposed',
-            html_url: 'https://github.com/owner/repo/security/secret-scanning/1',
+            html_url:
+              'https://github.com/owner/repo/security/secret-scanning/1',
             created_at: '2023-01-01T00:00:00Z',
           },
         },
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubAdvancedSecurityFactRetriever': {
+        githubAdvancedSecurityFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await githubUtils.getGitHubSecurityFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
-      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, ['githubAdvancedSecurityFactRetriever']);
+      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, [
+        'githubAdvancedSecurityFactRetriever',
+      ]);
       expect(result).toEqual({
         criticalCount: 5,
         highCount: 10,
@@ -130,14 +141,17 @@ describe('GithubAdvancedSecurityUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubAdvancedSecurityFactRetriever': {
+        githubAdvancedSecurityFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await githubUtils.getGitHubSecurityFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         criticalCount: 5,
@@ -153,14 +167,17 @@ describe('GithubAdvancedSecurityUtils', () => {
 
     it('should return default facts when no facts are found', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubAdvancedSecurityFactRetriever': {
+        githubAdvancedSecurityFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: {},
         },
       });
 
-      const result = await githubUtils.getGitHubSecurityFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_FACTS);
     });
@@ -168,7 +185,10 @@ describe('GithubAdvancedSecurityUtils', () => {
     it('should return default facts when response is undefined', async () => {
       mockTechInsightsApi.getFacts.mockResolvedValue({});
 
-      const result = await githubUtils.getGitHubSecurityFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_FACTS);
     });
@@ -176,7 +196,10 @@ describe('GithubAdvancedSecurityUtils', () => {
     it('should return default facts when API throws an error', async () => {
       mockTechInsightsApi.getFacts.mockRejectedValue(new Error('API Error'));
 
-      const result = await githubUtils.getGitHubSecurityFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_FACTS);
     });
@@ -194,14 +217,17 @@ describe('GithubAdvancedSecurityUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubAdvancedSecurityFactRetriever': {
+        githubAdvancedSecurityFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      const result = await githubUtils.getGitHubSecurityFacts(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityFacts(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         criticalCount: 0,
@@ -228,7 +254,10 @@ describe('GithubAdvancedSecurityUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await githubUtils.getGitHubSecurityChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         criticalCheck: true,
@@ -243,7 +272,10 @@ describe('GithubAdvancedSecurityUtils', () => {
     it('should return default checks when no check results are found', async () => {
       mockTechInsightsApi.runChecks.mockResolvedValue([]);
 
-      const result = await githubUtils.getGitHubSecurityChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_CHECKS);
       expect(mockTechInsightsApi.runChecks).toHaveBeenCalledWith(mockEntityRef);
@@ -252,7 +284,10 @@ describe('GithubAdvancedSecurityUtils', () => {
     it('should return default checks when API throws an error', async () => {
       mockTechInsightsApi.runChecks.mockRejectedValue(new Error('API Error'));
 
-      const result = await githubUtils.getGitHubSecurityChecks(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityChecks(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual(DEFAULT_CHECKS);
     });
@@ -271,7 +306,8 @@ describe('GithubAdvancedSecurityUtils', () => {
           'code-1': {
             severity: 'high',
             description: 'XSS vulnerability',
-            direct_link: 'https://github.com/owner/repo/blob/def456/src/utils.js#L15',
+            direct_link:
+              'https://github.com/owner/repo/blob/def456/src/utils.js#L15',
             created_at: '2023-01-02T00:00:00Z',
           },
         },
@@ -287,7 +323,7 @@ describe('GithubAdvancedSecurityUtils', () => {
       ];
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubAdvancedSecurityFactRetriever': {
+        githubAdvancedSecurityFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
@@ -296,7 +332,10 @@ describe('GithubAdvancedSecurityUtils', () => {
 
       mockTechInsightsApi.runChecks.mockResolvedValue(mockCheckResults);
 
-      const result = await githubUtils.getGitHubSecurityData(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityData(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         criticalCount: 3,
@@ -314,15 +353,24 @@ describe('GithubAdvancedSecurityUtils', () => {
         secretCheck: true,
       });
 
-      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, ['githubAdvancedSecurityFactRetriever']);
+      expect(mockTechInsightsApi.getFacts).toHaveBeenCalledWith(mockEntityRef, [
+        'githubAdvancedSecurityFactRetriever',
+      ]);
       expect(mockTechInsightsApi.runChecks).toHaveBeenCalledWith(mockEntityRef);
     });
 
     it('should return defaults when both APIs fail', async () => {
-      mockTechInsightsApi.getFacts.mockRejectedValue(new Error('Facts API Error'));
-      mockTechInsightsApi.runChecks.mockRejectedValue(new Error('Checks API Error'));
+      mockTechInsightsApi.getFacts.mockRejectedValue(
+        new Error('Facts API Error'),
+      );
+      mockTechInsightsApi.runChecks.mockRejectedValue(
+        new Error('Checks API Error'),
+      );
 
-      const result = await githubUtils.getGitHubSecurityData(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityData(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         ...DEFAULT_FACTS,
@@ -343,16 +391,21 @@ describe('GithubAdvancedSecurityUtils', () => {
       };
 
       mockTechInsightsApi.getFacts.mockResolvedValue({
-        'githubAdvancedSecurityFactRetriever': {
+        githubAdvancedSecurityFactRetriever: {
           timestamp: '2023-10-01T00:00:00Z',
           version: '1.0.0',
           facts: mockFacts,
         },
       });
 
-      mockTechInsightsApi.runChecks.mockRejectedValue(new Error('Checks API Error'));
+      mockTechInsightsApi.runChecks.mockRejectedValue(
+        new Error('Checks API Error'),
+      );
 
-      const result = await githubUtils.getGitHubSecurityData(mockTechInsightsApi, mockEntityRef);
+      const result = await githubUtils.getGitHubSecurityData(
+        mockTechInsightsApi,
+        mockEntityRef,
+      );
 
       expect(result).toEqual({
         criticalCount: 1,

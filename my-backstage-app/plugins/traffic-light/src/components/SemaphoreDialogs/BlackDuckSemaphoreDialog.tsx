@@ -1,4 +1,3 @@
-import React from 'react';
 import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
@@ -9,6 +8,7 @@ import { BlackDuckUtils } from '../../utils/blackDuckUtils';
 import { SemaphoreData, IssueDetail } from './types';
 import { Entity } from '@backstage/catalog-model';
 import { determineBlackDuckColor } from '../Semaphores/BlackDuckTrafficLight';
+import { useEffect, useMemo, useState } from 'react';
 
 const useStyles = makeStyles(theme => ({
   metricBox: {
@@ -32,25 +32,23 @@ interface BlackDuckSemaphoreDialogProps {
   entities?: Entity[];
 }
 
-export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> = ({
-  open,
-  onClose,
-  entities = [],
-}) => {
+export const BlackDuckSemaphoreDialog: React.FC<
+  BlackDuckSemaphoreDialogProps
+> = ({ open, onClose, entities = [] }) => {
   const classes = useStyles();
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const blackDuckUtils = React.useMemo(() => new BlackDuckUtils(), []);
+  const blackDuckUtils = useMemo(() => new BlackDuckUtils(), []);
 
-  const [data, setData] = React.useState<SemaphoreData>({
+  const [data, setData] = useState<SemaphoreData>({
     color: 'gray',
     metrics: {},
     summary: 'No data available for this metric.',
     details: [],
   });
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open || entities.length === 0) return;
     setIsLoading(true);
 
@@ -58,7 +56,9 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
       try {
         // Filter entities to only those with BlackDuck enabled
         const enabledEntities = entities.filter(
-          e => e.metadata.annotations?.['tech-insights.io/blackduck-enabled'] === 'true'
+          e =>
+            e.metadata.annotations?.['tech-insights.io/blackduck-enabled'] ===
+            'true',
         );
 
         if (enabledEntities.length === 0) {
@@ -76,7 +76,7 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
           enabledEntities.map(entity =>
             blackDuckUtils.getBlackDuckFacts(techInsightsApi, {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             }),
           ),
@@ -99,12 +99,16 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
 
         // Create details array from results
         const details: IssueDetail[] = [];
-        
-        const displayedRepos = await blackDuckUtils.getTop5CriticalBlackDuckRepos(techInsightsApi, enabledEntities);
+
+        const displayedRepos =
+          await blackDuckUtils.getTop5CriticalBlackDuckRepos(
+            techInsightsApi,
+            enabledEntities,
+          );
 
         for (const repo of displayedRepos) {
           // Create a description and determine severity based on the repo's issues
-          let description = ``;
+          let description;
           let severity = '';
 
           if (repo.security_risks_critical > 0) {
@@ -124,14 +128,19 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
           // Add the detail to the array
           details.push({
             severity: severity as 'critical' | 'high' | 'medium' | 'low',
-            description:  description,
+            description: description,
           });
         }
 
         // Determine the overall status color
-        const trafficLightcolor = await determineBlackDuckColor(entities, catalogApi, techInsightsApi, blackDuckUtils);
-        let color: 'green' | 'red' | 'yellow' | 'gray' = 'green';
-        color = trafficLightcolor.color;
+        const trafficLightcolor = await determineBlackDuckColor(
+          entities,
+          catalogApi,
+          techInsightsApi,
+          blackDuckUtils,
+        );
+        const color: 'green' | 'red' | 'yellow' | 'gray' =
+          trafficLightcolor.color;
 
         // Create the summary
         let summary = 'No critical security risks were found.';
@@ -143,16 +152,21 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
 
         // Set the real data
         setData({ color, metrics: totals, summary, details });
-      } catch (err) {
+      } catch {
         // Set default data in case of error
-        setData({ color: 'gray', metrics: {}, summary: 'Failed to load BlackDuck data.', details: [] });
+        setData({
+          color: 'gray',
+          metrics: {},
+          summary: 'Failed to load BlackDuck data.',
+          details: [],
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchBlackDuckData();
-  }, [open, entities, blackDuckUtils, techInsightsApi]);
+  }, [open, entities, blackDuckUtils, techInsightsApi, catalogApi]);
 
   const renderMetrics = () => (
     <Grid container spacing={2}>
@@ -161,7 +175,9 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
           <Typography variant="h4" className={classes.metricValue}>
             {data.metrics.security_risks_critical}
           </Typography>
-          <Typography className={classes.metricLabel}>Critical Security Risks</Typography>
+          <Typography className={classes.metricLabel}>
+            Critical Security Risks
+          </Typography>
         </Paper>
       </Grid>
       <Grid item xs={4}>
@@ -169,7 +185,9 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
           <Typography variant="h4" className={classes.metricValue}>
             {data.metrics.security_risks_high}
           </Typography>
-          <Typography className={classes.metricLabel}>High Security Risks</Typography>
+          <Typography className={classes.metricLabel}>
+            High Security Risks
+          </Typography>
         </Paper>
       </Grid>
       <Grid item xs={4}>
@@ -177,7 +195,9 @@ export const BlackDuckSemaphoreDialog: React.FC<BlackDuckSemaphoreDialogProps> =
           <Typography variant="h4" className={classes.metricValue}>
             {data.metrics.security_risks_medium}
           </Typography>
-          <Typography className={classes.metricLabel}>Medium Security Risks</Typography>
+          <Typography className={classes.metricLabel}>
+            Medium Security Risks
+          </Typography>
         </Paper>
       </Grid>
     </Grid>

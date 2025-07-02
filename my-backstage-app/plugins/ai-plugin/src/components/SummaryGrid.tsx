@@ -1,25 +1,31 @@
-import React from 'react';
-import { Box } from '@mui/material';
+/**
+ * Summary Grid Component
+ * Displays multiple system summary cards in a responsive layout
+ */
+import Box from '@mui/material/Box';
 import { SummaryPerRepo } from '../../utils/types';
 import { SummaryCard } from './SummaryCard';
 
+// Type definition for message data structure
 type MessagesBySystem = Record<string, SummaryPerRepo[]>;
 
+/**
+ * Props for the summary grid component
+ */
 interface SummaryGridProps {
   filteredMessages: MessagesBySystem;
-  fullMessages: MessagesBySystem; // Can be removed if unused
   repoSearch: string;
   handleDownload: (system: string) => void;
 }
 
 export const SummaryGrid = ({
   filteredMessages,
-  fullMessages,
   repoSearch,
   handleDownload,
 }: SummaryGridProps) => {
   return (
     <Box sx={{ paddingBottom: '20px' }}>
+      {/* Responsive grid layout - single column on small screens, two columns on medium+ */}
       <Box
         sx={{
           display: 'grid',
@@ -31,6 +37,7 @@ export const SummaryGrid = ({
           gap: 2,
         }}
       >
+        {/* Sort systems alphabetically and render a card for each */}
         {Object.entries(filteredMessages)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([system, repos]) => (

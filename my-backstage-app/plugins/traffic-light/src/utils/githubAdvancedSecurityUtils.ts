@@ -1,7 +1,4 @@
-import {
-  CompoundEntityRef,
-  stringifyEntityRef
-} from '@backstage/catalog-model';
+import { CompoundEntityRef } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 import { JsonObject } from '@backstage/types';
 
@@ -15,18 +12,24 @@ export interface GitHubSecurityFacts {
   lowCount: number;
   openCodeScanningAlertCount: number;
   openSecretScanningAlertCount: number;
-  codeScanningAlerts: Record<string, {
-    severity: string;
-    description: string;
-    direct_link?: string;
-    created_at: string;
-  }>;
-  secretScanningAlerts: Record<string, {
-    severity: string;
-    description: string;
-    html_url: string;
-    created_at: string;
-  }>;
+  codeScanningAlerts: Record<
+    string,
+    {
+      severity: string;
+      description: string;
+      direct_link?: string;
+      created_at: string;
+    }
+  >;
+  secretScanningAlerts: Record<
+    string,
+    {
+      severity: string;
+      description: string;
+      html_url: string;
+      created_at: string;
+    }
+  >;
 }
 
 /**
@@ -43,7 +46,9 @@ export interface GitHubSecurityChecks {
 /**
  * Combined interface for when you need both facts and checks
  */
-export interface GitHubSecurityData extends GitHubSecurityFacts, GitHubSecurityChecks {}
+export interface GitHubSecurityData
+  extends GitHubSecurityFacts,
+    GitHubSecurityChecks {}
 
 const DEFAULT_FACTS: GitHubSecurityFacts = {
   criticalCount: 0,
@@ -69,60 +74,48 @@ const DEFAULT_CHECKS: GitHubSecurityChecks = {
  * methods for GitHub Advanced Security facts & checks.
  */
 export class GithubAdvancedSecurityUtils {
-
-
   /**
    * Function to fetch GitHub security facts for a given entity
    * @param api - TechInsightsApi instance
    * @param entity - The entity reference for which to fetch facts
    * @return A promise that resolves to an object containing GitHub security facts
    */
-  async getGitHubSecurityFacts(api: TechInsightsApi, entity: CompoundEntityRef): Promise<GitHubSecurityFacts> {
+  async getGitHubSecurityFacts(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<GitHubSecurityFacts> {
     try {
-      console.log(
-        'Fetching GitHub Security facts for entity:',
-        stringifyEntityRef(entity),
-      );
-
-      const response = await api.getFacts(entity, ['githubAdvancedSecurityFactRetriever']);
-
-      console.log(
-        'Raw Tech Insights API response:',
-        JSON.stringify(response, null, 2),
-      );
-
+      const response = await api.getFacts(entity, [
+        'githubAdvancedSecurityFactRetriever',
+      ]);
       const facts = response?.githubAdvancedSecurityFactRetriever?.facts;
 
       // Check if the facts are present and log an error if not
       if (!facts) {
-        console.error(
-          'No GitHub Security facts found for entity:',
-          stringifyEntityRef(entity),
-        );
         return { ...DEFAULT_FACTS };
       }
 
       // Type assertion to handle the JSON types correctly
       const codeScanningAlerts = (facts.codeScanningAlerts as JsonObject) || {};
-      const secretScanningAlerts = (facts.secretScanningAlerts as JsonObject) || {};
+      const secretScanningAlerts =
+        (facts.secretScanningAlerts as JsonObject) || {};
 
       return {
         criticalCount: Number(facts.criticalCount ?? 0) || 0,
         highCount: Number(facts.highCount ?? 0) || 0,
         mediumCount: Number(facts.mediumCount ?? 0) || 0,
         lowCount: Number(facts.lowCount ?? 0) || 0,
-        openCodeScanningAlertCount: Number(facts.openCodeScanningAlertCount ?? 0) || 0,
-        openSecretScanningAlertCount: Number(facts.openSecretScanningAlertCount ?? 0) || 0,
-        // Cast to the expected types 
-        codeScanningAlerts: codeScanningAlerts as GitHubSecurityFacts['codeScanningAlerts'],
-        secretScanningAlerts: secretScanningAlerts as GitHubSecurityFacts['secretScanningAlerts'],
+        openCodeScanningAlertCount:
+          Number(facts.openCodeScanningAlertCount ?? 0) || 0,
+        openSecretScanningAlertCount:
+          Number(facts.openSecretScanningAlertCount ?? 0) || 0,
+        // Cast to the expected types
+        codeScanningAlerts:
+          codeScanningAlerts as GitHubSecurityFacts['codeScanningAlerts'],
+        secretScanningAlerts:
+          secretScanningAlerts as GitHubSecurityFacts['secretScanningAlerts'],
       };
-    } catch (error) {
-      console.error(
-        'Error fetching GitHub Security facts for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
+    } catch {
       return { ...DEFAULT_FACTS };
     }
   }
@@ -133,27 +126,22 @@ export class GithubAdvancedSecurityUtils {
    * @param entity - The entity reference for which to fetch check results
    * @return A promise that resolves to an object containing GitHub security check results
    */
-  async getGitHubSecurityChecks(api: TechInsightsApi, entity: CompoundEntityRef): Promise<GitHubSecurityChecks> {
+  async getGitHubSecurityChecks(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<GitHubSecurityChecks> {
     try {
-      console.log(
-        'Fetching GitHub Security checks for entity:',
-        stringifyEntityRef(entity),
-      );
-
       const checkResults = await api.runChecks(entity);
 
-      const secretCheck = checkResults.find(r => r.check.id === 'open-secret-scanning-alert-count');
-      const criticalCheck = checkResults.find(r => r.check.id === 'critical-count');
+      const secretCheck = checkResults.find(
+        r => r.check.id === 'open-secret-scanning-alert-count',
+      );
+      const criticalCheck = checkResults.find(
+        r => r.check.id === 'critical-count',
+      );
       const highCheck = checkResults.find(r => r.check.id === 'high-count');
       const mediumCheck = checkResults.find(r => r.check.id === 'medium-count');
       const lowCheck = checkResults.find(r => r.check.id === 'low-count');
-
-      // Log the results of the checks for debugging
-      console.log("Result from secret checks:", secretCheck?.result);
-      console.log("Result from medium checks:", mediumCheck?.result);
-      console.log("Result from high checks:", highCheck?.result);
-      console.log("Result from critical checks:", criticalCheck?.result);
-      console.log("Result from low checks:", lowCheck?.result);
 
       return {
         criticalCheck: Boolean(criticalCheck?.result ?? false),
@@ -162,12 +150,7 @@ export class GithubAdvancedSecurityUtils {
         lowCheck: Boolean(lowCheck?.result ?? false),
         secretCheck: Boolean(secretCheck?.result ?? false),
       };
-    } catch (error) {
-      console.error(
-        'Error fetching GitHub Security checks for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
+    } catch {
       return { ...DEFAULT_CHECKS };
     }
   }
@@ -178,7 +161,10 @@ export class GithubAdvancedSecurityUtils {
    * @param entity - The entity reference for which to fetch data
    * @return A promise that resolves to an object containing both facts and checks
    */
-  async getGitHubSecurityData(api: TechInsightsApi, entity: CompoundEntityRef): Promise<GitHubSecurityData> {
+  async getGitHubSecurityData(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<GitHubSecurityData> {
     const [facts, checks] = await Promise.all([
       this.getGitHubSecurityFacts(api, entity),
       this.getGitHubSecurityChecks(api, entity),

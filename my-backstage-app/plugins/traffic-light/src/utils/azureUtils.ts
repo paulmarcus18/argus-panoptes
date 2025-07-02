@@ -1,7 +1,4 @@
-import {
-  CompoundEntityRef,
-  stringifyEntityRef,
-} from '@backstage/catalog-model';
+import { CompoundEntityRef } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
 /**
@@ -31,14 +28,17 @@ const DEFAULT_CHECKS: AzureDevOpsBugChecks = {
  * facts and checks.
  */
 export class AzureUtils {
-
-
   /**
    * Fetches the Azure DevOps bug facts for the given entity.
    */
-  async getAzureDevOpsBugFacts(api: TechInsightsApi, entity: CompoundEntityRef): Promise<AzureDevOpsBugMetrics> {
+  async getAzureDevOpsBugFacts(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<AzureDevOpsBugMetrics> {
     try {
-      const response = await api.getFacts(entity, ['azure-devops-bugs-retriever']);
+      const response = await api.getFacts(entity, [
+        'azure-devops-bugs-retriever',
+      ]);
 
       const facts = response?.['azure-devops-bugs-retriever']?.facts;
 
@@ -49,12 +49,7 @@ export class AzureUtils {
       const bugCount = Number(facts.azure_bug_count ?? 0);
 
       return { azureBugCount: bugCount };
-    } catch (error) {
-      console.error(
-        'Error fetching Azure DevOps facts for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
+    } catch {
       return { ...DEFAULT_METRICS };
     }
   }
@@ -62,24 +57,19 @@ export class AzureUtils {
   /**
    * Runs the Azure DevOps bug‑count Tech‑Insights check.
    */
-  async getAzureDevOpsBugChecks(api: TechInsightsApi, entity: CompoundEntityRef): Promise<AzureDevOpsBugChecks> {
+  async getAzureDevOpsBugChecks(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<AzureDevOpsBugChecks> {
     try {
       const checkResults = await api.runChecks(entity);
 
-      const bugCheck = checkResults.find(
-        r => r.check.id === 'azure-bugs',
-      );
-
+      const bugCheck = checkResults.find(r => r.check.id === 'azure-bugs');
 
       return {
         bugCountCheck: bugCheck?.result === true,
       };
-    } catch (error) {
-      console.error(
-        'Error running Azure DevOps bug check for entity:',
-        stringifyEntityRef(entity),
-        error,
-      );
+    } catch {
       return { ...DEFAULT_CHECKS };
     }
   }

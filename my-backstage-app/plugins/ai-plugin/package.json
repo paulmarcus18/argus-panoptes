@@ -17,21 +17,27 @@
   "scripts": {
     "start": "backstage-cli package start",
     "build": "backstage-cli package build",
-    "lint": "backstage-cli package lint",
+    "lint": "backstage-cli package lint --since origin/main",
+    "lint:all": "backstage-cli package lint",
     "test": "backstage-cli package test",
     "clean": "backstage-cli package clean",
     "prepack": "backstage-cli package prepack",
-    "postpack": "backstage-cli package postpack"
+    "postpack": "backstage-cli package postpack",
+    "tsc": "tsc",
+    "tsc:full": "tsc --skipLibCheck false --incremental false"
   },
   "dependencies": {
     "@backstage/core-components": "^0.17.1",
     "@backstage/core-plugin-api": "^1.10.6",
+    "@backstage/plugin-catalog-react": "^1.17.0",
+    "@backstage/plugin-tech-insights": "^0.3.27",
     "@backstage/theme": "^0.6.5",
+    "@emotion/react": "^11.14.0",
     "@material-ui/core": "^4.9.13",
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.61",
-    "@mui/icons-material": "^7.1.1",
-    "@mui/material": "^7.1.1",
+    "@mui/icons-material": "^7.0.2",
+    "@mui/material": "^5.17.1",
     "react-use": "^17.2.4"
   },
   "peerDependencies": {
@@ -42,7 +48,6 @@
     "@backstage/cli": "^0.32.0",
     "@backstage/core-app-api": "^1.16.1",
     "@backstage/dev-utils": "^1.1.9",
-    "@backstage/plugin-tech-insights": "^0.3.27",
     "@backstage/test-utils": "^1.7.7",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",

@@ -1,26 +1,23 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useAsync from 'react-use/lib/useAsync';
 import {
   useApi,
   discoveryApiRef,
   fetchApiRef,
 } from '@backstage/core-plugin-api';
-import {
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Typography,
-  Chip,
-  OutlinedInput,
-  Paper,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-} from '@mui/material';
-import { SelectChangeEvent } from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import Paper from '@mui/material/Paper';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Radio from '@mui/material/Radio';
 
 // Type definitions for DORA metrics data
 export type DataPoint = {
@@ -60,16 +57,12 @@ export function useProjects() {
       const response = await fetch(url);
 
       if (!response.ok) {
-        console.error(
-          `Failed to fetch projects: ${response.status} ${response.statusText}`,
-        );
         return [];
       }
 
       const projects = await response.json();
       return Array.isArray(projects) ? projects : [];
-    } catch (error) {
-      console.error('Error fetching projects:', error);
+    } catch {
       return [];
     }
   }, []);
@@ -134,9 +127,6 @@ export function useMetricsData(
             const response = await fetch(url);
 
             if (!response.ok) {
-              console.error(
-                `Failed to fetch ${metric.label}: ${response.status} ${response.statusText}`,
-              );
               return {
                 id: metric.id,
                 dataPoints: [],
@@ -146,22 +136,17 @@ export function useMetricsData(
             const json = await response.json();
 
             // Transform API response to DataPoint format
-            const dataPoints: DataPoint[] = (json || []).map((dp: any) => {
+            const dataPoints: DataPoint[] = (json ?? []).map((dp: any) => {
               let date: Date | undefined;
-              try {
-                if (dp.data_key) {
-                  if (aggregation === 'daily') {
-                    // Daily format: YYYY-MM-DD
-                    date = new Date(dp.data_key + 'T00:00:00');
-                  } else {
-                    // Monthly format: YYYY-MM
-                    date = new Date(dp.data_key + '-01T00:00:00');
-                  }
+
+              if (dp.data_key) {
+                if (aggregation === 'daily') {
+                  // Daily format: YYYY-MM-DD
+                  date = new Date(`${dp.data_key}T00:00:00`);
+                } else {
+                  // Monthly format: YYYY-MM
+                  date = new Date(`${dp.data_key}-01T00:00:00`);
                 }
-              } catch (e) {
-                console.warn(
-                  `Failed to parse date from data_key: ${dp.data_key}`,
-                );
               }
 
               return {
@@ -181,8 +166,7 @@ export function useMetricsData(
               id: metric.id,
               dataPoints,
             };
-          } catch (error) {
-            console.error(`Error fetching ${metric.label}:`, error);
+          } catch {
             return {
               id: metric.id,
               dataPoints: [],
@@ -192,8 +176,7 @@ export function useMetricsData(
       );
 
       return results;
-    } catch (error) {
-      console.error('Error in useMetricsData:', error);
+    } catch {
       return [];
     }
   }, [
@@ -204,11 +187,10 @@ export function useMetricsData(
   ]);
 }
 
-/**
- * Example component demonstrating how to fetch and display DORA metrics data
+/*
  * This component provides a UI for selecting projects, aggregation type, and viewing the raw data
  */
-export const ExampleFetchComponent = () => {
+export const FetchMetricsComponent = () => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [aggregation, setAggregation] = useState<'daily' | 'monthly'>(
     'monthly',
@@ -223,7 +205,7 @@ export const ExampleFetchComponent = () => {
   } = useProjects();
 
   // Auto-select first project when projects are loaded
-  React.useEffect(() => {
+  useEffect(() => {
     if (
       availableProjects &&
       availableProjects.length > 0 &&
@@ -387,8 +369,8 @@ export const ExampleFetchComponent = () => {
             input={<OutlinedInput label="Select Projects" />}
             renderValue={selected => (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {selected.map(value => (
-                  <Chip key={value} label={value} size="small" />
+                {selected.map(project => (
+                  <Chip key={project} label={project} size="small" />
                 ))}
               </Box>
             )}

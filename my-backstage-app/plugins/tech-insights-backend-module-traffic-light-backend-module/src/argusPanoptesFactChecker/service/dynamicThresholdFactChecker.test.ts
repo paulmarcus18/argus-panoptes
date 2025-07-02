@@ -1,4 +1,8 @@
-import { DynamicThresholdFactChecker, DynamicThresholdCheck, DynamicThresholdFactCheckerFactory } from './dynamicThresholdFactChecker';
+import {
+  DynamicThresholdFactChecker,
+  DynamicThresholdCheck,
+  DynamicThresholdFactCheckerFactory,
+} from './dynamicThresholdFactChecker';
 import { TechInsightsStore } from '@backstage-community/plugin-tech-insights-node';
 import { CatalogApi } from '@backstage/catalog-client';
 import { LoggerService } from '@backstage/backend-plugin-api';
@@ -24,7 +28,7 @@ describe('DynamicThresholdFactChecker', () => {
     removeLocationById: jest.fn(),
     getOriginLocationByEntity: jest.fn(),
   } as unknown as jest.Mocked<CatalogApi>;
-  
+
   // Mocking the TechInsightsStore
   const mockRepository = {
     getLatestFactsByIds: jest.fn(),
@@ -34,7 +38,7 @@ describe('DynamicThresholdFactChecker', () => {
     insertFactSchema: jest.fn(),
     getLatestSchemas: jest.fn(),
   } as jest.Mocked<TechInsightsStore>;
-  
+
   // Mocking the LoggerService
   const mockLogger = {
     info: jest.fn(),
@@ -43,7 +47,7 @@ describe('DynamicThresholdFactChecker', () => {
     debug: jest.fn(),
     child: jest.fn(),
   } as jest.Mocked<LoggerService>;
-  
+
   // Sample checks for testing
   const sampleChecks: DynamicThresholdCheck[] = [
     {
@@ -63,21 +67,21 @@ describe('DynamicThresholdFactChecker', () => {
       annotationKeyThreshold: 'backstage.io/another-threshold',
       annotationKeyOperator: 'backstage.io/another-operator',
       description: 'Another test dynamic threshold check',
-    }
+    },
   ];
-  
+
   let factChecker: DynamicThresholdFactChecker;
-  
+
   beforeEach(() => {
     jest.clearAllMocks();
     factChecker = new DynamicThresholdFactChecker(
       mockCatalogApi,
       mockRepository,
       mockLogger,
-      sampleChecks
+      sampleChecks,
     );
   });
-  
+
   describe('runChecks', () => {
     // Sample entity reference and entities for testing
     const testEntityRef = 'component:default/test-component';
@@ -93,7 +97,7 @@ describe('DynamicThresholdFactChecker', () => {
         system: 'test-system',
       },
     };
-    
+
     // Sample system entity with annotations for testing
     const testSystemEntity: Entity = {
       apiVersion: 'backstage.io/v1alpha1',
@@ -114,33 +118,36 @@ describe('DynamicThresholdFactChecker', () => {
     // Test: error is thrown when entity is not found
     test('throws error when entity not found', async () => {
       mockCatalogApi.getEntityByRef.mockResolvedValueOnce(undefined);
-      
+
       await expect(factChecker.runChecks(testEntityRef)).rejects.toThrow(
-        `Entity not found: ${testEntityRef}`
+        `Entity not found: ${testEntityRef}`,
       );
     });
-    
-    // TestL error is thrown when system name is not specified
+
+    // Test: error is thrown when system name is not specified
     test('throws error when component does not specify a system', async () => {
-      const entityWithoutSystem = { ...testComponentEntity, spec: { type: 'service' } };
+      const entityWithoutSystem = {
+        ...testComponentEntity,
+        spec: { type: 'service' },
+      };
       mockCatalogApi.getEntityByRef.mockResolvedValueOnce(entityWithoutSystem);
-      
+
       await expect(factChecker.runChecks(testEntityRef)).rejects.toThrow(
-        `Component test-component does not specify a system.`
+        `The 'spec.system' field for entity '${testEntityRef}' is missing, empty, or not a string.`,
       );
     });
-    
+
     // Test: error is thrown when system entity is not found
     test('throws error when system entity not found', async () => {
       mockCatalogApi.getEntityByRef
         .mockResolvedValueOnce(testComponentEntity)
         .mockResolvedValueOnce(undefined);
-      
+
       await expect(factChecker.runChecks(testEntityRef)).rejects.toThrow(
-        `System entity 'test-system' not found in catalog.`
+        `System entity 'test-system' not found in catalog.`,
       );
     });
-    
+
     // Test: a warning is logged when the system entity does not have the required annotations
     test('handles missing threshold annotation', async () => {
       // System entity without threshold annotation
@@ -151,11 +158,11 @@ describe('DynamicThresholdFactChecker', () => {
           annotations: {},
         },
       };
-      
+
       mockCatalogApi.getEntityByRef
         .mockResolvedValueOnce(testComponentEntity)
         .mockResolvedValueOnce(systemEntityWithoutThreshold);
-      
+
       mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
         'test-fact-retriever': {
           id: 'test-fact-retriever',
@@ -169,9 +176,9 @@ describe('DynamicThresholdFactChecker', () => {
           },
         },
       });
-      
+
       const results = await factChecker.runChecks(testEntityRef);
-      
+
       expect(results).toHaveLength(2);
       expect(results[0].result).toBe(false); // Should fail due to missing threshold
       expect(mockLogger.warn).toHaveBeenCalled();
@@ -190,45 +197,49 @@ describe('DynamicThresholdFactChecker', () => {
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 85, // Should pass: 85 > 80
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(true);
         expect(results[0].facts['test-fact-retriever'].value).toBe(85);
       });
-      
+
       // Test: greaterThan operator returns false when value is less than or equal to the threshold
       test('greaterThan operator returns false when value is less than or equal to the threshold', async () => {
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 80, // Should fail: 80 == 80, not greater
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(false);
       });
-      
+
       // Test: greaterThanInclusive operator returns true when value is greater than or equal to the threshold
       test('evaluates greaterThanInclusive operator correctly', async () => {
         // Override the operator for this test
@@ -242,76 +253,82 @@ describe('DynamicThresholdFactChecker', () => {
             },
           },
         };
-        
+
         mockCatalogApi.getEntityByRef
           .mockReset()
           .mockResolvedValueOnce(testComponentEntity)
           .mockResolvedValueOnce(systemEntityWithInclusive);
-          
+
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 80, // Should pass: 80 >= 80
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(true);
       });
-      
+
       // Test: lessThan operator returns true when value is less than the threshold
       test('evaluates lessThan operator correctly', async () => {
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-2': 5, // Should pass: 5 < 10
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-2']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-2',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(true);
       });
-      
+
       // Test: lessThan operator returns false when value is greater than or equal to the threshold
       test('lessThan operator returns false when value is greater than or equal to threshold', async () => {
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-2': 10, // Should fail: 10 == 10, not less
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-2']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-2',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(false);
       });
-      
+
       // Test: lessThanInclusive operator returns true when value is less than or equal to the threshold
       test('evaluates lessThanInclusive operator correctly', async () => {
         // Override the operator for this test
@@ -325,32 +342,34 @@ describe('DynamicThresholdFactChecker', () => {
             },
           },
         };
-        
+
         mockCatalogApi.getEntityByRef
           .mockReset()
           .mockResolvedValueOnce(testComponentEntity)
           .mockResolvedValueOnce(systemEntityWithInclusive);
-          
+
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-2': 10, // Should pass: 10 <= 10
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-2']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-2',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(true);
       });
-      
+
       // Test: equal operator returns true when value is equal to the threshold
       test('evaluates equal operator correctly with numbers when equality is satisfied', async () => {
         // Override the operator for this test
@@ -364,32 +383,34 @@ describe('DynamicThresholdFactChecker', () => {
             },
           },
         };
-        
+
         mockCatalogApi.getEntityByRef
           .mockReset()
           .mockResolvedValueOnce(testComponentEntity)
           .mockResolvedValueOnce(systemEntityWithEqualOp);
-          
+
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 80, // Should pass: 80 == 80
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(true);
       });
-      
+
       // Test: equal operator returns false when value is not equal to the threshold
       test('evaluates equal operator correctly with numbers when equality is not satisfied', async () => {
         // Override the operator for this test
@@ -403,28 +424,30 @@ describe('DynamicThresholdFactChecker', () => {
             },
           },
         };
-        
+
         mockCatalogApi.getEntityByRef
           .mockReset()
           .mockResolvedValueOnce(testComponentEntity)
           .mockResolvedValueOnce(systemEntityWithEqualOp);
-          
+
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 83, // Should not pass: 83 !== 80
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(false);
       });
@@ -442,28 +465,30 @@ describe('DynamicThresholdFactChecker', () => {
             },
           },
         };
-        
+
         mockCatalogApi.getEntityByRef
           .mockReset()
           .mockResolvedValueOnce(testComponentEntity)
           .mockResolvedValueOnce(systemEntityWithNotEqualOp);
-          
+
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 85, // Should pass: 85 != 80
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(true);
       });
@@ -481,33 +506,35 @@ describe('DynamicThresholdFactChecker', () => {
             },
           },
         };
-        
+
         mockCatalogApi.getEntityByRef
           .mockReset()
           .mockResolvedValueOnce(testComponentEntity)
           .mockResolvedValueOnce(systemEntityWithNotEqualOp);
-          
+
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 80, // Should not pass: 80 == 80
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(false);
       });
     });
-    
+
     // Tests for string value thresholds
     describe('string value tests', () => {
       const systemEntityWithStringThreshold = {
@@ -533,44 +560,52 @@ describe('DynamicThresholdFactChecker', () => {
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 'production', // Should pass: 'production' === 'production'
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(true);
-        expect(results[0].facts['test-fact-retriever'].value).toBe('production');
+        expect(results[0].facts['test-fact-retriever'].value).toBe(
+          'production',
+        );
       });
-      
+
       // Test: equal operator returns false when string value is not equal to the threshold
       test('evaluates equal operator correctly with strings when values do not match', async () => {
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 'development', // Should not pass: 'development' !== 'production'
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(false);
-        expect(results[0].facts['test-fact-retriever'].value).toBe('development');
+        expect(results[0].facts['test-fact-retriever'].value).toBe(
+          'development',
+        );
       });
 
       // Test: notEqual operator returns true when string value is not equal to the threshold
@@ -585,28 +620,30 @@ describe('DynamicThresholdFactChecker', () => {
             },
           },
         };
-        
+
         mockCatalogApi.getEntityByRef
           .mockReset()
           .mockResolvedValueOnce(testComponentEntity)
           .mockResolvedValueOnce(systemEntityWithNotEqualOp);
-          
+
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 'development', // Should pass: 'development' !== 'production'
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(true);
       });
@@ -623,33 +660,35 @@ describe('DynamicThresholdFactChecker', () => {
             },
           },
         };
-        
+
         mockCatalogApi.getEntityByRef
           .mockReset()
           .mockResolvedValueOnce(testComponentEntity)
           .mockResolvedValueOnce(systemEntityWithNotEqualOp);
-          
+
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 'production', // Should not pass: 'production' == 'production'
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(false);
       });
     });
-    
+
     describe('special value handling', () => {
       beforeEach(() => {
         mockCatalogApi.getEntityByRef
@@ -663,70 +702,78 @@ describe('DynamicThresholdFactChecker', () => {
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               // test-fact-1 is missing
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(false);
       });
-      
+
       // Test: checker handles array fact values correctly
       test('handles array fact values', async () => {
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': ['item1', 'item2'], // Array value
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         // Arrays should be converted to strings for the facts output
-        expect(results[0].facts['test-fact-retriever'].value).toBe('item1,item2');
+        expect(results[0].facts['test-fact-retriever'].value).toBe(
+          'item1,item2',
+        );
         // But the check should fail as we can't compare array to number
         expect(results[0].result).toBe(false);
       });
-      
+
       // Test: checker handles empty array fact values correctly
       test('handles empty array fact values', async () => {
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': [], // Empty array
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         // Empty arrays should remain as empty arrays
         expect(results[0].facts['test-fact-retriever'].value).toEqual([]);
         // But the check should fail
         expect(results[0].result).toBe(false);
       });
-      
+
       // Test: checker handles unknown operators gracefully
       test('handles unknown operators', async () => {
         const systemEntityWithInvalidOp = {
@@ -739,32 +786,34 @@ describe('DynamicThresholdFactChecker', () => {
             },
           },
         };
-        
+
         mockCatalogApi.getEntityByRef
           .mockReset()
           .mockResolvedValueOnce(testComponentEntity)
           .mockResolvedValueOnce(systemEntityWithInvalidOp);
-          
+
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 85,
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(false); // Unknown operator should default to false
       });
-      
+
       // Test: checker handles invalid threshold value
       test('handles invalid threshold value', async () => {
         const systemEntityWithInvalidThreshold = {
@@ -777,61 +826,65 @@ describe('DynamicThresholdFactChecker', () => {
             },
           },
         };
-        
+
         mockCatalogApi.getEntityByRef
           .mockReset()
           .mockResolvedValueOnce(testComponentEntity)
           .mockResolvedValueOnce(systemEntityWithInvalidThreshold);
-          
+
         mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
           'test-fact-retriever': {
             id: 'test-fact-retriever',
             entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
+              kind: 'Component',
+              name: 'test-component',
+              namespace: 'default',
             },
             facts: {
               'test-fact-1': 85, // Numeric value
             },
           },
         });
-        
-        const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-        
+
+        const results = await factChecker.runChecks(testEntityRef, [
+          'test-check-1',
+        ]);
+
         expect(results).toHaveLength(1);
         expect(results[0].result).toBe(false); // Should fail due to type mismatch
       });
     });
-    
+
     // Test: checker filters checks by provided checkIds
     test('filters checks by provided checkIds', async () => {
       mockCatalogApi.getEntityByRef
         .mockResolvedValueOnce(testComponentEntity)
         .mockResolvedValueOnce(testSystemEntity);
-        
+
       mockRepository.getLatestFactsByIds.mockResolvedValueOnce({
         'test-fact-retriever': {
           id: 'test-fact-retriever',
           entity: {
-                kind: 'Component',
-                name: 'test-component',
-                namespace: 'default',
-            },
+            kind: 'Component',
+            name: 'test-component',
+            namespace: 'default',
+          },
           facts: {
             'test-fact-1': 85,
             'test-fact-2': 5,
           },
         },
       });
-      
-      const results = await factChecker.runChecks(testEntityRef, ['test-check-1']);
-      
+
+      const results = await factChecker.runChecks(testEntityRef, [
+        'test-check-1',
+      ]);
+
       expect(results).toHaveLength(1);
       expect(results[0].check.id).toBe('test-check-1');
     });
   });
-  
+
   describe('validate', () => {
     // Test: validate method for well-formed checks
     test('returns valid for a well-formed check', async () => {
@@ -839,7 +892,7 @@ describe('DynamicThresholdFactChecker', () => {
       expect(result.valid).toBe(true);
       expect(result.message).toBeUndefined();
     });
-    
+
     // Test: validate method for checks with missing required fields
     test('returns invalid for a check missing factIds', async () => {
       const invalidCheck = { ...sampleChecks[0], factIds: [] };
@@ -847,7 +900,7 @@ describe('DynamicThresholdFactChecker', () => {
       expect(result.valid).toBe(false);
       expect(result.message).toContain('must have a valid factId');
     });
-    
+
     // Test: validate method for checks with invalid factIds
     test('returns invalid for a check missing annotationKeyThreshold', async () => {
       const invalidCheck = { ...sampleChecks[0], annotationKeyThreshold: '' };
@@ -855,7 +908,7 @@ describe('DynamicThresholdFactChecker', () => {
       expect(result.valid).toBe(false);
       expect(result.message).toContain('must have a valid factId');
     });
-    
+
     // Test: validate method for checks with invalid annotationKeyOperator
     test('returns invalid for a check missing annotationKeyOperator', async () => {
       const invalidCheck = { ...sampleChecks[0], annotationKeyOperator: '' };
@@ -864,7 +917,7 @@ describe('DynamicThresholdFactChecker', () => {
       expect(result.message).toContain('must have a valid factId');
     });
   });
-  
+
   describe('getChecks', () => {
     // Test: getChecks method returns all configured checks
     test('returns all configured checks', async () => {
@@ -873,7 +926,7 @@ describe('DynamicThresholdFactChecker', () => {
       expect(checks).toHaveLength(2);
     });
   });
-  
+
   describe('DynamicThresholdFactCheckerFactory', () => {
     // Test: factory constructs a DynamicThresholdFactChecker with provided options
     test('constructs a DynamicThresholdFactChecker with provided options', () => {
@@ -882,9 +935,9 @@ describe('DynamicThresholdFactChecker', () => {
         logger: mockLogger,
         catalogApi: mockCatalogApi,
       });
-      
+
       const checker = factory.construct(mockRepository);
-      
+
       expect(checker).toBeInstanceOf(DynamicThresholdFactChecker);
     });
   });

@@ -1,26 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  Grid,
-  MenuItem,
-  Select,
-  Typography,
-  Box,
-  FormControl,
-  InputLabel,
-  Paper,
-  FormControlLabel,
-  Switch,
-  Button,
-  OutlinedInput,
-  Checkbox,
-  ListItemText,
-  RadioGroup,
-  Radio,
-  IconButton,
-  Tooltip,
-  Menu,
-  CircularProgress,
-} from '@mui/material';
+import { useState, useEffect, useRef } from 'react';
+import Grid from '@mui/material/Grid';
+import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Paper from '@mui/material/Paper';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+import Button from '@mui/material/Button';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import Checkbox from '@mui/material/Checkbox';
+import ListItemText from '@mui/material/ListItemText';
+import RadioGroup from '@mui/material/RadioGroup';
+import Radio from '@mui/material/Radio';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Menu from '@mui/material/Menu';
+import CircularProgress from '@mui/material/CircularProgress';
 import { FileDownload, PictureAsPdf, ImageOutlined } from '@mui/icons-material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -28,9 +25,9 @@ import { Progress, ResponseErrorPanel } from '@backstage/core-components';
 import {
   useMetricsData,
   useProjects,
-} from './ExampleFetchComponent/ExampleFetchComponent';
+} from './FetchMetricsComponent/FetchMetricsComponent';
 import { MetricChart } from './MetricChart';
-import { SelectChangeEvent } from '@mui/material';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 // Metric types
 type MetricType = {
@@ -92,7 +89,7 @@ export const DoraDashboard = () => {
     const endDate = new Date();
     const startDate = new Date();
     const defaultDays =
-      AGGREGATION_OPTIONS.find(opt => opt.value === aggType)?.defaultDays || 30;
+      AGGREGATION_OPTIONS.find(opt => opt.value === aggType)?.defaultDays ?? 30;
     startDate.setDate(startDate.getDate() - defaultDays);
     return { startDate, endDate };
   };
@@ -139,8 +136,8 @@ export const DoraDashboard = () => {
 
   const {
     value: metricsData,
-    loading,
-    error,
+    loading: metricsLoading,
+    error: metricsError,
   } = useMetricsData(
     aggregation,
     filterDates.start,
@@ -178,9 +175,9 @@ export const DoraDashboard = () => {
 
     if (newValue.includes('all')) {
       const allSelected =
-        selectedProjects.length === (availableProjects?.length || 0);
+        selectedProjects.length === (availableProjects?.length ?? 0);
       // Toggle behavior:
-      setSelectedProjects(allSelected ? [] : availableProjects || []);
+      setSelectedProjects(allSelected ? [] : availableProjects ?? []);
     } else {
       setSelectedProjects(newValue);
     }
@@ -201,37 +198,11 @@ export const DoraDashboard = () => {
   const handleApplyDateFilter = () => {
     if (startDate && endDate) {
       if (new Date(startDate) > new Date(endDate)) {
-        alert('Start date must be before end date');
         return;
       }
 
-      // Validate date range based on aggregation type
-      const daysDiff = Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
       setFilterDates({ start: startDate, end: endDate });
-    } else {
-      alert('Please select both start and end dates');
     }
-  };
-
-  const formatDateRange = () => {
-    const start = filterDates.start || startDate;
-    const end = filterDates.end || endDate;
-
-    if (!start || !end) return 'No date range selected';
-
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    };
-
-    return `${start.toLocaleDateString(
-      'en-US',
-      options,
-    )} - ${end.toLocaleDateString('en-US', options)}`;
   };
 
   // Export functions
@@ -293,9 +264,6 @@ export const DoraDashboard = () => {
         .slice(0, 19)
         .replace(/[:.]/g, '-');
       downloadFile(blob, `dora-dashboard-${timestamp}.svg`);
-    } catch (error) {
-      console.error('Error exporting as SVG:', error);
-      alert('Failed to export as SVG. Please try again.');
     } finally {
       setIsExporting(false);
     }
@@ -310,7 +278,7 @@ export const DoraDashboard = () => {
     try {
       // Import libraries dynamically
       const html2canvas = (await import('html2canvas')).default;
-      const jsPDF = (await import('jspdf')).jsPDF;
+      const { default: JSPDF } = await import('jspdf');
 
       // Create canvas from the dashboard
       const canvas = await html2canvas(dashboardRef.current, {
@@ -321,7 +289,7 @@ export const DoraDashboard = () => {
       });
 
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
+      const pdf = new JSPDF({
         orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
         unit: 'px',
         format: [canvas.width, canvas.height],
@@ -334,9 +302,6 @@ export const DoraDashboard = () => {
         .slice(0, 19)
         .replace(/[:.]/g, '-');
       pdf.save(`dora-dashboard-${timestamp}.pdf`);
-    } catch (error) {
-      console.error('Error exporting as PDF:', error);
-      alert('Failed to export as PDF. Please try again.');
     } finally {
       setIsExporting(false);
     }
@@ -367,9 +332,6 @@ export const DoraDashboard = () => {
           downloadFile(blob, `dora-dashboard-${timestamp}.png`);
         }
       }, 'image/png');
-    } catch (error) {
-      console.error('Error exporting as image:', error);
-      alert('Failed to export as image. Please try again.');
     } finally {
       setIsExporting(false);
     }
@@ -377,8 +339,8 @@ export const DoraDashboard = () => {
 
   if (projectsLoading) return <Progress />;
   if (projectsError) return <ResponseErrorPanel error={projectsError} />;
-  if (loading) return <Progress />;
-  if (error) return <ResponseErrorPanel error={error} />;
+  if (metricsLoading) return <Progress />;
+  if (metricsError) return <ResponseErrorPanel error={metricsError} />;
 
   return (
     <Box sx={{ width: '100%' }} ref={dashboardRef}>
@@ -411,7 +373,10 @@ export const DoraDashboard = () => {
               sx={{
                 border: 1,
                 borderColor: 'primary.main',
-                '&:hover': { backgroundColor: 'primary.main', color: 'white' },
+                '&:hover': {
+                  backgroundColor: 'primary.main',
+                  color: 'white',
+                },
               }}
             >
               <FileDownload />
@@ -421,8 +386,10 @@ export const DoraDashboard = () => {
             anchorEl={exportMenuAnchor}
             open={Boolean(exportMenuAnchor)}
             onClose={handleExportClose}
-            PaperProps={{
-              sx: { mt: 1 },
+            slotProps={{
+              paper: {
+                sx: { mt: 1 },
+              },
             }}
           >
             <MenuItem onClick={exportAsPDF} disabled={isExporting}>
@@ -492,7 +459,7 @@ export const DoraDashboard = () => {
                 input={<OutlinedInput label="Projects" />}
                 renderValue={selected => {
                   if (selected.length === 0) return 'No projects selected';
-                  if (selected.length === (availableProjects?.length || 0))
+                  if (selected.length === (availableProjects?.length ?? 0))
                     return 'All Projects';
                   if (selected.length === 1) return selected[0];
                   return `${selected.length} projects selected`;
@@ -502,7 +469,7 @@ export const DoraDashboard = () => {
                   <Checkbox
                     checked={
                       selectedProjects.length ===
-                      (availableProjects?.length || 0)
+                      (availableProjects?.length ?? 0)
                     }
                   />
                   <ListItemText primary="All Projects" />

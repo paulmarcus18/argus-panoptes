@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Entity } from '@backstage/catalog-model';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -7,11 +7,27 @@ import { FoundationTrafficLight } from '../FoundationTrafficLight';
 import { determineSemaphoreColor } from '../../utils';
 import { FoundationUtils } from '../../../utils/foundationUtils';
 
+// Mock the BaseTrafficLight component
 jest.mock('../BaseTrafficLight', () => ({
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
-    <div data-testid="base-traffic-light" data-color={color} data-tooltip={tooltip} onClick={onClick}>
+    <button
+      type="button"
+      data-testid="base-traffic-light"
+      data-color={color}
+      data-tooltip={tooltip}
+      onClick={onClick}
+      style={{
+        border: 'none',
+        borderRadius: '50%',
+        width: '50px',
+        height: '50px',
+        backgroundColor: color ?? 'gray',
+        cursor: 'pointer',
+        padding: 0,
+      }}
+    >
       Traffic Light: {color}
-    </div>
+    </button>
   ),
 }));
 
@@ -70,7 +86,9 @@ describe('FoundationTrafficLight', () => {
       }),
     };
 
-    (FoundationUtils as jest.Mock).mockImplementation(() => mockFoundationUtils);
+    (FoundationUtils as jest.Mock).mockImplementation(
+      () => mockFoundationUtils,
+    );
 
     (determineSemaphoreColor as jest.Mock).mockReturnValue({
       color: 'green',
@@ -91,20 +109,21 @@ describe('FoundationTrafficLight', () => {
         ]}
       >
         <FoundationTrafficLight entities={entities} onClick={onClick} />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
 
   it('shows initial loading state', () => {
     renderComponent();
     const light = screen.getByTestId('base-traffic-light');
     expect(light).toHaveAttribute('data-color', 'white');
-    expect(light).toHaveAttribute('data-tooltip', 'Loading Foundation pipeline data...');
+    expect(light).toHaveAttribute(
+      'data-tooltip',
+      'Loading Foundation pipeline data...',
+    );
   });
 
   it('handles empty entities', async () => {
-    await act(async () => {
-      renderComponent([]);
-    });
+    renderComponent([]);
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'gray');
@@ -113,9 +132,7 @@ describe('FoundationTrafficLight', () => {
   });
 
   it('uses system annotation threshold and configured repos', async () => {
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -124,25 +141,23 @@ describe('FoundationTrafficLight', () => {
         name: 'some-system',
       });
 
-      expect(mockFoundationUtils.getFoundationPipelineChecks).toHaveBeenCalledWith(
-        mockTechInsightsApi,
-        {
-          kind: 'Component',
-          namespace: 'default',
-          name: 'test-service',
-        },
-      );
+      expect(
+        mockFoundationUtils.getFoundationPipelineChecks,
+      ).toHaveBeenCalledWith(mockTechInsightsApi, {
+        kind: 'Component',
+        namespace: 'default',
+        name: 'test-service',
+      });
 
       expect(determineSemaphoreColor).toHaveBeenCalledWith(0, 1, 0.5);
     });
   });
 
   it('falls back to default threshold when not present', async () => {
-    mockCatalogApi.getEntityByRef.mockResolvedValueOnce({ metadata: { annotations: {} } });
-
-    await act(async () => {
-      renderComponent();
+    mockCatalogApi.getEntityByRef.mockResolvedValueOnce({
+      metadata: { annotations: {} },
     });
+    renderComponent();
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(0, 1, 0.33);
@@ -155,13 +170,15 @@ describe('FoundationTrafficLight', () => {
       metadata: { name: 'not-configured', namespace: 'default' },
     });
 
-    await act(async () => {
-      renderComponent(mockEntities);
-    });
+    renderComponent(mockEntities);
 
     await waitFor(() => {
-      expect(mockFoundationUtils.getFoundationPipelineChecks).toHaveBeenCalledTimes(1);
-      expect(mockFoundationUtils.getFoundationPipelineChecks).toHaveBeenCalledWith(
+      expect(
+        mockFoundationUtils.getFoundationPipelineChecks,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockFoundationUtils.getFoundationPipelineChecks,
+      ).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ name: 'test-service' }),
       );
@@ -169,71 +186,73 @@ describe('FoundationTrafficLight', () => {
   });
 
   it('uses all entities when no configured repos annotation is present', async () => {
-    delete mockSystemEntity.metadata.annotations['foundation-configured-repositories'];
+    delete mockSystemEntity.metadata.annotations[
+      'foundation-configured-repositories'
+    ];
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
-      expect(mockFoundationUtils.getFoundationPipelineChecks).toHaveBeenCalledTimes(1);
+      expect(
+        mockFoundationUtils.getFoundationPipelineChecks,
+      ).toHaveBeenCalledTimes(1);
     });
   });
 
   it('shows gray when no configured repos match entities', async () => {
-    mockSystemEntity.metadata.annotations['foundation-configured-repositories'] = 'nonexistent';
+    mockSystemEntity.metadata.annotations[
+      'foundation-configured-repositories'
+    ] = 'nonexistent';
 
-    await act(async () => {
-      renderComponent();
-    });
-
+    renderComponent();
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'gray');
-      expect(light).toHaveAttribute('data-tooltip', 'No configured repositories found for foundation checks');
+      expect(light).toHaveAttribute(
+        'data-tooltip',
+        'No configured repositories found for foundation checks',
+      );
     });
   });
 
   it('handles API failure gracefully', async () => {
-    mockFoundationUtils.getFoundationPipelineChecks.mockRejectedValue(new Error('Failure'));
+    mockFoundationUtils.getFoundationPipelineChecks.mockRejectedValue(
+      new Error('Failure'),
+    );
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'gray');
-      expect(light).toHaveAttribute('data-tooltip', 'Error fetching foundation pipeline data');
+      expect(light).toHaveAttribute(
+        'data-tooltip',
+        'Error fetching foundation pipeline data',
+      );
     });
   });
 
   it('handles click event if onClick is provided', async () => {
     const onClick = jest.fn();
 
-    await act(async () => {
-      renderComponent(mockEntities, onClick);
-    });
+    renderComponent(mockEntities, onClick);
 
     const light = await screen.findByTestId('base-traffic-light');
 
-    await act(async () => {
-      light.click();
-    });
-
+    light.click();
     expect(onClick).toHaveBeenCalled();
   });
 
   it('counts failures correctly', async () => {
-    mockFoundationUtils.getFoundationPipelineChecks.mockResolvedValueOnce({ successRateCheck: false });
+    mockFoundationUtils.getFoundationPipelineChecks.mockResolvedValueOnce({
+      successRateCheck: false,
+    });
     (determineSemaphoreColor as jest.Mock).mockReturnValue({
       color: 'red',
       reason: 'Many failures',
     });
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(1, 1, 0.5);

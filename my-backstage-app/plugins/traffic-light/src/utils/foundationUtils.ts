@@ -1,6 +1,4 @@
-import {
-  CompoundEntityRef,
-} from '@backstage/catalog-model';
+import { CompoundEntityRef } from '@backstage/catalog-model';
 import { TechInsightsApi } from '@backstage/plugin-tech-insights';
 
 /**
@@ -44,8 +42,6 @@ const DEFAULT_CHECKS: FoundationPipelineChecks = {
  * evaluating Foundation‑pipeline data.
  */
 export class FoundationUtils {
-
-
   /**
    * Fetches Foundation pipeline facts for a given entity using the Tech Insights API.
    * Returns metrics like total workflow runs, unique workflows, success count, failure count, and success rate.
@@ -54,7 +50,10 @@ export class FoundationUtils {
    * @param entity - The entity reference for which to fetch Foundation pipeline facts.
    * @returns An object containing Foundation pipeline metrics for the entity.
    */
-  async getFoundationPipelineFacts(api: TechInsightsApi, entity: CompoundEntityRef): Promise<FoundationPipelineMetrics> {
+  async getFoundationPipelineFacts(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<FoundationPipelineMetrics> {
     try {
       // fetch Foundation pipeline facts for the given entity
       const response = await api.getFacts(entity, [
@@ -74,8 +73,8 @@ export class FoundationUtils {
         failureWorkflowRunsCount: Number(facts.failureWorkflowRunsCount ?? 0),
         successRate: Number(facts.successRate ?? 0),
       };
-    } catch (error) {
-      return { ...DEFAULT_METRICS }
+    } catch {
+      return { ...DEFAULT_METRICS };
     }
   }
 
@@ -87,7 +86,10 @@ export class FoundationUtils {
    * @param entity - The entity reference for which to fetch Foundation pipeline facts.
    * @returns An object containing the results of the checks.
    */
-  async getFoundationPipelineChecks(api: TechInsightsApi, entity: CompoundEntityRef): Promise<FoundationPipelineChecks> {
+  async getFoundationPipelineChecks(
+    api: TechInsightsApi,
+    entity: CompoundEntityRef,
+  ): Promise<FoundationPipelineChecks> {
     try {
       // fetch Foundation pipeline checks for the given entity
       const checkResults = await api.runChecks(entity);
@@ -103,7 +105,7 @@ export class FoundationUtils {
       return {
         successRateCheck: successRateCheck?.result === true,
       };
-    } catch (error) {
+    } catch {
       return { ...DEFAULT_CHECKS };
     }
   }

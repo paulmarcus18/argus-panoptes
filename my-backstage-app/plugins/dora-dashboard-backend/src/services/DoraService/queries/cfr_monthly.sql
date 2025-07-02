@@ -1,6 +1,4 @@
--- Metric 3: change failure rate per month
 with _deployments as (
-  -- When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last one's finished_date as the finished date.
   SELECT
     cdc.cicd_deployment_id as deployment_id,
     max(cdc.finished_date) as deployment_finished_date
@@ -18,7 +16,6 @@ with _deployments as (
     max(cdc.finished_date) BETWEEN (?) AND (?)
 ),
 _failure_caused_by_deployments as (
-  -- calculate the number of incidents caused by each deployment
   SELECT
     d.deployment_id,
     d.deployment_finished_date,

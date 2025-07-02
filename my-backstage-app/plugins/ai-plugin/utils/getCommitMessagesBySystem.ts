@@ -51,39 +51,39 @@ export async function getCommitMessagesBySystem(
        * Uses the techInsightsApi to retrieve the data saved under
        * id github-commit-message-retriever.
        */
-      try {
-        const facts = await techInsightsApi.getFacts(entityRef, [
-          'github-commit-message-retriever',
-        ]);
+      const facts = await techInsightsApi.getFacts(entityRef, [
+        'github-commit-message-retriever',
+      ]);
 
-        /**
-         * If no facts are stored on a certain entity ref
-         * then no further action is needed and the program breaks.
-         */
-        if (!facts) break;
+      /**
+       * If no facts are stored on a certain entity ref
+       * then no further action is needed and the program breaks.
+       */
+      if (!facts) break;
 
-        /**
-         * The JSON object retrieve is unpacked so that the recent
-         * commit messages can be extracted.
-         */
-        const retriever = facts['github-commit-message-retriever'];
-        const factsForEntity = retriever?.facts;
-        const recentCommitMessages = factsForEntity?.recent_commit_messages;
-        const timestamp = retriever?.timestamp;
+      /**
+       * The JSON object retrieve is unpacked so that the recent
+       * commit messages can be extracted.
+       */
+      const retriever = facts['github-commit-message-retriever'];
+      const factsForEntity = retriever?.facts;
+      const recentCommitMessages = factsForEntity?.recent_commit_messages;
+      const timestamp = retriever?.timestamp;
 
-        /**
-         * If the recent commit messages are not undefines, the allCommitMessages
-         * list is being populated with a new object of the type
-         * CommitsPerRepo.
-         */
-        if (typeof recentCommitMessages === 'string' && timestamp && isToday(timestamp)) {
-          allCommitMessages.push({
-            repoName: entityRef.name,
-            commitMessages: recentCommitMessages,
-          });
-        }
-      } catch (error) {
-        console.error(`Failed to retrieve facts for ${entityRef.name}:`, error);
+      /**
+       * If the recent commit messages are not undefines, the allCommitMessages
+       * list is being populated with a new object of the type
+       * CommitsPerRepo.
+       */
+      if (
+        typeof recentCommitMessages === 'string' &&
+        timestamp &&
+        isToday(timestamp)
+      ) {
+        allCommitMessages.push({
+          repoName: entityRef.name,
+          commitMessages: recentCommitMessages,
+        });
       }
     }
 

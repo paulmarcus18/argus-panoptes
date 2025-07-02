@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Entity } from '@backstage/catalog-model';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -10,14 +10,24 @@ import { ReportingUtils } from '../../../utils/reportingUtils';
 // Mock the BaseTrafficLight component
 jest.mock('../BaseTrafficLight', () => ({
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
-    <div
+    <button
+      type="button"
       data-testid="base-traffic-light"
       data-color={color}
       data-tooltip={tooltip}
       onClick={onClick}
+      style={{
+        border: 'none',
+        borderRadius: '50%',
+        width: '50px',
+        height: '50px',
+        backgroundColor: color ?? 'gray',
+        cursor: 'pointer',
+        padding: 0,
+      }}
     >
       Traffic Light: {color}
-    </div>
+    </button>
   ),
 }));
 
@@ -89,7 +99,10 @@ describe('ReportingTrafficLight Component', () => {
     jest.clearAllMocks();
   });
 
-  const renderComponent = (entities: Entity[] = mockEntities, onClick?: () => void) => {
+  const renderComponent = (
+    entities: Entity[] = mockEntities,
+    onClick?: () => void,
+  ) => {
     return render(
       <TestApiProvider
         apis={[
@@ -98,7 +111,7 @@ describe('ReportingTrafficLight Component', () => {
         ]}
       >
         <ReportingTrafficLight entities={entities} onClick={onClick} />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
   };
 
@@ -106,13 +119,14 @@ describe('ReportingTrafficLight Component', () => {
     renderComponent();
     const light = screen.getByTestId('base-traffic-light');
     expect(light).toHaveAttribute('data-color', 'white');
-    expect(light).toHaveAttribute('data-tooltip', 'Loading Reporting pipeline data...');
+    expect(light).toHaveAttribute(
+      'data-tooltip',
+      'Loading Reporting pipeline data...',
+    );
   });
 
   it('sets gray when no entities are passed', async () => {
-    await act(async () => {
-      renderComponent([]);
-    });
+    renderComponent([]);
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'gray');
@@ -121,9 +135,7 @@ describe('ReportingTrafficLight Component', () => {
   });
 
   it('fetches system entity and passes custom threshold', async () => {
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
         kind: 'System',
@@ -136,9 +148,7 @@ describe('ReportingTrafficLight Component', () => {
 
   it('uses default threshold when annotation is missing', async () => {
     mockCatalogApi.getEntityByRef.mockResolvedValueOnce({ metadata: {} });
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(0, 1, 0.33);
     });
@@ -153,27 +163,24 @@ describe('ReportingTrafficLight Component', () => {
       reason: 'Reporting failures detected',
     });
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       const light = screen.getByTestId('base-traffic-light');
       expect(light).toHaveAttribute('data-color', 'red');
-      expect(light).toHaveAttribute('data-tooltip', 'Reporting failures detected');
+      expect(light).toHaveAttribute(
+        'data-tooltip',
+        'Reporting failures detected',
+      );
     });
   });
 
   it('calls onClick when traffic light is clicked', async () => {
     const onClick = jest.fn();
-    await act(async () => {
-      renderComponent(mockEntities, onClick);
-    });
+    renderComponent(mockEntities, onClick);
 
     const light = await screen.findByTestId('base-traffic-light');
-    await act(async () => {
-      light.click();
-    });
+    light.click();
 
     expect(onClick).toHaveBeenCalled();
   });

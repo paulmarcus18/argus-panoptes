@@ -1,6 +1,4 @@
--- Metric 2: median change lead time per month
 with _pr_stats as (
--- get the cycle time of PRs deployed by the deployments finished each month
 	SELECT
 		distinct pr.id,
 		date_format(cdc.finished_date,'%y/%m') as month,

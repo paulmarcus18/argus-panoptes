@@ -1,1 +1,1 @@
-export {createDoraService} from './createDoraService';
+export { createDoraService } from './createDoraService';

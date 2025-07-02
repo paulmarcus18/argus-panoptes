@@ -1,8 +1,6 @@
 import { createBackend } from '@backstage/backend-defaults';
-//import aiPlugin from '@internal/plugin-ai-plugin-backend';
-//import aiPlugin from '';
-//import { techInsightsModuleSonarCloudFactRetriever } from './modules/sonarCloudFactRetriever';
 import dotenv from 'dotenv';
+
 dotenv.config();
 const backend = createBackend();
 
@@ -46,7 +44,6 @@ backend.add(import('@backstage-community/plugin-tech-insights-backend'));
 backend.add(
   import('@backstage-community/plugin-tech-insights-backend-module-jsonfc'),
 );
-//backend.add(techInsightsModuleSonarCloudFactRetriever); // Add the SonarCloud fact retriever
 backend.add(
   import(
     '@internal/plugin-tech-insights-backend-module-traffic-light-backend-module'

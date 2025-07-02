@@ -7,12 +7,14 @@ import {
   AnyApiFactory,
   configApiRef,
   createApiFactory,
-  identityApiRef 
+  identityApiRef,
+  discoveryApiRef,
 } from '@backstage/core-plugin-api';
 
-import { techInsightsApiRef, TechInsightsClient } from '@backstage/plugin-tech-insights';
-import { discoveryApiRef } from '@backstage/core-plugin-api';
-// import { createApiFactory, ApiRegistry } from '@backstage/core-plugin-api';
+import {
+  techInsightsApiRef,
+  TechInsightsClient,
+} from '@backstage/plugin-tech-insights';
 
 export const apis: AnyApiFactory[] = [
   createApiFactory({

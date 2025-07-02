@@ -132,7 +132,11 @@ const sampleWorkflowDefinitions = {
     { id: 2, name: 'workflow1', path: '.github/workflows/workflow1.yml' },
     { id: 3, name: 'workflow2', path: '.github/workflows/workflow2.yml' },
     { id: 4, name: 'Deploy', path: '.github/workflows/deploy.yml' },
-    { id: 5, name: 'integration-test', path: '.github/workflows/integration-test.yml' },
+    {
+      id: 5,
+      name: 'integration-test',
+      path: '.github/workflows/integration-test.yml',
+    },
   ],
 };
 
@@ -750,7 +754,7 @@ describe('githubPipelineStatusFactRetriever', () => {
       expect(githubPipelineStatusFactRetriever.id).toBe(
         'githubPipelineStatusFactRetriever',
       );
-      expect(githubPipelineStatusFactRetriever.version).toBe('0.2.0'); 
+      expect(githubPipelineStatusFactRetriever.version).toBe('0.2.0');
     });
   });
 });

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -21,10 +21,7 @@ export const FoundationTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
-  const foundationUtils = React.useMemo(
-    () => new FoundationUtils(),
-    [],
-  );
+  const foundationUtils = useMemo(() => new FoundationUtils(), []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,7 +34,7 @@ export const FoundationTrafficLight = ({
       try {
         // Step 1: Determine system entity and get configuration
         const systemName = entities[0].spec?.system;
-        const namespace = entities[0].metadata.namespace || 'default';
+        const namespace = entities[0].metadata.namespace ?? 'default';
 
         const systemEntity = systemName
           ? await catalogApi.getEntityByRef({
@@ -54,7 +51,7 @@ export const FoundationTrafficLight = ({
         const redThresholdRaw =
           systemEntity?.metadata.annotations?.[
             'foundation-check-threshold-red'
-          ] || '0.33';
+          ] ?? '0.33';
         const redThreshold = parseFloat(redThresholdRaw);
 
         // Step 3: Get configured repositories for foundation checks
@@ -71,11 +68,12 @@ export const FoundationTrafficLight = ({
         }
 
         // Step 4: Filter entities to only include configured repositories
-        const filteredEntities = configuredRepoNames.length > 0 
-          ? entities.filter(entity => 
-              configuredRepoNames.includes(entity.metadata.name)
-            )
-          : entities; // Fallback to all entities if no configuration found
+        const filteredEntities =
+          configuredRepoNames.length > 0
+            ? entities.filter(entity =>
+                configuredRepoNames.includes(entity.metadata.name),
+              )
+            : entities; // Fallback to all entities if no configuration found
 
         if (filteredEntities.length === 0) {
           setColor('gray');
@@ -88,7 +86,7 @@ export const FoundationTrafficLight = ({
           filteredEntities.map(entity =>
             foundationUtils.getFoundationPipelineChecks(techInsightsApi, {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             }),
           ),
@@ -107,7 +105,7 @@ export const FoundationTrafficLight = ({
 
         setColor(newColor);
         setReason(newReason);
-      } catch (err) {
+      } catch {
         setColor('gray');
         setReason('Error fetching foundation pipeline data');
       }

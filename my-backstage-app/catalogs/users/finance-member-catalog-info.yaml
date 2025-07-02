@@ -6,5 +6,5 @@ spec:
   profile:
     displayName: Finance 1
     email: finance@example.com
-  memberOf: 
+  memberOf:
     - finance-team

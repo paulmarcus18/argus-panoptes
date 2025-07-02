@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Entity } from '@backstage/catalog-model';
 import { TestApiProvider } from '@backstage/test-utils';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -10,14 +10,24 @@ import { determineSemaphoreColor } from '../../utils';
 // Mock the BaseTrafficLight component
 jest.mock('../BaseTrafficLight', () => ({
   BaseTrafficLight: ({ color, tooltip, onClick }: any) => (
-    <div 
-      data-testid="base-traffic-light" 
+    <button
+      type="button"
+      data-testid="base-traffic-light"
       data-color={color}
       data-tooltip={tooltip}
       onClick={onClick}
+      style={{
+        border: 'none',
+        borderRadius: '50%',
+        width: '50px',
+        height: '50px',
+        backgroundColor: color ?? 'gray',
+        cursor: 'pointer',
+        padding: 0,
+      }}
     >
       Traffic Light: {color}
-    </div>
+    </button>
   ),
 }));
 
@@ -36,7 +46,6 @@ jest.mock('../../utils', () => ({
 describe('PreproductionTrafficLight Component', () => {
   let mockCatalogApi: any;
   let mockTechInsightsApi: any;
-  let mockPreproductionUtils: any;
   let mockEntities: Entity[];
   let mockSystemEntity: any;
 
@@ -46,10 +55,6 @@ describe('PreproductionTrafficLight Component', () => {
     };
 
     mockTechInsightsApi = {};
-
-    mockPreproductionUtils = {
-      getPreproductionPipelineChecks: jest.fn(),
-    };
 
     mockEntities = [
       {
@@ -91,7 +96,8 @@ describe('PreproductionTrafficLight Component', () => {
       metadata: {
         annotations: {
           'preproduction-check-threshold-red': '0.33',
-          'preproduction-configured-repositories': 'test-component-1,test-component-2,test-component-3',
+          'preproduction-configured-repositories':
+            'test-component-1,test-component-2,test-component-3',
         },
       },
     };
@@ -104,7 +110,9 @@ describe('PreproductionTrafficLight Component', () => {
         successRateCheck: true,
       }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
     // Mock determineSemaphoreColor
     (determineSemaphoreColor as jest.Mock).mockReturnValue({
@@ -117,7 +125,10 @@ describe('PreproductionTrafficLight Component', () => {
     jest.clearAllMocks();
   });
 
-  const renderComponent = (entities: Entity[] = mockEntities, onClick?: () => void) => {
+  const renderComponent = (
+    entities: Entity[] = mockEntities,
+    onClick?: () => void,
+  ) => {
     return render(
       <TestApiProvider
         apis={[
@@ -126,46 +137,49 @@ describe('PreproductionTrafficLight Component', () => {
         ]}
       >
         <PreproductionTrafficLight entities={entities} onClick={onClick} />
-      </TestApiProvider>
+      </TestApiProvider>,
     );
   };
 
   it('should render with initial white color and loading message', () => {
     renderComponent();
-    
+
     const trafficLight = screen.getByTestId('base-traffic-light');
     expect(trafficLight).toHaveAttribute('data-color', 'white');
-    expect(trafficLight).toHaveAttribute('data-tooltip', 'Loading Preproduction pipeline data...');
+    expect(trafficLight).toHaveAttribute(
+      'data-tooltip',
+      'Loading Preproduction pipeline data...',
+    );
   });
 
   it('should update to gray when no entities are provided', async () => {
-    await act(async () => {
-      renderComponent([]);
-    });
+    renderComponent([]);
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
       expect(trafficLight).toHaveAttribute('data-color', 'gray');
-      expect(trafficLight).toHaveAttribute('data-tooltip', 'No entities selected');
+      expect(trafficLight).toHaveAttribute(
+        'data-tooltip',
+        'No entities selected',
+      );
     });
   });
 
   it('should update to green when all checks pass', async () => {
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
       expect(trafficLight).toHaveAttribute('data-color', 'green');
-      expect(trafficLight).toHaveAttribute('data-tooltip', 'All preproduction pipeline checks passing');
+      expect(trafficLight).toHaveAttribute(
+        'data-tooltip',
+        'All preproduction pipeline checks passing',
+      );
     });
   });
 
   it('should fetch system entity with correct parameters', async () => {
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -184,9 +198,7 @@ describe('PreproductionTrafficLight Component', () => {
       },
     };
 
-    await act(async () => {
-      renderComponent([entityWithStringSystem]);
-    });
+    renderComponent([entityWithStringSystem]);
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -205,9 +217,7 @@ describe('PreproductionTrafficLight Component', () => {
       },
     };
 
-    await act(async () => {
-      renderComponent([entityWithNonStringSystem]);
-    });
+    renderComponent([entityWithNonStringSystem]);
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -222,7 +232,8 @@ describe('PreproductionTrafficLight Component', () => {
     mockCatalogApi.getEntityByRef.mockResolvedValue({
       metadata: {
         annotations: {
-          'preproduction-configured-repositories': 'test-component-1,test-component-2,test-component-3',
+          'preproduction-configured-repositories':
+            'test-component-1,test-component-2,test-component-3',
         },
       },
     });
@@ -232,11 +243,10 @@ describe('PreproductionTrafficLight Component', () => {
         successRateCheck: false,
       }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
-
-    await act(async () => {
-      renderComponent();
-    });
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
+    renderComponent();
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(3, 3, 0.33);
@@ -244,7 +254,8 @@ describe('PreproductionTrafficLight Component', () => {
   });
 
   it('should use custom threshold from system annotation', async () => {
-    mockSystemEntity.metadata.annotations['preproduction-check-threshold-red'] = '0.5';
+    mockSystemEntity.metadata.annotations['preproduction-check-threshold-red'] =
+      '0.5';
     mockCatalogApi.getEntityByRef.mockResolvedValue(mockSystemEntity);
 
     const mockPreproductionUtilsInstance = {
@@ -252,19 +263,20 @@ describe('PreproductionTrafficLight Component', () => {
         successRateCheck: false,
       }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent();
-    });
-
+    renderComponent();
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(3, 3, 0.5);
     });
   });
 
   it('should filter entities based on configured repositories', async () => {
-    mockSystemEntity.metadata.annotations['preproduction-configured-repositories'] = 'test-component-1,test-component-3';
+    mockSystemEntity.metadata.annotations[
+      'preproduction-configured-repositories'
+    ] = 'test-component-1,test-component-3';
     mockCatalogApi.getEntityByRef.mockResolvedValue(mockSystemEntity);
 
     const mockPreproductionUtilsInstance = {
@@ -272,30 +284,30 @@ describe('PreproductionTrafficLight Component', () => {
         successRateCheck: true,
       }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
-      expect(mockPreproductionUtilsInstance.getPreproductionPipelineChecks).toHaveBeenCalledTimes(2);
-      expect(mockPreproductionUtilsInstance.getPreproductionPipelineChecks).toHaveBeenCalledWith(
-        mockTechInsightsApi,
-        {
-          kind: 'Component',
-          namespace: 'default',
-          name: 'test-component-1',
-        }
-      );
-      expect(mockPreproductionUtilsInstance.getPreproductionPipelineChecks).toHaveBeenCalledWith(
-        mockTechInsightsApi,
-        {
-          kind: 'Component',
-          namespace: 'default',
-          name: 'test-component-3',
-        }
-      );
+      expect(
+        mockPreproductionUtilsInstance.getPreproductionPipelineChecks,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        mockPreproductionUtilsInstance.getPreproductionPipelineChecks,
+      ).toHaveBeenCalledWith(mockTechInsightsApi, {
+        kind: 'Component',
+        namespace: 'default',
+        name: 'test-component-1',
+      });
+      expect(
+        mockPreproductionUtilsInstance.getPreproductionPipelineChecks,
+      ).toHaveBeenCalledWith(mockTechInsightsApi, {
+        kind: 'Component',
+        namespace: 'default',
+        name: 'test-component-3',
+      });
     });
   });
 
@@ -310,19 +322,23 @@ describe('PreproductionTrafficLight Component', () => {
         successRateCheck: true,
       }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
-      expect(mockPreproductionUtilsInstance.getPreproductionPipelineChecks).toHaveBeenCalledTimes(3);
+      expect(
+        mockPreproductionUtilsInstance.getPreproductionPipelineChecks,
+      ).toHaveBeenCalledTimes(3);
     });
   });
 
   it('should handle empty configured repositories list', async () => {
-    mockSystemEntity.metadata.annotations['preproduction-configured-repositories'] = '  ,  ,  ';
+    mockSystemEntity.metadata.annotations[
+      'preproduction-configured-repositories'
+    ] = '  ,  ,  ';
     mockCatalogApi.getEntityByRef.mockResolvedValue(mockSystemEntity);
 
     const mockPreproductionUtilsInstance = {
@@ -330,48 +346,57 @@ describe('PreproductionTrafficLight Component', () => {
         successRateCheck: true,
       }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
-      expect(mockPreproductionUtilsInstance.getPreproductionPipelineChecks).toHaveBeenCalledTimes(3);
+      expect(
+        mockPreproductionUtilsInstance.getPreproductionPipelineChecks,
+      ).toHaveBeenCalledTimes(3);
     });
   });
 
   it('should return gray when no configured repositories match entities', async () => {
-    mockSystemEntity.metadata.annotations['preproduction-configured-repositories'] = 'non-existent-repo-1,non-existent-repo-2';
+    mockSystemEntity.metadata.annotations[
+      'preproduction-configured-repositories'
+    ] = 'non-existent-repo-1,non-existent-repo-2';
     mockCatalogApi.getEntityByRef.mockResolvedValue(mockSystemEntity);
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
       expect(trafficLight).toHaveAttribute('data-color', 'gray');
-      expect(trafficLight).toHaveAttribute('data-tooltip', 'No configured repositories found for preproduction checks');
+      expect(trafficLight).toHaveAttribute(
+        'data-tooltip',
+        'No configured repositories found for preproduction checks',
+      );
     });
   });
 
   it('should proceed with default values when system entity fetch fails', async () => {
-    mockCatalogApi.getEntityByRef.mockRejectedValue(new Error('System entity not found'));
+    mockCatalogApi.getEntityByRef.mockRejectedValue(
+      new Error('System entity not found'),
+    );
 
     const mockPreproductionUtilsInstance = {
       getPreproductionPipelineChecks: jest.fn().mockResolvedValue({
         successRateCheck: true,
       }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
-      expect(mockPreproductionUtilsInstance.getPreproductionPipelineChecks).toHaveBeenCalledTimes(3);
+      expect(
+        mockPreproductionUtilsInstance.getPreproductionPipelineChecks,
+      ).toHaveBeenCalledTimes(3);
       expect(determineSemaphoreColor).toHaveBeenCalledWith(0, 3, 0.33);
     });
   });
@@ -389,14 +414,15 @@ describe('PreproductionTrafficLight Component', () => {
         successRateCheck: true,
       }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent(entitiesWithoutSystem);
-    });
-
+    renderComponent(entitiesWithoutSystem);
     await waitFor(() => {
-      expect(mockPreproductionUtilsInstance.getPreproductionPipelineChecks).toHaveBeenCalledTimes(1);
+      expect(
+        mockPreproductionUtilsInstance.getPreproductionPipelineChecks,
+      ).toHaveBeenCalledTimes(1);
       expect(determineSemaphoreColor).toHaveBeenCalledWith(0, 1, 0.33);
     });
   });
@@ -419,11 +445,11 @@ describe('PreproductionTrafficLight Component', () => {
         successRateCheck: true,
       }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent(entitiesWithoutNamespace);
-    });
+    renderComponent(entitiesWithoutNamespace);
 
     await waitFor(() => {
       expect(mockCatalogApi.getEntityByRef).toHaveBeenCalledWith({
@@ -431,29 +457,29 @@ describe('PreproductionTrafficLight Component', () => {
         namespace: 'default',
         name: 'test-system',
       });
-      expect(mockPreproductionUtilsInstance.getPreproductionPipelineChecks).toHaveBeenCalledWith(
-        mockTechInsightsApi,
-        {
-          kind: 'Component',
-          namespace: 'default',
-          name: 'test-component-1',
-        }
-      );
+      expect(
+        mockPreproductionUtilsInstance.getPreproductionPipelineChecks,
+      ).toHaveBeenCalledWith(mockTechInsightsApi, {
+        kind: 'Component',
+        namespace: 'default',
+        name: 'test-component-1',
+      });
     });
   });
 
   it('should count failures correctly', async () => {
     const mockPreproductionUtilsInstance = {
-      getPreproductionPipelineChecks: jest.fn()
+      getPreproductionPipelineChecks: jest
+        .fn()
         .mockResolvedValueOnce({ successRateCheck: false })
         .mockResolvedValueOnce({ successRateCheck: true })
         .mockResolvedValueOnce({ successRateCheck: false }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(2, 3, 0.33);
@@ -462,26 +488,29 @@ describe('PreproductionTrafficLight Component', () => {
 
   it('should handle API errors gracefully', async () => {
     const mockPreproductionUtilsInstance = {
-      getPreproductionPipelineChecks: jest.fn().mockRejectedValue(new Error('API Error')),
+      getPreproductionPipelineChecks: jest
+        .fn()
+        .mockRejectedValue(new Error('API Error')),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
       expect(trafficLight).toHaveAttribute('data-color', 'gray');
-      expect(trafficLight).toHaveAttribute('data-tooltip', 'Error fetching preproduction pipeline data');
+      expect(trafficLight).toHaveAttribute(
+        'data-tooltip',
+        'Error fetching preproduction pipeline data',
+      );
     });
   });
 
   it('should call onClick handler when provided', async () => {
     const mockOnClick = jest.fn();
-    await act(async () => {
-      renderComponent(mockEntities, mockOnClick);
-    });
+    renderComponent(mockEntities, mockOnClick);
 
     await waitFor(() => {
       const trafficLight = screen.getByTestId('base-traffic-light');
@@ -489,24 +518,22 @@ describe('PreproductionTrafficLight Component', () => {
     });
 
     const trafficLight = screen.getByTestId('base-traffic-light');
-    
-    await act(async () => {
-      trafficLight.click();
-    });
+
+    trafficLight.click();
 
     expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
 
   it('should create PreproductionUtils instance with memoization', async () => {
-    await act(async () => {
-      renderComponent();
-    });
-    
+    renderComponent();
+
     expect(PreproductionUtils).toHaveBeenCalledTimes(1);
   });
 
   it('should handle whitespace in configured repositories annotation', async () => {
-    mockSystemEntity.metadata.annotations['preproduction-configured-repositories'] = ' test-component-1 , test-component-2 , test-component-3 ';
+    mockSystemEntity.metadata.annotations[
+      'preproduction-configured-repositories'
+    ] = ' test-component-1 , test-component-2 , test-component-3 ';
     mockCatalogApi.getEntityByRef.mockResolvedValue(mockSystemEntity);
 
     const mockPreproductionUtilsInstance = {
@@ -514,14 +541,16 @@ describe('PreproductionTrafficLight Component', () => {
         successRateCheck: true,
       }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
-      expect(mockPreproductionUtilsInstance.getPreproductionPipelineChecks).toHaveBeenCalledTimes(3);
+      expect(
+        mockPreproductionUtilsInstance.getPreproductionPipelineChecks,
+      ).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -532,22 +561,26 @@ describe('PreproductionTrafficLight Component', () => {
     });
 
     const mockPreproductionUtilsInstance = {
-      getPreproductionPipelineChecks: jest.fn()
+      getPreproductionPipelineChecks: jest
+        .fn()
         .mockResolvedValueOnce({ successRateCheck: true })
         .mockResolvedValueOnce({ successRateCheck: false })
         .mockResolvedValueOnce({ successRateCheck: true }),
     };
-    (PreproductionUtils as jest.Mock).mockImplementation(() => mockPreproductionUtilsInstance);
+    (PreproductionUtils as jest.Mock).mockImplementation(
+      () => mockPreproductionUtilsInstance,
+    );
 
-    await act(async () => {
-      renderComponent();
-    });
+    renderComponent();
 
     await waitFor(() => {
       expect(determineSemaphoreColor).toHaveBeenCalledWith(1, 3, 0.33);
       const trafficLight = screen.getByTestId('base-traffic-light');
       expect(trafficLight).toHaveAttribute('data-color', 'yellow');
-      expect(trafficLight).toHaveAttribute('data-tooltip', 'Some checks failing');
+      expect(trafficLight).toHaveAttribute(
+        'data-tooltip',
+        'Some checks failing',
+      );
     });
   });
 });

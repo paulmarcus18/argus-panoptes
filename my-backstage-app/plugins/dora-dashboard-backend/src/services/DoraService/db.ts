@@ -1,5 +1,9 @@
 import mysql from 'mysql2/promise';
 
+/**
+ * Database connection configuration
+ * Required parameters for MySQL/MariaDB connection
+ */
 export interface DbConfig {
   host: string;
   port: number;
@@ -8,6 +12,11 @@ export interface DbConfig {
   database: string;
 }
 
+/**
+ * Creates a MySQL connection pool with optimized settings
+ * @param config - Database connection parameters
+ * @returns Connection pool for executing database queries
+ */
 export function createDbPool(config: DbConfig) {
   return mysql.createPool({
     host: config.host,
@@ -15,8 +24,8 @@ export function createDbPool(config: DbConfig) {
     user: config.user,
     password: config.password,
     database: config.database,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
+    waitForConnections: true, // Queue queries when no connections available
+    connectionLimit: 10, // Maximum number of connections in pool
+    queueLimit: 0, // No limit on connection queue size
   });
 }

@@ -1,20 +1,24 @@
-import React from 'react';
-import {
-  Card,
-  CardContent,
-  IconButton,
-  Typography,
-  Box,
-  useTheme,
-} from '@mui/material';
+/**
+ * Summary Card Component
+ * Displays AI-generated commit summaries for a system's repositories
+ */
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
 import DownloadIcon from '@mui/icons-material/Download';
 import { SummaryPerRepo } from '../../utils/types';
 
+/**
+ * Props for configuring the Summary Card
+ */
 interface SummaryCardProps {
-  system: string;
-  repos: SummaryPerRepo[];
-  repoSearch: string;
-  handleDownload: (system: string) => void;
+  system: string; // System name to display
+  repos: SummaryPerRepo[]; // Repository data with summaries
+  repoSearch: string; // Filter text for repositories
+  handleDownload: (system: string) => void; // Export handler
 }
 
 export const SummaryCard = ({
@@ -25,8 +29,9 @@ export const SummaryCard = ({
 }: SummaryCardProps) => {
   const theme = useTheme();
 
+  // Filter repositories by search text
   const filteredRepos = repos.filter(repo =>
-    repo.repoName.toLowerCase().includes(repoSearch.toLowerCase())
+    repo.repoName.toLowerCase().includes(repoSearch.toLowerCase()),
   );
 
   return (
@@ -39,6 +44,7 @@ export const SummaryCard = ({
         backgroundColor: theme.palette.background.paper, // Backstage card bg
       }}
     >
+      {/* Download button for exporting summaries */}
       <IconButton
         onClick={() => handleDownload(system)}
         aria-label="download"
@@ -66,10 +72,12 @@ export const SummaryCard = ({
           overflow: 'hidden',
         }}
       >
+        {/* System name header */}
         <Typography variant="h4" color="primary" gutterBottom>
           {system}
         </Typography>
 
+        {/* Scrollable content area for repository summaries */}
         <Box
           sx={{
             flexGrow: 1,
@@ -92,6 +100,7 @@ export const SummaryCard = ({
                 border: `1px solid ${theme.palette.divider}`,
               }}
             >
+              {/* Repository summaries list */}
               {filteredRepos.map(({ repoName, summary }) => (
                 <Box key={repoName} sx={{ marginBottom: 2 }}>
                   <Typography variant="h5" color="text.primary" gutterBottom>

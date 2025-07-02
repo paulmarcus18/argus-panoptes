@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi } from '@backstage/core-plugin-api';
 import { techInsightsApiRef } from '@backstage/plugin-tech-insights';
@@ -23,7 +23,7 @@ export const PreproductionTrafficLight = ({
   const techInsightsApi = useApi(techInsightsApiRef);
   const catalogApi = useApi(catalogApiRef);
 
-  const preproductionUtils = React.useMemo(() => new PreproductionUtils(), []);
+  const preproductionUtils = useMemo(() => new PreproductionUtils(), []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,10 +37,10 @@ export const PreproductionTrafficLight = ({
         // 1. Fetch red threshold and configured repositories from system annotation
         let redThreshold = 0.33;
         let configuredRepoNames: string[] = [];
-        
+
         try {
           const systemName = entities[0].spec?.system;
-          const namespace = entities[0].metadata.namespace || 'default';
+          const namespace = entities[0].metadata.namespace ?? 'default';
 
           if (systemName) {
             const systemEntity = await catalogApi.getEntityByRef({
@@ -72,20 +72,23 @@ export const PreproductionTrafficLight = ({
                 .filter(name => name.length > 0);
             }
           }
-        } catch (err) {
+        } catch {
           // If system entity can't be fetched, proceed with default values.
         }
 
         // 2. Filter entities to only include configured repositories
-        const filteredEntities = configuredRepoNames.length > 0 
-          ? entities.filter(entity => 
-              configuredRepoNames.includes(entity.metadata.name)
-            )
-          : entities; // Fallback to all entities if no configuration found
+        const filteredEntities =
+          configuredRepoNames.length > 0
+            ? entities.filter(entity =>
+                configuredRepoNames.includes(entity.metadata.name),
+              )
+            : entities; // Fallback to all entities if no configuration found
 
         if (filteredEntities.length === 0) {
           setColor('gray');
-          setReason('No configured repositories found for preproduction checks');
+          setReason(
+            'No configured repositories found for preproduction checks',
+          );
           return;
         }
 
@@ -94,7 +97,7 @@ export const PreproductionTrafficLight = ({
           filteredEntities.map(entity =>
             preproductionUtils.getPreproductionPipelineChecks(techInsightsApi, {
               kind: entity.kind,
-              namespace: entity.metadata.namespace || 'default',
+              namespace: entity.metadata.namespace ?? 'default',
               name: entity.metadata.name,
             }),
           ),
@@ -106,11 +109,15 @@ export const PreproductionTrafficLight = ({
 
         // 4. Determine color and reason based on filtered entities
         const { color: computedColor, reason: computedReason } =
-          determineSemaphoreColor(failures, filteredEntities.length, redThreshold);
+          determineSemaphoreColor(
+            failures,
+            filteredEntities.length,
+            redThreshold,
+          );
 
         setColor(computedColor);
         setReason(computedReason);
-      } catch (err) {
+      } catch {
         setColor('gray');
         setReason('Error fetching preproduction pipeline data');
       }

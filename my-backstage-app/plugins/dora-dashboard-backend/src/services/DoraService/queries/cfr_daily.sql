@@ -1,4 +1,3 @@
--- Metric 3: Change failure rate per day
 WITH RECURSIVE calendar_days AS (
   SELECT DATE(?) AS day
   UNION ALL
